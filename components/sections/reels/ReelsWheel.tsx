@@ -8,10 +8,12 @@ import { reelCover, reelUrl, reelVideo, reels, type Reel } from "@/data/reels";
 const STRIP = [...reels, ...reels];
 const GAP = 14; // px between cards
 const SPEED = 36; // px per second, auto-scroll
-// about 14.5% of the width on desktop (five or six across, ~210px on a laptop); on phones ~40%,
-// so two-and-a-bit reels show at a readable size. A flat, straight strip — every reel upright
-// and the same size.
-const cardWidth = (w: number) => (w < 640 ? w * 0.4 : Math.min(260, Math.max(150, w * 0.145)));
+// about 19% of the width on desktop (four or five across, ~270px on a laptop); on phones ~40%,
+// so two-and-a-bit reels show at a readable size. Never taller than the strip leaves room for
+// (h = the strip's height), so a short laptop screen doesn't crop them. A flat, straight
+// strip — every reel upright and the same size.
+const cardWidth = (w: number, h: number) =>
+  Math.min(w < 640 ? w * 0.4 : Math.min(340, Math.max(170, w * 0.19)), ((h - 40) * 9) / 16);
 
 // Reels whose preview file isn't there (yet) — remembered so hovering doesn't keep asking.
 const missingVideo = new Set<string>();
@@ -148,7 +150,7 @@ export function ReelsWheel() {
     let W = 0;
     const size = () => {
       W = wrap.clientWidth;
-      st.current.cw = cardWidth(W);
+      st.current.cw = cardWidth(W, wrap.clientHeight);
       cardRefs.current.forEach((c) => c && (c.style.width = `${st.current.cw}px`));
     };
     size();
