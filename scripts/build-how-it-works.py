@@ -27,8 +27,15 @@ for n in used:
     # one file per distinct image, named after its first alias
     first = sorted(x for x in a if a[x] == k and x in used)[0]
     f = f'{first.replace("_", "-").lower()}.{ext}'
-    if not os.path.exists(os.path.join(outdir, f)):
-        open(os.path.join(outdir, f), 'wb').write(base64.b64decode(uri.split(',', 1)[1]))
+    data = base64.b64decode(uri.split(',', 1)[1])
+    if ext == 'svg':
+        # iOS Safari shows an <svg> whose width or height is under 1px as a broken image ("?").
+        # The hairlines are drawn from their viewBox anyway, so give them a 1px minimum.
+        txt = data.decode('utf-8')
+        root = txt[:txt.index('>') + 1]
+        fixed = re.sub(r'\b(width|height)="(\.\d+|0\.\d+)"', r'\1="1"', root)
+        data = (fixed + txt[len(root):]).encode('utf-8')
+    open(os.path.join(outdir, f), 'wb').write(data)
     fname[n] = f
 os.system(f'cp "{MAP}" "{outdir}/india-map.webp"')
 mf = [re.sub(r'data-img="([^"]+)"', lambda m: f'src="/how-it-works/{fname[m.group(1)]}" decoding="async"', m) for m in mf]
@@ -67,7 +74,9 @@ out.append('''/* --- refinements on top of the export --- */
 /* step 4: every timeline row the same height, so one- and two-line rows space evenly */
 .hfm .tlr{min-height:19.852px;align-items:center}
 /* step 4: both repayments screens share one height, so switching tabs doesn't drop the panel 18px */
-.hfm .repm{height:284px}''')
+.hfm .repm{height:284px}
+/* step 1: ticks follow the faces 6px down inside the grown green band */
+.hfm #s1-ticks{margin-top:6px}''')
 css_out = '/* Generated from the Figma "How it works" motion export — regenerate with scripts/build-how-it-works.py */\n' + '\n'.join(out) + '\n'
 
 # ---------- js ----------
@@ -105,11 +114,16 @@ for a_, b_ in (('N(4,L("#s4-ov"),"opacity",[[0,1,"se"],[28.502,0],[100,0]])',
     assert a_ in code, a_
     code = code.replace(a_, b_)
 code = code.replace(oldt, 'N(2,w,"translate",[[0,S(0,0)],[61.142,S(0,0)],[63.508,S(302,0),[.622,.151,.173,.894]],[75.107,S(302,0),[.83,.01,.28,.94]],[82.559,S(-30,0),[.83,.01,.28,.94]],[89.409,S(-376,0)],[92.221,S(0,0)],[100,S(0,0)]]),')
-# Step 1: the last (green) band hugged its two rows of faces with ~2px above and the ticks
-# spilling out below. Grow it to 78px and lift it 6px so there's an even 8px all round.
+# Step 1: the last (green) band hugged its two rows of faces (~2px above, ticks spilling out
+# below). Keep the band exactly where the design puts it (same gaps between bands) and grow it
+# downward only, to 78px; the six faces that reach it, and their ticks, sit 6px lower inside it.
 anchor = 'const t={purple:'
 assert anchor in code
-code = code.replace(anchor, 'N(1,w("green"),"height",[[0,"36px"],[30.893,"36px","io"],[32.857,"78px"],[38.75,"78px","io"],[41.429,"36px"],[100,"36px"]]),N(1,w("green"),"translate",[[0,D],[30.893,D,"io"],[32.857,S(0,-34)],[38.75,S(0,-34),"io"],[41.429,D],[100,D]]);' + anchor, 1)
+# (their final positions in the export are y=227 and y=257.813 — nudge those by 6px)
+for y0, y1 in (('px 227px"', 'px 233px"'), ('px 257.813px"', 'px 263.813px"')):
+    assert y0 in code
+    code = code.replace(y0, y1)
+code = code.replace(anchor, 'N(1,w("green"),"height",[[0,"36px"],[30.893,"36px","io"],[32.857,"78px"],[38.75,"78px","io"],[41.429,"36px"],[100,"36px"]]);' + anchor, 1)
 code = code.replace('j("img[data-img]").forEach(L=>{L.src=M.h[M.a[L.dataset.img]]});', '')
 code = code.replace('!function(){const M=A("#mf1")', 'const BUILD={1:function(){const M=A("#mf1")', 1)
 for n in (2, 3, 4):

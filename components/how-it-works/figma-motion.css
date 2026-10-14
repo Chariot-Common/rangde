@@ -194,3 +194,5 @@
 .hfm .tlr{min-height:19.852px;align-items:center}
 /* step 4: both repayments screens share one height, so switching tabs doesn't drop the panel 18px */
 .hfm .repm{height:284px}
+/* step 1: ticks follow the faces 6px down inside the grown green band */
+.hfm #s1-ticks{margin-top:6px}

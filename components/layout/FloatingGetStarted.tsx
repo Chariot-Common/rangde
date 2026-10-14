@@ -6,18 +6,18 @@ const SIGNUP_URL = "https://rangde.in/account/signup";
 
 /**
  * Phones only: the navbar drops its Invest button, and this "Get started" button floats at
- * the bottom of the screen instead — but only once the hero has scrolled away, so the first
- * screen stays clean and the action is always within thumb's reach after that.
+ * the bottom of the screen instead — from the first scroll on, so the very first view stays
+ * clean and the action is within thumb's reach as soon as someone starts reading.
  */
 export function FloatingGetStarted() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const hero = document.getElementById("hero");
-    if (!hero) return;
-    const io = new IntersectionObserver(([e]) => setShow(!e.isIntersecting), { threshold: 0 });
-    io.observe(hero);
-    return () => io.disconnect();
+    // Shows as soon as the page has been scrolled at all (one flick), hides again at the very top.
+    const onScroll = () => setShow(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
