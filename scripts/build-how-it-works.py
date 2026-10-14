@@ -42,6 +42,17 @@ mf = [re.sub(r'data-img="([^"]+)"', lambda m: f'src="/how-it-works/{fname[m.grou
 mf = [re.sub(r'\s*\n\s*', ' ', m) for m in mf]
 # "ring" is also a Tailwind utility (a 1px box-shadow) — rename so the site's CSS can't touch it
 mf = [m.replace('class="ring"', 'class="hring"') for m in mf]
+# Step 3 copy: the card's header is just the payment date, and neither date shows the year.
+for a_, b_ in (('<span class="t11">3 investments</span>', '<span class="t11">Payment date</span>'),
+               ('01 Sept 2026', '01 Sept'), ('02 Sept 2026', '02 Sept')):
+    assert a_ in mf[2], a_
+    mf[2] = mf[2].replace(a_, b_)
+# Step 3's bottom fade: the export's 48px white gradient + 4px backdrop blur had a hard top
+# edge. Same height (it must clear the card), no blur, and an eased gradient instead.
+FADE_OLD = 'background:linear-gradient(to top,#fff 0%,#fff 21.154%,rgba(255,255,255,0));backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);'
+FADE_NEW = 'background:linear-gradient(to top,#fff 0%,rgba(255,255,255,.92) 18%,rgba(255,255,255,.7) 40%,rgba(255,255,255,.38) 65%,rgba(255,255,255,.12) 85%,rgba(255,255,255,0) 100%);'
+assert FADE_OLD in mf[2]
+mf[2] = mf[2].replace(FADE_OLD, FADE_NEW)
 # Step 4: the empty slot between "Credit rating:" and "Very good" gets the rating gauge from the design
 GAUGE = ('<svg viewBox="0 0 20 11" style="width:10.4px;height:5.7px;margin:0 1px;flex:none" aria-hidden="true">'
          '<path d="M2 10a8 8 0 0 1 4-6.9" stroke="#ef5350" stroke-width="3" fill="none"/>'
@@ -98,6 +109,15 @@ PAN = '[[0,S(549,239)],[5.49,S(549,239),"io"],[25.64,S(715,239),[.65,0,.35,1]],[
 code = code.replace(old2, 'N(2,L,"translate",' + PAN + ')')
 assert 'I(2,L,"scale","0.77")' in code
 code = code.replace('I(2,L,"scale","0.77")', 'N(2,L,"scale",[[0,"0.45"],[25.64,"0.45",[.65,0,.35,1]],[36.6,"0.77"],[100,"0.77"]])', 1)
+# Step 2: Monika's and Jagdish's top-row cards filled in only at or after the end of the pan,
+# so they sat as grey placeholders until the zoom. Fill them in during the pan, as they come
+# into view. Rekha's card keeps the export's timing: it fills in after the zoom.
+for a_, b_ in (('jagdish:{title:[35.793,38.58],trig:[35.793,38.58],skel:[34.346,37.161],card:[38.263,46.773]}',
+                'jagdish:{title:[18.5,21.3],trig:[18.5,21.3],skel:[17.2,20],card:[38.263,46.773]}'),
+               ('monika:{title:[27.044,29.803],trig:[27.077,29.776],skel:[25.709,28.451,"i"]}',
+                'monika:{title:[11.5,14.3],trig:[11.5,14.3],skel:[10.2,13,"i"]}')):
+    assert a_ in code, a_[:40]
+    code = code.replace(a_, b_)
 # Step 3: the export started the payment card at 0.92 and snapped it to 1 at ~0.7s (a jerk),
 # then slid it up; at full size it is 380px wide in a 374px frame, so its sides were cut off.
 # Hold it smaller and still, the whole card in frame — no snap, no slide; the header eases in.
