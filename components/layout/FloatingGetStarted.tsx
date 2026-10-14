@@ -22,8 +22,9 @@ export function FloatingGetStarted() {
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-[90] px-2 pb-[calc(8px+env(safe-area-inset-bottom))] pt-6 transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] md:hidden ${
-        show ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0"
+      className={`fixed inset-x-0 bottom-0 z-[90] px-2 pb-[calc(8px+env(safe-area-inset-bottom))] pt-6 transition-[opacity,translate] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none md:hidden ${
+        // a gentle rise and fade in (a short 20px lift over 0.7s), and a quicker fade away
+        show ? "translate-y-0 opacity-100 duration-700" : "pointer-events-none translate-y-5 opacity-0 duration-300"
       }`}
       aria-hidden={!show}
     >

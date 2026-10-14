@@ -64,15 +64,15 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
 
         <div className="h-px w-full bg-white/16" />
 
-        <div className="flex w-full items-center gap-sp5">
+        <div className="flex w-full items-center gap-3 sm:gap-sp5">
           <div className="flex flex-1 flex-col items-center gap-[4px]">
             <p className="w-full text-center font-display text-p2 font-bold text-white">{story.totalFunded}</p>
-            <p className="w-full text-center font-display text-p4 font-medium text-white/64">Total Funded</p>
+            <p className="w-full whitespace-nowrap text-center font-display text-p4 font-medium text-white/64">Total Funded</p>
           </div>
           <div className="h-[48px] w-px shrink-0 bg-white/16" />
           <div className="flex flex-1 flex-col items-center gap-[4px]">
             <p className="w-full text-center font-display text-p2 font-bold text-white">{story.returns}</p>
-            <p className="w-full text-center font-display text-p4 font-medium text-white/64">Returns Provided</p>
+            <p className="w-full whitespace-nowrap text-center font-display text-p4 font-medium text-white/64">Returns Provided</p>
           </div>
         </div>
       </div>
