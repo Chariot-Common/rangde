@@ -76,7 +76,9 @@ out.append('''/* --- refinements on top of the export --- */
 /* step 4: both repayments screens share one height, so switching tabs doesn't drop the panel 18px */
 .hfm .repm{height:284px}
 /* step 1: ticks follow the faces 6px down inside the grown green band */
-.hfm #s1-ticks{margin-top:6px}''')
+.hfm #s1-ticks{margin-top:6px}
+/* step 2: card names keep the title's bold 18px (step 3's .nm rule was reaching them) */
+.hfm .c2-title .nm{font:inherit;white-space:normal}''')
 css_out = '/* Generated from the Figma "How it works" motion export — regenerate with scripts/build-how-it-works.py */\n' + '\n'.join(out) + '\n'
 
 # ---------- js ----------
@@ -87,8 +89,21 @@ code = code.replace('j(".ring circle",M)', 'j(".hring circle",M)')
 # final framing instead, then the focus on Rekha plays as designed.
 old2 = 'N(2,L,"translate",[[0,S(0,125.98)],[.517,S(0,125.98),"io"],[14.742,S(859.123,220.98),"io"],[20.963,S(942.94,94.98),"io"],[30.356,S(309.94,378.98),"io"],[42.201,S(930.94,388.98)],[48.814,S(930.94,367.98)],[100,S(930.94,367.98)]])'
 assert old2 in code
-# pan across the wall: diagonal, back, then one glide to Rekha (the export's extra hop removed)
-code = code.replace(old2, 'N(2,L,"translate",[[0,S(0,125.98)],[.517,S(0,125.98),"io"],[14.742,S(859.123,220.98),"io"],[26,S(309.94,378.98),"io"],[38.5,S(930.94,367.98)],[100,S(930.94,367.98)]])')
+# The pan: open on the bottom-left of the card wall, sweep diagonally up to the top right,
+# then along the top row onto Rekha Bai's card (the export's own positions, minus its
+# opening zig-zag).
+code = code.replace(old2, 'N(2,L,"translate",[[0,S(942.94,94.98)],[3,S(942.94,94.98),"io"],[20,S(309.94,378.98),"io"],[34,S(930.94,367.98)],[100,S(930.94,367.98)]])')
+# ...and with less ground to cover, that opening stretch (the pan and the cards filling in,
+# 0–38.5% of the export's 18.194s) plays 40% faster; Rekha's part keeps its pace. Every step-2
+# keyframe is remapped onto the shorter loop.
+D2_OLD, CUT, K = 18194, 38.5, 0.6
+D2_NEW = round(D2_OLD * (1 - CUT / 100 * (1 - K)))
+code = code.replace('w={1:12e3,2:18194,', 'w={1:12e3,2:%d,' % D2_NEW, 1)
+remap = ('if(2===M){const R=t=>Math.min(100,(t<=%(c)s?t*%(k)s:%(c)s*%(k)s+(t-%(c)s))*%(o)s/%(n)s);'
+         'j=j.map(L=>[R(L[0]),...L.slice(1)])}') % {'c': CUT, 'k': K, 'o': D2_OLD, 'n': D2_NEW}
+anchor_n = '.filter((M,L)=>M[0]<=100.0001||0===L)}'
+assert anchor_n in code
+code = code.replace(anchor_n, anchor_n + remap, 1)
 oldt = 'N(2,w,"translate",[[0,S(0,0)],[61.142,S(0,0)],[63.508,S(302,0),[.622,.151,.173,.894]],[73.41,S(18,0),[0,0,.047,1.004]],[75.107,S(302,0),[.83,.01,.28,.94]],[82.559,S(-30,0),[.83,.01,.28,.94]],[89.409,S(-376,0)],[92.221,S(0,0)],[100,S(0,0)]]),'
 olds = 'N(2,w,"scale",[[0,"1"],[42.637,"1",[.53,.81,.41,1]],[51.417,"1.2"],[61.142,"1.2"],[63.508,"2.88"],[89.413,"2.88"],[92.221,"1.2"],[100,"1.2"]])'
 assert oldt in code and olds in code

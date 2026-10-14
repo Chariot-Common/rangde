@@ -196,3 +196,5 @@
 .hfm .repm{height:284px}
 /* step 1: ticks follow the faces 6px down inside the grown green band */
 .hfm #s1-ticks{margin-top:6px}
+/* step 2: card names keep the title's bold 18px (step 3's .nm rule was reaching them) */
+.hfm .c2-title .nm{font:inherit;white-space:normal}
