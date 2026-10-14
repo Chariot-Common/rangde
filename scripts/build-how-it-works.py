@@ -89,10 +89,25 @@ code = code.replace('j(".ring circle",M)', 'j(".hring circle",M)')
 # final framing instead, then the focus on Rekha plays as designed.
 old2 = 'N(2,L,"translate",[[0,S(0,125.98)],[.517,S(0,125.98),"io"],[14.742,S(859.123,220.98),"io"],[20.963,S(942.94,94.98),"io"],[30.356,S(309.94,378.98),"io"],[42.201,S(930.94,388.98)],[48.814,S(930.94,367.98)],[100,S(930.94,367.98)]])'
 assert old2 in code
-# The pan: open on the bottom-left of the card wall, sweep diagonally up to the top right,
-# then along the top row onto Rekha Bai's card (the export's own positions, minus its
-# opening zig-zag).
-code = code.replace(old2, 'N(2,L,"translate",[[0,S(942.94,94.98)],[3,S(942.94,94.98),"io"],[20,S(309.94,378.98),"io"],[34,S(930.94,367.98)],[100,S(930.94,367.98)]])')
+# The pan (times below are the export's %, remapped onto the shorter loop further down:
+# old% x ~109ms). The whole wall opens scaled down to 0.45, all three rows in view, showing
+# its right-hand cards; holds to ~600ms; one smooth sideways pan (cards travel left to right)
+# reaches Rekha Bai's column at ~2.8s; then it zooms in on her card (to the export's 0.77
+# framing) while the others fade.
+PAN = '[[0,S(549,239)],[5.49,S(549,239),"io"],[25.64,S(715,239),[.65,0,.35,1]],[36.6,S(930.94,367.98)],[100,S(930.94,367.98)]]'
+code = code.replace(old2, 'N(2,L,"translate",' + PAN + ')')
+assert 'I(2,L,"scale","0.77")' in code
+code = code.replace('I(2,L,"scale","0.77")', 'N(2,L,"scale",[[0,"0.45"],[25.64,"0.45",[.65,0,.35,1]],[36.6,"0.77"],[100,"0.77"]])', 1)
+# Step 3: the export started the payment card at 0.92 and snapped it to 1 at ~0.7s (a jerk),
+# then slid it up; at full size it is 380px wide in a 374px frame, so its sides were cut off.
+# Hold it smaller and still, the whole card in frame — no snap, no slide; the header eases in.
+old3 = 'N(3,w,"translate",[[0,S(-718,-275)],[7.503,S(-718,-275),[0,0,.731,.277]],[40.025,S(-718,-532)],[100,S(-718,-532)]]),N(3,w,"scale",[[0,"0.92","se"],[7.503,"1"],[100,"1"]])'
+assert old3 in code
+# (0.82 and centred in the frame's top 294px: the frame's bottom 48px is a white fade-out.)
+code = code.replace(old3, 'N(3,w,"translate",[[0,S(-718,-385)],[100,S(-718,-385)]]),N(3,w,"scale",[[0,"0.82"],[100,"0.82"]])')
+old3b = 'N(3,L("#s3-tl"),"opacity",[[0,0,"i"],[3.619,1],[100,1]]),N(3,L("#s3-tl"),"translate",[[0,S(0,0),"o"],[3.619,S(0,-24)],[100,S(0,-24)]])'
+assert old3b in code
+code = code.replace(old3b, 'N(3,L("#s3-tl"),"opacity",[[0,0,"o"],[7,1],[100,1]]),N(3,L("#s3-tl"),"translate",[[0,S(0,0),[.22,1,.36,1]],[9,S(0,-24)],[100,S(0,-24)]])')
 # ...and with less ground to cover, that opening stretch (the pan and the cards filling in,
 # 0–38.5% of the export's 18.194s) plays 40% faster; Rekha's part keeps its pace. Every step-2
 # keyframe is remapped onto the shorter loop.
@@ -104,6 +119,17 @@ remap = ('if(2===M){const R=t=>Math.min(100,(t<=%(c)s?t*%(k)s:%(c)s*%(k)s+(t-%(c
 anchor_n = '.filter((M,L)=>M[0]<=100.0001||0===L)}'
 assert anchor_n in code
 code = code.replace(anchor_n, anchor_n + remap, 1)
+# Step 3: the card no longer slides, so the ~3s between the list filling in (14.4% of the
+# export's 9.589s) and the Pay now press (46.5%) was dead air. Play that stretch at 0.3x
+# length (about 1s to read the card) and shorten the loop to match.
+D3_OLD, A3, B3, K3 = 9589.022, 14.4, 46.5, 0.3
+D3_NEW = round(D3_OLD * (1 - (B3 - A3) / 100 * (1 - K3)))
+assert 'w={1:12e3,2:%d,3:9589.022,' % D2_NEW in code
+code = code.replace('3:9589.022,', '3:%d,' % D3_NEW, 1)
+remap3 = ('if(3===M){const R=t=>Math.min(100,(t<=%(a)s?t:t<=%(b)s?%(a)s+(t-%(a)s)*%(k)s:%(a)s+(%(b)s-%(a)s)*%(k)s+(t-%(b)s))*%(o)s/%(n)s);'
+          'j=j.map(L=>[R(L[0]),...L.slice(1)])}') % {'a': A3, 'b': B3, 'k': K3, 'o': D3_OLD, 'n': D3_NEW}
+code = code.replace(anchor_n + remap, anchor_n + remap + remap3, 1)
+
 oldt = 'N(2,w,"translate",[[0,S(0,0)],[61.142,S(0,0)],[63.508,S(302,0),[.622,.151,.173,.894]],[73.41,S(18,0),[0,0,.047,1.004]],[75.107,S(302,0),[.83,.01,.28,.94]],[82.559,S(-30,0),[.83,.01,.28,.94]],[89.409,S(-376,0)],[92.221,S(0,0)],[100,S(0,0)]]),'
 olds = 'N(2,w,"scale",[[0,"1"],[42.637,"1",[.53,.81,.41,1]],[51.417,"1.2"],[61.142,"1.2"],[63.508,"2.88"],[89.413,"2.88"],[92.221,"1.2"],[100,"1.2"]])'
 assert oldt in code and olds in code
