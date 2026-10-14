@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rang De Play</title>
+<meta name="description" content="Two quick games from Rang De: test what you know about rural India, and find an entrepreneur to support.">
+<meta property="og:title" content="Why is it so hard for rural India to borrow?">
+<meta property="og:description" content="Follow Jyoti Ben as she tries to get a loan, and see why every door closes.">
+<link rel="icon" href="logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Parkinsans:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#292D36; --ink-64:rgba(41,45,54,.64); --ink-48:rgba(41,45,54,.48); --ink-16:rgba(41,45,54,.16); --ink-8:rgba(41,45,54,.08);
+    --green-dark:#3A6E0C; --green-bright:#62AF1D; --green-8:rgba(140,162,30,.10); --primary:#0DAADE; --blue-deep:#00517A;
+    --cream:#F7F3ED; --card:#fff; --bg:#F7F3ED;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --ink:#ECEDF0; --ink-64:rgba(236,237,240,.7); --ink-48:rgba(236,237,240,.5); --ink-16:rgba(236,237,240,.16); --ink-8:rgba(236,237,240,.08); --bg:#16181D; --card:#20232A; --green-dark:#8FD14F; --green-8:rgba(143,209,79,.12); }
+  }
+  :root[data-theme="dark"]{ --ink:#ECEDF0; --ink-64:rgba(236,237,240,.7); --ink-48:rgba(236,237,240,.5); --ink-16:rgba(236,237,240,.16); --ink-8:rgba(236,237,240,.08); --bg:#16181D; --card:#20232A; --green-dark:#8FD14F; --green-8:rgba(143,209,79,.12); }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ background:var(--bg); color:var(--ink); font-family:Inter, system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  body{ min-height:100vh; min-height:100dvh; display:flex; justify-content:center; padding:max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); }
+  main{ width:100%; max-width:480px; display:flex; flex-direction:column; gap:20px; }
+  header{ display:flex; align-items:center; justify-content:space-between; padding-top:4px; }
+  header img{ height:36px; width:auto; }
+  .logo-chip{ display:inline-flex; padding:6px 10px; border-radius:12px; background:#fff; }
+  .eyebrow{ font-family:Parkinsans, Inter, sans-serif; font-weight:600; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-48); }
+  h1{ font-size:32px; line-height:36px; font-weight:800; letter-spacing:-.02em; }
+  h1 em, h2 em{ font-style:normal; color:var(--green-dark); }
+  h2{ font-size:24px; line-height:30px; font-weight:800; letter-spacing:-.01em; }
+  p.lead{ font-size:16px; line-height:23px; color:var(--ink-64); font-weight:500; }
+  .card{ background:var(--card); border-radius:20px; padding:20px; box-shadow:0 1px 2px rgba(41,45,54,.06), 0 8px 24px rgba(41,45,54,.08); }
+  button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; }
+  button:focus-visible, a:focus-visible{ outline:3px solid var(--primary); outline-offset:2px; }
+  .game{ display:flex; gap:16px; align-items:center; text-align:left; width:100%; transition:transform .2s var(--ease); }
+  .game:active{ transform:scale(.98); }
+  .game .ico{ width:56px; height:56px; flex:none; border-radius:16px; display:flex; align-items:center; justify-content:center; background:var(--ink-8); }
+  .game .ico img{ width:34px; height:34px; }
+  .game b{ display:block; font-size:18px; font-weight:800; }
+  .game span{ display:block; font-size:14px; color:var(--ink-64); margin-top:2px; font-weight:500; }
+  .btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:52px; border-radius:14px; font-weight:800; font-size:16px; text-decoration:none; transition:filter .15s, transform .15s; }
+  .btn:active{ transform:scale(.98); }
+  .btn.primary{ background:var(--primary); color:#fff; }
+  .btn.wa{ background:#25D366; color:#0b3d1f; }
+  .btn.ghost{ background:var(--ink-8); color:var(--ink); }
+  .row{ display:flex; gap:10px; }
+  .row .btn{ flex:1; }
+  .progress{ display:flex; gap:4px; }
+  .progress i{ flex:1; height:4px; border-radius:4px; background:var(--ink-16); overflow:hidden; position:relative; }
+  .progress i::after{ content:""; position:absolute; inset:0; background:var(--green-bright); transform:scaleX(0); transform-origin:left; transition:transform .4s var(--ease); }
+  .progress i.on::after{ transform:scaleX(1); }
+  .q{ font-size:22px; line-height:30px; font-weight:800; letter-spacing:-.01em; min-height:120px; }
+  .tf{ height:64px; font-size:18px; border-radius:16px; }
+  .tf.t{ background:var(--green-8); color:var(--green-dark); }
+  .tf.f{ background:rgba(194,54,43,.10); color:#C2362B; }
+  .tf[disabled]{ opacity:.45; }
+  .fact{ border-radius:16px; padding:16px; font-size:15px; line-height:22px; font-weight:500; animation:up .35s var(--ease); }
+  .fact b{ display:block; font-size:16px; margin-bottom:4px; }
+  .fact.good{ background:var(--green-8); }
+  .fact.bad{ background:rgba(194,54,43,.08); }
+  .fact small{ display:block; margin-top:6px; color:var(--ink-48); font-size:12px; }
+  @keyframes up{ from{ opacity:0; transform:translateY(8px); } }
+  .score{ font-size:72px; line-height:72px; font-weight:800; letter-spacing:-.04em; color:var(--green-dark); }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ padding:12px 16px; border-radius:999px; background:var(--ink-8); font-weight:700; font-size:15px; transition:background .2s, color .2s; }
+  .chip[aria-pressed="true"]{ background:var(--ink); color:var(--bg); }
+  .match{ display:flex; gap:14px; align-items:center; text-decoration:none; color:inherit; animation:up .4s var(--ease) backwards; }
+  .match img{ width:76px; height:76px; border-radius:16px; object-fit:cover; flex:none; background:var(--ink-8); }
+  .match b{ display:block; font-size:17px; font-weight:800; }
+  .match .where{ font-size:13px; color:var(--ink-48); font-weight:600; }
+  .match .need{ font-size:14px; color:var(--ink-64); margin-top:4px; line-height:20px; font-weight:500; }
+  .fine{ font-size:11px; line-height:16px; color:var(--ink-48); text-align:center; }
+  .screen{ display:flex; flex-direction:column; gap:18px; animation:up .35s var(--ease); }
+  .screen[hidden]{ display:none; }
+  /* Jyoti Ben's journey */
+  .scene{ border-radius:24px; overflow:hidden; background:var(--card); box-shadow:0 1px 2px rgba(41,45,54,.06), 0 10px 30px rgba(41,45,54,.10); }
+  .scene .art{ height:240px; position:relative; background:var(--ink-8); overflow:hidden; }
+  .scene .art img.ph{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; animation:fadein .6s var(--ease); }
+  .scene .art::after{ content:""; position:absolute; inset:auto 0 0 0; height:45%; background:linear-gradient(transparent, rgba(0,0,0,.45)); }
+  @keyframes fadein{ from{ opacity:0; transform:scale(1.04); } }
+  .scene .art .tag{ z-index:1; position:absolute; left:16px; bottom:14px; font-family:Parkinsans, Inter, sans-serif; font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.85); color:#292D36; }
+  .scene .txt{ padding:20px; display:flex; flex-direction:column; gap:14px; }
+  .scene .line{ font-size:20px; line-height:28px; font-weight:700; letter-spacing:-.01em; animation:up .4s var(--ease); }
+  .scene .line.soft{ font-size:16px; line-height:24px; font-weight:500; color:var(--ink-64); }
+  .doors{ display:flex; flex-direction:column; gap:10px; }
+  .door{ display:flex; gap:14px; align-items:center; text-align:left; padding:14px 16px; border-radius:16px; background:var(--ink-8); font-weight:700; font-size:16px; transition:transform .15s; }
+  .door:active{ transform:scale(.98); }
+  .door .e{ width:48px; height:48px; flex:none; border-radius:14px; background:var(--card); display:flex; align-items:center; justify-content:center; }
+  .door .e img{ width:30px; height:30px; }
+  .door small{ display:block; font-size:13px; font-weight:500; color:var(--ink-64); margin-top:2px; }
+  .door[disabled]{ opacity:.5; text-decoration:line-through; text-decoration-color:var(--ink-48); }
+  .verdict{ border-radius:14px; padding:12px 14px; font-weight:800; font-size:17px; animation:up .4s var(--ease); display:flex; gap:10px; align-items:center; }
+  .verdict img{ width:26px; height:26px; flex:none; }
+  .real{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .real a{ text-decoration:none; color:inherit; font-size:12px; line-height:16px; font-weight:700; }
+  .real img{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; display:block; margin-bottom:6px; background:var(--ink-8); }
+  .real small{ display:block; font-weight:500; color:var(--ink-64); }
+  .verdict.no{ background:rgba(194,54,43,.10); color:#C2362B; }
+  .verdict.yes{ background:var(--green-8); color:var(--green-dark); }
+  .stat-chip{ font-size:13px; line-height:19px; font-weight:600; color:var(--ink-64); background:var(--ink-8); border-radius:12px; padding:10px 12px; }
+  .stat-chip b{ color:var(--ink); }
+  .dots{ display:flex; gap:6px; justify-content:center; }
+  .dots i{ width:7px; height:7px; border-radius:50%; background:var(--ink-16); }
+  .dots i.on{ background:var(--green-bright); }
+  .feature{ position:relative; overflow:hidden; }
+  .feature::after{ content:"New"; position:absolute; right:14px; top:14px; font-size:11px; font-weight:800; padding:4px 8px; border-radius:999px; background:var(--green-bright); color:#fff; }
+  /* Guess the gap options */
+  .opts{ display:flex; flex-direction:column; gap:10px; }
+  .opt{ text-align:left; padding:16px; border-radius:14px; background:var(--ink-8); font-weight:700; font-size:17px; transition:background .2s, color .2s; }
+  .opt.right{ background:var(--green-8); color:var(--green-dark); }
+  .opt.wrong{ background:rgba(194,54,43,.10); color:#C2362B; }
+  .opt[disabled]{ cursor:default; }
+  /* Swipe to support */
+  .stack{ position:relative; height:470px; touch-action:pan-y; user-select:none; -webkit-user-select:none; }
+  .scard{ position:absolute; inset:0; border-radius:24px; overflow:hidden; background:var(--card); box-shadow:0 10px 30px rgba(41,45,54,.16); display:flex; flex-direction:column; will-change:transform; }
+  .scard img{ width:100%; height:300px; object-fit:cover; pointer-events:none; background:var(--ink-8); }
+  .scard .body{ padding:16px 18px; display:flex; flex-direction:column; gap:6px; }
+  .scard b{ font-size:22px; font-weight:800; letter-spacing:-.01em; }
+  .scard .where{ font-size:13px; font-weight:600; color:var(--ink-48); }
+  .scard .need{ font-size:15px; line-height:21px; color:var(--ink-64); font-weight:500; }
+  .scard .terms{ font-size:12px; font-weight:700; color:var(--green-dark); margin-top:2px; }
+  .stamp{ position:absolute; top:22px; padding:6px 14px; border-radius:10px; font-weight:800; font-size:22px; letter-spacing:.06em; border:3px solid; opacity:0; transform:rotate(-10deg); }
+  .stamp.yes{ left:18px; color:#2E9E3E; border-color:#2E9E3E; background:rgba(255,255,255,.85); }
+  .stamp.no{ right:18px; color:#C2362B; border-color:#C2362B; background:rgba(255,255,255,.85); transform:rotate(10deg); }
+  .swipebtns{ display:flex; justify-content:center; gap:28px; }
+  .round{ width:68px; height:68px; border-radius:50%; background:var(--card); box-shadow:0 6px 18px rgba(41,45,54,.14); display:flex; align-items:center; justify-content:center; font-size:28px; transition:transform .15s; }
+  .round:active{ transform:scale(.92); }
+  /* What can ₹500 do? */
+  .amt{ font-size:56px; line-height:60px; font-weight:800; letter-spacing:-.03em; color:var(--green-dark); text-align:center; }
+  input[type=range]{ width:100%; accent-color:var(--green-bright); height:32px; }
+  .ripple{ position:relative; height:200px; display:flex; align-items:center; justify-content:center; }
+  .ripple i{ position:absolute; border-radius:50%; border:2px solid var(--green-bright); opacity:0; animation:wave 2.4s ease-out infinite; }
+  .ripple .core{ width:56px; height:56px; border-radius:50%; background:var(--green-bright); color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; z-index:1; box-shadow:0 8px 20px rgba(98,175,29,.35); }
+  @keyframes wave{ 0%{ width:56px; height:56px; opacity:.8; } 100%{ width:var(--max,200px); height:var(--max,200px); opacity:0; } }
+  .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .stat{ background:var(--ink-8); border-radius:14px; padding:12px 8px; text-align:center; }
+  .stat b{ display:block; font-size:20px; font-weight:800; letter-spacing:-.01em; }
+  .stat span{ display:block; font-size:11px; line-height:14px; font-weight:600; color:var(--ink-64); margin-top:4px; }
+  /* Friends pool */
+  .pick{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scroll-snap-type:x mandatory; }
+  .pick button{ flex:none; width:96px; text-align:center; scroll-snap-align:start; border-radius:14px; padding:8px 6px; border:2px solid transparent; }
+  .pick button[aria-pressed="true"]{ border-color:var(--green-bright); background:var(--green-8); }
+  .pick img{ width:64px; height:64px; border-radius:50%; object-fit:cover; display:block; margin:0 auto 6px; background:var(--ink-8); }
+  .pick span{ font-size:12px; font-weight:700; line-height:15px; display:block; }
+  .msg{ background:#DCF8C6; color:#111; border-radius:14px 14px 4px 14px; padding:14px; font-size:14px; line-height:21px; white-space:pre-wrap; box-shadow:0 1px 1px rgba(0,0,0,.08); }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header><span class="logo-chip"><img src="logo.svg" alt="Rang De"></span><span class="eyebrow">Rang De Play</span></header>
+
+  <!-- HOME -->
+  <section class="screen" id="home">
+    <div>
+      <p class="eyebrow">A two-minute story</p>
+      <h1 style="margin-top:8px">Why is it so hard for rural India to <em>borrow?</em></h1>
+    </div>
+    <p class="lead">Follow one woman’s search for a loan, or guess the gap in four questions.</p>
+    <button class="card game feature" data-go="journey"><span class="ico" aria-hidden="true"><img src="icons/map.webp" alt="" width="34" height="34"></span><span><b>Jyoti Ben’s journey</b><span>Help her find a loan. Every door she knocks on tells a story.</span></span></button>
+    <button class="card game" data-go="tf"><span class="ico" aria-hidden="true"><img src="icons/warning-circle.webp" alt="" width="34" height="34"></span><span><b>Guess the gap</b><span>4 questions about credit in rural India</span></span></button>
+    <p class="eyebrow" style="margin-top:6px">More ways to play</p>
+    <button class="card game" data-go="match"><span class="ico" aria-hidden="true"><img src="icons/target-center.webp" alt="" width="34" height="34"></span><span><b>Find your entrepreneur</b><span>3 taps to meet someone you could support</span></span></button>
+    <button class="card game" data-go="swipe"><span class="ico" aria-hidden="true"><img src="icons/hand-check.webp" alt="" width="34" height="34"></span><span><b>Swipe to support</b><span>Swipe through real entrepreneurs, build your shortlist</span></span></button>
+    <button class="card game" data-go="ripple"><span class="ico" aria-hidden="true"><img src="icons/bar-chart.webp" alt="" width="34" height="34"></span><span><b>See your ripple</b><span>Slide and see what your investment could touch</span></span></button>
+    <button class="card game" data-go="pool"><span class="ico" aria-hidden="true"><img src="icons/network.webp" alt="" width="34" height="34"></span><span><b>Back someone together</b><span>Pool in with friends for one entrepreneur</span></span></button>
+    <p class="fine">Rang De is an RBI-registered NBFC-P2P platform. Investments carry risk; returns are not guaranteed.</p>
+  </section>
+
+  <!-- JYOTI BEN'S JOURNEY -->
+  <section class="screen" id="journey" hidden>
+    <div class="dots" id="jDots"></div>
+    <div class="scene">
+      <div class="art" id="jArt"></div>
+      <div class="txt" id="jTxt"></div>
+    </div>
+    <div id="jActions" style="display:flex;flex-direction:column;gap:10px"></div>
+    <p class="fine">Jyoti Ben is a fictional character, based on the experiences of many rural women entrepreneurs. Scene photos are illustrative (Unsplash). Figures: NABARD (July 2026) and rangde.in.</p>
+  </section>
+
+  <!-- TRUE / FALSE -->
+  <section class="screen" id="tf" hidden>
+    <div class="progress" id="tfProg"></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:16px">
+      <p class="eyebrow" id="tfCount"></p>
+      <p class="q" id="tfQ"></p>
+      <div class="opts" id="tfOpts"></div>
+      <div id="tfFact"></div>
+      <button class="btn primary" id="tfNext" hidden>Next</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="tfResult" hidden>
+    <div class="card" style="text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center">
+      <p class="eyebrow">Your score</p>
+      <p class="score" id="tfScore"></p>
+      <h2 id="tfVerdict"></h2>
+      <p class="lead" style="font-size:15px">Most of rural India still can’t borrow fairly. That gap is why Rang De exists.</p>
+    </div>
+    <a class="btn wa" id="tfShare" target="_blank" rel="noopener">Challenge a friend on WhatsApp</a>
+    <button class="btn primary" data-go="journey">Follow Jyoti Ben’s journey →</button>
+    <a class="btn ghost" id="tfSite" target="_blank" rel="noopener">See who Rang De supports</a>
+    <button class="btn ghost" data-go="home">Back to games</button>
+  </section>
+
+  <!-- MATCHER -->
+  <section class="screen" id="match" hidden>
+    <div class="progress" id="mProg"><i></i><i></i><i></i></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:16px">
+      <p class="eyebrow" id="mCount"></p>
+      <h2 id="mQ"></h2>
+      <div class="chips" id="mOpts" role="group"></div>
+      <button class="btn primary" id="mNext" disabled>Next</button>
+    </div>
+  </section>
+
+  <section class="screen" id="matchResult" hidden>
+    <div>
+      <p class="eyebrow">Your matches</p>
+      <h2 style="margin-top:6px">People you could <em>back</em></h2>
+    </div>
+    <div class="card" id="mList" style="display:flex;flex-direction:column;gap:18px"></div>
+    <a class="btn primary" id="mAll" target="_blank" rel="noopener">See all live opportunities</a>
+    <a class="btn wa" id="mShare" target="_blank" rel="noopener">Share with a friend on WhatsApp</a>
+    <button class="btn ghost" data-go="home">Back to games</button>
+    <p class="fine">Listings change as people get funded; amounts and availability are on rangde.in. RBI does not assure repayment of loans on P2P platforms.</p>
+  </section>
+
+  <!-- SWIPE TO SUPPORT -->
+  <section class="screen" id="swipe" hidden>
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Swipe to <em>support</em></h2><span class="eyebrow" id="swCount"></span></div>
+    <p class="lead" style="font-size:14px;margin-top:-8px">Swipe right to shortlist, left to skip. These are real people on rangde.in.</p>
+    <div class="stack" id="stack"></div>
+    <div class="swipebtns"><button class="round" id="swNo" aria-label="Skip"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C2362B" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><button class="round" id="swYes" aria-label="Shortlist"><svg width="28" height="28" viewBox="0 0 24 24" fill="#62AF1D"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.1 4.3 2.4h2c.7-1.3 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg></button></div>
+  </section>
+  <section class="screen" id="swipeResult" hidden>
+    <div><p class="eyebrow">Your shortlist</p><h2 style="margin-top:6px" id="swTitle"></h2></div>
+    <div class="card" id="swList" style="display:flex;flex-direction:column;gap:18px"></div>
+    <a class="btn primary" id="swAll" target="_blank" rel="noopener">See all live opportunities</a>
+    <a class="btn wa" id="swShare" target="_blank" rel="noopener">Share my shortlist on WhatsApp</a>
+    <button class="btn ghost" data-go="home">Back to games</button>
+    <p class="fine">Listings change as people get funded; check availability on rangde.in.</p>
+  </section>
+
+  <!-- WHAT CAN ₹500 DO? -->
+  <section class="screen" id="ripple" hidden>
+    <div><p class="eyebrow">See your ripple</p><h2 style="margin-top:6px">Slide to see what it could <em>touch</em></h2></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:16px">
+      <p class="amt" id="rpAmt">₹500</p>
+      <input type="range" id="rpRange" min="0" max="6" step="1" value="0" aria-label="Amount to invest">
+      <div class="ripple" id="rpViz"><span class="core">₹</span></div>
+      <div class="stats">
+        <div class="stat"><b id="rpPeople">1</b><span>entrepreneurs at ₹500 each</span></div>
+        <div class="stat"><b id="rpLives">1</b><span>lives you could help impact</span></div>
+        <div class="stat"><b id="rpReturn">₹43</b><span>returns a year, up to 8.5% p.a.</span></div>
+      </div>
+    </div>
+    <a class="btn wa" id="rpShare" target="_blank" rel="noopener">Share on WhatsApp</a>
+    <a class="btn primary" id="rpGo" target="_blank" rel="noopener">Start with this amount on rangde.in</a>
+    <button class="btn ghost" data-go="home">Back to games</button>
+    <p class="fine">Based on rangde.in: ₹10,000 could earn up to ₹850 a year (8.5% p.a.) and help impact 3–10 lives. Minimum ₹500 per entrepreneur. Investments carry risk; returns are not guaranteed.</p>
+  </section>
+
+  <!-- FRIENDS POOL -->
+  <section class="screen" id="pool" hidden>
+    <div><p class="eyebrow">Start a friends pool</p><h2 style="margin-top:6px">Back someone <em>together</em></h2></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:16px">
+      <p class="eyebrow">1 · Pick who to back</p>
+      <div class="pick" id="plPick" role="group"></div>
+      <p class="eyebrow">2 · How many friends?</p>
+      <div class="chips" id="plFriends"><button class="chip" data-v="3">3</button><button class="chip" data-v="5" aria-pressed="true">5</button><button class="chip" data-v="10">10</button><button class="chip" data-v="20">20</button></div>
+      <p class="eyebrow">3 · Each puts in</p>
+      <div class="chips" id="plEach"><button class="chip" data-v="500" aria-pressed="true">₹500</button><button class="chip" data-v="1000">₹1,000</button><button class="chip" data-v="2000">₹2,000</button></div>
+    </div>
+    <div><p class="eyebrow" style="margin-bottom:8px">Your message to the group</p><div class="msg" id="plMsg"></div></div>
+    <a class="btn wa" id="plShare" target="_blank" rel="noopener">Send to a WhatsApp group</a>
+    <button class="btn ghost" id="plCopy">Copy message</button>
+    <button class="btn ghost" data-go="home">Back to games</button>
+    <p class="fine">Each friend invests individually on rangde.in in the same entrepreneur. Investments carry risk; returns are not guaranteed.</p>
+  </section>
+</main>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const UTM = 'utm_source=whatsapp&utm_medium=game&utm_campaign=rangde_play';
+  const SITE = 'https://rangde.in';
+  const HERE = location.origin + location.pathname;
+
+  /* ---------- navigation ---------- */
+  function show(id){ document.querySelectorAll('.screen').forEach(s => s.hidden = s.id !== id); window.scrollTo({ top: 0 }); }
+  document.addEventListener('click', e => {
+    const go = e.target.closest('[data-go]');
+    if(!go) return;
+    const id = go.dataset.go;
+    if(id === 'tf') startTF();
+    if(id === 'journey') startJourney();
+    if(id === 'match') startMatch();
+    if(id === 'swipe') startSwipe();
+    if(id === 'ripple') renderRipple();
+    if(id === 'pool') renderPool();
+    show(id);
+  });
+  const wa = text => 'https://wa.me/?text=' + encodeURIComponent(text);
+
+  /* ---------- True or false ---------- */
+  /* Every figure has a real, checkable source (shown under each answer). */
+  const NABARD = 'NABARD Rural Economic Conditions & Sentiments Survey, July 2026 (via Rural Voice, 23 Jul 2026)';
+  const TF = [
+    { q: 'How many rural households in India still borrow from informal sources (moneylenders, friends, family)?', opts: ['About 1 in 10', 'About 1 in 4', 'Nearly half'], a: 2,
+      fact: 'Nearly half: 23.6% borrow only from informal sources, and another 25.3% use both formal and informal ones.', src: NABARD },
+    { q: 'What does an informal loan in rural India cost, on average?', opts: ['About 6% a year', 'About 12% a year', 'Almost 18% a year'], a: 2,
+      fact: 'Informal loans average 17.77% interest.', src: NABARD },
+    { q: 'How many of India’s villages now have a banking outlet within 5 km?', opts: ['About 25%', 'About 60%', 'Almost all'], a: 2,
+      fact: '99.92% of villages do. But a bank nearby isn’t a loan: nearly half of rural households still borrow informally.', src: 'Ministry of Finance, August 2026' },
+    { q: 'How much of India’s eligible population has no access to formal credit, by Rang De’s estimate?', opts: ['About 20%', 'About 45%', 'About 86%'], a: 2,
+      fact: '86% of India’s eligible population has no access to formal credit.', src: 'rangde.in' },
+  ];
+  let tfi = 0, score = 0;
+  $('#tfProg').innerHTML = TF.map(() => '<i></i>').join('');
+  function startTF(){ tfi = 0; score = 0; renderTF(); }
+  function renderTF(){
+    const item = TF[tfi];
+    $('#tfCount').textContent = `Question ${tfi + 1} of ${TF.length}`;
+    $('#tfQ').textContent = item.q;
+    $('#tfOpts').innerHTML = item.opts.map((o, i) => `<button class="opt" data-i="${i}">${o}</button>`).join('');
+    $('#tfFact').innerHTML = '';
+    $('#tfNext').hidden = true;
+    document.querySelectorAll('#tfProg i').forEach((b, i) => b.classList.toggle('on', i < tfi));
+  }
+  $('#tfOpts').addEventListener('click', e => {
+    const b = e.target.closest('.opt'); if(!b || b.disabled) return;
+    const item = TF[tfi], right = +b.dataset.i === item.a;
+    if(right) score++;
+    document.querySelectorAll('#tfOpts .opt').forEach((x, i) => { x.disabled = true; if(i === item.a) x.classList.add('right'); });
+    if(!right) b.classList.add('wrong');
+    document.querySelectorAll('#tfProg i')[tfi].classList.add('on');
+    $('#tfFact').innerHTML = `<div class="fact ${right ? 'good' : 'bad'}"><b>${right ? '✓ You got it.' : '✗ The real number:'}</b>${item.fact}<small>Source: ${item.src}</small></div>`;
+    $('#tfNext').hidden = false;
+    $('#tfNext').textContent = tfi === TF.length - 1 ? 'See how you did' : 'Next';
+    $('#tfNext').focus();
+  });
+  $('#tfNext').addEventListener('click', () => {
+    if(tfi < TF.length - 1){ tfi++; renderTF(); return; }
+    $('#tfScore').textContent = `${score}/${TF.length}`;
+    $('#tfVerdict').innerHTML = score === TF.length ? 'You know the gap. <em>Few people do.</em>' : score >= 2 ? 'Some of these <em>surprise everyone.</em>' : 'Surprising, <em>right?</em>';
+    $('#tfShare').href = wa(`Nearly half of rural households in India still borrow from informal sources. I didn’t know that either 🌾 Take Rang De’s 4-question quiz:\n${HERE}?${UTM}&utm_content=quiz_share`);
+    $('#tfSite').href = `${SITE}/invest/individuals?${UTM}&utm_content=quiz_site`;
+    show('tfResult');
+  });
+
+  /* ---------- Jyoti Ben's journey ---------- */
+  /* A story, not a tutorial: three doors that close, then the one that opens. Figures are
+     rangde.in's; no unsourced rates or amounts. */
+  const DOORS = {
+    bank: { e:'bank', imgs:['https://images.unsplash.com/photo-1671822689127-d233af35d107?auto=format&fit=crop&w=800&h=480&q=70'], name:'The bank', sub:'Safe, official, low interest', bg:'linear-gradient(160deg,#DCEBF7,#B9D7EE)', beats:[
+      'Jyoti Ben takes the early bus to the nearest town with a bank branch. The trip takes most of her day.',
+      'The officer asks for a credit history, land papers as security, and proof of income. Her business runs on cash. She has none of these.',
+    ], verdict:'Loan declined.', fact:'Almost every village now has a banking outlet nearby, yet <b>nearly half</b> of rural households still borrow from informal sources. <small style="display:block;margin-top:4px;font-weight:500">Source: '+NABARD+'</small>' },
+    nbfc: { e:'bar-chart', imgs:['https://images.unsplash.com/photo-1708593330411-24d85eff0728?auto=format&fit=crop&w=800&h=480&q=70','https://images.unsplash.com/photo-1729077537326-91749c1c9197?auto=format&fit=crop&w=800&h=480&q=70'], name:'A finance company', sub:'An agent comes to the village', bg:'linear-gradient(160deg,#EEE6F7,#D8C8EE)', beats:[
+      'An agent from a finance company visits her village. The paperwork is lighter, and the loan comes quickly.',
+      'But the repayments are fixed and frequent, and her income isn’t. Sales rise in some months and fall in others. One slow month and she’d fall behind.',
+    ], verdict:'The loan doesn’t fit how her business earns.', fact:'' },
+    lender: { e:'banknotes', imgs:['https://images.unsplash.com/photo-1729077555348-4ab768b4a90e?auto=format&fit=crop&w=800&h=480&q=70','https://images.unsplash.com/photo-1758995116383-f51775896add?auto=format&fit=crop&w=800&h=480&q=70','https://images.unsplash.com/photo-1763361712752-dc9d527a42a4?auto=format&fit=crop&w=800&h=480&q=70'], name:'The village moneylender', sub:'Cash today, no questions', bg:'linear-gradient(160deg,#F7E6D9,#EDC9A8)', beats:[
+      'The moneylender can give her cash the same evening. No forms, no bus ride.',
+      'But he wants her gold bangles as security, and the interest keeps growing every month.',
+      'Months later, she is still paying interest. Her stove is still the old one.',
+    ], verdict:'Fast money, but a trap.', fact:'Informal loans in rural India average <b>almost 18%</b> interest a year. <small style="display:block;margin-top:4px;font-weight:500">Source: '+NABARD+'</small>' },
+  };
+  let tried = [], path = null, beat = 0;
+  const SCENE = { intro:'https://images.unsplash.com/photo-1643474003664-42ad6632c039?auto=format&fit=crop&w=800&h=480&q=70', doors:'https://images.unsplash.com/photo-1784915443137-72cc0525c97d?auto=format&fit=crop&w=800&h=480&q=70', reveal:'https://images.unsplash.com/photo-1708593337380-6f97a307696f?auto=format&fit=crop&w=800&h=480&q=70' };
+  Object.values(SCENE).concat(...Object.values(DOORS).map(d => d.imgs)).forEach(u => { new Image().src = u; });
+  const art = (src, tag) => { $('#jArt').innerHTML = `<img class="ph" src="${src}" alt="">${tag ? `<span class="tag">${tag}</span>` : ''}`; };
+  const dots = n => { $('#jDots').innerHTML = [0, 1, 2, 3, 4].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join(''); };
+  function startJourney(){ tried = []; path = null; beat = 0; intro(); }
+  function intro(){
+    dots(0);
+    art(SCENE.intro, 'Meet Jyoti Ben');
+    $('#jTxt').innerHTML = `<p class="line">Jyoti Ben makes papad and khakhra at home in her village, and sells them at the weekly market.</p>
+      <p class="line soft">Shops in the nearby town want to stock them. To keep up, she needs a bigger stove and more raw material. She needs a loan.</p>`;
+    $('#jActions').innerHTML = `<button class="btn primary" id="jGo">Help her find one →</button>`;
+    $('#jGo').onclick = choose;
+  }
+  function choose(){
+    dots(1 + tried.length);
+    art(SCENE.doors, tried.length ? 'Try another door' : 'Where should she go?');
+    $('#jTxt').innerHTML = `<p class="line">${tried.length ? 'That door closed. Where next?' : 'Where should Jyoti Ben go for a loan?'}</p>`;
+    $('#jActions').innerHTML = `<div class="doors">${Object.entries(DOORS).map(([k, d]) => `<button class="door" data-k="${k}" ${tried.includes(k) ? 'disabled' : ''}><span class="e"><img src="icons/${d.e}.webp" alt=""></span><span>${d.name}<small>${tried.includes(k) ? 'Already tried' : d.sub}</small></span></button>`).join('')}</div>
+      ${tried.length >= 2 ? '<button class="btn ghost" id="jAnswer">Is there another way?</button>' : ''}`;
+    document.querySelectorAll('.door').forEach(b => b.onclick = () => { path = b.dataset.k; beat = 0; walk(); });
+    const ans = $('#jAnswer'); if(ans) ans.onclick = reveal;
+  }
+  function walk(){
+    const d = DOORS[path];
+    const im = d.imgs[Math.min(beat, d.imgs.length - 1)];
+    if(!$('#jArt img') || $('#jArt img').getAttribute('src') !== im) art(im, d.name);
+    $('#jTxt').innerHTML = d.beats.slice(0, beat + 1).map((b, i) => `<p class="line ${i < beat ? 'soft' : ''}">${b}</p>`).join('');
+    if(beat < d.beats.length - 1){
+      $('#jActions').innerHTML = `<button class="btn primary" id="jNext">What happens next?</button>`;
+      $('#jNext').onclick = () => { beat++; walk(); };
+      return;
+    }
+    $('#jTxt').innerHTML += `<div class="verdict no"><img src="icons/warning-circle.webp" alt="">${d.verdict}</div>${d.fact ? `<p class="stat-chip">${d.fact}</p>` : ''}`;
+    if(!tried.includes(path)) tried.push(path);
+    $('#jActions').innerHTML = tried.length < 3
+      ? `<button class="btn primary" id="jBack">Try another door</button>`
+      : `<button class="btn primary" id="jBack">Is there another way?</button>`;
+    $('#jBack').onclick = tried.length < 3 ? choose : reveal;
+  }
+  function reveal(){
+    dots(4);
+    art(SCENE.reveal, 'Another way');
+    $('#jTxt').innerHTML = `<p class="line">Then Jyoti Ben hears about Rang De.</p>
+      <p class="line soft">A partner who works in her area visits her at home. They look at her business itself: her customers, her sales, the shops waiting for her papad. Not just paperwork.</p>
+      <p class="line soft">Then people from across India each invest a part of her loan. She gets fair credit and repays every month. They get their money back, with returns.</p>
+      <div class="verdict yes"><img src="icons/hand-check.webp" alt="">Jyoti Ben buys her new stove.</div>
+      <p class="stat-chip"><b>86%</b> of India’s eligible population still has no access to formal credit. That’s who Rang De is for.</p>
+      <p class="eyebrow" style="margin-top:4px">Real entrepreneurs on Rang De today</p>
+      <div class="real">${LIST.slice(0, 3).map(p => `<a href="${link(p, 'journey_real')}" target="_blank" rel="noopener"><img src="${photo(p, 240, 240, true)}" alt="${p.name}" loading="lazy">${firstName(p)}<small>${p.where.split(',')[0]}</small></a>`).join('')}</div>`;
+    $('#jActions').innerHTML = `<a class="btn primary" target="_blank" rel="noopener" href="${SITE}/invest/individuals?${UTM}&utm_content=journey_end">Meet real entrepreneurs like Jyoti Ben</a>
+      <a class="btn wa" target="_blank" rel="noopener" href="${wa(`Jyoti Ben needed a loan. The bank said no, the moneylender wanted her gold. Follow her journey 👇\n${HERE}?${UTM}&utm_content=journey_share`)}">Share her story on WhatsApp</a>
+      <button class="btn ghost" data-go="tf">Guess the gap: 4 questions</button>`;
+  }
+
+  /* ---------- Find your entrepreneur ---------- */
+  /* Snapshot of live listings on rangde.in/invest/individuals (7 Oct 2026). */
+  const LIST = [
+    { key:'rekha-465',       name:'Rekha Bai',                 where:'Udaipur, Rajasthan',      region:'west',    tags:['women','shop'],       need:'Needs funds to keep her grocery store well stocked.', photo:'Rekha-42-img.jpg' },
+    { key:'durga-294',       name:'Durga Chouhan',             where:'Dhar, Madhya Pradesh',    region:'central', tags:['women','first','shop'], need:'Starting an event decoration and tent business. Her first credit.', photo:'durgamanawar01-img.jpg' },
+    { key:'monika-468',      name:'Monika Bhatodra',           where:'Dhar, Madhya Pradesh',    region:'central', tags:['women','shop'],       need:'Buying cosmetics stock and improving her store setup.', photo:'manawrmonika037-img.jpg' },
+    { key:'vijay-714',       name:'Vijay Muwel',               where:'Dhar, Madhya Pradesh',    region:'central', tags:['shop'],               need:'Needs furniture and grocery items to maintain his store.', photo:'Vijay-004-img.jpg' },
+    { key:'khandu-679',      name:'Khandu Ganga Chavhan',      where:'Nashik, Maharashtra',     region:'west',    tags:['farm'],               need:'Building a shed for his poultry business.', photo:'51603-017-633-01-5111-img.jpg' },
+    { key:'dnyaneshwar-360', name:'Dnyaneshwar Nandu Mahale',  where:'Nashik, Maharashtra',     region:'west',    tags:['shop'],               need:'Restocking clothing inventory for his store.', photo:'dnyaneshwar-mahale--img.jpg' },
+    { key:'manoj-776',       name:'Manoj Kumar Mandal',        where:'Dhubri, Assam',           region:'ne',      tags:['services'],           need:'Equipping his professional services setup.', photo:'10020497-img.jpg' },
+    { key:'nitin-898',       name:'Nitin Vishvnath Jadhav',    where:'Nashik, Maharashtra',     region:'west',    tags:['services'],           need:'Getting his repair business underway.', photo:'nitin-jadhav-img.jpg' },
+    { key:'jagdish-426',     name:'Jagdish Kashinath Sahare',  where:'Nashik, Maharashtra',     region:'west',    tags:['services'],           need:'Strengthening his repair setup with a garage.', photo:'Jagdish-sahare--img.jpg' },
+  ];
+  const STEPS = [
+    { key:'who', q:'Who would you like to support?', opts:[['women','Women entrepreneurs'], ['first','First-time borrowers'], ['shop','Shopkeepers'], ['farm','Farmers & livestock'], ['services','Repair & services']] },
+    { key:'region', q:'Which part of India?', opts:[['west','West'], ['central','Central'], ['ne','North East'], ['any','Anywhere']] },
+    { key:'amount', q:'How much would you start with?', opts:[['500','₹500'], ['2000','₹2,000'], ['5000','₹5,000+']] },
+  ];
+  let mi = 0; const ans = {};
+  function startMatch(){ mi = 0; Object.keys(ans).forEach(k => delete ans[k]); renderMatch(); }
+  function renderMatch(){
+    const s = STEPS[mi];
+    $('#mCount').textContent = `Question ${mi + 1} of ${STEPS.length}`;
+    $('#mQ').textContent = s.q;
+    $('#mOpts').innerHTML = s.opts.map(([v, l]) => `<button class="chip" data-v="${v}" aria-pressed="${ans[s.key] === v}">${l}</button>`).join('');
+    $('#mNext').disabled = !ans[s.key];
+    $('#mNext').textContent = mi === STEPS.length - 1 ? 'Show my matches' : 'Next';
+    document.querySelectorAll('#mProg i').forEach((b, i) => b.classList.toggle('on', i < mi));
+  }
+  $('#mOpts').addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if(!c) return;
+    ans[STEPS[mi].key] = c.dataset.v;
+    document.querySelectorAll('#mOpts .chip').forEach(x => x.setAttribute('aria-pressed', x === c));
+    $('#mNext').disabled = false;
+  });
+  $('#mNext').addEventListener('click', () => {
+    if(mi < STEPS.length - 1){ mi++; renderMatch(); return; }
+    const ranked = LIST.map(p => ({ p, s: (p.tags.includes(ans.who) ? 2 : 0) + (ans.region === 'any' || p.region === ans.region ? 1 : 0) }))
+      .sort((a, b) => b.s - a.s).slice(0, 3).map(x => x.p);
+    const amt = { '500':'₹500', '2000':'₹2,000', '5000':'₹5,000' }[ans.amount];
+    $('#mList').innerHTML = ranked.map((p, i) => `
+      <a class="match" style="animation-delay:${i * 90}ms" href="${SITE}/i/${p.key}?${UTM}&utm_content=match" target="_blank" rel="noopener">
+        <img src="https://rangde.imgix.net/bImg/${p.photo}?auto=compress,format&w=160&h=160&fit=facearea&facepad=2.4" alt="">
+        <span><b>${p.name}</b><span class="where">${p.where}</span><span class="need" style="display:block">${p.need}</span></span>
+      </a>`).join('');
+    $('#mAll').href = `${SITE}/invest/individuals?${UTM}&utm_content=match_all`;
+    $('#mShare').href = wa(`I just found an entrepreneur I could support with Rang De 🤝 Take the 3-tap quiz and find yours:\n${HERE}?${UTM}&utm_content=match_share`);
+    show('matchResult');
+  });
+
+  /* ---------- shared listing helpers ---------- */
+  const TERMS = { 'rekha-465': [8.25, 12], 'khandu-679': [8.5, 18] };   // others: 8.25% p.a., 18 months
+  const terms = p => TERMS[p.key] || [8.25, 18];
+  const photo = (p, w, h, face) => `https://rangde.imgix.net/bImg/${p.photo}?auto=compress,format&w=${w}&h=${h}&${face ? 'fit=facearea&facepad=2.4' : 'fit=crop&crop=faces'}`;
+  const link = (p, content) => `${SITE}/i/${p.key}?${UTM}&utm_content=${content}`;
+  const firstName = p => p.name.split(' ')[0];
+  const inr = n => '₹' + n.toLocaleString('en-IN');
+
+  /* ---------- Swipe to support ---------- */
+  let order = [], si = 0, picked = [];
+  function startSwipe(){
+    order = LIST.slice(); si = 0; picked = [];
+    order.forEach(p => { const im = new Image(); im.src = photo(p, 900, 600); });   // preload so the next card is ready
+    renderStack();
+  }
+  function cardHTML(p, i){
+    const [r, t] = terms(p);
+    return `<div class="scard" data-i="${i}">
+      <img src="${photo(p, 900, 600)}" alt="${p.name}" draggable="false">
+      <span class="stamp yes">SUPPORT</span><span class="stamp no">SKIP</span>
+      <div class="body"><b>${p.name}</b><span class="where">${p.where}</span><span class="need">${p.need}</span><span class="terms">Returns up to ${r}% p.a. · ${t} months · from ₹500</span></div>
+    </div>`;
+  }
+  function renderStack(){
+    $('#swCount').textContent = si < order.length ? `${si + 1} of ${order.length}` : '';
+    const rest = order.slice(si, si + 3);
+    $('#stack').innerHTML = rest.map((p, k) => cardHTML(p, si + k)).reverse().join('');
+    [...$('#stack').children].reverse().forEach((c, k) => { c.style.transform = `translateY(${k * 10}px) scale(${1 - k * .04})`; c.style.zIndex = 10 - k; });
+    const top = $('#stack').lastElementChild;
+    if(top) bindDrag(top);
+    if(si >= order.length) finishSwipe();
+  }
+  function decide(yes, el){
+    el = el || $('#stack').lastElementChild; if(!el) return;
+    const p = order[si];
+    if(yes) picked.push(p);
+    el.style.transition = 'transform .35s ease-out, opacity .35s';
+    el.style.transform = `translateX(${yes ? 520 : -520}px) rotate(${yes ? 24 : -24}deg)`;
+    el.style.opacity = '0';
+    el.querySelector(yes ? '.yes' : '.no').style.opacity = 1;
+    si++;
+    setTimeout(renderStack, 260);
+  }
+  function bindDrag(el){
+    let x0 = null, dx = 0;
+    const yes = el.querySelector('.yes'), no = el.querySelector('.no');
+    el.addEventListener('pointerdown', e => { x0 = e.clientX; dx = 0; el.setPointerCapture(e.pointerId); el.style.transition = 'none'; });
+    el.addEventListener('pointermove', e => {
+      if(x0 === null) return;
+      dx = e.clientX - x0;
+      el.style.transform = `translateX(${dx}px) rotate(${dx / 18}deg)`;
+      yes.style.opacity = Math.max(0, Math.min(1, dx / 90)); no.style.opacity = Math.max(0, Math.min(1, -dx / 90));
+    });
+    const end = () => {
+      if(x0 === null) return; x0 = null;
+      if(Math.abs(dx) > 100) decide(dx > 0, el);
+      else { el.style.transition = 'transform .3s ease-out'; el.style.transform = ''; yes.style.opacity = no.style.opacity = 0; }
+    };
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  }
+  $('#swYes').addEventListener('click', () => decide(true));
+  $('#swNo').addEventListener('click', () => decide(false));
+  function finishSwipe(){
+    $('#swTitle').innerHTML = picked.length ? `You’d back <em>${picked.length} ${picked.length === 1 ? 'person' : 'people'}</em>` : 'Nobody yet? <em>No worries.</em>';
+    $('#swList').innerHTML = picked.length ? picked.map((p, i) => `
+      <a class="match" style="animation-delay:${i * 80}ms" href="${link(p, 'swipe')}" target="_blank" rel="noopener">
+        <img src="${photo(p, 160, 160, true)}" alt=""><span><b>${p.name}</b><span class="where">${p.where}</span><span class="need" style="display:block">${p.need}</span></span></a>`).join('')
+      : '<p class="lead" style="font-size:15px">There are more entrepreneurs on rangde.in, new ones are listed every week.</p>';
+    $('#swAll').href = `${SITE}/invest/individuals?${UTM}&utm_content=swipe_all`;
+    const names = picked.map(firstName);
+    $('#swShare').href = wa(picked.length
+      ? `I shortlisted ${names.slice(0, 3).join(', ')}${names.length > 3 ? ' and more' : ''} on Rang De 💚 Swipe through real rural entrepreneurs you could back:\n${HERE}?${UTM}&utm_content=swipe_share`
+      : `Swipe through real rural entrepreneurs you could back 💚\n${HERE}?${UTM}&utm_content=swipe_share`);
+    show('swipeResult');
+  }
+
+  /* ---------- What can ₹500 do? ---------- */
+  /* rangde.in: "if you lend ₹10,000 you could earn ₹850 (up to 8.5% p.a.) and help impact 3–10 lives". */
+  const AMOUNTS = [500, 1000, 2000, 5000, 10000, 25000, 50000];
+  function renderRipple(){
+    const a = AMOUNTS[+$('#rpRange').value];
+    const people = Math.floor(a / 500);   // ₹500 is the minimum per entrepreneur
+    const lo = Math.max(1, Math.round(a * 3 / 10000)), hi = Math.max(lo, Math.round(a * 10 / 10000));
+    $('#rpAmt').textContent = inr(a);
+    $('#rpPeople').textContent = String(people);
+    $('#rpLives').textContent = lo === hi ? String(lo) : `${lo}–${hi}`;
+    $('#rpReturn').textContent = inr(Math.round(a * .085));
+    const rings = 1 + +$('#rpRange').value;
+    $('#rpViz').innerHTML = Array.from({ length: rings }, (_, i) => `<i style="--max:${120 + rings * 12}px;animation-delay:${i * (2.4 / rings)}s"></i>`).join('') + '<span class="core">₹</span>';
+    $('#rpShare').href = wa(`My ${inr(a)} could help impact ${lo === hi ? lo : lo + '–' + hi} ${hi === 1 ? 'life' : 'lives'} through Rang De 🌱 What could yours do?\n${HERE}?${UTM}&utm_content=ripple_share`);
+    $('#rpGo').href = `${SITE}/invest/individuals?${UTM}&utm_content=ripple_${a}`;
+  }
+  $('#rpRange').addEventListener('input', renderRipple);
+
+  /* ---------- Friends pool ---------- */
+  let poolPick = LIST[1];   // Durga: closest to fully funded this week
+  function renderPool(){
+    $('#plPick').innerHTML = LIST.map(p => `<button data-k="${p.key}" aria-pressed="${p === poolPick}"><img src="${photo(p, 140, 140, true)}" alt=""><span>${p.name.split(' ').slice(0, 2).join(' ')}</span></button>`).join('');
+    updatePool();
+  }
+  function updatePool(){
+    const n = +document.querySelector('#plFriends [aria-pressed="true"]').dataset.v;
+    const each = +document.querySelector('#plEach [aria-pressed="true"]').dataset.v;
+    const p = poolPick, [r] = terms(p);
+    const msg = `Hey all 👋 Let's each put in ${inr(each)} and back ${p.name} together.\n\n${firstName(p)} is from ${p.where}. ${p.need}\n\n${n} of us × ${inr(each)} = ${inr(n * each)} towards ${p.key === 'durga-294' || p.tags.includes('women') ? 'her' : 'his'} goal, and we each get repaid every month with returns up to ${r}% p.a.\n\nHere's ${firstName(p)}'s profile 👇\n${link(p, 'pool')}`;
+    $('#plMsg').textContent = msg;
+    $('#plShare').href = wa(msg);
+  }
+  $('#plPick').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; poolPick = LIST.find(p => p.key === b.dataset.k); document.querySelectorAll('#plPick button').forEach(x => x.setAttribute('aria-pressed', x === b)); updatePool(); });
+  ['#plFriends', '#plEach'].forEach(sel => $(sel).addEventListener('click', e => { const c = e.target.closest('.chip'); if(!c) return; document.querySelectorAll(sel + ' .chip').forEach(x => x.setAttribute('aria-pressed', x === c)); updatePool(); }));
+  $('#plCopy').addEventListener('click', async () => { try{ await navigator.clipboard.writeText($('#plMsg').textContent); $('#plCopy').textContent = 'Copied ✓'; setTimeout(() => $('#plCopy').textContent = 'Copy message', 1500); }catch(_){ $('#plCopy').textContent = 'Select the message and copy'; } });
+})();
+</script>
+</body>
+</html>

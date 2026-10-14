@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rang De · WhatsApp Status &amp; forwards (v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Parkinsans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Rang De's own visual language (rangde.org): warm cream, soft pastel panels, real photos in
+     tilted white frames, deep green for the phrases that matter, Parkinsans headings. One real,
+     live entrepreneur per card; facts only from their rangde.in listing. */
+  :root{
+    --cream:#F4F1EA; --ink:#292D36; --ink-64:rgba(41,45,54,.64); --green:#3A6E0C; --green-2:#5C9A1F;
+    --blue:#0DAADE;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#ddd;font-family:Inter,system-ui,sans-serif;color:var(--ink);display:flex;flex-wrap:wrap;gap:40px;padding:40px}
+  .card{position:relative;overflow:hidden;background:var(--cream);flex:none}
+  .status{width:1080px;height:1920px}
+  .forward{width:1080px;height:1350px}
+  .panel{position:absolute;border-radius:56px}
+  .t-green .panel{background:#DCEBC9}
+  .t-blue .panel{background:#D6EAF6}
+  .t-lilac .panel{background:#E3DCF2}
+  .logo{position:absolute;display:flex;align-items:center;gap:18px}
+  .logo img{height:88px}
+  .logo span{font:600 26px Parkinsans;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-64)}
+  .photo{position:absolute;background:#fff;padding:18px;border-radius:28px;box-shadow:0 30px 60px rgba(41,45,54,.16),0 2px 6px rgba(41,45,54,.08)}
+  .photo div{width:100%;height:100%;border-radius:16px;background-size:cover;background-position:center 30%}
+  .eyebrow{font:600 30px Parkinsans;letter-spacing:.16em;text-transform:uppercase;color:var(--green)}
+  h1{font:600 92px/1.06 Parkinsans;letter-spacing:-.02em;color:var(--ink)}
+  h1 em{font-style:normal;color:var(--green)}
+  .forward h1{font-size:76px}
+  .body{font:400 38px/1.45 Inter;color:var(--ink-64)}
+  .forward .body{font-size:33px}
+  .where{display:inline-flex;align-items:center;gap:12px;font:500 30px Inter;color:var(--ink-64)}
+  .where svg{width:30px;height:30px;color:var(--green)}
+  .bar{height:14px;border-radius:99px;background:rgba(41,45,54,.1);overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:99px;background:var(--green-2)}
+  .raised{display:flex;justify-content:space-between;font:500 28px Inter;color:var(--ink-64)}
+  .raised b{color:var(--ink);font-weight:700}
+  .cta{display:flex;align-items:center;justify-content:space-between;gap:24px;background:var(--green);color:#fff;border-radius:28px;padding:34px 40px;font:600 36px Parkinsans}
+  .cta small{display:block;font:500 26px Inter;opacity:.8;margin-top:6px}
+  .cta svg{width:56px;height:56px;flex:none}
+  .fine{font:500 24px Inter;color:rgba(41,45,54,.5);letter-spacing:.01em}
+  .leaf{position:absolute;color:var(--green);opacity:.9}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="9.5" r="2.5" fill="currentColor"/></symbol>
+  <symbol id="arrow" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="rgba(255,255,255,.18)"/><path d="M8 12h8M13 8l4 4-4 4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <!-- a hand-drawn sprout, in the spirit of rangde.org's line icons -->
+  <symbol id="sprout" viewBox="0 0 120 120"><path d="M60 112V58M60 58C60 34 42 22 18 22c0 24 16 36 42 36zM60 70c0-22 16-34 42-34 0 22-16 34-42 34z" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<!-- ============ STATUS 9:16 ============ -->
+<template id="tpl-status">
+  <div class="card status" style="display:flex;flex-direction:column;padding:96px 96px 88px">
+    <div class="logo" style="position:static"><img src="logo.svg" alt=""><span>Meet someone new</span></div>
+    <!-- photo on its pastel panel -->
+    <div style="position:relative;margin:48px -48px 0;height:740px;flex:none">
+      <div class="panel" style="inset:0"></div>
+      <div class="photo" style="left:130px;top:60px;width:660px;height:620px;transform:rotate(-3deg)"><div data-photo></div></div>
+      <svg class="leaf" style="right:40px;top:-60px;width:150px;height:150px;transform:rotate(12deg)"><use href="#sprout"/></svg>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px;margin-top:56px">
+      <span class="where"><svg><use href="#pin"/></svg><span data-where></span></span>
+      <h1 data-head style="font-size:82px"></h1>
+      <p class="body" data-body style="font-size:34px"></p>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:14px"><div class="bar"><i data-pct></i></div><div class="raised"><span data-raised></span><span data-goal></span></div></div>
+      <div class="cta"><div>Read <span data-first></span>'s story<small data-link></small></div><svg><use href="#arrow"/></svg></div>
+      <p class="fine">Back her from ₹500 · Repaid monthly · RBI-registered NBFC-P2P · Investments carry risk</p>
+    </div>
+  </div>
+</template>
+
+<!-- ============ FORWARD 4:5 ============ -->
+<template id="tpl-forward">
+  <div class="card forward">
+    <div class="panel" style="right:48px;top:48px;height:820px;width:540px"></div>
+    <div class="photo" style="right:100px;top:130px;width:440px;height:580px;transform:rotate(3deg)"><div data-photo></div></div>
+    <svg class="leaf" style="right:440px;top:690px;width:110px;height:110px;transform:rotate(-10deg)"><use href="#sprout"/></svg>
+    <div class="logo" style="left:80px;top:84px"><img src="logo.svg" alt="" style="height:76px"></div>
+    <div style="position:absolute;left:80px;width:410px;top:250px;display:flex;flex-direction:column;gap:24px">
+      <span class="eyebrow">Meet <span data-first></span></span>
+      <h1 data-head style="font-size:60px"></h1>
+    </div>
+    <div style="position:absolute;left:80px;right:80px;top:900px;bottom:80px;display:flex;flex-direction:column;gap:22px">
+      <span class="where"><svg><use href="#pin"/></svg><span data-where></span></span>
+      <p class="body" data-body style="font-size:32px"></p>
+      <div class="cta" style="margin-top:auto;padding:28px 36px"><div>Read <span data-first></span>'s story<small data-link></small></div><svg><use href="#arrow"/></svg></div>
+    </div>
+  </div>
+</template>
+
+<div id="out" style="display:contents"></div>
+
+<script>
+// Live listings on rangde.in, 12 Oct 2026 — names, places, needs and amounts as published.
+const PEOPLE = [
+  { key:'babita-893', first:'Babita', where:'Dholpur, Rajasthan', theme:'t-green', photo:'Bari32-img.jpg',
+    head:'Babita is growing her dairy, <em>one buffalo at a time.</em>',
+    body:'Babita runs a small dairy in Dholpur. She is raising credit to buy a buffalo, and social investors across India are backing her.',
+    raised:30700, goal:93000 },
+  { key:'bhagyshri-230', first:'Bhagyshri', where:'Nashik, Maharashtra', theme:'t-blue', photo:'51603-038-748-02-5040-img.jpg',
+    head:'Bhagyshri is opening <em>her own clothing shop.</em>',
+    body:'Bhagyshri is starting an apparel shop in Nashik, and needs credit for her first stock of clothes.',
+    raised:22200, goal:100000 },
+  { key:'manisha-275', first:'Manisha', where:'Dhar, Madhya Pradesh', theme:'t-lilac', photo:'manavrManisha24-img.jpg',
+    head:'Manisha’s food stall is <em>ready for its next season.</em>',
+    body:'Manisha runs a food stall in Dhar, and is raising credit to buy the raw materials that keep it going.',
+    raised:30500, goal:95000 },
+];
+const inr = n => '₹' + n.toLocaleString('en-IN');
+const img = (f,w,h) => `https://rangde.imgix.net/bImg/${f}?auto=compress,format&w=${w}&h=${h}&fit=crop&crop=faces`;
+const out = document.getElementById('out');
+for (const p of PEOPLE) for (const kind of ['status','forward']) {
+  const n = document.getElementById('tpl-'+kind).content.firstElementChild.cloneNode(true);
+  n.classList.add(p.theme); n.id = `${kind}-${p.first.toLowerCase()}`;
+  n.querySelector('[data-photo]').style.backgroundImage = `url("${kind==='status'?img(p.photo,1400,1360):img(p.photo,880,1160)}")`;
+  n.querySelectorAll('[data-first]').forEach(e=>e.textContent=p.first);
+  n.querySelector('[data-where]').textContent = p.where;
+  n.querySelector('[data-head]').innerHTML = p.head;
+  n.querySelector('[data-body]').textContent = p.body;
+  n.querySelectorAll('[data-link]').forEach(e=>e.textContent=`rangde.in/i/${p.key}`);
+  const pct = n.querySelector('[data-pct]'); if (pct) pct.style.width = Math.max(3, p.raised/p.goal*100)+'%';
+  const r = n.querySelector('[data-raised]'); if (r) r.innerHTML = `<b>${inr(p.raised)}</b> raised`;
+  const g = n.querySelector('[data-goal]'); if (g) g.textContent = `of ${inr(p.goal)}`;
+  out.appendChild(n);
+}
+</script>
+</body>
+</html>

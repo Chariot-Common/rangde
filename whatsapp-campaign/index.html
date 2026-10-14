@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhatsApp Campaign Kit</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Parkinsans:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#292D36; --ink-64:rgba(41,45,54,.64); --ink-48:rgba(41,45,54,.48); --ink-8:rgba(41,45,54,.08); --green-dark:#3A6E0C; --primary:#0DAADE; --bg:#F7F3ED; --card:#fff; }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --ink:#ECEDF0; --ink-64:rgba(236,237,240,.7); --ink-48:rgba(236,237,240,.5); --ink-8:rgba(236,237,240,.08); --bg:#16181D; --card:#20232A; --green-dark:#8FD14F; }
+  }
+  :root[data-theme="dark"]{ --ink:#ECEDF0; --ink-64:rgba(236,237,240,.7); --ink-48:rgba(236,237,240,.5); --ink-8:rgba(236,237,240,.08); --bg:#16181D; --card:#20232A; --green-dark:#8FD14F; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:var(--bg); color:var(--ink); font-family:Inter, system-ui, sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:1200px; margin:0 auto; padding:32px 16px 80px; display:flex; flex-direction:column; gap:48px; }
+  header{ display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; }
+  .logo{ display:inline-flex; padding:8px 12px; background:#fff; border-radius:12px; }
+  .logo img{ height:34px; width:auto; }
+  h1{ font-size:clamp(28px, 4vw, 40px); line-height:1.1; font-weight:800; letter-spacing:-.02em; }
+  h1 em, h2 em{ font-style:normal; color:var(--green-dark); }
+  .lead{ font-size:16px; line-height:24px; color:var(--ink-64); max-width:720px; margin-top:8px; font-weight:500; }
+  .eyebrow{ font-family:Parkinsans, Inter, sans-serif; font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-48); }
+  nav{ display:flex; flex-wrap:wrap; gap:8px; }
+  nav a{ padding:8px 14px; border-radius:999px; background:var(--card); color:var(--ink); text-decoration:none; font-weight:700; font-size:14px; box-shadow:0 1px 2px rgba(41,45,54,.08); }
+  section{ display:flex; flex-direction:column; gap:18px; scroll-margin-top:16px; }
+  h2{ font-size:24px; font-weight:800; letter-spacing:-.01em; }
+  .grid{ display:grid; gap:16px; grid-template-columns:repeat(auto-fill, minmax(min(100%, 260px), 1fr)); align-items:start; }
+  figure{ background:var(--card); border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:10px; box-shadow:0 1px 2px rgba(41,45,54,.06), 0 6px 18px rgba(41,45,54,.06); }
+  figure img, figure video{ width:100%; height:auto; border-radius:10px; display:block; background:var(--ink-8); }
+  figcaption{ display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:14px; font-weight:700; }
+  figcaption span{ display:block; font-size:12px; color:var(--ink-48); font-weight:600; margin-top:2px; }
+  .dl{ font-size:12px; font-weight:700; color:var(--primary); text-decoration:none; white-space:nowrap; }
+  .games{ display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 340px), 1fr)); align-items:start; }
+  .phone{ width:min(100%, 390px); height:780px; border-radius:36px; border:10px solid #1d1f24; overflow:hidden; background:#fff; justify-self:center; box-shadow:0 20px 50px rgba(0,0,0,.18); }
+  .phone iframe{ width:100%; height:100%; border:0; }
+  .doc{ background:var(--card); border-radius:16px; padding:24px; font-size:15px; line-height:24px; overflow-x:auto; }
+  .doc h1{ font-size:24px; margin:0 0 12px; } .doc h2{ font-size:20px; margin:28px 0 10px; } .doc h3{ font-size:16px; margin:20px 0 8px; }
+  .doc p, .doc ul, .doc ol{ margin:8px 0; } .doc ul, .doc ol{ padding-left:22px; }
+  .doc blockquote{ margin:10px 0; padding:12px 16px; border-left:4px solid #25D366; background:var(--ink-8); border-radius:0 10px 10px 0; white-space:normal; }
+  .doc blockquote p{ margin:4px 0; }
+  .doc code{ font-size:13px; background:var(--ink-8); padding:2px 6px; border-radius:6px; word-break:break-all; }
+  .doc pre{ background:var(--ink-8); padding:14px; border-radius:10px; overflow-x:auto; } .doc pre code{ background:none; padding:0; }
+  .doc table{ border-collapse:collapse; width:100%; font-size:14px; margin:10px 0; } .doc th, .doc td{ border:1px solid var(--ink-8); padding:8px 10px; text-align:left; vertical-align:top; }
+  .doc hr{ border:0; border-top:1px solid var(--ink-8); margin:24px 0; }
+  .doc a{ color:var(--primary); }
+  pre.json{ background:var(--card); border-radius:16px; padding:20px; font-size:12.5px; line-height:19px; overflow:auto; max-height:460px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">Rang De · WhatsApp campaign kit</p>
+      <h1>New users from WhatsApp <em>to the website</em></h1>
+      <p class="lead">Everything in one place: forwardable cards, Status &amp; Reels videos, six games at <a href="https://rangde-play.vercel.app" target="_blank" style="color:var(--primary)">rangde-play.vercel.app</a>, every message ready to paste, and the in-chat WhatsApp Flow.</p>
+    </div>
+    <span class="logo"><img src="src/logo.svg" alt="Rang De"></span>
+  </header>
+
+  <nav><a href="#cards">Cards</a><a href="#videos">Videos</a><a href="#games">Quiz &amp; game</a><a href="#messages">Messages &amp; plan</a><a href="#flow">WhatsApp Flow</a></nav>
+
+  <section id="cards">
+    <h2>Cards</h2>
+    <div class="grid">
+      <figure><img src="cards/story-rekha.png" alt="Story card: Rekha Bai"><figcaption><div>Story · Rekha<span>Weekly forward · 4:5</span></div><a class="dl" href="cards/story-rekha.png" download>Download</a></figcaption></figure>
+      <figure><img src="cards/story-durga.png" alt="Story card: Durga Chouhan"><figcaption><div>Story · Durga<span>Week 2 · 4:5</span></div><a class="dl" href="cards/story-durga.png" download>Download</a></figcaption></figure>
+      <figure><img src="cards/friday.png" alt="Fund her by Friday"><figcaption><div>Fund her by Friday<span>Live data · 4:5</span></div><a class="dl" href="cards/friday.png" download>Download</a></figcaption></figure>
+      <figure><img src="cards/friday-status.png" alt="Fund her by Friday, Status"><figcaption><div>Fund by Friday · Status<span>Live data · 9:16</span></div><a class="dl" href="cards/friday-status.png" download>Download</a></figcaption></figure>
+      <figure><img src="cards/pool.png" alt="Friends pool"><figcaption><div>Friends pool<span>Groups · 4:5</span></div><a class="dl" href="cards/pool.png" download>Download</a></figcaption></figure>
+      <figure><img src="cards/fact-86.png" alt="86% fact card"><figcaption><div>“86%” fact<span>Forward / Channel · 1:1</span></div><a class="dl" href="cards/fact-86.png" download>Download</a></figcaption></figure>
+      <figure><img src="cards/status-rekha.png" alt="Status card: Rekha"><figcaption><div>Status · Rekha<span>WhatsApp Status · 9:16</span></div><a class="dl" href="cards/status-rekha.png" download>Download</a></figcaption></figure>
+    </div>
+  </section>
+
+  <section id="videos">
+    <h2>Videos <span class="eyebrow" style="margin-left:8px">9:16 · Status, Reels, ads</span></h2>
+    <div class="grid">
+      <figure><video src="videos/rangde-showreel-9x16.mp4" controls playsinline muted loop preload="metadata"></video><figcaption><div>Showreel · Reel<span>40 seconds · 9:16 · <a href="showreel/index.html" target="_blank" style="color:var(--primary)">interactive page</a></span></div><a class="dl" href="videos/rangde-showreel-9x16.mp4" download>Download</a></figcaption></figure>
+      <figure><video src="videos/rangde-showreel-16x9.mp4" controls playsinline muted loop preload="metadata"></video><figcaption><div>Showreel · Wide<span>40 seconds · 16:9 · YouTube, LinkedIn, site</span></div><a class="dl" href="videos/rangde-showreel-16x9.mp4" download>Download</a></figcaption></figure>
+      <figure><video src="videos/meet-rekha.mp4" controls playsinline muted loop preload="metadata"></video><figcaption><div>Meet Rekha<span>12 seconds</span></div><a class="dl" href="videos/meet-rekha.mp4" download>Download</a></figcaption></figure>
+      <figure><video src="videos/how-rang-de-works.mp4" controls playsinline muted loop preload="metadata"></video><figcaption><div>How Rang De works<span>15 seconds</span></div><a class="dl" href="videos/how-rang-de-works.mp4" download>Download</a></figcaption></figure>
+    </div>
+  </section>
+
+  <section id="games">
+    <h2>Quiz &amp; game · <em>Rang De Play</em></h2>
+    <div class="games">
+      <div class="phone"><iframe src="quiz/index.html" title="Rang De Play"></iframe></div>
+      <div class="doc">
+        <h3 style="margin-top:0">Play it here, or <a href="quiz/index.html" target="_blank">open full screen</a></h3>
+        <p><b>Jyoti Ben’s journey</b> (lead game). An interactive story: help Jyoti Ben, who makes papad at home, find a loan. The bank, a finance company and the village moneylender each fail her, with a real fact at each dead end. Rang De is revealed only at the end. Jyoti Ben is fictional, and the page says so.</p>
+        <p><b>Guess the gap.</b> 4 multiple-choice questions, only about rural credit pain points (NABARD July 2026 and Ministry of Finance Aug 2026 figures, plus rangde.in’s 86%; each answer shows its source). No product questions.</p>
+        <p><b>Find your entrepreneur.</b> 3 taps: who, where, how much. Shows 3 real matching entrepreneurs linked to their rangde.in pages, plus “See all live opportunities” and a WhatsApp share.</p>
+        <p><b>Swipe to support.</b> Swipe right to shortlist real entrepreneurs, left to skip. Ends with your shortlist and “Share my shortlist on WhatsApp”.</p>
+        <p><b>See your ripple.</b> Slide from ₹500 to ₹50,000 and see the ripple: entrepreneurs at ₹500 each, lives you could help impact, and returns up to 8.5% p.a. (rangde.in’s own figures).</p>
+        <p><b>Start a friends pool.</b> Pick who to back, how many friends and how much each; it writes the WhatsApp group message with the link.</p>
+        <p>Every link carries <code>utm_source=whatsapp&amp;utm_medium=game&amp;utm_campaign=rangde_play</code>, so visits from the game show up separately in analytics.</p>
+        <p style="color:var(--ink-48)">Needs a public link before it can be shared on WhatsApp.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="messages">
+    <h2>Messages, plan &amp; checklist</h2>
+    <div class="doc" id="readme">Loading…</div>
+  </section>
+
+  <section id="flow">
+    <h2>In-chat matcher · WhatsApp Flow <span class="eyebrow" style="margin-left:8px">draft, validate in Meta's Flow Builder</span></h2>
+    <pre class="json" id="flowjson">Loading…</pre>
+    <a class="dl" href="flow/find-your-entrepreneur.flow.json" download>Download JSON</a>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script>
+  fetch('README.md').then(r => r.text()).then(md => { document.getElementById('readme').innerHTML = marked.parse(md); })
+    .catch(() => { document.getElementById('readme').textContent = 'Open README.md to read the messages.'; });
+  fetch('flow/find-your-entrepreneur.flow.json').then(r => r.text()).then(t => { document.getElementById('flowjson').textContent = t; });
+</script>
+</body>
+</html>

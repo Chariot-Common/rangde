@@ -1,0 +1,107 @@
+{
+  "version": "6.3",
+  "screens": [
+    {
+      "id": "WHO",
+      "title": "Find your entrepreneur",
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Who would you like to support?" },
+          { "type": "TextBody", "text": "3 quick taps and we'll introduce you to someone you could back from ₹500." },
+          {
+            "type": "RadioButtonsGroup",
+            "name": "who",
+            "label": "Choose one",
+            "required": true,
+            "data-source": [
+              { "id": "women", "title": "Women entrepreneurs" },
+              { "id": "first", "title": "First-time borrowers" },
+              { "id": "shop", "title": "Shopkeepers" },
+              { "id": "farm", "title": "Farmers & livestock" },
+              { "id": "services", "title": "Repair & services" }
+            ]
+          },
+          {
+            "type": "Footer",
+            "label": "Next",
+            "on-click-action": {
+              "name": "navigate",
+              "next": { "type": "screen", "name": "REGION" },
+              "payload": { "who": "${form.who}" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "REGION",
+      "title": "Find your entrepreneur",
+      "data": {
+        "who": { "type": "string", "__example__": "women" }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "Which part of India?" },
+          {
+            "type": "RadioButtonsGroup",
+            "name": "region",
+            "label": "Choose one",
+            "required": true,
+            "data-source": [
+              { "id": "west", "title": "West (Maharashtra, Rajasthan)" },
+              { "id": "central", "title": "Central (Madhya Pradesh)" },
+              { "id": "ne", "title": "North East (Assam)" },
+              { "id": "any", "title": "Anywhere" }
+            ]
+          },
+          {
+            "type": "Footer",
+            "label": "Next",
+            "on-click-action": {
+              "name": "navigate",
+              "next": { "type": "screen", "name": "AMOUNT" },
+              "payload": { "who": "${data.who}", "region": "${form.region}" }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "AMOUNT",
+      "title": "Find your entrepreneur",
+      "terminal": true,
+      "data": {
+        "who": { "type": "string", "__example__": "women" },
+        "region": { "type": "string", "__example__": "central" }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          { "type": "TextHeading", "text": "How much would you start with?" },
+          {
+            "type": "RadioButtonsGroup",
+            "name": "amount",
+            "label": "Choose one",
+            "required": true,
+            "data-source": [
+              { "id": "500", "title": "₹500" },
+              { "id": "2000", "title": "₹2,000" },
+              { "id": "5000", "title": "₹5,000+" }
+            ]
+          },
+          { "type": "TextCaption", "text": "Rang De is an RBI-registered NBFC-P2P platform. Investments carry risk; returns are not guaranteed." },
+          {
+            "type": "Footer",
+            "label": "Show my matches",
+            "on-click-action": {
+              "name": "complete",
+              "payload": { "who": "${data.who}", "region": "${data.region}", "amount": "${form.amount}" }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

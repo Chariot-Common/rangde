@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rang De — WhatsApp cards</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Parkinsans:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* Rang De site tokens */
+  :root{
+    --ink:#292D36; --ink-64:rgba(41,45,54,.64); --ink-48:rgba(41,45,54,.48); --ink-8:rgba(41,45,54,.08);
+    --green:#8CA21E; --green-dark:#3A6E0C; --green-bright:#62AF1D; --primary:#0DAADE; --blue-deep:#00517A;
+    --cream:#F7F3ED;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:#ddd; font-family:Inter, sans-serif; color:var(--ink); display:flex; flex-direction:column; gap:40px; padding:40px; align-items:flex-start; }
+  .card{ position:relative; overflow:hidden; background:var(--cream); }
+  .eyebrow{ font-family:Parkinsans, Inter, sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.12em; }
+  .brand{ display:flex; align-items:center; gap:18px; }
+  .brand img{ height:62px; width:auto; }
+  .pill{ display:inline-flex; align-items:center; gap:10px; border-radius:999px; font-weight:700; }
+  .rbi{ font-size:22px; padding:12px 22px; background:#fff; color:var(--ink-64); box-shadow:0 2px 8px rgba(41,45,54,.08); }
+  .rbi i{ width:10px; height:10px; border-radius:50%; background:var(--green-bright); }
+  .cta{ display:flex; align-items:center; justify-content:space-between; border-radius:28px; background:var(--primary); color:#fff; font-weight:800; }
+  .cta svg{ flex:none; }
+  .fine{ font-size:18px; color:var(--ink-48); font-weight:500; }
+
+  /* ---------- Story card (1080 x 1350) ---------- */
+  .story{ width:1080px; height:1350px; padding:64px; display:flex; flex-direction:column; gap:40px; }
+  .story .top{ display:flex; align-items:center; justify-content:space-between; }
+  .story .photo{ position:relative; flex:none; height:680px; border-radius:40px; overflow:hidden; background:#ccc; }
+  .story .photo img{ width:100%; height:100%; object-fit:cover; }
+  .story .photo::after{ content:""; position:absolute; inset:auto 0 0 0; height:55%; background:linear-gradient(to top, rgba(0,0,0,.72), transparent); }
+  .story .who{ position:absolute; left:48px; bottom:44px; z-index:1; color:#fff; }
+  .story .who .tag{ font-size:22px; color:rgba(255,255,255,.8); margin-bottom:10px; }
+  .story .who b{ display:block; font-size:72px; line-height:78px; font-weight:800; letter-spacing:-.02em; }
+  .story .who span{ font-size:30px; font-weight:500; color:rgba(255,255,255,.85); }
+  .story .need{ font-size:40px; line-height:52px; font-weight:700; letter-spacing:-.01em; }
+  .story .need em{ font-style:normal; color:var(--green-dark); }
+  .story .chips{ display:flex; gap:12px; flex-wrap:nowrap; }
+  .story .chips span{ font-size:23px; padding:13px 20px; white-space:nowrap; background:#fff; border-radius:999px; font-weight:600; color:var(--ink); }
+  .story .chips span b{ color:var(--green-dark); }
+  .story .cta{ flex:none; margin-top:auto; height:104px; padding:0 40px; font-size:36px; }
+
+  /* ---------- Diwali card (1080 x 1350) ---------- */
+  .diwali{ width:1080px; height:1350px; padding:72px 64px; background:radial-gradient(70% 50% at 50% 30%, #FFF4DA 0%, #FCE7C0 45%, #F6D49A 100%); display:flex; flex-direction:column; align-items:center; text-align:center; gap:36px; }
+  .diwali .lamps{ display:flex; gap:44px; margin-top:20px; }
+  .lamp{ position:relative; width:96px; height:120px; }
+  .lamp .flame{ position:absolute; left:50%; top:0; width:30px; height:56px; transform:translateX(-50%); border-radius:50% 50% 50% 50% / 62% 62% 38% 38%; background:radial-gradient(circle at 50% 70%, #FFF6C8 0 22%, #FFC63D 40%, #FF8A00 75%); box-shadow:0 0 40px 14px rgba(255,170,40,.45); }
+  .lamp .bowl{ position:absolute; left:0; bottom:0; width:96px; height:52px; border-radius:0 0 60px 60px; background:linear-gradient(#C8642A, #93401A); }
+  .lamp .bowl::before{ content:""; position:absolute; left:-6px; right:-6px; top:-8px; height:16px; border-radius:50%; background:#DD7A36; }
+  .diwali h1{ font-size:96px; line-height:100px; font-weight:800; letter-spacing:-.03em; color:#5A2A0A; margin-top:24px; }
+  .diwali h1 em{ font-style:normal; color:var(--green-dark); }
+  .diwali p.sub{ font-size:36px; line-height:48px; font-weight:600; color:rgba(90,42,10,.8); max-width:860px; }
+  .faces{ display:flex; gap:28px; margin-top:12px; }
+  .face{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .face img{ width:200px; height:200px; border-radius:50%; object-fit:cover; border:8px solid #fff; box-shadow:0 10px 30px rgba(90,42,10,.2); }
+  .face span{ font-size:24px; font-weight:700; color:#5A2A0A; }
+  .diwali .cta{ width:100%; height:110px; padding:0 44px; font-size:38px; margin-top:auto; background:#5A2A0A; }
+  .diwali .brandrow{ display:flex; width:100%; justify-content:space-between; align-items:center; }
+  .diwali .fine{ color:rgba(90,42,10,.6); }
+
+  /* ---------- Fact card (1080 x 1080) ---------- */
+  .fact{ width:1080px; height:1080px; padding:72px; display:flex; flex-direction:column; background:var(--blue-deep); color:#fff; }
+  .fact .big{ font-size:300px; line-height:280px; font-weight:800; letter-spacing:-.05em; color:#9BDD5A; margin-top:56px; }
+  .fact .big small{ font-size:150px; }
+  .fact .line{ font-size:52px; line-height:64px; font-weight:700; letter-spacing:-.01em; margin-top:28px; max-width:900px; }
+  .fact .line2{ font-size:34px; line-height:46px; font-weight:500; color:rgba(255,255,255,.75); margin-top:28px; max-width:860px; }
+  .fact .line2 b{ color:#fff; }
+  .fact .cta{ margin-top:auto; height:100px; padding:0 40px; font-size:34px; }
+  .fact .fine{ color:rgba(255,255,255,.55); }
+  .fact .brand .eyebrow{ color:rgba(255,255,255,.7); }
+
+  /* ---------- Status card (1080 x 1920) ---------- */
+  .status{ width:1080px; height:1920px; background:#111; color:#fff; }
+  .status img.bg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .status .shade{ position:absolute; inset:0; background:linear-gradient(to bottom, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,.1) 50%, rgba(0,0,0,.85) 78%); }
+  .status .inner{ position:absolute; inset:0; padding:120px 72px 150px; display:flex; flex-direction:column; }
+  .status .brandchip{ align-self:flex-start; display:flex; align-items:center; gap:16px; background:#fff; border-radius:999px; padding:14px 28px 14px 18px; }
+  .status .brandchip img{ height:48px; width:auto; }
+  .status .brandchip span{ color:var(--ink); font-size:26px; font-weight:700; }
+  .status h1{ margin-top:auto; font-size:92px; line-height:100px; font-weight:800; letter-spacing:-.03em; }
+  .status h1 em{ font-style:normal; color:#9BDD5A; }
+  .status p{ font-size:38px; line-height:50px; color:rgba(255,255,255,.85); margin-top:28px; font-weight:500; }
+  .status .cta{ margin-top:56px; height:120px; padding:0 48px; font-size:42px; }
+  .status .meta{ font-size:26px; color:rgba(255,255,255,.7); margin-top:24px; }
+
+  /* ---------- Friends pool card (1080 x 1350) ---------- */
+  .pool{ width:1080px; height:1350px; padding:72px 64px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:44px;
+         background:radial-gradient(60% 40% at 20% 15%, rgba(98,175,29,.18), transparent 70%), radial-gradient(60% 40% at 85% 85%, rgba(13,170,222,.16), transparent 70%), var(--cream); }
+  .pool .brandrow{ display:flex; width:100%; justify-content:space-between; align-items:center; }
+  .pool h1{ font-size:92px; line-height:98px; font-weight:800; letter-spacing:-.03em; margin-top:30px; }
+  .pool h1 em{ font-style:normal; color:var(--green-dark); }
+  .pool .sub{ font-size:36px; line-height:48px; font-weight:600; color:var(--ink-64); max-width:880px; }
+  .pool .viz{ display:flex; align-items:center; gap:28px; margin-top:10px; }
+  .pool .friends{ display:grid; grid-template-columns:repeat(3, 96px); gap:14px; }
+  .pool .friends i{ width:96px; height:96px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-style:normal; font-size:30px; font-weight:800; color:#fff; box-shadow:0 6px 16px rgba(41,45,54,.14); }
+  .pool .friends i small{ display:block; font-size:16px; font-weight:700; opacity:.9; }
+  .pool .plus{ font-size:64px; font-weight:800; color:var(--ink-48); }
+  .pool .target{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .pool .target img{ width:250px; height:250px; border-radius:50%; object-fit:cover; border:10px solid #fff; box-shadow:0 14px 34px rgba(41,45,54,.2); }
+  .pool .target span{ font-size:28px; font-weight:800; }
+  .pool .math{ font-size:44px; font-weight:800; letter-spacing:-.01em; background:#fff; border-radius:999px; padding:22px 40px; box-shadow:0 4px 14px rgba(41,45,54,.08); }
+  .pool .math b{ color:var(--green-dark); }
+  .pool .cta{ width:100%; height:108px; padding:0 44px; font-size:36px; margin-top:auto; }
+</style>
+</head>
+<body>
+
+<!-- Arrow used in CTAs -->
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<!-- 1. Weekly story card: Rekha Bai (live listing rangde.in/i/rekha-465) -->
+<section class="card story" id="story-rekha">
+  <div class="top">
+    <div class="brand"><img src="logo.svg" alt="Rang De"></div>
+    <span class="pill rbi"><i></i>RBI-regulated</span>
+  </div>
+  <div class="photo">
+    <img src="https://rangde.imgix.net/bImg/Rekha-42-img.jpg?auto=compress,format&w=1000&h=760&fit=crop&crop=faces" alt="">
+    <div class="who"><div class="eyebrow tag">Entrepreneur of the week</div><b>Rekha Bai</b><span>Grocery store · Udaipur, Rajasthan</span></div>
+  </div>
+  <p class="need">Rekha needs funds to keep her <em>grocery store well stocked.</em></p>
+  <div class="chips"><span>Back her from <b>₹500</b></span><span>Returns up to <b>8.25% p.a.</b></span><span>Repaid over <b>12 months</b></span></div>
+  <div class="cta">Meet Rekha on rangde.in <svg width="44" height="44"><use href="#arrow"/></svg></div>
+</section>
+
+<!-- 1b. Story card: Durga Chouhan (rangde.in/i/durga-294) -->
+<section class="card story" id="story-durga">
+  <div class="top">
+    <div class="brand"><img src="logo.svg" alt="Rang De"></div>
+    <span class="pill rbi"><i></i>RBI-regulated</span>
+  </div>
+  <div class="photo">
+    <img src="https://rangde.imgix.net/bImg/durgamanawar01-img.jpg?auto=compress,format&w=1000&h=760&fit=crop&crop=faces" alt="">
+    <div class="who"><div class="eyebrow tag">Entrepreneur of the week</div><b>Durga Chouhan</b><span>Grocery shop · Dhar, Madhya Pradesh</span></div>
+  </div>
+  <p class="need">Durga is adding a <em>tent and decoration rental business</em> to her grocery shop.</p>
+  <div class="chips"><span>Back her from <b>₹500</b></span><span>Returns up to <b>8.25% p.a.</b></span><span>Her <b>first credit</b></span></div>
+  <div class="cta">Meet Durga on rangde.in <svg width="44" height="44"><use href="#arrow"/></svg></div>
+</section>
+
+<!-- 2. Diwali gift card -->
+<section class="card diwali" id="diwali">
+  <div class="brandrow"><div class="brand"><img src="logo.svg" alt="Rang De"></div><span class="pill rbi"><i></i>RBI-regulated</span></div>
+  <div class="lamps"><div class="lamp"><div class="flame"></div><div class="bowl"></div></div><div class="lamp"><div class="flame"></div><div class="bowl"></div></div><div class="lamp"><div class="flame"></div><div class="bowl"></div></div></div>
+  <h1>This Diwali,<br>gift a <em>livelihood.</em></h1>
+  <p class="sub">Instead of sweets, back a rural entrepreneur in someone’s name, from just ₹500.</p>
+  <div class="faces">
+    <div class="face"><img src="https://rangde.imgix.net/bImg/Rekha-42-img.jpg?auto=compress,format&w=400&h=400&fit=facearea&facepad=2.6" alt=""><span>Rekha</span></div>
+    <div class="face"><img src="https://rangde.imgix.net/bImg/durgamanawar01-img.jpg?auto=compress,format&w=400&h=400&fit=facearea&facepad=2.6" alt=""><span>Durga</span></div>
+    <div class="face"><img src="https://rangde.imgix.net/bImg/manawrmonika037-img.jpg?auto=compress,format&w=400&h=400&fit=facearea&facepad=2.6" alt=""><span>Monika</span></div>
+  </div>
+  <div class="cta">Gift a livelihood · rangde.in <svg width="46" height="46"><use href="#arrow"/></svg></div>
+  <p class="fine">Investments carry risk; returns are not guaranteed.</p>
+</section>
+
+<!-- 3. Fact card -->
+<section class="card fact" id="fact-86">
+  <div class="brand"><img src="logo.svg" alt="Rang De" style="filter:brightness(0) invert(1)"><span class="eyebrow" style="font-size:22px">Did you know?</span></div>
+  <div class="big">86<small>%</small></div>
+  <p class="line">of India’s eligible population has no access to formal credit.</p>
+  <p class="line2"><b>11,839 social investors</b> are changing that, ₹500 at a time.</p>
+  <div class="cta">Be one of them · rangde.in <svg width="42" height="42"><use href="#arrow"/></svg></div>
+  <p class="fine" style="margin-top:20px">Source: rangde.in · RBI-registered NBFC-P2P</p>
+</section>
+
+<!-- 4. Status card (9:16) -->
+<section class="card status" id="status-rekha">
+  <img class="bg" src="https://rangde.imgix.net/bImg/Rekha-42-img.jpg?auto=compress,format&w=1080&h=1920&fit=crop&crop=faces" alt="">
+  <div class="shade"></div>
+  <div class="inner">
+    <div class="brandchip"><img src="logo.svg" alt=""><span>RBI-regulated social investing</span></div>
+    <h1>Help <em>Rekha</em> keep her store stocked.</h1>
+    <p>Back a rural entrepreneur. Get repaid every month, with returns.</p>
+    <div class="cta">rangde.in <svg width="48" height="48"><use href="#arrow"/></svg></div>
+    <p class="meta">Investments carry risk; returns are not guaranteed.</p>
+  </div>
+</section>
+
+<!-- 5. Friends pool card -->
+<section class="card pool" id="pool">
+  <div class="brandrow"><div class="brand"><img src="logo.svg" alt="Rang De"></div><span class="pill rbi"><i></i>RBI-regulated</span></div>
+  <h1>Back someone<br><em>together.</em></h1>
+  <p class="sub">Pool ₹500 each with friends and fund a rural entrepreneur’s next step.</p>
+  <div class="viz">
+    <div class="friends">
+      <i style="background:#62AF1D">₹500</i><i style="background:#0DAADE">₹500</i><i style="background:#00517A">₹500</i>
+      <i style="background:#8CA21E">₹500</i><i style="background:#3A6E0C">₹500</i><i style="background:rgba(41,45,54,.16);color:var(--ink-64)">+</i>
+    </div>
+    <span class="plus">→</span>
+    <div class="target"><img src="https://rangde.imgix.net/bImg/durgamanawar01-img.jpg?auto=compress,format&w=500&h=500&fit=facearea&facepad=2.4" alt=""><span>Durga</span></div>
+  </div>
+  <p class="math">5 friends × ₹500 = <b>₹2,500</b> for Durga</p>
+  <div class="cta">Start a friends pool · rangde-play.vercel.app <svg width="44" height="44"><use href="#arrow"/></svg></div>
+  <p class="fine">Each friend invests individually on rangde.in · Investments carry risk; returns are not guaranteed.</p>
+</section>
+
+</body>
+</html>

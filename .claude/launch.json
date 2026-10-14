@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "campaign",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "/Users/samridhiaggarwal/Desktop/projects_1/rangde/whatsapp-campaign/src/serve.mjs"
+      ],
+      "port": 4100
+    }
+  ]
+}

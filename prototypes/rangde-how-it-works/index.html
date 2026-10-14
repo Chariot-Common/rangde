@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it works — prototypes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#292D36; --mute:rgba(41,45,54,.64); --bg:#F1F2F5; --card:#fff; --primary:#0DAADE; }
+  @media (prefers-color-scheme: dark){ :root{ --ink:#ECEDF0; --mute:rgba(236,237,240,.64); --bg:#16181D; --card:#20232A; } }
+  *{ box-sizing:border-box; }
+  body{ margin:0; min-height:100vh; background:var(--bg); color:var(--ink); font-family:Inter,system-ui,sans-serif; display:flex; align-items:center; justify-content:center; padding:24px 16px; }
+  main{ width:min(420px,100%); display:flex; flex-direction:column; gap:12px; }
+  h1{ font-size:20px; margin:0; } p{ margin:0 0 8px; color:var(--mute); font-size:14px; line-height:20px; }
+  a{ display:block; background:var(--card); border-radius:16px; padding:16px 18px; text-decoration:none; color:var(--ink); box-shadow:0 4px 16px rgba(41,45,54,.10); }
+  a b{ display:block; font-size:16px; } a span{ display:block; margin-top:4px; color:var(--mute); font-size:13px; line-height:18px; }
+  a:hover b{ color:var(--primary); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rang De — How it works</h1>
+  <p>Mobile prototypes of the How it works popup. Best viewed on a phone.</p>
+  <a href="v2/"><b>Version 2</b><span>Full walkthrough: flow, browse feed, invest morph and returns dashboard.</span></a>
+  <a href="v3/"><b>Version 3 — lighter</b><span>One borrower, one amount, one idea per step.</span></a>
+</main>
+</body>
+</html>

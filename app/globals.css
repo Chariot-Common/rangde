@@ -1,0 +1,235 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors — from Figma variables (Rang De Master Design III) */
+  --color-primary: #0daade;
+  --color-blue-highlight: #3eaae0;
+  --color-green: #8ca21e;
+  --color-green-dark: #3a6e0c;
+  --color-ink: #292d36;
+  --color-bg-grey: #f1f2f5;
+
+  /* Font families */
+  --font-display: var(--font-inter);
+  --font-eyebrow: var(--font-parkinsans);
+  --font-body: var(--font-geist);
+
+  /* Type scale — Figma tokens H1-H6 / P1-P4. These are the MOBILE values (base, <768px);
+     the Desktop values from the Figma typography spec override them at md (768px) and up,
+     see the media query below. H5/H6 mobile sizes are floored to 10px (the spec's own
+     9px/8px would violate the site-wide 10px minimum font-size floor). */
+  --text-h1: 34px;
+  --text-h1--line-height: 36px;
+  --text-h2: 34px;
+  --text-h2--line-height: 36px;
+  --text-h3: 32px;
+  --text-h3--line-height: 36px;
+  --text-h4: 24px;
+  --text-h4--line-height: 28px;
+  --text-h5: 10px;
+  --text-h5--line-height: 12px;
+  --text-h6: 10px;
+  --text-h6--line-height: 12px;
+  --text-p1: 18px;
+  --text-p1--line-height: 24px;
+  --text-p2: 16px;
+  --text-p2--line-height: 22px;
+  --text-p3: 14px;
+  --text-p3--line-height: 20px;
+  --text-p4: 12px;
+  --text-p4--line-height: 16px;
+
+  /* Spacing scale — Figma Sp1-Sp12 tokens */
+  --spacing-sp1: 2px;
+  --spacing-sp2: 4px;
+  --spacing-sp3: 8px;
+  --spacing-sp5: 16px;
+  --spacing-sp6: 24px;
+  --spacing-sp7: 32px;
+  --spacing-sp9: 48px;
+  --spacing-sp10: 64px;
+  --spacing-sp12: 80px;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+/* Desktop values from the Figma typography spec — overrides the mobile-base tokens
+   defined in @theme above. Every text-hN / text-pN utility reads these custom properties
+   at used-value time, so this single switch makes the whole type scale responsive without
+   any component needing its own per-breakpoint token swap. */
+@media (min-width: 768px) {
+  :root {
+    --text-h1: 56px;
+    --text-h1--line-height: 64px;
+    --text-h2: 48px;
+    --text-h2--line-height: 56px;
+    --text-h3: 40px;
+    --text-h3--line-height: 48px;
+    --text-h4: 32px;
+    --text-h4--line-height: 40px;
+    --text-h5: 11px;
+    --text-h5--line-height: 16px;
+    --text-h6: 10px;
+    --text-h6--line-height: 12px;
+    --text-p1: 24px;
+    --text-p1--line-height: 32px;
+    --text-p2: 18px;
+    --text-p2--line-height: 24px;
+    --text-p3: 16px;
+    --text-p3--line-height: 24px;
+    --text-p4: 14px;
+    --text-p4--line-height: 20px;
+  }
+}
+
+:root {
+  /* Actual value is measured and kept in sync by TopNav (scroll/resize/ResizeObserver);
+     this is just the first-paint fallback so the mobile menu doesn't jump once JS runs. */
+  --navbar-bottom: 74px;
+}
+
+/* Investment calculator slider — native <input type="range"> restyled to match Figma. */
+input[type="range"].rangde-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 40px;
+  background: transparent;
+  cursor: grab;
+}
+input[type="range"].rangde-slider:active {
+  cursor: grabbing;
+}
+input[type="range"].rangde-slider::-webkit-slider-runnable-track {
+  height: 16px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    #00517a 0%,
+    #00517a var(--fill),
+    rgba(41, 45, 54, 0.08) var(--fill),
+    rgba(41, 45, 54, 0.08) 100%
+  );
+}
+input[type="range"].rangde-slider::-moz-range-track {
+  height: 16px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    #00517a 0%,
+    #00517a var(--fill),
+    rgba(41, 45, 54, 0.08) var(--fill),
+    rgba(41, 45, 54, 0.08) 100%
+  );
+}
+input[type="range"].rangde-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  margin-top: -12px;
+  border-radius: 9999px;
+  background-image: url("/icons/slider-thumb.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+  box-shadow: 0px 4px 8px 0px rgba(3, 21, 56, 0.24);
+  transition: transform 0.1s ease;
+}
+input[type="range"].rangde-slider::-moz-range-thumb {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 9999px;
+  background-image: url("/icons/slider-thumb.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+  box-shadow: 0px 4px 8px 0px rgba(3, 21, 56, 0.24);
+}
+input[type="range"].rangde-slider:active::-webkit-slider-thumb {
+  transform: scale(1.05);
+}
+
+/* Testimonial marquee — continuous CSS loop, no scroll-linking needed so GSAP is skipped. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes marquee-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Layered (rather than global/unlayered) so Tailwind's `@layer utilities` rules — like
+   the `group-hover:[animation-play-state:paused]` hover-to-pause behavior — can still
+   override this shorthand's `animation-play-state` by specificity. Unlayered CSS always
+   wins over layered CSS regardless of specificity, which silently defeated that utility. */
+@layer utilities {
+  .animate-marquee {
+    animation: marquee 240s linear infinite; /* 8 copies: 4× the distance, same speed */
+  }
+  .animate-marquee-reverse {
+    animation: marquee-reverse 240s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee,
+    .animate-marquee-reverse {
+      animation: none;
+    }
+  }
+}
+
+/* Opportunities "live" signal (components/sections/opportunities/LiveSignal.tsx). */
+@keyframes live-signal-arc {
+  0%, 100% { opacity: 0.18; }
+  30%, 60% { opacity: 1; }
+}
+@keyframes live-signal-dot {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.82); }
+}
+.live-signal__arc { animation: live-signal-arc 1.6s ease-in-out infinite; }
+.live-signal__arc--2 { animation-delay: 0.25s; }
+.live-signal__dot { transform-box: fill-box; transform-origin: center; animation: live-signal-dot 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .live-signal__arc, .live-signal__dot { animation: none; opacity: 1; }
+}
+
+/* Dotted lines drawn as a dot pattern rather than text-decoration/border "dotted": the
+   browser's dotted styles start the pattern wherever the box starts (so the underline began
+   a little before the "S" of "See how it works") and give no control over spacing. Here the
+   first dot sits exactly at the left edge, and `round` fits a whole number of dots. Colour
+   comes from `currentColor` (set it with a text colour utility); the underline can take its own
+   via --dot-color. */
+.dot-underline {
+  padding-bottom: 6px;
+  background-image: radial-gradient(circle at 1px 1px, var(--dot-color, currentColor) 1px, transparent 1.25px);
+  background-size: 4px 2px;
+  background-repeat: round no-repeat;
+  background-position: left bottom;
+}
+.dot-rule {
+  height: 2px;
+  background-image: radial-gradient(circle at 1px 1px, currentColor 1px, transparent 1.25px);
+  background-size: 7px 2px;
+  background-repeat: round no-repeat;
+}
+
+/* Carousel indicator: the active dot's fill runs for the auto-advance interval. */
+@keyframes dot-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}

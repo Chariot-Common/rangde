@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rang De — WhatsApp videos</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Parkinsans:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* Vertical 1080x1920 videos for WhatsApp Status / Reels. Every frame is drawn by
+     render(t) from the time alone (no CSS timelines), so frame capture is exact. */
+  :root{ --ink:#292D36; --green-dark:#3A6E0C; --green-bright:#62AF1D; --lime:#9BDD5A; --primary:#0DAADE; --blue-deep:#00517A; --cream:#F7F3ED; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ width:1080px; height:1920px; overflow:hidden; background:#000; font-family:Inter, sans-serif; }
+  #v{ position:relative; width:1080px; height:1920px; overflow:hidden; }
+  .abs{ position:absolute; }
+  .eyebrow{ font-family:Parkinsans, Inter, sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.14em; }
+  .cta{ display:flex; align-items:center; justify-content:space-between; border-radius:32px; background:var(--primary); color:#fff; font-weight:800; }
+  .chip{ display:inline-flex; align-items:center; border-radius:999px; font-weight:700; white-space:nowrap; }
+  img.logo{ width:auto; }
+</style>
+</head>
+<body>
+<div id="v"></div>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+<script>
+/* ---------- timing helpers ---------- */
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const outCubic = x => 1 - Math.pow(1 - x, 3);
+const inOut = x => x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3) / 2;
+/** 0→1 progress of [t0, t1], eased. */
+const p = (t, t0, t1, e = outCubic) => e(clamp((t - t0) / (t1 - t0)));
+/** in at [a,b], out at [c,d] — returns visibility 0..1 */
+const win = (t, a, b, c, d) => Math.min(p(t, a, b), 1 - p(t, c, d, x => x));
+const set = (el, s) => Object.assign(el.style, s);
+/** Fade+rise: v in 0..1 */
+const rise = (el, v, dy = 40) => set(el, { opacity: v, transform: `translateY(${(1 - v) * dy}px)`, filter: v < 1 ? `blur(${(1 - v) * 8}px)` : 'none' });
+
+const IMG = (f, w, h, extra = 'fit=crop&crop=faces') => `https://rangde.imgix.net/bImg/${f}?auto=compress,format&w=${w}&h=${h}&${extra}`;
+const ICON = {
+  shield: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2.2 2.2L15.5 10"/>',
+  people: '<path d="M9 7a4 4 0 1 0 8 0a4 4 0 1 0-8 0"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M19 8v6m3-3h-6"/>',
+  calendar: '<path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm12-4v4M8 3v4m-4 4h16"/><path d="M8 15h2v2H8z"/>',
+  chart: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+};
+const icon = (n, size, color) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[n]}</svg>`;
+
+/* Shared end card (cream sheet that slides up). */
+function endCardHTML(title, sub){
+  return `<div id="end" class="abs" style="inset:0;background:var(--cream);padding:150px 80px 160px;display:flex;flex-direction:column;align-items:center;text-align:center">
+    <img class="logo" src="logo.svg" style="height:150px;margin-top:180px">
+    <p id="endT" style="margin-top:90px;font-size:92px;line-height:100px;font-weight:800;letter-spacing:-.03em;color:var(--ink)">${title}</p>
+    <p id="endS" style="margin-top:36px;font-size:40px;line-height:54px;font-weight:600;color:rgba(41,45,54,.64)">${sub}</p>
+    <div id="endC" class="cta" style="margin-top:auto;width:100%;height:136px;padding:0 56px;font-size:52px">rangde.in<svg width="60" height="60"><use href="#arrow"/></svg></div>
+    <p style="margin-top:36px;font-size:28px;color:rgba(41,45,54,.5);font-weight:500">RBI-registered NBFC-P2P · Investments carry risk; returns are not guaranteed.</p>
+  </div>`;
+}
+function renderEnd(t, start){
+  const end = document.getElementById('end');
+  const s = p(t, start, start + .7, inOut);
+  set(end, { transform: `translateY(${(1 - s) * 1920}px)` });
+  rise(document.getElementById('endT'), p(t, start + .4, start + 1.1));
+  rise(document.getElementById('endS'), p(t, start + .6, start + 1.3));
+  rise(document.getElementById('endC'), p(t, start + .8, start + 1.5));
+}
+
+/* =================== 1. Meet Rekha (12s) =================== */
+const REKHA = {
+  duration: 12,
+  build(){
+    return `
+      <img id="bg" class="abs" src="${IMG('Rekha-42-img.jpg', 1188, 2112)}" style="inset:0;width:1080px;height:1920px;object-fit:cover;transform-origin:50% 35%">
+      <div class="abs" style="inset:0;background:linear-gradient(to bottom, rgba(0,0,0,.4) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,.15) 45%, rgba(0,0,0,.88) 80%)"></div>
+      <div id="chip" class="abs chip" style="top:130px;left:72px;gap:16px;background:#fff;padding:14px 30px 14px 18px">
+        <img class="logo" src="logo.svg" style="height:52px"><span style="font-size:28px;color:var(--ink)">Entrepreneur of the week</span></div>
+      <div id="l1" class="abs" style="left:72px;right:72px;bottom:430px;color:#fff">
+        <p class="eyebrow" style="font-size:30px;color:rgba(255,255,255,.8)">Udaipur, Rajasthan</p>
+        <p style="margin-top:20px;font-size:104px;line-height:110px;font-weight:800;letter-spacing:-.03em">Meet <span style="color:var(--lime)">Rekha</span>.<br>She runs a grocery store.</p></div>
+      <div id="l2" class="abs" style="left:72px;right:72px;bottom:430px;color:#fff">
+        <p style="font-size:96px;line-height:104px;font-weight:800;letter-spacing:-.03em">She needs funds to keep it <span style="color:var(--lime)">well stocked.</span></p>
+        <div class="chip" style="margin-top:44px;background:rgba(255,255,255,.16);color:#fff;font-size:34px;padding:18px 32px">Her goal: ₹1,00,000</div></div>
+      <div id="l3" class="abs" style="left:72px;right:72px;bottom:400px;color:#fff">
+        <p style="font-size:96px;line-height:104px;font-weight:800;letter-spacing:-.03em">Be part of <span style="color:var(--lime)">her story.</span></p>
+        <p style="margin-top:28px;font-size:44px;line-height:58px;font-weight:500;color:rgba(255,255,255,.85)">Get repaid every month, with returns.</p>
+        <div style="display:flex;gap:16px;margin-top:40px"><span class="chip" style="background:#fff;color:var(--ink);font-size:32px;padding:18px 30px">Up to 8.25% p.a.</span><span class="chip" style="background:#fff;color:var(--ink);font-size:32px;padding:18px 30px">12 months</span></div></div>
+      ${endCardHTML('Meet Rekha on rangde.in', 'India’s first social investment platform. 31,667 entrepreneurs backed.')}`;
+  },
+  render(t){
+    set(document.getElementById('bg'), { transform: `scale(${1.1 - .1 * p(t, 0, 9.6, x => x)})` });
+    rise(document.getElementById('chip'), win(t, .2, .9, 9.2, 9.6), 20);
+    rise(document.getElementById('l1'), win(t, .5, 1.4, 3.4, 3.9));
+    rise(document.getElementById('l2'), win(t, 4.0, 4.9, 6.6, 7.1));
+    rise(document.getElementById('l3'), win(t, 7.2, 8.1, 9.6, 9.9));
+    renderEnd(t, 9.5);
+  },
+};
+
+/* =================== 2. How Rang De works in 15 seconds =================== */
+const STEPS = [
+  { icon: 'shield',   title: 'Every entrepreneur is checked',  text: 'Verified on the ground by our partners, not through paperwork.' },
+  { icon: 'people',   title: 'You choose who to support',      text: 'Read their story and see what their business needs.' },
+  { icon: 'calendar', title: 'Start small',                     text: 'From ₹500. Collected on the 1st or 15th of the month, as per RBI rules.' },
+  { icon: 'chart',    title: 'Get repaid every month',         text: 'Your money comes back with returns of up to 8.5% p.a.' },
+];
+const FACES = ['Rekha-42-img.jpg', 'durgamanawar01-img.jpg', 'manawrmonika037-img.jpg', 'Vijay-004-img.jpg', '10020497-img.jpg', 'nitin-jadhav-img.jpg'];
+const HOW = {
+  duration: 15,
+  build(){
+    const steps = STEPS.map((s, i) => `
+      <div id="s${i}" class="abs" style="left:80px;right:80px;top:640px">
+        <div style="display:flex;align-items:center;gap:28px">
+          <div id="ico${i}" style="width:180px;height:180px;border-radius:48px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 50px rgba(41,45,54,.12)">${icon(s.icon, 96, '#3A6E0C')}</div>
+          <span class="eyebrow" style="font-size:34px;color:rgba(41,45,54,.5)">Step ${i + 1} of 4</span>
+        </div>
+        <p style="margin-top:64px;font-size:110px;line-height:116px;font-weight:800;letter-spacing:-.03em;color:var(--ink)">${s.title}</p>
+        <p style="margin-top:36px;font-size:46px;line-height:62px;font-weight:500;color:rgba(41,45,54,.68)">${s.text}</p>
+      </div>`).join('');
+    const faces = FACES.map((f, i) => `<img id="f${i}" src="${IMG(f, 300, 300, 'fit=facearea&facepad=2.4')}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:6px solid #fff;box-shadow:0 10px 30px rgba(41,45,54,.18);margin-left:${i ? -28 : 0}px">`).join('');
+    const dots = STEPS.map((_, i) => `<span style="flex:1;height:10px;border-radius:10px;background:rgba(41,45,54,.12);overflow:hidden"><i id="d${i}" style="display:block;height:100%;width:0;background:var(--green-bright)"></i></span>`).join('');
+    return `
+      <div class="abs" style="inset:0;background:radial-gradient(60% 40% at 15% 10%, rgba(98,175,29,.22), transparent 70%), radial-gradient(60% 40% at 90% 95%, rgba(13,170,222,.18), transparent 70%), var(--cream)"></div>
+      <div class="abs" style="top:130px;left:80px;right:80px;display:flex;align-items:center;justify-content:space-between">
+        <img class="logo" src="logo.svg" style="height:96px"><span class="eyebrow" style="font-size:30px;color:rgba(41,45,54,.6)">How Rang De works</span></div>
+      <div class="abs" style="top:330px;left:80px;right:80px;display:flex;gap:14px">${dots}</div>
+      ${steps}
+      <div id="faces" class="abs" style="left:80px;bottom:330px;display:flex">${faces}</div>
+      ${endCardHTML('Start small.', 'Back a rural entrepreneur and get repaid every month. 11,839 social investors already do.')}`;
+  },
+  render(t){
+    const T = 3; // seconds per step
+    STEPS.forEach((_, i) => {
+      const a = .2 + i * T;
+      rise(document.getElementById('s' + i), win(t, a, a + .7, a + T - .35, a + T - .05));
+      const k = p(t, a, a + .6);
+      set(document.getElementById('ico' + i), { transform: `scale(${.7 + .3 * k}) rotate(${(1 - k) * -10}deg)` });
+      document.getElementById('d' + i).style.width = (100 * p(t, a, a + T - .1, x => x)) + '%';
+    });
+    // faces appear on "You choose who to support" and stay until the end card
+    FACES.forEach((_, i) => rise(document.getElementById('f' + i), win(t, 3.3 + i * .12, 3.8 + i * .12, 12.0, 12.3), 30));
+    renderEnd(t, 12.2);
+  },
+};
+
+/* =================== 3. Diwali: gift a livelihood (10s) =================== */
+const DIWALI = {
+  duration: 10,
+  build(){
+    const lamps = [0, 1, 2].map(i => `
+      <div style="position:relative;width:170px;height:210px">
+        <div id="glow${i}" style="position:absolute;left:50%;top:-40px;width:220px;height:220px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle, rgba(255,190,60,.55), rgba(255,160,40,0) 65%)"></div>
+        <div id="fl${i}" style="position:absolute;left:50%;top:0;width:52px;height:96px;transform-origin:50% 100%;border-radius:50% 50% 50% 50% / 62% 62% 38% 38%;background:radial-gradient(circle at 50% 70%, #FFF6C8 0 22%, #FFC63D 40%, #FF8A00 75%);margin-left:-26px"></div>
+        <div style="position:absolute;left:0;bottom:0;width:170px;height:92px;border-radius:0 0 100px 100px;background:linear-gradient(#C8642A,#93401A)"></div>
+        <div style="position:absolute;left:-10px;right:-10px;bottom:78px;height:28px;border-radius:50%;background:#DD7A36"></div>
+      </div>`).join('');
+    const faces = [['Rekha-42-img.jpg', 'Rekha'], ['durgamanawar01-img.jpg', 'Durga'], ['manawrmonika037-img.jpg', 'Monika']].map(([f, n], i) => `
+      <div id="df${i}" style="display:flex;flex-direction:column;align-items:center;gap:18px">
+        <img src="${IMG(f, 440, 440, 'fit=facearea&facepad=2.6')}" style="width:250px;height:250px;border-radius:50%;object-fit:cover;border:10px solid #fff;box-shadow:0 16px 40px rgba(90,42,10,.22)">
+        <span style="font-size:36px;font-weight:700;color:#5A2A0A">${n}</span></div>`).join('');
+    return `
+      <div id="dbg" class="abs" style="inset:0;background:radial-gradient(70% 45% at 50% 32%, #FFF4DA 0%, #FCE7C0 45%, #F2C47F 100%)"></div>
+      <div class="abs" style="top:130px;left:80px;right:80px;display:flex;align-items:center;justify-content:space-between">
+        <img class="logo" src="logo.svg" style="height:96px"><span class="eyebrow" style="font-size:30px;color:rgba(90,42,10,.6)">Happy Diwali</span></div>
+      <div class="abs" style="top:360px;left:0;right:0;display:flex;justify-content:center;gap:70px">${lamps}</div>
+      <p id="h1" class="abs" style="top:690px;left:70px;right:70px;text-align:center;font-size:124px;line-height:128px;font-weight:800;letter-spacing:-.035em;color:#5A2A0A">This Diwali,<br>gift a <span style="color:var(--green-dark)">livelihood.</span></p>
+      <p id="sub" class="abs" style="top:990px;left:110px;right:110px;text-align:center;font-size:46px;line-height:62px;font-weight:600;color:rgba(90,42,10,.82)">Instead of sweets, back a rural entrepreneur in someone’s name, from just ₹500.</p>
+      <div class="abs" style="top:1200px;left:0;right:0;display:flex;justify-content:center;gap:44px">${faces}</div>
+      <div id="dcta" class="abs cta" style="left:70px;right:70px;bottom:190px;height:140px;padding:0 56px;font-size:54px;background:#5A2A0A">Gift a livelihood · rangde.in<svg width="62" height="62"><use href="#arrow"/></svg></div>
+      <p id="dfine" class="abs" style="left:70px;right:70px;bottom:120px;text-align:center;font-size:28px;font-weight:500;color:rgba(90,42,10,.6)">RBI-registered NBFC-P2P · Investments carry risk; returns are not guaranteed.</p>`;
+  },
+  render(t){
+    [0, 1, 2].forEach(i => {
+      const on = p(t, .3 + i * .45, .8 + i * .45);
+      const flick = 1 + .06 * Math.sin(t * 13 + i * 2) + .04 * Math.sin(t * 7.3 + i);
+      set(document.getElementById('fl' + i), { opacity: on, transform: `scale(${on * flick}, ${on * (2 - flick)})` });
+      set(document.getElementById('glow' + i), { opacity: on * (.85 + .15 * Math.sin(t * 5 + i)) });
+    });
+    rise(document.getElementById('h1'), p(t, 1.8, 2.6));
+    rise(document.getElementById('sub'), p(t, 3.0, 3.8));
+    [0, 1, 2].forEach(i => rise(document.getElementById('df' + i), p(t, 4.4 + i * .25, 5.1 + i * .25), 50));
+    rise(document.getElementById('dcta'), p(t, 6.4, 7.1));
+    rise(document.getElementById('dfine'), p(t, 6.8, 7.4), 10);
+  },
+};
+
+const VIDEOS = { rekha: REKHA, how: HOW, diwali: DIWALI };
+const which = new URLSearchParams(location.search).get('v') || 'rekha';
+const V = VIDEOS[which];
+document.getElementById('v').innerHTML = V.build();
+window.DURATION = V.duration;
+window.render = t => V.render(t);
+window.render(0);
+</script>
+</body>
+</html>
