@@ -1,35 +1,42 @@
-// Static content pulled directly from the Figma file (node 212:10083, "home page").
+// Homepage content. Numbers come live from rangde.in (lib/stats.ts); stories and
+// testimonials are cross-checked against rangde.in (see the notes on each).
 
-export const heroStats: Array<
+import type { RangDeStats } from "./stats";
+
+export type HeroStat =
   | { kind: "number"; target: number; format: (n: number) => string; label: string }
-  | { kind: "icon"; icon: string; label: string }
-> = [
-  {
-    kind: "number",
-    target: 29_283,
-    format: (n) => Math.round(n).toLocaleString("en-IN"),
-    label: "Entrepreneurs funded",
-  },
-  {
-    kind: "number",
-    target: 108.08,
-    format: (n) => `₹ ${n.toFixed(2)} Cr`,
-    label: "Total Invested",
-  },
-  { kind: "icon", icon: "/icons/rbi-seal.webp", label: "RBI Regulated" },
-  {
-    kind: "number",
-    target: 11_596,
-    format: (n) => Math.round(n).toLocaleString("en-IN"),
-    label: "Investors aboard",
-  },
-  {
-    kind: "number",
-    target: 99.7,
-    format: (n) => `${n.toFixed(1)}%`,
-    label: "Principle Repaid",
-  },
-];
+  | { kind: "icon"; icon: string; label: string };
+
+/** The hero's proof row, from the live rangde.in numbers (see lib/stats.ts). */
+export function heroStatsFrom(s: RangDeStats): HeroStat[] {
+  return [
+    {
+      kind: "number",
+      target: s.entrepreneurs,
+      format: (n) => Math.round(n).toLocaleString("en-IN"),
+      label: "Entrepreneurs funded",
+    },
+    {
+      kind: "number",
+      target: s.disbursedCr,
+      format: (n) => `₹ ${n.toFixed(2)} Cr`,
+      label: "Loans disbursed",
+    },
+    { kind: "icon", icon: "/icons/rbi-seal.webp", label: "RBI Regulated" },
+    {
+      kind: "number",
+      target: s.investors,
+      format: (n) => Math.round(n).toLocaleString("en-IN"),
+      label: "Investors aboard",
+    },
+    {
+      kind: "number",
+      target: s.principalRepaidPct,
+      format: (n) => `${n.toFixed(1)}%`,
+      label: "Principal repaid",
+    },
+  ];
+}
 
 export interface Story {
   image: string;
@@ -41,8 +48,9 @@ export interface Story {
 }
 
 // The four success stories from rangde.in's "Some of our success stories" (Oct 2026):
-// copy, amount raised, investor count and returns as published there. Photos are still the
-// Figma placeholders — swap in real photos of each entrepreneur when available.
+// copy, amount raised, investor count and returns as published there. Portraits are the
+// entrepreneurs' own photos from that section (rangde.imgix.net/images/page-home/*.png);
+// the wide background photos are scene shots, not of these four people.
 
 export const stories: Story[] = [
   {
@@ -87,24 +95,34 @@ export interface QuoteSegment {
 export interface Testimonial {
   quote: QuoteSegment[];
   name: string;
-  role: string;
-  since: string;
+  /** Title and/or place, as published — omitted when Rang De doesn't show one. */
+  role?: string;
+  /** "Social Investor since …" from their Rang De profile, when public. */
+  since?: string;
   avatar: string;
-  flag: string;
+  /** Country flag, only where the country is on record. */
+  flag?: string;
 }
+
+// Real social investors, cross-checked Oct 2026 against rangde.in: quotes from the
+// Wall of Love (rangde.in/wall-of-love, embed.testimonial.to/w/rangde), titles as shown
+// there, places and "since" from their public Rang De profiles (rangde.in/<profile>) or
+// the homepage investor cards (rangde.in/si-cards). Photos: the Rang De profile photo
+// where public, otherwise the Wall of Love photo. Nothing is filled in that isn't on record.
+const IN = "\u{1F1EE}\u{1F1F3}";
+const US = "\u{1F1FA}\u{1F1F8}";
 
 export const testimonialsRow1: Testimonial[] = [
   {
     quote: [
       { text: "For all of us who benefited financially thanks to a liberalised and growing Indian economy, " },
       { text: "this is a fantastic opportunity to help others who need small capital to grow", emphasized: true },
-      { text: " - not via donations but through contributing to affordable loans." },
+      { text: " - not through donations but through contributing to affordable loans." },
     ],
     name: "Chaitanya Nadkarny",
-    role: "Chartered Accountant, India",
-    since: "Social Investor since Jun 2021",
+    role: "Chairman, STARS Forum",
+    since: "Social Investor since Sep 2019",
     avatar: "/images/testimonials/chaitanya-nadkarny.webp",
-    flag: "\u{1F1E9}\u{1F1EA}",
   },
   {
     quote: [
@@ -113,60 +131,55 @@ export const testimonialsRow1: Testimonial[] = [
       { text: " This translated to ~30,420 days of livelihood in rural India." },
     ],
     name: "Kishor Nayar, PhD, PE",
-    role: "Texas, USA",
-    since: "Social Investor since Jun 2021",
+    role: "Business Director, Xylem · Texas, USA",
+    since: "Social Investor since 2023",
     avatar: "/images/testimonials/kishor-nayar.webp",
-    flag: "\u{1F1EE}\u{1F1F3}",
+    flag: US,
   },
   {
     quote: [
       { text: "It’s humbling to know that " },
-      { text: "my investments have help made an impact", emphasized: true },
-      { text: " on the lives of farmers and rural entrepreneurs across India. Thank you, RangDe , for letting me be a small part of this big change" },
+      { text: "my investments have helped make an impact", emphasized: true },
+      { text: " in the lives of farmers and rural entrepreneurs across India. Thank you, Rang De, for letting me be a small part of this big change." },
     ],
     name: "Ritika Ojha",
-    role: "Chartered Accountant, India",
-    since: "Social Investor since Jun 2021",
+    role: "Senior Business Project Manager",
     avatar: "/images/testimonials/ritika-ojha.webp",
-    flag: "\u{1F1FA}\u{1F1F8}",
   },
   {
     quote: [
-      { text: "I've enabled over 30 individuals, each one contributing to their own dignity and livelihood. " },
-      { text: "You don't need crores to be a social investor.", emphasized: true },
-      { text: " You just need the urge to give back — consistently & consciously." },
+      { text: "Am extremely impressed with the impact that team Rang De have done over the years championing lending for the weakest section of rural India. " },
+      { text: "I feel good that I am able to support women in rural India who are micro entrepreneurs.", emphasized: true },
     ],
-    name: "S. Balasubramanian",
-    role: "Chartered Accountant, India",
-    since: "Social Investor since Jun 2021",
-    avatar: "/images/testimonials/s-balasubramanian.webp",
-    flag: "\u{1F1EE}\u{1F1F3}",
+    name: "Hari Balasubramanian",
+    role: "Angel Investor & Mentor · Karnataka, India",
+    since: "Social Investor since Sep 2019",
+    avatar: "/images/testimonials/hari-balasubramanian.webp",
+    flag: IN,
   },
 ];
 
 export const testimonialsRow2: Testimonial[] = [
   {
     quote: [
-      { text: "First… it’s not a donation, it’s social investment, you get repaid with interest.  Rang De organises and manages micro loans for people. " },
+      { text: "First… it’s not a donation, it’s social investment, you get repaid with interest. Rang De organises and manages micro loans for people. " },
       { text: "Great way to support people who need these loans the most.", emphasized: true },
     ],
     name: "Ajay Jain",
-    role: "Chartered Accountant, India",
-    since: "Social Investor since Jun 2021",
+    role: "Social Investor",
     avatar: "/images/testimonials/ajay-jain.webp",
-    flag: "\u{1F1EF}\u{1F1F5}",
   },
   {
     quote: [
-      { text: "The biggest factor that kept me going is their " },
-      { text: "diligence and their impact partners who make sure that our capital remains safe.", emphasized: true },
-      { text: " I have received every single rupee I have given and more (the interest where applicable)." },
+      { text: "Your efforts are empowering rural people get the credit that they deserve with dignity. " },
+      { text: "I am honoured to be one of your contributors", emphasized: true },
+      { text: " and it gives immense satisfaction to see how it is impacting the lives of others." },
     ],
     name: "Amrudesh Santhanam",
     role: "Engineer, India",
-    since: "Social Investor since Jun 2021",
+    since: "Social Investor since Sep 2019",
     avatar: "/images/testimonials/amrudesh-santhanam.webp",
-    flag: "\u{1F1EE}\u{1F1F3}",
+    flag: IN,
   },
   {
     quote: [
@@ -174,10 +187,10 @@ export const testimonialsRow2: Testimonial[] = [
       { text: "\"socialist by heart and capitalist by brain\".", emphasized: true },
     ],
     name: "Mahesh Avasare",
-    role: "Chartered Accountant, India",
-    since: "Social Investor since Jun 2021",
+    role: "Maharashtra, India",
+    since: "Social Investor since Oct 2023",
     avatar: "/images/testimonials/mahesh-avasare.webp",
-    flag: "\u{1F1EE}\u{1F1F3}",
+    flag: IN,
   },
   {
     quote: [
@@ -186,10 +199,8 @@ export const testimonialsRow2: Testimonial[] = [
       { text: " Their cause resonates with me and I am happy to be a part of this journey." },
     ],
     name: "Shiri Baghar",
-    role: "Founder and Director, India",
-    since: "Social Investor since Jun 2021",
+    role: "Founder & Director, Proteus Technologies",
     avatar: "/images/testimonials/shiri-baghar.webp",
-    flag: "\u{1F1E6}\u{1F1FA}",
   },
 ];
 

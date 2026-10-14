@@ -8,9 +8,10 @@ import { reelCover, reelUrl, reelVideo, reels, type Reel } from "@/data/reels";
 const STRIP = [...reels, ...reels];
 const GAP = 14; // px between cards
 const SPEED = 36; // px per second, auto-scroll
-// about 11.5% of the width on desktop (about seven across); on phones ~40%, so two-and-a-bit
-// reels show at a readable size. A flat, straight strip — every reel upright and the same size.
-const cardWidth = (w: number) => (w < 640 ? w * 0.4 : Math.min(200, Math.max(130, w * 0.115)));
+// about 14.5% of the width on desktop (five or six across, ~210px on a laptop); on phones ~40%,
+// so two-and-a-bit reels show at a readable size. A flat, straight strip — every reel upright
+// and the same size.
+const cardWidth = (w: number) => (w < 640 ? w * 0.4 : Math.min(260, Math.max(150, w * 0.145)));
 
 // Reels whose preview file isn't there (yet) — remembered so hovering doesn't keep asking.
 const missingVideo = new Set<string>();

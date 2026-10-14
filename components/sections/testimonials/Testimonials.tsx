@@ -6,10 +6,12 @@ import { TestimonialMarquee } from "./TestimonialMarquee";
 import { TestimonialCard } from "./TestimonialCard";
 import { SwipeCarousel } from "@/components/ui/SwipeCarousel";
 import { FlagBadge } from "@/components/ui/FlagBadge";
+import { useRangDeStats } from "@/components/providers/StatsProvider";
 
 const allTestimonials = [...testimonialsRow1, ...testimonialsRow2];
 
 export function Testimonials() {
+  const { investors } = useRangDeStats();
   return (
     <section className="mx-2 flex flex-col items-center gap-8 overflow-hidden rounded-[16px] bg-white px-4 py-12 sm:gap-sp9 sm:px-8 sm:py-16 lg:py-sp12">
       <div className="flex flex-col items-center gap-4 pt-sp6 text-center sm:gap-5">
@@ -19,7 +21,7 @@ export function Testimonials() {
           ))}
         </div>
         <h2 className="font-display text-h2 font-bold text-ink">
-          11,596 social investors and counting
+          {investors.toLocaleString("en-IN")} social investors and counting
         </h2>
       </div>
 

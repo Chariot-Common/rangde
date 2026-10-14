@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InvestorsMasonry } from "@/components/sections/testimonials/InvestorsMasonry";
 import { testimonialsRow1, testimonialsRow2 } from "@/lib/content";
+import { getRangDeStats } from "@/lib/stats";
 
 export const metadata: Metadata = {
   title: "Social Investors | Rang De",
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
 
 const allInvestors = [...testimonialsRow1, ...testimonialsRow2];
 
-export default function InvestorsPage() {
+export default async function InvestorsPage() {
+  const { investors } = await getRangDeStats();
   return (
     // The shared root layout itself caps at 1560px now, so this page's own content just
     // fills that — no need to break out of an ancestor here.
@@ -21,7 +23,7 @@ export default function InvestorsPage() {
             ← Back to home
           </Link>
           <h1 className="font-display text-h2 font-bold text-ink">
-            11,596 social investors and counting
+            {investors.toLocaleString("en-IN")} social investors and counting
           </h1>
           <p className="max-w-[640px] font-display text-p2 font-medium text-ink/64">
             Everyday people backing rural entrepreneurs, one loan at a time.

@@ -73,7 +73,7 @@ export function TopNav() {
       }`}
     >
       {/* Mobile/tablet (<768px): logo left-aligned, Sign up / Login and the hamburger on
-          the right. Desktop keeps its original single-row layout, Invest included. */}
+          the right. Desktop keeps its original single-row layout, with Get started first. */}
       <div className="flex items-center justify-between gap-2 md:hidden">
         <div className="flex shrink-0 flex-col items-start">
           <div className="relative h-[36px] w-[46px]">
@@ -106,8 +106,13 @@ export function TopNav() {
         </div>
 
         <div className="flex shrink-0 items-center gap-[8px]">
-          <Button variant="primary" size="sm" className="!px-[16px]">
-            Invest
+          <Button
+            variant="primary"
+            size="sm"
+            className="!px-[16px]"
+            onClick={() => window.location.assign("https://rangde.in/account/signup")}
+          >
+            Get started
           </Button>
           <Button variant="secondary" size="sm" className="!px-[16px]">
             Sign up / Login

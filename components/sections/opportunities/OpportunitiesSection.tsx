@@ -1,4 +1,4 @@
-import { FUND_OPPORTUNITIES, STATE_OPPORTUNITIES, getIndividualOpportunities, uniqueBorrowers } from "@/lib/opportunities";
+import { FUNDS_OPEN, FUND_OPPORTUNITIES, STATE_OPPORTUNITIES, getIndividualOpportunities, uniqueBorrowers } from "@/lib/opportunities";
 import { OpportunitiesTabs } from "./OpportunitiesTabs";
 import { LiveSignal } from "./LiveSignal";
 
@@ -26,7 +26,7 @@ export async function OpportunitiesSection() {
         </h2>
       </div>
 
-      <OpportunitiesTabs individuals={uniqueBorrowers(individuals)} states={STATE_OPPORTUNITIES} funds={FUND_OPPORTUNITIES} />
+      <OpportunitiesTabs individuals={uniqueBorrowers(individuals)} states={STATE_OPPORTUNITIES} funds={FUNDS_OPEN ? FUND_OPPORTUNITIES : []} />
     </section>
   );
 }

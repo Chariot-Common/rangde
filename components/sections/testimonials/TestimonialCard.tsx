@@ -37,8 +37,8 @@ export function TestimonialCard({ testimonial, align, variant = "marquee" }: Tes
           }`}
         >
           <p className="text-ink">{testimonial.name}</p>
-          <p className="text-ink/64">{testimonial.role}</p>
-          <p className="text-ink/64">{testimonial.since}</p>
+          {testimonial.role && <p className="text-ink/64">{testimonial.role}</p>}
+          {testimonial.since && <p className="text-ink/64">{testimonial.since}</p>}
         </div>
 
         <div className="relative h-[64px] w-[64px] shrink-0 overflow-visible rounded-[8px] bg-white">
@@ -55,7 +55,7 @@ export function TestimonialCard({ testimonial, align, variant = "marquee" }: Tes
             fetchPriority="low"
             className="rounded-[8px] object-cover"
           />
-          <FlagBadge flag={testimonial.flag} className="absolute -bottom-[6px] -left-[8px] shadow-[0_1px_3px_rgba(41,45,54,0.2)]" />
+          {testimonial.flag && <FlagBadge flag={testimonial.flag} className="absolute -bottom-[6px] -left-[8px] shadow-[0_1px_3px_rgba(41,45,54,0.2)]" />}
         </div>
       </div>
     </div>

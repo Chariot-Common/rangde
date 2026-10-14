@@ -25,11 +25,15 @@ interface ReferencePoint {
   avatarCount: number;
 }
 
+// Returns use rangde.in's own calculator: "if you lend ₹10,000 you could earn ₹850,
+// considering upto 8.5% returns p.a." — so 8.5% of the amount at every point. The
+// "lives impacted" range at ₹10,000 (3–10) is also rangde.in's; the larger amounts scale it.
+const RATE = 0.085;
 const REFERENCE_POINTS: ReferencePoint[] = [
-  { amount: 10_000, returnMin: 600, returnMax: 1_000, jobsMin: 3, jobsMax: 10, avatarCount: 1 },
-  { amount: 75_000, returnMin: 4_500, returnMax: 5_000, jobsMin: 25, jobsMax: 35, avatarCount: 3 },
-  { amount: 100_000, returnMin: 6_000, returnMax: 10_000, jobsMin: 30, jobsMax: 80, avatarCount: 5 },
-  { amount: 500_000, returnMin: 30_000, returnMax: 40_000, jobsMin: 120, jobsMax: 210, avatarCount: 7 },
+  { amount: 10_000, returnMin: 10_000 * RATE, returnMax: 10_000 * RATE, jobsMin: 3, jobsMax: 10, avatarCount: 1 },
+  { amount: 75_000, returnMin: 75_000 * RATE, returnMax: 75_000 * RATE, jobsMin: 25, jobsMax: 35, avatarCount: 3 },
+  { amount: 100_000, returnMin: 100_000 * RATE, returnMax: 100_000 * RATE, jobsMin: 30, jobsMax: 80, avatarCount: 5 },
+  { amount: 500_000, returnMin: 500_000 * RATE, returnMax: 500_000 * RATE, jobsMin: 120, jobsMax: 210, avatarCount: 7 },
 ];
 
 // Figma's cash icon isn't a count of repeated icons — it's a single icon drawn as a

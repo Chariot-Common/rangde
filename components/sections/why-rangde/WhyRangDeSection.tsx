@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { SourceTip } from "@/components/ui/SourceTip";
+import { STATS_SNAPSHOT as LIVE, roundedPlus } from "@/lib/stats";
 
 export interface CardItem {
   /** Animated icon (IconScout "hover pinch/pulse" pack, animated WebP) — exported at ~3x
@@ -76,10 +77,10 @@ export const cards: Card[] = [
     eyebrow: "Impact",
     heading: "Businesses growing across India, since 2008",
     items: [
-      { icon: "/images/why-rangde-v2/icon-map.webp", text: "65,000+ entrepreneurs supported across 28 states." },
+      { icon: "/images/why-rangde-v2/icon-map.webp", text: `${roundedPlus(LIVE.entrepreneurs)} entrepreneurs backed across ${LIVE.states} states.` },
       {
         icon: "/images/why-rangde-v2/icon-network.webp",
-        text: "15,000+ investors, including many from abroad, earn returns.",
+        text: `${roundedPlus(LIVE.investors)} investors, including ${roundedPlus(LIVE.investorsAbroad)} from abroad, earn returns.`,
       },
       {
         icon: "/images/why-rangde-v2/icon-spinner.webp",

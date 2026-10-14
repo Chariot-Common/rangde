@@ -22,16 +22,16 @@ export function FloatingGetStarted() {
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-[90] px-2 pb-[calc(8px+env(safe-area-inset-bottom))] pt-6 transition-[opacity,translate] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none md:hidden ${
+      className={`pointer-events-none fixed inset-x-2 bottom-[calc(8px+env(safe-area-inset-bottom))] z-[90] transition-[opacity,translate] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none md:hidden ${
         // a gentle rise and fade in (a short 20px lift over 0.7s), and a quicker fade away
-        show ? "translate-y-0 opacity-100 duration-700" : "pointer-events-none translate-y-5 opacity-0 duration-300"
+        show ? "translate-y-0 opacity-100 duration-700" : "translate-y-5 opacity-0 duration-300"
       }`}
       aria-hidden={!show}
     >
       <a
         href={SIGNUP_URL}
         tabIndex={show ? 0 : -1}
-        className="flex h-[52px] w-full items-center justify-center rounded-[8px] bg-primary/72 font-display text-p2 font-bold text-white shadow-[0_8px_24px_rgba(41,45,54,0.12)] backdrop-blur-md active:bg-primary/84"
+        className={`flex h-[52px] w-full items-center justify-center rounded-[8px] bg-primary font-display text-p2 font-bold text-white shadow-[0_6px_20px_rgba(41,45,54,0.16)] active:brightness-95 ${show ? "pointer-events-auto" : ""}`}
       >
         Get started
       </a>

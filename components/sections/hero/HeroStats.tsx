@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useInView } from "motion/react";
 import { useRef } from "react";
-import { heroStats } from "@/lib/content";
+import { heroStatsFrom } from "@/lib/content";
+import { useRangDeStats } from "@/components/providers/StatsProvider";
 import { useAnimatedNumber } from "@/lib/use-animated-number";
 
 const COUNT_UP_DURATION = 1800;
@@ -44,6 +45,7 @@ export function HeroStats({ start }: { start?: boolean } = {}) {
   // Triggers once, the first time the stats row enters the viewport.
   const seen = useInView(ref, { once: true, amount: 0.4 });
   const inView = seen && start !== false;
+  const heroStats = heroStatsFrom(useRangDeStats());
   const rbiIndex = heroStats.findIndex((stat) => stat.kind === "icon");
 
   return (

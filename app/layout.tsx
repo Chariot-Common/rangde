@@ -7,6 +7,8 @@ import { Footer } from "@/components/layout/Footer";
 import { PageLoader } from "@/components/layout/PageLoader";
 import { HowItWorksProvider } from "@/components/how-it-works/HowItWorksContext";
 import { HowItWorksModal } from "@/components/how-it-works/HowItWorksModal";
+import { StatsProvider } from "@/components/providers/StatsProvider";
+import { getRangDeStats } from "@/lib/stats";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,7 +35,9 @@ export const metadata: Metadata = {
     "Rang De bridges the gap between urban investors and rural India, turning investments into livelihoods and livelihoods into returns.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Live headline numbers from rangde.in (refreshed every 10 minutes), shared with every section.
+  const stats = await getRangDeStats();
   return (
     <html
       lang="en"
@@ -41,6 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body>
         <PageLoader />
+        <StatsProvider stats={stats}>
         <HowItWorksProvider>
           <div className="mx-auto flex min-h-screen w-full flex-col overflow-x-clip">
             {/* Normal document flow — scrolls away with the page, unlike the navbar below. */}
@@ -54,6 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <FloatingGetStarted />
           <HowItWorksModal />
         </HowItWorksProvider>
+        </StatsProvider>
       </body>
     </html>
   );

@@ -103,7 +103,7 @@ export function InvestmentSlider() {
               {formatInr(animatedTotalMin)}
             </p>
             <p className="w-full font-display text-p2 font-medium text-ink/64">
-              Repaid to you, @ upto 8% p.a.
+              Repaid to you, @ upto 8.5% p.a.
             </p>
           </div>
         </div>

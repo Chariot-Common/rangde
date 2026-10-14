@@ -1,8 +1,10 @@
+import { STATS_SNAPSHOT as LIVE, roundedPlus } from "@/lib/stats";
+
 /**
  * Durga's problem → answer → impact story, shared by the "Why Rang De?" story variants.
  * Every fact is from her public listing (rangde.in/i/durga-294, Oct 2026); the "nearly half"
  * figure is NABARD RECSS Round 12 (July 2026),
- * and the closing "65,000+ / 28 states / since 2008" are the original section's figures.
+ * and the closing line uses Rang De's live numbers (lib/stats.ts).
  */
 
 export const DURGA = {
@@ -59,4 +61,5 @@ export const TONE = {
   impact: { chip: "bg-green/16 text-green-dark", dot: "bg-green-dark", card: "#EEF3DE" },
 } as const;
 
-export const CLOSING_LINE = { entrepreneurs: "65,000+ entrepreneurs", states: "28 states", since: "2008" };
+// Checked against rangde.in/stats/v2 (counts since the P2P launch in Sep 2019).
+export const CLOSING_LINE = { entrepreneurs: `${roundedPlus(LIVE.entrepreneurs)} entrepreneurs`, states: `${LIVE.states} states` };

@@ -30,11 +30,13 @@ interface Props {
 
 export function OpportunitiesTabs({ individuals, states, funds }: Props) {
   const [tab, setTab] = useState<TabKey>("individuals");
-  const tabs: { key: TabKey; label: string; count: number }[] = [
+  const allTabs: { key: TabKey; label: string; count: number }[] = [
     { key: "individuals", label: "Individuals", count: individuals.length },
     { key: "states", label: "States", count: states.length },
     { key: "funds", label: "Funds", count: funds.length },
   ];
+  // A tab with nothing open (e.g. no funds right now) is hidden.
+  const tabs = allTabs.filter((t) => t.count > 0);
   const activeIndex = tabs.findIndex((t) => t.key === tab);
 
   return (

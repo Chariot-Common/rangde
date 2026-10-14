@@ -40,7 +40,7 @@ export interface FundOpportunity {
   image: string;
 }
 
-const LISTINGS_URL = "https://rangde.in/invest-j?partial=true&category=all&page=0&size=40";
+const LISTINGS_URL = "https://rangde.in/invest-j?partial=true&category=all&page=0&size=100";
 
 interface RawLoan {
   borrowerFriendlyKey: string;
@@ -103,14 +103,14 @@ export function uniqueBorrowers(items: IndividualOpportunity[]): IndividualOppor
   });
 }
 
-/** rangde.in/invest/state, captured 6 Oct 2026 (no public feed for these). */
+/** rangde.in/invest/state, re-checked 14 Oct 2026 (no public feed for these). */
 export const STATE_OPPORTUNITIES: StateOpportunity[] = [
   {
     name: "Assam",
     slug: "assam",
     sectors: "Farming, Animal husbandry, Fisheries",
     investors: "6.1K",
-    invested: "₹16.48 Cr",
+    invested: "₹16.52 Cr",
     investees: "5.1K",
     image: "https://rangde.imgix.net/images/state-bg/assam.jpg",
   },
@@ -126,7 +126,7 @@ export const STATE_OPPORTUNITIES: StateOpportunity[] = [
   {
     name: "Maharashtra",
     slug: "maharashtra",
-    sectors: "Farming, Animal husbandry",
+    sectors: "Farming, Others, Animal husbandry",
     investors: "4.2K",
     invested: "₹7.63 Cr",
     investees: "1.9K",
@@ -147,6 +147,10 @@ export const STATE_OPPORTUNITIES: StateOpportunity[] = [
 export const STATE_TERMS = { returnsUpTo: "8.5%", tenureMonths: "1–24" };
 
 /** rangde.in/invest/fund, captured 6 Oct 2026. */
+/** rangde.in/invest/fund shows no open funds as of 14 Oct 2026 ("you've funded every
+ * borrower") — flip this back on when the Rang De Fund reopens. */
+export const FUNDS_OPEN = false;
+
 export const FUND_OPPORTUNITIES: FundOpportunity[] = [
   {
     name: "Rang De Fund",

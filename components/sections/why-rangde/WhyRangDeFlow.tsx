@@ -22,7 +22,7 @@ const TINT: Record<string, { bg: string; eyebrow: string; ring: string; arrow: s
   Impact: { bg: "bg-[#FFF5E6]", eyebrow: "text-[#B86E00]", ring: "border-[#B86E00]/12", arrow: "text-[#B86E00]/40" },
 };
 
-/** Bold the first figure in a sentence (11%, 8.5% p.a., 65,000+ …). */
+/** Bold the first figure in a sentence (11%, 8.5% p.a., 31,700+ …). */
 function emphasise(text: string): ReactNode {
   const m = text.match(/\d[\d,.]*(?:%|\+)?(?: p\.a\.)?/);
   if (!m || m.index === undefined) return text;

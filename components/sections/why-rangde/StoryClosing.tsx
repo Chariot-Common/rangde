@@ -1,6 +1,6 @@
 import { CLOSING_LINE, DURGA } from "./durgaStory";
 
-/** "Durga is one of 65,000+…" bar with the two CTAs — shared by the story variants. */
+/** "Durga is one of 31,700+…" bar with the two CTAs — shared by the story variants. */
 export function StoryClosing({ className = "" }: { className?: string }) {
   return (
     <div
@@ -8,7 +8,7 @@ export function StoryClosing({ className = "" }: { className?: string }) {
     >
       <p className="font-display text-p2 font-medium text-ink/80">
         Durga is one of <b className="font-bold text-ink">{CLOSING_LINE.entrepreneurs}</b> across{" "}
-        <b className="font-bold text-ink">{CLOSING_LINE.states}</b> Rang De has supported since {CLOSING_LINE.since}.
+        <b className="font-bold text-ink">{CLOSING_LINE.states}</b> Rang De has backed.
       </p>
       <div className="flex shrink-0 flex-wrap items-center justify-center gap-3">
         <a

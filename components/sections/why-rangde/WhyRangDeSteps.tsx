@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRef, type ReactNode } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
+import { STATS_SNAPSHOT as LIVE, roundedPlus } from "@/lib/stats";
 
 /**
  * "Why Rang De?" — three numbered steps joined by a dashed line, told as one story in the
@@ -168,12 +169,12 @@ function ImpactMock() {
           </span>
         ))}
       </div>
-      <p className="relative mt-3 font-display text-[44px] font-extrabold leading-[48px] tracking-[-1px] text-green-dark">65,000+</p>
-      <p className="relative font-display text-p4 font-semibold text-ink/72">entrepreneurs supported</p>
+      <p className="relative mt-3 font-display text-[44px] font-extrabold leading-[48px] tracking-[-1px] text-green-dark">{roundedPlus(LIVE.entrepreneurs)}</p>
+      <p className="relative font-display text-p4 font-semibold text-ink/72">entrepreneurs backed</p>
       <div className="relative mt-4 flex items-center gap-3 rounded-full bg-white/80 px-4 py-1.5 font-display text-[12px] font-semibold text-ink/72">
-        <span><b className="font-bold text-ink">28</b> states</span>
+        <span><b className="font-bold text-ink">{LIVE.states}</b> states</span>
         <span className="size-[3px] rounded-full bg-ink/32" />
-        <span><b className="font-bold text-ink">15,000+</b> investors</span>
+        <span><b className="font-bold text-ink">{roundedPlus(LIVE.investors)}</b> investors</span>
       </div>
     </div>
   );
@@ -192,7 +193,7 @@ const STEPS = [
   },
   {
     title: "Businesses grow, impact spreads",
-    text: "Entrepreneurs repay every month and investors earn returns, so the money goes on to fund the next business. So far, that's 65,000+ entrepreneurs across 28 states.",
+    text: `Entrepreneurs repay every month and investors earn returns, so the money goes on to fund the next business. So far, that's ${roundedPlus(LIVE.entrepreneurs)} entrepreneurs across ${LIVE.states} states.`,
     mock: <ImpactMock />,
   },
 ];

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
+import { STATS_SNAPSHOT as LIVE, roundedPlus } from "@/lib/stats";
 
 /**
  * "Why Rang De?" — version C, told through one real entrepreneur. Every fact about Durga
@@ -162,8 +163,8 @@ export function WhyRangDeStory() {
           className="flex w-full flex-col items-center gap-5 rounded-[16px] bg-white px-6 py-6 text-center shadow-[0_4px_16px_rgba(41,45,54,0.08)] sm:flex-row sm:justify-between sm:text-left"
         >
           <p className="font-display text-p2 font-medium text-ink/80">
-            Durga is one of <b className="font-bold text-ink">65,000+ entrepreneurs</b> across{" "}
-            <b className="font-bold text-ink">28 states</b> Rang De has supported since 2008.
+            Durga is one of <b className="font-bold text-ink">{roundedPlus(LIVE.entrepreneurs)} entrepreneurs</b> across{" "}
+            <b className="font-bold text-ink">{LIVE.states} states</b> Rang De has backed.
           </p>
           <div className="flex shrink-0 flex-wrap items-center justify-center gap-3">
             <a
