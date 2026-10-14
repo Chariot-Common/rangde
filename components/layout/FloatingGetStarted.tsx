@@ -31,7 +31,7 @@ export function FloatingGetStarted() {
       <a
         href={SIGNUP_URL}
         tabIndex={show ? 0 : -1}
-        className={`flex h-[52px] w-full items-center justify-center rounded-[8px] bg-primary font-display text-p2 font-bold text-white shadow-[0_6px_20px_rgba(41,45,54,0.16)] active:brightness-95 ${show ? "pointer-events-auto" : ""}`}
+        className={`flex h-[52px] w-full items-center justify-center rounded-[8px] bg-primary/72 font-display text-p2 font-bold text-white shadow-[0_8px_24px_rgba(41,45,54,0.12)] backdrop-blur-md active:bg-primary/84 ${show ? "pointer-events-auto" : ""}`}
       >
         Get started
       </a>
