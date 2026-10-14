@@ -49,7 +49,8 @@ export interface Story {
 
 // The four success stories from rangde.in's "Some of our success stories" (Oct 2026):
 // copy, amount raised, investor count and returns as published there. Portraits are the
-// entrepreneurs' own photos from that section (rangde.imgix.net/images/page-home/*.png);
+// entrepreneurs’ own photos from that section (rangde.imgix.net/images/page-home/*.png,
+// published as circles — cropped to the square inside the circle for these cards);
 // the wide background photos are scene shots, not of these four people.
 
 export const stories: Story[] = [

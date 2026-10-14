@@ -51,8 +51,7 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
           src={story.avatar}
           alt=""
           size={80}
-          // round: rangde.in publishes these entrepreneurs' photos as circular portraits
-          radius={40}
+          radius={8}
           borderClassName="border-2 border-white"
           className="z-10"
           eager={loading === "eager"}
