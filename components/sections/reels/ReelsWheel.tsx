@@ -13,7 +13,7 @@ const SPEED = 36; // px per second, auto-scroll
 // (h = the strip's height), so a short laptop screen doesn't crop them. A flat, straight
 // strip — every reel upright and the same size.
 const cardWidth = (w: number, h: number) =>
-  Math.min(w < 640 ? w * 0.4 : Math.min(340, Math.max(170, w * 0.19)), ((h - 40) * 9) / 16);
+  Math.min(w < 640 ? w * 0.4 : Math.min(360, Math.max(170, w * 0.19)), ((h - 40) * 9) / 16);
 
 // Reels whose preview file isn't there (yet) — remembered so hovering doesn't keep asking.
 const missingVideo = new Set<string>();
@@ -74,7 +74,7 @@ function ReelCard({ reel, onOpen, onHover }: { reel: Reel; onOpen: (r: Reel) => 
 }
 
 /** Plays the reel right here, through Instagram's own embed, instead of sending people off-site. */
-function ReelDialog({ reel, onClose }: { reel: Reel | null; onClose: () => void }) {
+export function ReelDialog({ reel, onClose }: { reel: Reel | null; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const d = ref.current;
@@ -217,7 +217,7 @@ export function ReelsWheel() {
   };
 
   return (
-    <section className="mx-2 flex flex-col items-center overflow-hidden rounded-[16px] bg-[#F7F3ED] pb-6 pt-10 sm:h-[calc(100svh-var(--navbar-bottom))] sm:min-h-[600px] sm:pb-0 sm:pt-14 lg:pt-16">
+    <section className="mx-2 flex flex-col items-center overflow-hidden rounded-[16px] bg-white pb-6 pt-10 sm:h-[calc(100svh-var(--navbar-bottom))] sm:min-h-[600px] sm:pb-0 sm:pt-14 lg:h-[896px] lg:pt-20">
       <h2 className="px-4 text-center font-display text-h3 font-bold text-ink">
         Real people, real businesses,
         <br />

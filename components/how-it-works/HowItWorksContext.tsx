@@ -9,7 +9,9 @@ interface HowItWorksContextValue {
   sessionId: number;
   /** Step the overlay opens at (0-based) — lets a CTA deep-link to a specific step. */
   initialStep: number;
-  open: (step?: number) => void;
+  /** Screen rect of the button that opened the overlay, if any — the modal grows out of it. */
+  origin: DOMRect | null;
+  open: (step?: number, origin?: DOMRect) => void;
   close: () => void;
 }
 
@@ -24,13 +26,15 @@ export function HowItWorksProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState(0);
   const [initialStep, setInitialStep] = useState(0);
-  const open = useCallback((step = 0) => {
+  const [origin, setOrigin] = useState<DOMRect | null>(null);
+  const open = useCallback((step = 0, from?: DOMRect) => {
     setInitialStep(step);
+    setOrigin(from ?? null);
     setIsOpen(true);
     setSessionId((id) => id + 1);
   }, []);
   const close = useCallback(() => setIsOpen(false), []);
-  const value = useMemo(() => ({ isOpen, sessionId, initialStep, open, close }), [isOpen, sessionId, initialStep, open, close]);
+  const value = useMemo(() => ({ isOpen, sessionId, initialStep, origin, open, close }), [isOpen, sessionId, initialStep, origin, open, close]);
 
   return <HowItWorksContext.Provider value={value}>{children}</HowItWorksContext.Provider>;
 }

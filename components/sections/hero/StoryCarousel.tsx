@@ -171,6 +171,7 @@ export function StoryCarousel() {
       <SwipeCarousel
         items={stories}
         peek
+        accent="green"
         autoAdvanceMs={3000}
         ariaLabel="Rural entrepreneur stories"
         // Only the first card is visible on load, so only it is fetched up front; the

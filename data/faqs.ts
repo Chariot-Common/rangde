@@ -6,6 +6,8 @@
 export interface Faq {
   question: string;
   answer: string;
+  /** An illustration that explains the answer, shown in the FAQ pop-up (Version B). */
+  illustration?: string;
 }
 
 export interface FaqGroup {
@@ -106,4 +108,36 @@ export const faqGroups: FaqGroup[] = [
       },
     ],
   },
+];
+
+const find = (question: string) => {
+  const faq = faqGroups.flatMap((g) => g.faqs).find((f) => f.question === question);
+  if (!faq) throw new Error(`FAQ not found: ${question}`);
+  return faq;
+};
+
+/**
+ * Version B's FAQ: twelve questions, in the order asked for in the Figma notes (node 2479:897). Two of them reword a question for the strip but keep rangde.in's
+ * answer verbatim: "Are returns guaranteed?" uses the answer to "How does Rang De ensure that I
+ * get my money back?" (it carries the RBI line that repayments cannot be guaranteed), and "What
+ * is Rang De's revenue model?" uses the answer to "How does Rang De sustain itself?" (copied from
+ * rangde.in/faqs on 2026-10-28).
+ */
+export const ideaFaqs: Faq[] = [
+  { question: "Are returns guaranteed?", answer: find("How does Rang De ensure that I get my money back?").answer },
+  {
+    question: "What is Rang De's revenue model?",
+    answer:
+      "Rang De has adopted a platform as a service business model. We earn our revenues through platform access fees paid by our impact partners. The impact partners pay a one time setup fee at the time of their onboarding and an annual recurring fee. The impact partners pay this fee to gain access to Rang De’s regulated credit platform for their communities.",
+  },
+  find("What is Rang De's mission?"),
+  find("What is unique about Rang De?"),
+  find("Is Rang De a crowdfunding platform?"),
+  find("What are the payment options to make an investment?"),
+  find("What is KYC? Why is it needed?"),
+  find("How much interest will I earn if I invest?"),
+  find("What are the payment options for NRIs and OCI card holders?"),
+  find("I am a foreign national. Can I invest on Rang De?"),
+  find("Can I invest in foreign currency?"),
+  find("How does the Rang De model work?"),
 ];

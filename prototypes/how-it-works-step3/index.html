@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it works · Step 3 · avatar flow prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap">
+<style>
+  /* Standalone prototype for the new Step 3 animation. Lives outside the site on purpose.
+     The stage is the same 374x342 frame the site's How it works stage uses, so it can be
+     dropped in later. World coordinates below are Figma's own (frame 1725:22648, 625x1624). */
+  *{box-sizing:border-box;margin:0}
+  body{font-family:Inter,system-ui,sans-serif;background:#f4f4f1;color:#292d36;display:flex;flex-direction:column;align-items:center;gap:20px;padding:28px 16px 48px}
+  h1{font-size:15px;font-weight:700}
+  .note{font-size:12px;color:rgba(41,45,54,.64);max-width:560px;text-align:center;line-height:1.5}
+  .wrap{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
+  .stageBox{width:374px;height:342px;transform-origin:top center;zoom:1.5}
+  .stage{position:relative;width:374px;height:342px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 14px rgba(41,45,54,.14)}
+  .stage.full{width:312px;height:812px}
+  .world{position:absolute;left:0;top:0;width:625px;height:1624px;transform-origin:0 0;will-change:transform}
+  .abs{position:absolute}
+
+  /* cards */
+  .card{position:absolute;left:144px;width:380px;background:#f1f2f5;border-radius:8px;overflow:hidden;font-feature-settings:"lnum" 1,"pnum" 1}
+  .ttl{padding:24px 0 8px;text-align:center;font-size:11px;line-height:16px;letter-spacing:.88px;text-transform:uppercase;font-weight:500}
+  .row{display:flex;align-items:center;padding:16px;gap:16px;border-top:1px solid rgba(41,45,54,.08)}
+  .row:first-of-type{border-top:0}
+  .row .slot{width:32px;height:32px;border-radius:50%;background:rgba(41,45,54,.07);flex:none}
+  .row .nm{font-size:16px;line-height:24px;font-weight:500}
+  .row .am{margin-left:auto;font-size:16px;line-height:24px;font-weight:500}
+  .bd{background:#e7e7e7;padding:8px 8px 16px}
+  .bd .in{position:relative;height:124px}
+  .bd .tot{position:absolute;left:16px;right:16px;top:8px;height:24px;display:flex;align-items:center;font-weight:700;font-size:16px;line-height:24px}
+  .bd .tot img{width:16px;height:16px;margin-left:4px}
+  .bd .tot .v{margin-left:auto}
+  .bd .sub{position:absolute;left:16px;right:16px;top:40px;font-size:14px;line-height:20px;font-weight:500;color:rgba(41,45,54,.64);display:flex;flex-direction:column;gap:8px}
+  .bd .sub div{display:flex;justify-content:space-between;height:20px}
+  .btn{position:relative;background:#62af1d;color:#fff;text-align:center;padding:16px;transform-origin:50% 50%}
+  .btn b{display:block;font-size:14px;line-height:20px;padding:4px 0}
+  .btn small{display:block;font-size:11px;line-height:16px;letter-spacing:.88px;text-transform:uppercase;font-weight:500;color:#f1f2f5}
+  .btn.pay{display:flex;align-items:center;justify-content:center;height:60px;padding:16px}
+  .btn .tint{position:absolute;inset:0;background:rgba(255,255,255,.18);opacity:0}
+  .btn .paytxt{position:relative;display:flex;align-items:center;gap:6px}
+  .btn .paytick{position:relative;width:15px;height:15px;transform:scale(0)}
+  .btn .paytick img{position:absolute;left:0;top:0;width:15px;height:15px}
+  .btn .paytick svg{position:absolute;left:3.2px;top:4px;width:8.6px;height:6.8px}
+  .amt2{padding:24px 0 8px;text-align:center}
+  .amt2 .big{font-size:24px;line-height:32px;font-weight:700;font-feature-settings:"dlig" 1,"lnum" 1,"pnum" 1}
+  .amt2 .lbl{margin-top:8px;font-size:11px;line-height:16px;letter-spacing:.88px;text-transform:uppercase;font-weight:500}
+  .trioSpace{height:88px}
+
+  /* connectors, chips */
+  svg.lines{position:absolute;left:0;top:0;width:625px;height:1624px;overflow:visible;pointer-events:none}
+  .chip{position:absolute;padding:8px 16px;background:#f1f2f5;border-radius:8px;font-size:11px;line-height:16px;letter-spacing:.88px;text-transform:uppercase;font-weight:700;white-space:nowrap;box-shadow:0 0 0 10px #fff;transform-origin:50% 50%;z-index:40;color:#292d36}
+  .chip .tn{position:absolute;inset:0;border-radius:8px;background:rgba(98,175,29,.30);opacity:0}
+  .chip span{position:relative}
+
+  /* the shared avatars: one set of elements that travels through the whole story */
+  .fav{position:absolute;border-radius:50%;overflow:hidden;background:#a8d8f0;will-change:transform,left,top,width,height}
+  .fav img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .fring{position:absolute;pointer-events:none;overflow:visible}
+
+  /* success */
+  .succ{position:absolute;left:248px;top:1562px;width:173px;height:16px}
+  .succ .badge{position:absolute;left:0;top:1px;width:15px;height:14px;transform:scale(0)}
+  .succ .badge img{position:absolute}
+  .succ .tx{position:absolute;left:0;top:0;width:173px;text-align:center;font-size:11px;line-height:16px;letter-spacing:.88px;text-transform:uppercase;font-weight:700;color:rgba(41,45,54,.8);white-space:nowrap}
+
+  /* dev controls */
+  .ctl{display:flex;flex-direction:column;gap:10px;font-size:12px;width:300px}
+  .ctl .r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .ctl button{font:inherit;font-weight:700;border:0;background:#0daade;color:#fff;border-radius:6px;padding:8px 14px;cursor:pointer}
+  .ctl input[type=range]{flex:1;min-width:160px}
+  .ctl label{display:flex;gap:6px;align-items:center}
+  .ctl .t{font-variant-numeric:tabular-nums;color:rgba(41,45,54,.64)}
+  .marks{display:flex;flex-wrap:wrap;gap:6px}
+  .marks button{background:#e6eef3;color:#292d36;font-weight:500;padding:5px 9px}
+</style>
+</head>
+<body>
+<h1>Step 3 · avatars flow through the story</h1>
+<p class="note">Prototype only (not on the site). The same three avatars lift out of the Confirm card, ride the green line into the Pay card, then ride the line again and fan out along the three branches. Drag the slider to inspect any moment.</p>
+
+<div class="wrap">
+  <div class="stageBox" id="stageBox"><div class="stage" id="stage"><div class="world" id="world"></div></div></div>
+  <div class="ctl">
+    <div class="r"><button id="play">Pause</button><span class="t" id="time">0.00s</span></div>
+    <div class="r"><input id="scrub" type="range" min="0" max="1000" value="0"></div>
+    <div class="r">
+      <label>Speed <select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option></select></label>
+      <label><input type="checkbox" id="full"> Full storyboard</label>
+    </div>
+    <div class="marks" id="marks"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- assets & world layout (Figma coordinates) ---------- */
+const A='../../public/how-it-works/';
+const PEOPLE=[ // order of the list in the Confirm card
+  {key:'rekha',name:'Rekha Bai',amt:'₹5,000',img:A+'s1-av7.webp',row:[176,196.5]},
+  {key:'vijay',name:'Vijay Muwel',amt:'₹2,000',img:A+'s1-av12.webp',row:[176,261]},
+  {key:'monika',name:'Monika',amt:'₹500',img:A+'s1-av3.webp',row:[176,326]},
+];
+const TRIO={vijay:[278,969],rekha:[334,969],monika:[390,969]};          // overlapped, Figma's order: Vijay, Rekha, Monika
+const FINAL={rekha:[235,1502],vijay:[334,1502],monika:[433,1502]};       // 72px rings at the bottom
+const CX=334, SPLIT_Y=1296;
+
+const world=document.getElementById('world');
+world.innerHTML=`
+<svg class="lines" id="lines" viewBox="0 0 625 1624">
+  <path id="l1d" d="M334 582V849" stroke="#cbe0b8" stroke-width="4" fill="none"/>
+  <path id="l1" d="M334 582V849" stroke="#62af1d" stroke-width="4" fill="none"/>
+  <path id="l2d" d="M334 1085V${SPLIT_Y}" stroke="#cbe0b8" stroke-width="4" fill="none"/>
+  <path id="l2" d="M334 1085V${SPLIT_Y}" stroke="#62af1d" stroke-width="4" fill="none"/>
+  <g id="branches"></g>
+</svg>
+
+<div class="card" id="card1" style="top:117px">
+  <div class="ttl">You’re investing in</div>
+  ${PEOPLE.map((p,i)=>`<div class="row" id="row-${p.key}" style="height:${i?64:63}px"><div class="slot" id="slot-${p.key}"></div><div class="nm">${p.name}</div><div class="am">${p.amt}</div></div>`).join('')}
+  <div class="bd"><div class="in">
+    <div class="tot"><span>Total Investment</span><img src="${A}s3-caret.svg" alt=""><span class="v" id="total1">₹7,677</span></div>
+    <div class="sub"><div><span>3 Investments</span><span>₹7,500</span></div><div><span>Compliance Fee (2%)</span><span>₹150</span></div><div><span>GST on Compliance Fee (18%)</span><span>₹27</span></div></div>
+  </div></div>
+  <div class="btn" id="btn1"><div class="tint"></div><b>Confirm Investment</b><small>Payment on <span id="d1" style="display:inline-block">1st May</span></small></div>
+</div>
+
+<div class="chip" id="chip1" style="left:294px;top:709px"><div class="tn"></div><span>01 May</span></div>
+
+<div class="card" id="card2" style="top:849px">
+  <div class="amt2"><div class="big" id="total2">₹7,677</div><div class="lbl">Payment due towards your investment</div></div>
+  <div class="trioSpace"></div>
+  <div class="btn pay" id="btn2"><div class="tint"></div><div class="paytxt"><span class="paytick" id="paytick"><img src="${A}s3-pr-star.svg" alt="" style="filter:brightness(0) invert(1)"><svg viewBox="3.6 5.9 17 12.1"><path d="M10 15.172L19.192 5.979L20.607 7.393L10 18L3.636 11.636L5.05 10.222L10 15.172Z" fill="#3A6E0C"/></svg></span><b style="padding:0">Pay Now</b></div></div>
+</div>
+
+<div class="chip" id="chip2" style="left:294px;top:1244px"><div class="tn"></div><span>02 May</span></div>
+
+<div id="favs"></div>
+<div id="rings"></div>
+
+<div class="succ" id="succ"><span class="badge" id="badge"><img src="${A}s3-ts-star.svg" style="left:.32px;top:.24px;width:14.05px;height:13.89px" alt=""><img src="${A}s3-ts-check.svg" style="left:3.55px;top:5.04px;width:7.25px;height:5.14px" alt=""></span><span class="tx" id="sx">Transfer Successful</span></div>
+`;
+
+/* the branch connectors, in world space (Rekha curves left, Vijay straight, Monika mirrors Rekha) */
+const BR={
+  rekha:`M334 ${SPLIT_Y}C334 ${SPLIT_Y} 334 1353.33 284.5 1382C235 1410.67 235 1468 235 1468`,
+  vijay:`M334 ${SPLIT_Y}L334 1468`,
+  monika:`M334 ${SPLIT_Y}C334 ${SPLIT_Y} 334 1353.33 383.5 1382C433 1410.67 433 1468 433 1468`,
+};
+const NS='http://www.w3.org/2000/svg';
+const branchG=document.getElementById('branches');
+const branch={};
+for(const k in BR){
+  const d=document.createElementNS(NS,'path'); d.setAttribute('d',BR[k]); d.setAttribute('stroke','#cbe0b8'); d.setAttribute('stroke-width','4'); d.setAttribute('fill','none');
+  const p=document.createElementNS(NS,'path'); p.setAttribute('d',BR[k]); p.setAttribute('stroke','#62af1d'); p.setAttribute('stroke-width','4'); p.setAttribute('fill','none');
+  // invisible extended path: the line itself, then straight down to the avatar's centre
+  const ext=document.createElementNS(NS,'path'); ext.setAttribute('d',BR[k]+`L${FINAL[k][0]} ${FINAL[k][1]}`); ext.setAttribute('fill','none'); ext.setAttribute('stroke','none');
+  branchG.append(d,p,ext);
+  const lineLen=p.getTotalLength(), extLen=ext.getTotalLength();
+  p.style.strokeDasharray=lineLen; p.style.strokeDashoffset=lineLen;
+  branch[k]={p,ext,lineLen,extLen};
+}
+const l1=document.getElementById('l1'), l2=document.getElementById('l2');
+const L1=267, L2=SPLIT_Y-1085;
+l1.style.strokeDasharray=L1; l2.style.strokeDasharray=L2;
+
+/* shared avatars + final rings */
+const favs={}, rings={};
+PEOPLE.forEach(p=>{
+  const f=document.createElement('div'); f.className='fav'; f.innerHTML=`<img src="${p.img}" alt="${p.name}">`; document.getElementById('favs').append(f); favs[p.key]=f;
+  const r=document.createElementNS(NS,'svg'); r.setAttribute('class','fring'); r.setAttribute('width','72'); r.setAttribute('height','72'); r.setAttribute('viewBox','0 0 72 72');
+  r.style.left=(FINAL[p.key][0]-36)+'px'; r.style.top=(FINAL[p.key][1]-36)+'px';
+  r.innerHTML=`<circle cx="36" cy="36" r="34" fill="none" stroke="#cbe0b8" stroke-width="4"/><circle class="pr" cx="36" cy="36" r="34" fill="none" stroke="#62af1d" stroke-width="4" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="1" transform="rotate(-90 36 36)"/>`;
+  r.style.opacity=0; document.getElementById('rings').append(r); rings[p.key]=r;
+});
+
+/* ---------- timeline ---------- */
+const T=12.4;                       // seconds, one loop
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const lerp=(a,b,u)=>a+(b-a)*u;
+const E={lin:t=>t,io:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,o:t=>1-Math.pow(1-t,3),i:t=>t*t*t,back:t=>{const c=1.70158,c3=c+1;return 1+c3*Math.pow(t-1,3)+c*Math.pow(t-1,2)}};
+const seg=(t,a,b,e=E.io)=>e(clamp((t-a)/(b-a)));
+
+const CAM=[[0,96],[2.4,150],[3.3,150],[5.5,742],[7.0,742],[9.6,1176],[T,1176]];   // world y at the top of the stage
+function camY(t){for(let i=0;i<CAM.length-1;i++){const[a,ya]=CAM[i],[b,yb]=CAM[i+1];if(t<=b)return lerp(ya,yb,E.io(clamp((t-a)/(b-a))))}return CAM[CAM.length-1][1]}
+
+const ROW_AT=[0.6,0.9,1.2];                 // list rows reveal
+const BTN1=[2.7,3.15];                      // Confirm press
+const FLY1=3.35, FLY1_STAG=0.18, FLY1_DUR=2.1;   // list -> trio
+const BTN2=[6.1,6.6], TICK=[6.5,6.95];      // Pay press, tick
+const FLY2=7.3, FLY2_STAG=0.18, FLY2_DUR=2.4;    // trio -> branches
+const RING=[0.0,0.7];                       // ring draw, after landing
+const ORDER2=['vijay','rekha','monika'];    // left-to-right in the trio, so they leave in that order
+
+/* each flight is ONE continuous curve (tangent-continuous at every join), travelled with ONE easing,
+   so an avatar never stops between "leave the row", "ride the line" and "settle" */
+const mkPath=d=>{const el=document.createElementNS(NS,"path");el.setAttribute("d",d);el.setAttribute("fill","none");el.setAttribute("stroke","none");branchG.append(el);return{el,len:el.getTotalLength()}};
+const FL1={},FL2={};
+PEOPLE.forEach(p=>{
+  const row=p.row,tr=TRIO[p.key],fin=FINAL[p.key];
+  const d1a=`M${row[0]} ${row[1]}C${row[0]+130} ${row[1]} ${CX} 520 ${CX} 640`;               // row -> onto the line, arriving vertically
+  const d1b=d1a+`L${CX} 880`;                                                                    // along the line
+  FL1[p.key]={path:mkPath(d1b+`C${CX} 930 ${tr[0]} 915 ${tr[0]} ${tr[1]}`),join:mkPath(d1a).len,line:mkPath(d1b).len};
+  const e2a=`M${tr[0]} ${tr[1]}C${tr[0]} 1030 ${CX} 1040 ${CX} 1110`;                          // trio -> onto the line
+  const e2b=e2a+`L${CX} ${SPLIT_Y}`;                                                            // down to the split
+  const br=BR[p.key].slice(`M${CX} ${SPLIT_Y}`.length);
+  FL2[p.key]={path:mkPath(e2b+br+`L${fin[0]} ${fin[1]}`),join:mkPath(e2a).len,split:mkPath(e2b).len};
+});
+const smooth=(x)=>{x=clamp(x);return x*x*(3-2*x)};
+const sine=(u)=>.5-Math.cos(Math.PI*clamp(u))/2;                    // gentle ease in/out over the whole trip
+
+function avatarState(p,i,t){
+  const row=p.row,trio=TRIO[p.key],fin=FINAL[p.key],k2=ORDER2.indexOf(p.key);
+  const s1=FLY1+FLY1_STAG*i, s2=FLY2+FLY2_STAG*k2;
+  let x=row[0],y=row[1],size=32,lift=0,ring=0,u1=0,u2=0;
+  if(t<ROW_AT[i]) return {x,y,size,o:0,sc:.6,lift,ring,u1,u2};
+  const o=seg(t,ROW_AT[i],ROW_AT[i]+.35,E.o), sc=lerp(.6,1,seg(t,ROW_AT[i],ROW_AT[i]+.4,E.back));
+  u1=clamp((t-s1)/FLY1_DUR); u2=clamp((t-s2)/FLY2_DUR);
+  if(u1>0&&u2<=0){
+    const f=FL1[p.key], dist=f.path.len*sine(u1), pt=f.path.el.getPointAtLength(dist);
+    x=pt.x;y=pt.y;
+    size=32+10*smooth(dist/f.join)+22*smooth((dist-f.line)/(f.path.len-f.line));
+    lift=Math.sin(Math.PI*Math.min(1,u1*1.12));                       // shadow swells then settles, never toggles
+    ring=smooth((dist-f.line)/(f.path.len-f.line));
+  }
+  if(u2>0){
+    const f=FL2[p.key], dist=f.path.len*sine(u2), pt=f.path.el.getPointAtLength(dist);
+    x=pt.x;y=pt.y;
+    size=64-24*smooth(dist/f.join)+24*smooth((dist-f.split)/(f.path.len-f.split));
+    lift=Math.sin(Math.PI*Math.min(1,u2*1.08));
+    ring=1-smooth(dist/f.join);
+    return {x,y,size,o,sc,lift,ring,u1,u2,dist,split:f.split};
+  }
+  if(u1>=1){ x=trio[0];y=trio[1];size=64;ring=1;lift=0; }
+  return {x,y,size,o,sc,lift,ring,u1,u2};
+}
+
+const $=id=>document.getElementById(id);
+const stage=$('stage'), fullCb=$('full');
+function render(t){
+  const full=fullCb.checked;
+  stage.classList.toggle('full',full);
+  const fade=1-seg(t,T-0.5,T,E.io);
+  world.style.opacity=fade;
+  if(full) world.style.transform='scale(.5)';
+  else { const sc=.78; world.style.transform=`translate(${187-CX*sc}px,${-camY(t)*sc}px) scale(${sc})`; }
+
+  // card 1
+  const c1=seg(t,0,.6,E.o);
+  $('card1').style.opacity=c1; $('card1').style.transform=`translateY(${(1-c1)*14}px)`;
+  PEOPLE.forEach((p,i)=>{const r=$('row-'+p.key); const u=seg(t,ROW_AT[i],ROW_AT[i]+.4,E.o); r.querySelector('.nm').style.opacity=u; r.querySelector('.am').style.opacity=u; r.querySelector('.nm').style.transform=`translateX(${(1-u)*8}px)`;
+    const gone=favs[p.key]&&avatarState(p,i,t).u1>0; $('slot-'+p.key).style.opacity=gone?seg(t,FLY1+FLY1_STAG*i,FLY1+FLY1_STAG*i+.3,E.o):0;});
+  const bd1=seg(t,1.7,2.0,E.o); document.querySelector('#card1 .bd .tot').style.opacity=bd1;
+  document.querySelectorAll('#card1 .sub div').forEach((d,i)=>{const u=seg(t,1.95+.14*i,2.3+.14*i,E.o); d.style.opacity=u; d.style.transform=`translateY(${(1-u)*6}px)`;});
+  $('btn1').style.opacity=seg(t,1.7,2.1,E.o);
+  // Confirm press
+  const press1=seg(t,BTN1[0],BTN1[0]+.14,E.o)-seg(t,BTN1[0]+.14,BTN1[1],E.o);
+  $('d1').style.fontWeight=press1>.05?700:500; $('d1').style.color=`rgba(255,255,255,${.78+.22*press1})`; $('d1').style.transform=`scale(${1+.18*press1})`;
+  $('btn1').style.transform=`scale(${1-.035*press1})`; $('btn1').querySelector('.tint').style.opacity=press1*.9;
+
+  // line 1 follows the lead avatar down
+  const av=PEOPLE.map((p,i)=>({p,i,s:avatarState(p,i,t)}));
+  const lead1=Math.max(...av.map(a=>a.s.u1>0&&a.s.u1<1?a.s.y:(a.s.u1>=1?849:0)));
+  const l1p=clamp((lead1-582)/(849-582));
+  $('l1d').style.opacity=seg(t,3.0,3.5,E.o);
+  l1.style.strokeDashoffset=L1*(1-l1p);
+  // chip 1
+  const mix=u=>`rgb(${[41,45,54].map((c,i)=>Math.round(lerp(c,[58,110,12][i],u))).join(',')})`;
+  const ch1=seg(t,3.0,3.5,E.back), pass1=clamp((lead1-690)/120), pulse1=Math.sin(Math.PI*pass1), tint1=seg(lead1,700,735,E.o);
+  $('chip1').style.opacity=clamp(ch1*2); $('chip1').style.transform=`scale(${lerp(.85,1,clamp(ch1))*(1+.16*pulse1)})`;
+  $('chip1').querySelector('.tn').style.opacity=tint1; $('chip1').style.color=mix(tint1);
+
+  // card 2
+  const c2=seg(t,3.6,4.3,E.o);
+  $('card2').style.opacity=c2; $('card2').style.transform=`translateY(${(1-c2)*16}px)`;
+  const cnt=seg(t,4.4,5.2,E.o); $('total2').textContent='₹'+Math.round(7677*cnt).toLocaleString('en-IN');
+  const press2=seg(t,BTN2[0],BTN2[0]+.16,E.o)-seg(t,BTN2[0]+.16,BTN2[1],E.o);
+  $('btn2').style.transform=`scale(${1-.035*press2})`; $('btn2').querySelector('.tint').style.opacity=press2*.9;
+  const tk=seg(t,TICK[0],TICK[1],E.back); $('paytick').style.transform=`scale(${1.23*tk})`;
+  $('paytick').style.marginLeft=`${-21*(1-clamp(tk))}px`;
+
+  // line 2 + chip 2 + branches
+  const lead2=Math.max(...av.map(a=>a.s.u2>0?a.s.y:0));
+  $('l2d').style.opacity=seg(t,6.9,7.4,E.o);
+  l2.style.strokeDashoffset=L2*(1-clamp((Math.min(lead2,SPLIT_Y)-1085)/L2));
+  const ch2=seg(t,6.8,7.3,E.back), pass2=clamp((lead2-1215)/120), pulse2=Math.sin(Math.PI*pass2), tint2=seg(lead2,1225,1262,E.o);
+  $('chip2').style.opacity=clamp(ch2*2); $('chip2').style.transform=`scale(${lerp(.85,1,clamp(ch2))*(1+.16*pulse2)})`;
+  $('chip2').querySelector('.tn').style.opacity=tint2; $('chip2').style.color=mix(tint2);
+  for(const k in branch){ const b=branch[k]; const s=av.find(a=>a.p.key===k).s;
+    const drawn=s.u2>0?clamp(s.dist-s.split,0,b.lineLen):0; b.p.style.strokeDashoffset=b.lineLen-drawn;
+    b.p.previousSibling.style.opacity=seg(t,6.95,7.45,E.o); }
+
+  // avatars
+  av.forEach(({p,s})=>{
+    const f=favs[p.key]; f.style.left=(s.x-s.size/2)+"px"; f.style.top=(s.y-s.size/2)+"px"; f.style.width=f.style.height=s.size+"px";
+    f.style.opacity=s.o; f.style.transform=`scale(${s.sc})`;
+    const sh=s.lift; f.style.boxShadow=`0 0 0 3px rgba(241,242,245,${s.ring.toFixed(3)}),0 ${(2+6*sh).toFixed(1)}px ${(4+14*sh).toFixed(1)}px rgba(41,45,54,${(.04+.2*sh).toFixed(3)})`;
+    f.style.zIndex=20+ORDER2.indexOf(p.key);                         // fixed: no stacking pops mid-flight
+  });
+  // rings draw once each avatar has landed
+  PEOPLE.forEach(p=>{
+    const s=av.find(a=>a.p===p||a.p.key===p.key).s; const r=rings[p.key]; const k2=ORDER2.indexOf(p.key);
+    const landedAt=FLY2+FLY2_STAG*k2+FLY2_DUR-.05; const u=seg(t,landedAt+RING[0],landedAt+RING[1],E.io);
+    r.style.opacity=t>=landedAt-.05?1:0; r.querySelector('.pr').style.strokeDashoffset=1-u;
+  });
+  // success
+  const lastLanded=FLY2+FLY2_STAG*2+FLY2_DUR+RING[1];
+  const sb=seg(t,lastLanded-.1,lastLanded+.35,E.back); $('badge').style.transform=`scale(${1.23*sb})`;
+  $('sx').style.transform=`translateX(${12*seg(t,lastLanded-.1,lastLanded+.25,E.o)}px)`;
+  $('sx').style.opacity=seg(t,lastLanded-.2,lastLanded+.15,E.o);
+}
+
+/* ---------- player ---------- */
+let t=0, playing=true, speed=1, last=performance.now();
+const scrub=$('scrub'), timeEl=$('time'), playBtn=$('play');
+function frame(now){ const dt=(now-last)/1000; last=now; if(playing){ t=(t+dt*speed)%T; scrub.value=t/T*1000; } timeEl.textContent=t.toFixed(2)+'s'; render(t); requestAnimationFrame(frame); }
+scrub.addEventListener('input',()=>{ t=scrub.value/1000*T; playing=false; playBtn.textContent='Play'; });
+playBtn.addEventListener('click',()=>{ playing=!playing; playBtn.textContent=playing?'Pause':'Play'; last=performance.now(); });
+$('speed').addEventListener('change',e=>speed=+e.target.value);
+document.addEventListener('keydown',e=>{ if(e.code==='Space'){ e.preventDefault(); playBtn.click(); } });
+[['Card 1',1.9],['Confirm',2.9],['Flight 1',4.2],['Card 2',5.6],['Pay',6.5],['Flight 2',8.3],['Landed',9.9],['Done',11.7]].forEach(([n,s])=>{const b=document.createElement('button'); b.textContent=n; b.onclick=()=>{ t=s; playing=false; playBtn.textContent='Play'; scrub.value=t/T*1000; }; $('marks').append(b);});
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

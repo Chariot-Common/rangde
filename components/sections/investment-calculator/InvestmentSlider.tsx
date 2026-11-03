@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Divider } from "@/components/ui/Divider";
 import { useAnimatedNumber } from "@/lib/use-animated-number";
 import {
@@ -31,31 +31,68 @@ const AVATAR_SOURCES = AVATAR_PHOTOS.slice(0, MAX_AVATARS).map(
 );
 
 const TWEEN_MS = 220;
+const GLIDE_MS = 2600;
 
 export function InvestmentSlider() {
-  const [amount, setAmount] = useState(SLIDER_DEFAULT);
+  // Starts at the minimum and glides up to the default the first time the section scrolls into
+  // view, so the numbers visibly come alive. Touching the slider hands control to the visitor.
+  const [amount, setAmount] = useState(SLIDER_MIN);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const touched = useRef(false);
+  const [gliding, setGliding] = useState(false);
+  const inView = useInView(wrapRef, { once: true, amount: 0.6 });
+  const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (!inView || touched.current) return;
+    let raf = 0;
+    if (reduceMotion) {
+      raf = requestAnimationFrame(() => setAmount(SLIDER_DEFAULT));
+      return () => cancelAnimationFrame(raf);
+    }
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      if (touched.current) {
+        setGliding(false);
+        return;
+      }
+      const u = Math.min(1, (now - t0) / GLIDE_MS);
+      const eased = 1 - Math.pow(1 - u, 3);
+      setAmount(Math.round((SLIDER_MIN + (SLIDER_DEFAULT - SLIDER_MIN) * eased) / SLIDER_STEP) * SLIDER_STEP);
+      setGliding(u < 1);
+      if (u < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, reduceMotion]);
 
   // investmentAmount (the slider) is the single source of truth — every displayed value
   // below is derived from it, not stored independently.
   const outcome = useMemo(() => calculateInvestmentOutcome(amount), [amount]);
 
-  const animatedAmount = useAnimatedNumber(amount, { duration: TWEEN_MS });
-  const animatedTotalMin = useAnimatedNumber(outcome.totalMin, { duration: TWEEN_MS });
-  const animatedJobsMin = useAnimatedNumber(outcome.jobsMin, { duration: TWEEN_MS });
-  const animatedJobsMax = useAnimatedNumber(outcome.jobsMax, { duration: TWEEN_MS });
+  const animatedAmountTween = useAnimatedNumber(amount, { duration: TWEEN_MS });
+  const animatedTotalMinTween = useAnimatedNumber(outcome.totalMin, { duration: TWEEN_MS });
+  const animatedJobsMinTween = useAnimatedNumber(outcome.jobsMin, { duration: TWEEN_MS });
+  const animatedJobsMaxTween = useAnimatedNumber(outcome.jobsMax, { duration: TWEEN_MS });
+
+  // While the glide runs, show the live values directly; the 220ms tween would trail the slider.
+  const animatedAmount = gliding ? amount : animatedAmountTween;
+  const animatedTotalMin = gliding ? outcome.totalMin : animatedTotalMinTween;
+  const animatedJobsMin = gliding ? outcome.jobsMin : animatedJobsMinTween;
+  const animatedJobsMax = gliding ? outcome.jobsMax : animatedJobsMaxTween;
 
   const percent = ((amount - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100;
 
   return (
-    <div className="flex w-full flex-col items-center gap-8 px-4 sm:gap-sp9">
+    <div ref={wrapRef} className="flex w-full flex-col items-center gap-8 px-4 sm:gap-sp9">
       <div className="flex w-full max-w-[370px] flex-col items-center gap-[4px] text-center">
-        <p className="w-full font-display text-p1 font-bold text-ink/64">For example, if you invest</p>
-        <p className="w-full font-display text-[28px] font-bold leading-[32px] text-blue-highlight md:text-h3 md:leading-[48px]">
+        <p className="w-full font-display text-p1 font-medium text-ink/80">For example, if you invest</p>
+        <p className="w-full font-display text-[28px] font-bold leading-[32px] text-green-dark md:text-h3 md:leading-[48px]">
           {formatInr(animatedAmount)}
         </p>
       </div>
 
-      <div className="w-full max-w-[970px]">
+      <div className="-mb-[31px] -mt-6 w-full max-w-[970px] max-sm:mb-0 max-sm:mt-0">
         <input
           type="range"
           className="rangde-slider"
@@ -63,7 +100,12 @@ export function InvestmentSlider() {
           max={SLIDER_MAX}
           step={SLIDER_STEP}
           value={amount}
-          onChange={(e) => setAmount(Number(e.target.value))}
+          onPointerDown={() => (touched.current = true)}
+          onKeyDown={() => (touched.current = true)}
+          onChange={(e) => {
+            touched.current = true;
+            setAmount(Number(e.target.value));
+          }}
           style={{ ["--fill" as string]: `${percent}%` }}
           aria-label="Investment amount"
           aria-valuetext={formatInr(amount)}
@@ -99,10 +141,10 @@ export function InvestmentSlider() {
             </AnimatePresence>
           </div>
           <div className="flex flex-col items-center gap-[8px] text-center">
-            <p className="w-full font-display text-[24px] font-bold leading-[30px] text-ink sm:text-h4 sm:leading-[40px]">
+            <p className="w-full font-display text-[24px] font-bold leading-[30px] text-ink sm:text-h3 sm:leading-[48px]">
               {formatInr(animatedTotalMin)}
             </p>
-            <p className="w-full font-display text-p2 font-medium text-ink/64">
+            <p className="w-full font-display text-p2 font-medium text-ink/80 md:text-p1">
               Repaid to you, @ upto 8.5% p.a.
             </p>
           </div>
@@ -130,10 +172,10 @@ export function InvestmentSlider() {
             </AnimatePresence>
           </div>
           <div className="flex flex-col items-center gap-[8px] text-center">
-            <p className="w-full font-display text-[24px] font-bold leading-[30px] text-ink sm:text-h4 sm:leading-[40px]">
+            <p className="w-full font-display text-[24px] font-bold leading-[30px] text-ink sm:text-h3 sm:leading-[48px]">
               {Math.round(animatedJobsMin)} - {Math.round(animatedJobsMax)}
             </p>
-            <p className="w-full font-display text-p2 font-medium text-ink/64">Rural entrepreneurs you&apos;d fund</p>
+            <p className="w-full font-display text-p2 font-medium text-ink/80 md:text-p1">Rural entrepreneurs you&apos;d fund</p>
           </div>
         </div>
       </div>

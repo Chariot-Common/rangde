@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>India After Dark · Rang De</title>
+<meta name="description" content="A map of India that lights up with every rural entrepreneur backed on Rang De. Scroll through the years, find your hometown, and see who is still waiting.">
+<meta property="og:title" content="India after dark: every light is someone who got a loan">
+<meta property="og:description" content="Scroll to watch 31,000+ lights switch on across India, find your hometown, and light one up yourself.">
+<meta name="theme-color" content="#062019">
+<link rel="icon" href="logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#062019; --ink:#EEF5F1; --ink-70:rgba(238,245,241,.72); --ink-50:rgba(238,245,241,.5); --ink-30:rgba(238,245,241,.3); --ink-12:rgba(238,245,241,.12);
+    --card:#D6E6DE; --card-ink:#0E2D24; --card-ink-60:rgba(14,45,36,.62); --light:#FFFFFF; --warm:#FFD58A; --blue:#0DAADE;
+    --serif:"Cormorant Garamond", Georgia, serif; --sans:Inter, system-ui, sans-serif; --ease:cubic-bezier(.22,1,.36,1);
+    color-scheme:dark;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ background:var(--bg); scroll-behavior:smooth; }
+  body{ background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; }
+  a{ color:inherit; }
+  button:focus-visible, a:focus-visible, input:focus-visible{ outline:2px solid var(--warm); outline-offset:3px; }
+
+  /* ── Fixed stage ── */
+  #map{ position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:pan-y; }
+  .grain{ position:fixed; inset:0; pointer-events:none; opacity:.18; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E"); }
+  #marks{ position:fixed; inset:0; pointer-events:none; }
+  .scrim{ position:fixed; left:0; right:0; z-index:5; pointer-events:none; }
+  .scrim.t{ top:0; height:104px; background:linear-gradient(var(--bg) 35%, rgba(6,32,25,0)); }
+  .scrim.b{ bottom:0; height:96px; background:linear-gradient(rgba(6,32,25,0), var(--bg) 70%); }
+
+  .mk{ position:absolute; width:28px; height:28px; margin:-14px 0 0 -14px; border-radius:50%; pointer-events:auto; display:flex; align-items:center; justify-content:center; transition:opacity .5s, transform .35s var(--ease); }
+  .mk::before{ content:""; width:12px; height:12px; border-radius:50%; background:var(--light); box-shadow:0 0 14px 4px rgba(255,255,255,.55); transition:transform .3s var(--ease); }
+  .mk::after{ content:""; position:absolute; inset:2px; border-radius:50%; border:1px solid rgba(255,255,255,0); transition:border-color .3s, transform .3s var(--ease); }
+  .mk:hover::before, .mk.sel::before{ transform:scale(1.25); }
+  .mk.sel::after{ border-color:rgba(255,255,255,.8); }
+  .mk.wait::before{ background:transparent; box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.75); animation:flicker 3.4s steps(1) infinite; }
+  .mk.wait.lit::before{ background:var(--warm); box-shadow:0 0 18px 6px rgba(255,213,138,.8); animation:none; }
+  .mk.home{ pointer-events:none; }
+  .mk.home::before{ width:10px; height:10px; background:var(--blue); box-shadow:0 0 0 4px rgba(13,170,222,.25); }
+  .mk.home::after{ border-color:var(--blue); animation:ring 2.2s ease-out infinite; }
+  .mk[hidden]{ display:none; }
+  .mk.faded{ opacity:.25; }
+  @keyframes ring{ 0%{ transform:scale(.6); opacity:1; } 100%{ transform:scale(1.8); opacity:0; } }
+  @keyframes flicker{ 0%,100%{ opacity:.6; } 8%{ opacity:1; } 10%{ opacity:.35; } 50%{ opacity:.8; } 53%{ opacity:.3; } }
+  .burst{ position:absolute; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%; border:1.5px solid var(--warm); pointer-events:none; animation:burst 1.3s var(--ease) forwards; }
+  @keyframes burst{ from{ transform:scale(.5); opacity:1; } to{ transform:scale(10); opacity:0; } }
+
+  /* Tooltip card, pinned beside a light */
+  .tip{ position:fixed; z-index:6; display:flex; align-items:stretch; width:340px; max-width:calc(100vw - 32px); pointer-events:none; text-decoration:none; opacity:0; transform:translateY(6px); transition:opacity .35s var(--ease), transform .35s var(--ease); }
+  .tip.on{ opacity:1; transform:none; pointer-events:auto; }
+  .tip img{ width:112px; flex:none; object-fit:cover; margin-top:-12px; margin-bottom:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); background:#33463F; }
+  .tip .t{ flex:1; background:var(--card); color:var(--card-ink); padding:16px 36px 16px 16px; position:relative; display:flex; flex-direction:column; gap:6px; min-height:100px; justify-content:center; }
+  .tip .t b{ font-family:var(--serif); font-weight:500; font-size:20px; line-height:22px; }
+  .tip .t small{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--card-ink-60); font-weight:600; }
+  .tip .t span{ font-family:var(--serif); font-size:17px; font-weight:600; }
+  .tip .t::after{ content:""; position:absolute; right:16px; top:50%; width:8px; height:8px; border-right:1.5px solid var(--card-ink); border-bottom:1.5px solid var(--card-ink); transform:translateY(-50%) rotate(-45deg); }
+  .tip.plain{ width:auto; }
+  .tip.plain .t{ padding-right:16px; min-height:0; }
+  .tip.plain .t::after{ display:none; }
+
+  /* ── Chrome ── */
+  .brand{ position:fixed; z-index:7; left:20px; top:max(18px, env(safe-area-inset-top)); display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .brand a{ text-decoration:none; }
+  .brand .chip{ background:#fff; border-radius:10px; padding:5px 8px; display:flex; }
+  .brand img{ height:26px; display:block; }
+  .brand span{ font-family:var(--serif); font-size:16px; letter-spacing:.08em; text-transform:uppercase; line-height:1; }
+  .top-r{ position:fixed; z-index:7; right:20px; top:max(18px, env(safe-area-inset-top)); display:flex; gap:22px; align-items:flex-start; }
+  .icon-btn{ display:flex; flex-direction:column; align-items:center; gap:4px; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; text-decoration:none; }
+  .icon-btn svg{ width:22px; height:22px; }
+  .counter{ text-align:right; transition:opacity .5s; }
+  .counter b{ display:block; font-family:var(--serif); font-weight:500; font-size:34px; line-height:34px; font-variant-numeric:lining-nums tabular-nums; }
+  .counter span{ display:block; margin-top:4px; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-50); }
+  .counter.off{ opacity:0; }
+
+  #rail{ position:fixed; z-index:5; left:24px; top:50%; transform:translateY(-50%); display:none; flex-direction:column; gap:14px; transition:opacity .5s; }
+  #rail.off{ opacity:0; pointer-events:none; }
+  #rail .all{ font-family:var(--serif); font-size:30px; text-align:left; margin-bottom:8px; }
+  #rail button.y{ text-align:left; display:flex; flex-direction:column; transition:opacity .4s; opacity:.38; }
+  #rail button.y small{ font-size:9px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+  #rail button.y b{ font-family:var(--serif); font-weight:500; font-size:19px; line-height:20px; }
+  #rail button.y.near{ opacity:.6; } #rail button.y.on{ opacity:1; }
+  #rail button.y:hover{ opacity:.9; }
+
+  .zoom{ position:fixed; z-index:7; right:20px; bottom:96px; display:flex; flex-direction:column; border:1px solid var(--ink-30); border-radius:999px; }
+  .zoom button{ width:40px; height:40px; font-size:22px; font-weight:300; color:var(--ink-70); }
+  .zoom button + button{ border-top:1px solid var(--ink-30); }
+  .zoom button:hover{ color:var(--ink); }
+  .toggle{ position:fixed; z-index:7; left:24px; bottom:max(20px, env(safe-area-inset-bottom)); display:flex; }
+  .toggle button{ display:flex; align-items:center; gap:8px; height:38px; padding:0 18px; font-family:var(--serif); font-size:16px; border:1px solid var(--ink-30); transform:skewX(-16deg); background:rgba(6,32,25,.5); }
+  .toggle button > *{ transform:skewX(16deg); }
+  .toggle button + button{ border-left:0; }
+  .toggle button[aria-pressed="true"]{ background:var(--ink-12); }
+  .toggle i{ width:9px; height:9px; border-radius:50%; background:var(--ink); }
+  .toggle .bars{ width:10px; height:10px; border-left:2px solid; border-right:2px solid; position:relative; }
+  .toggle .bars::after{ content:""; position:absolute; left:2px; top:0; bottom:0; border-left:2px solid; }
+  .cta{ position:fixed; z-index:7; right:20px; bottom:max(20px, env(safe-area-inset-bottom)); display:flex; align-items:center; gap:10px; height:44px; padding:0 22px 0 14px; border:1px solid var(--ink-50); text-decoration:none; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; background:rgba(6,32,25,.5); transition:background .2s; }
+  .cta::before{ content:""; width:18px; height:1px; background:currentColor; }
+  .cta:hover{ background:var(--ink-12); }
+
+  /* ── Scrolling story ── */
+  main{ position:relative; z-index:4; pointer-events:none; }
+  .step{ min-height:100vh; min-height:100svh; display:flex; align-items:center; justify-content:flex-end; padding:0 76px 0 0; }
+  .card{ pointer-events:auto; width:380px; padding:28px; background:rgba(8,36,29,.94); border:1px solid var(--ink-12); display:flex; flex-direction:column; gap:14px; }
+  .eyebrow{ font-size:10px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-50); }
+  h1, h2, .year{ font-family:var(--serif); font-weight:500; letter-spacing:-.01em; }
+  h1{ font-size:84px; line-height:.95; }
+  h2{ font-size:34px; line-height:38px; }
+  h1 em, h2 em{ font-style:italic; color:var(--warm); }
+  .lead{ font-size:15px; line-height:23px; color:var(--ink-70); }
+  .year{ font-size:72px; line-height:72px; font-variant-numeric:lining-nums; }
+  .tag{ display:inline-block; font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:4px 8px; border:1px solid var(--ink-30); color:var(--ink-50); align-self:flex-start; }
+  .btn{ display:flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:0 18px; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; text-decoration:none; text-align:center; border:1px solid var(--ink-50); transition:background .2s, transform .15s; }
+  .btn:hover{ background:var(--ink-12); }
+  .btn:active{ transform:scale(.98); }
+  .btn.solid{ background:var(--card); color:var(--card-ink); border-color:var(--card); }
+  .btn.solid:hover{ background:#fff; }
+  .btn.wa{ background:#25D366; color:#0b3d1f; border-color:#25D366; }
+  .fine{ font-size:11px; line-height:17px; color:var(--ink-50); }
+  .facts{ display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid var(--ink-12); border-bottom:1px solid var(--ink-12); }
+  .facts div{ padding:14px 4px; text-align:center; }
+  .facts div + div{ border-left:1px solid var(--ink-12); }
+  .facts b{ display:block; font-family:var(--serif); font-weight:500; font-size:28px; line-height:30px; }
+  .facts span{ display:block; margin-top:4px; font-size:10px; line-height:13px; font-weight:600; color:var(--ink-50); letter-spacing:.04em; }
+
+  .hero{ justify-content:flex-start; padding:0 0 0 clamp(20px, 12vw, 200px); }
+  .hero .inner{ pointer-events:auto; max-width:620px; display:flex; flex-direction:column; gap:22px; text-shadow:0 2px 30px rgba(0,0,0,.5); }
+  .hero .lead{ font-size:18px; line-height:28px; max-width:460px; }
+  .cue{ display:flex; align-items:center; gap:12px; font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-50); }
+  .cue i{ width:1px; height:44px; background:linear-gradient(var(--ink-50), transparent); animation:cue 2s ease-in-out infinite; transform-origin:top; }
+  @keyframes cue{ 0%{ transform:scaleY(0); } 50%{ transform:scaleY(1); } 100%{ transform:scaleY(1); opacity:0; } }
+  .yr{ min-height:80vh; }
+  .hero{ min-height:88vh; min-height:88svh; }
+  .yr[data-i="0"]{ min-height:60vh; }
+
+  .search input{ width:100%; height:50px; border:0; border-bottom:1px solid var(--ink-50); background:transparent; color:var(--ink); font-family:var(--serif); font-size:24px; padding:0 2px; }
+  .search input::placeholder{ color:var(--ink-30); }
+  .sugg{ list-style:none; margin-top:4px; }
+  .sugg button{ display:flex; justify-content:space-between; gap:12px; width:100%; text-align:left; padding:11px 2px; font-size:15px; font-weight:500; border-bottom:1px solid var(--ink-12); }
+  .sugg button small{ color:var(--ink-50); font-size:12px; }
+  .sugg button:hover{ color:var(--warm); }
+  .result{ display:flex; flex-direction:column; gap:8px; font-size:14px; line-height:21px; color:var(--ink-70); }
+  .result:empty{ display:none; }
+  .result .big{ font-family:var(--serif); font-size:26px; line-height:28px; color:var(--ink); }
+  .result b{ color:var(--ink); font-weight:600; }
+  .person-head{ display:flex; gap:14px; align-items:center; }
+  .person-head img{ width:72px; height:72px; object-fit:cover; flex:none; background:#33463F; }
+  .person-head .where{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-50); }
+  .person-head h2{ font-size:28px; line-height:30px; }
+  .photo{ display:none; width:calc(100% + 56px); margin:-28px -28px 4px; aspect-ratio:16/10; object-fit:cover; background:#33463F; }
+  @media (min-width:900px) and (min-height:700px){ .photo{ display:block; } .photo + .person-head img{ display:none; } }
+  .trust{ display:flex; flex-wrap:wrap; gap:6px 14px; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-70); }
+  .trust span::before{ content:"✓ "; color:var(--warm); }
+  .jump{ font-size:13px; font-weight:600; color:var(--warm); text-decoration:none; pointer-events:auto; }
+  .bar{ height:3px; background:var(--ink-12); overflow:hidden; }
+  .bar i{ display:block; height:100%; background:var(--warm); }
+  .meta{ display:flex; justify-content:space-between; font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--ink-50); text-transform:uppercase; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chips button{ display:flex; align-items:center; gap:8px; padding:6px 12px 6px 6px; border:1px solid var(--ink-30); font-size:13px; font-weight:600; }
+  .chips button img{ width:28px; height:28px; border-radius:50%; object-fit:cover; }
+  .chips button[aria-pressed="true"]{ background:var(--card); color:var(--card-ink); border-color:var(--card); }
+  .msg{ background:#DCF8C6; color:#111; border-radius:12px 12px 4px 12px; padding:14px; font-size:14px; line-height:21px; white-space:pre-wrap; }
+  .done{ display:flex; flex-direction:column; gap:12px; animation:up .5s var(--ease); }
+  #done:empty{ display:none; }
+  @keyframes up{ from{ opacity:0; transform:translateY(8px); } }
+  footer.step{ min-height:70vh; }
+  details summary{ cursor:pointer; list-style:none; color:var(--ink-70); }
+  details summary::-webkit-details-marker{ display:none; }
+  details p{ margin-top:8px; }
+
+  /* List view */
+  #list{ position:fixed; z-index:8; inset:0; background:rgba(4,22,17,.95); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); overflow:auto; padding:100px 20px 100px; display:none; }
+  #list.on{ display:block; animation:up .35s var(--ease); }
+  #list .wrap{ max-width:880px; margin:0 auto; display:flex; flex-direction:column; gap:28px; }
+  #list .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:18px; }
+  #list .item{ display:flex; text-align:left; background:var(--card); color:var(--card-ink); }
+  #list .item img{ width:88px; object-fit:cover; flex:none; }
+  #list .item div{ padding:12px 14px; display:flex; flex-direction:column; gap:4px; }
+  #list .item b{ font-family:var(--serif); font-size:19px; font-weight:500; line-height:21px; }
+  #list .item small{ font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--card-ink-60); }
+  #list .item span{ font-size:12px; line-height:17px; color:var(--card-ink-60); }
+
+  .sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+  @media (min-width:900px){ #rail{ display:flex; } }
+  @media (max-width:899px){
+    .step{ justify-content:center; align-items:flex-end; padding:0 12px 84px; }
+    .card{ width:100%; max-width:480px; padding:20px; gap:12px; }
+    .hero{ align-items:flex-end; padding:0 20px 120px; }
+    h1{ font-size:56px; }
+    h2{ font-size:28px; line-height:32px; }
+    .year{ font-size:52px; line-height:52px; }
+    .zoom{ display:none; }
+    .cta{ height:36px; padding:0 12px 0 10px; font-size:10px; }
+    .toggle{ left:12px; } .cta{ right:12px; }
+    .toggle button{ height:36px; padding:0 14px; font-size:15px; }
+    .brand a + a{ display:none; }
+    .counter b{ font-size:28px; line-height:28px; }
+    .tip{ width:300px; }
+    .tip img{ width:84px; }
+    .tip .t b{ font-size:18px; line-height:20px; }
+  }
+  @media (max-width:479px){ .cta .long{ display:none; } }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } html{ scroll-behavior:auto; } }
+</style>
+</head>
+<body>
+<canvas id="map" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div class="scrim t" aria-hidden="true"></div><div class="scrim b" aria-hidden="true"></div>
+<div id="marks"></div>
+<a class="tip" id="tip" target="_blank" rel="noopener" aria-hidden="true"></a>
+
+<div class="brand"><a class="chip" href="https://rangde.in/?utm_source=after_dark&utm_medium=site&utm_campaign=logo" target="_blank" rel="noopener"><img src="logo.svg" alt="Rang De home"></a><a href="#top" aria-label="India After Dark, back to top"><span>After Dark</span></a></div>
+<div class="top-r">
+  <div class="counter off" id="counter" aria-live="polite"><b id="cNum">0</b><span id="cLbl">loans backed</span></div>
+  <a class="icon-btn" href="#hometown" aria-label="Find your hometown"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Find</a>
+</div>
+<nav id="rail" class="off" aria-label="Years"></nav>
+<div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button></div>
+<div class="toggle" role="group" aria-label="View"><button id="vMap" aria-pressed="true"><i></i><span>Map</span></button><button id="vList" aria-pressed="false"><span class="bars"></span><span>List</span></button></div>
+<a class="cta" id="cta" href="https://rangde.in/invest/individuals?utm_source=after_dark&utm_medium=site&utm_campaign=cta" target="_blank" rel="noopener"><span>Back someone<span class="long"> on Rang De</span></span></a>
+
+<main id="top"></main>
+<div id="list" role="dialog" aria-label="Everyone on the map"></div>
+<p class="sr" id="srSummary"></p>
+
+<script src="data.js"></script>
+<script>
+(() => {
+  const D = window.AFTER_DARK, S = D.stats, Y = D.years;
+  const $ = s => document.querySelector(s);
+  const fmt = n => Math.round(n).toLocaleString('en-IN');
+  const k = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K' : String(n);
+  const first = p => p.name.split(' ')[0];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wide = () => innerWidth >= 900;
+  const utm = c => `utm_source=after_dark&utm_medium=site&utm_campaign=${c}`;
+  const profile = (p, c) => `https://rangde.in/i/${p.key}?${utm(c)}`;
+  const photo = (url, w, h) => `${url}?auto=compress,format&w=${w}&h=${h}&fit=crop&crop=faces`;
+  const SHARE_URL = location.origin + location.pathname;
+  $('#srSummary').textContent = `Map of India with ${fmt(S.loans)} lights, one for each loan backed on Rang De across ${S.states} states.`;
+
+  /* ── data ── */
+  const raw = Uint8Array.from(atob(D.points), c => c.charCodeAt(0)), dv = new DataView(raw.buffer), N = raw.length / 4;
+  const PX = new Float32Array(N), PY = new Float32Array(N);
+  for (let i = 0; i < N; i++) { PX[i] = dv.getUint16(i * 4, true) / 20; PY[i] = dv.getUint16(i * 4 + 2, true) / 20; }
+  const STATES = D.states.map(s => ({ ...s, p: new Path2D(s.path) }));
+  const DIST = D.districts.map(([name, si, x, y]) => ({ name, state: STATES[si].name, si, x, y }));
+  const PEOPLE = [...D.waiting.map(p => ({ ...p, waiting: true })), ...D.stories.map(p => ({ ...p, waiting: false }))];
+  const byKey = Object.fromEntries(PEOPLE.map(p => [p.key, p]));
+  const W8 = PEOPLE.filter(p => p.waiting), STORIES = PEOPLE.filter(p => !p.waiting);
+  const pctOf = p => Math.round(p.raised / p.goal * 100);
+  // Five closest to switching on, one per state where possible.
+  const CLOSE = (() => {
+    const byPct = [...W8].sort((a, b) => b.raised / b.goal - a.raised / a.goal), out = [], states = new Set();
+    for (const p of byPct) if (out.length < 5 && !states.has(p.state)) { out.push(p); states.add(p.state); }
+    for (const p of byPct) if (out.length < 5 && !out.includes(p)) out.push(p);
+    return out;
+  })();
+  const FEATURED = ['rekha-465', 'durga-294', 'manoj-776'].map(x => byKey[x]).filter(p => p && !p.waiting);
+  for (const p of STORIES) if (FEATURED.length < 3 && !FEATURED.includes(p)) FEATURED.push(p);
+  const outline = (() => { const p = new Path2D(); STATES.forEach(s => p.addPath(s.p)); return p; })();
+
+  /* ── canvas, view ── */
+  const cv = $('#map'), ctx = cv.getContext('2d'), hit = document.createElement('canvas').getContext('2d');
+  let dpr = 1, VW = 0, VH = 0;
+  const view = { s: 1, tx: 0, ty: 0 };
+  let fit = { s: 1, cx: 0, cy: 0 }, focus = { x: D.W / 2, y: D.H / 2, z: 1 }, user = { z: 1, x: 0, y: 0 }, tipShift = 0;
+  const st = { shown: 0, dim: 0, dimTarget: 0, hiState: -1, dirty: true };
+  const makeSprite = stops => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); stops.forEach(([o, col]) => r.addColorStop(o, col)); g.fillStyle = r; g.fillRect(0, 0, 64, 64); return c; };
+  // White cores with a halo in each of the logo's four colours (green, orange, red, blue).
+  const LOGO_RGB = ['140,162,30', '235,83,50', '227,38,66', '13,170,222'];
+  const sprites = LOGO_RGB.map(c => makeSprite([[0, 'rgba(255,255,255,1)'], [.12, 'rgba(255,250,240,.85)'], [.32, `rgba(${c},.42)`], [1, `rgba(${c},0)`]]));
+  const spriteNew = makeSprite([[0, 'rgba(255,255,255,1)'], [.2, 'rgba(255,236,196,.9)'], [1, 'rgba(255,213,138,0)']]);
+
+  function measure() {
+    dpr = Math.min(devicePixelRatio || 1, 2); VW = innerWidth; VH = innerHeight;
+    cv.width = VW * dpr; cv.height = VH * dpr;
+    const r = wide() ? { x0: 150, x1: VW - 470, y0: 70, y1: VH - 60 } : { x0: 10, x1: VW - 10, y0: 76, y1: VH * 0.56 };
+    fit.s = Math.max(0.05, Math.min((r.x1 - r.x0) / D.W, (r.y1 - r.y0) / D.H));
+    fit.cx = (r.x0 + r.x1) / 2; fit.cy = (r.y0 + r.y1) / 2;
+    st.dirty = true;
+  }
+  const target = () => { const z = focus.z * user.z, s = fit.s * z; return { s, tx: fit.cx - tipShift - (focus.x + user.x) * s, ty: fit.cy - (focus.y + user.y) * s }; };
+  const toMap = (sx, sy) => [(sx - view.tx) / view.s, (sy - view.ty) / view.s];
+  const toScreen = (x, y) => [view.tx + x * view.s, view.ty + y * view.s];
+
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const bg = ctx.createRadialGradient(VW * .5, VH * .45, 0, VW * .5, VH * .45, Math.max(VW, VH) * .75);
+    bg.addColorStop(0, '#0E3A2F'); bg.addColorStop(1, '#041A14');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, VW, VH);
+
+    ctx.setTransform(dpr * view.s, 0, 0, dpr * view.s, dpr * view.tx, dpr * view.ty);
+    // Land: a soft shadow for depth, then a gentle north–south gradient.
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 40 * dpr; ctx.shadowOffsetY = 10 * dpr;
+    const land = ctx.createLinearGradient(0, 0, 0, D.H); land.addColorStop(0, '#1C5546'); land.addColorStop(1, '#123F33');
+    ctx.fillStyle = land; ctx.fill(outline); ctx.restore();
+    STATES.forEach(s => { if (!s.lit) { ctx.fillStyle = 'rgba(4,26,20,.35)'; ctx.fill(s.p); } });
+    ctx.lineJoin = 'round'; ctx.lineWidth = 0.6 / view.s; ctx.strokeStyle = 'rgba(200,240,220,.10)';
+    STATES.forEach(s => ctx.stroke(s.p));
+    if (st.hiState >= 0) { ctx.lineWidth = 1.4 / view.s; ctx.strokeStyle = 'rgba(214,230,222,.7)'; ctx.stroke(STATES[st.hiState].p); }
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalCompositeOperation = 'lighter';
+    const z = view.s / fit.s;
+    const r = Math.max(1.4, Math.min(4.5, 1.9 * Math.sqrt(view.s / 0.6) * Math.min(1.4, Math.pow(z, .3))));
+    const n = Math.floor(st.shown), fresh = Math.max(0, n - 500);
+    ctx.globalAlpha = (0.36 - 0.3 * st.dim) / Math.max(1, Math.pow(z, .35));
+    for (let i = 0; i < fresh; i++) {
+      const x = view.tx + PX[i] * view.s, y = view.ty + PY[i] * view.s;
+      if (x < -r || y < -r || x > VW + r || y > VH + r) continue;
+      ctx.drawImage(sprites[i & 3], x - r, y - r, r * 2, r * 2);
+    }
+    // The newest lights glow warmer, so scrolling shows them arriving.
+    ctx.globalAlpha = 0.75 - 0.5 * st.dim;
+    for (let i = fresh; i < n; i++) {
+      const x = view.tx + PX[i] * view.s, y = view.ty + PY[i] * view.s;
+      ctx.drawImage(spriteNew, x - r * 1.5, y - r * 1.5, r * 3, r * 3);
+    }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    placeMarks(); placeTip();
+  }
+
+  let raf = 0;
+  const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+  function frame() {
+    raf = 0;
+    const tg = target(), a = reduce ? 1 : 0.12;
+    const moving = Math.abs(tg.s - view.s) / tg.s > 0.001 || Math.abs(tg.tx - view.tx) > 0.3 || Math.abs(tg.ty - view.ty) > 0.3;
+    if (moving) { view.s += (tg.s - view.s) * a; view.tx += (tg.tx - view.tx) * a; view.ty += (tg.ty - view.ty) * a; st.dirty = true; }
+    const dimMoving = Math.abs(st.dimTarget - st.dim) > 0.004;
+    if (dimMoving) { st.dim += (st.dimTarget - st.dim) * (reduce ? 1 : 0.08); st.dirty = true; } else if (st.dim !== st.dimTarget) { st.dim = st.dimTarget; st.dirty = true; }
+    if (st.dirty) { draw(); st.dirty = false; }
+    if (moving || dimMoving) kick();
+  }
+  const zoomTo = (x, y, z) => { focus = { x, y, z }; user = { z: 1, x: 0, y: 0 }; kick(); };
+  const zoomOut = () => zoomTo(D.W / 2, D.H / 2, 1);
+
+  /* ── markers & tooltip ── */
+  const marks = $('#marks'), markEls = [];
+  PEOPLE.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'mk ' + (p.waiting ? 'wait' : 'story'); b.hidden = true;
+    b.setAttribute('aria-label', `${p.name}, ${p.district}${p.waiting ? ', still waiting for funds' : ''}`);
+    b.addEventListener('mouseenter', () => { if (!pinned) showTip(p, false); });
+    b.addEventListener('mouseleave', () => { if (!pinned) hideTip(); });
+    b.addEventListener('click', e => { e.stopPropagation(); showTip(p, true); });
+    marks.appendChild(b); markEls.push({ el: b, p }); p.el = b;
+  });
+  const homeEl = document.createElement('div'); homeEl.className = 'mk home'; homeEl.hidden = true; marks.appendChild(homeEl);
+  let home = null;
+  function placeMarks() {
+    for (const m of markEls) { const [x, y] = toScreen(m.p.x, m.p.y); m.el.style.left = x + 'px'; m.el.style.top = y + 'px'; }
+    if (home) { const [x, y] = toScreen(home.x, home.y); homeEl.style.left = x + 'px'; homeEl.style.top = y + 'px'; }
+  }
+  function showMarks(mode) {
+    for (const { el, p } of markEls) {
+      el.hidden = mode === 'none' || (mode === 'story' && p.waiting);
+      el.classList.toggle('faded', mode === 'wait' && !p.waiting);
+    }
+  }
+  const tip = $('#tip');
+  let tipFor = null, pinned = false;
+  function showTip(p, pin, html) {
+    tipFor = p; pinned = pin;
+    markEls.forEach(m => m.el.classList.toggle('sel', m.p === p));
+    tip.classList.toggle('plain', !p.key);
+    tip.href = p.key ? profile(p, 'map_card') : '#';
+    tip.innerHTML = html || `<img src="${photo(p.photo, 240, 300)}" alt=""><div class="t"><small>${esc(p.district)}, ${esc(p.state)}</small><b>${esc(p.need)}</b><span>${esc(p.name)}</span></div>`;
+    tip.setAttribute('aria-hidden', 'false');
+    placeTip(); requestAnimationFrame(() => tip.classList.add('on'));
+  }
+  function hideTip() { tipFor = null; pinned = false; tip.classList.remove('on'); tip.setAttribute('aria-hidden', 'true'); markEls.forEach(m => m.el.classList.remove('sel')); }
+  function placeTip() {
+    if (!tipFor) return;
+    const [x, y] = toScreen(tipFor.x, tipFor.y), w = tip.offsetWidth || 340, h = tip.offsetHeight || 110;
+    let left = x + 22, top = y - h / 2;
+    const edge = wide() && ['person', 'wait'].includes(scene) ? VW - 76 - 380 - 16 : VW - 12;
+    if (left + w > edge) left = x - 22 - w;
+    if (left < 12) { left = Math.max(12, Math.min(VW - w - 12, x - w / 2)); top = y + 24; }
+    top = Math.max(76, Math.min(VH - h - 12, top));
+    tip.style.left = left + 'px'; tip.style.top = top + 'px';
+  }
+  tip.addEventListener('click', e => { if (!tipFor?.key) e.preventDefault(); });
+
+  /* ── year rail ── */
+  const rail = $('#rail');
+  rail.innerHTML = `<button class="all" data-go="all">All</button>` + [...Y].reverse().map(y => `<button class="y" data-y="${y.year}"><small>${k(y.loans)} loans</small><b>${y.year}</b></button>`).join('');
+  rail.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const el = b.dataset.go ? $('#facts') : document.querySelector(`.yr[data-year="${b.dataset.y}"]`);
+    el && el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+  });
+  function railYear(f) {
+    rail.querySelectorAll('.y').forEach(b => { const i = Y.findIndex(y => y.year === +b.dataset.y), d = Math.abs(i - f); b.classList.toggle('on', d < .5); b.classList.toggle('near', d >= .5 && d < 1.5); });
+  }
+
+  /* ── counter ── */
+  const counter = $('#counter');
+  function setCounter(n, label) { counter.classList.remove('off'); $('#cNum').textContent = fmt(n); $('#cLbl').textContent = label; }
+
+  /* ── the story, built as scroll steps ── */
+  const CAPTIONS = {
+    2019: 'Rang De becomes an RBI-registered P2P lender. The first lights come on.',
+    2020: 'The pandemic year. Investors keep lending to farmers and small shops.',
+    2021: 'By the end of 2021, about 11,000 loans.',
+    2022: 'By the end of 2022, more than 15,000 loans.',
+    2023: 'By the end of 2023, 20,000 loans. Most of these lights belong to women.',
+    2024: `Lights in ${S.states} states, from Rajasthan to Manipur.`,
+    2025: 'By the end of 2025, about 28,000 lights.',
+  };
+  const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const outcome = p => p.investors ? `${p.investors} social investors backed ${esc(first(p))}’s ${inr(p.raised)} loan.` : '';
+  const statusTag = p => p.status === 'REPAYMENT_IN_PROGRESS' ? 'Fully funded · repaying' : p.raised && p.raised >= p.goal ? 'Fully funded' : '';
+  const stateLine = name => {
+    const s = STATES.find(x => x.name === name); if (!s) return '';
+    if (s.backed) return `${k(s.backed)} entrepreneurs backed in ${esc(name)} · ${esc(s.invested)} invested`;
+    return `Rang De lends in ${S.states} states. Numbers for ${esc(name)} aren’t published yet.`;
+  };
+  $('#top').innerHTML = `
+    <section class="step hero" data-scene="hero"><div class="inner">
+      <p class="eyebrow">Rang De · backing rural India since 2008</p>
+      <h1>India,<br><em>after dark.</em></h1>
+      <p class="lead">Every light on this map is a rural entrepreneur who got a loan from people like you: ${fmt(S.loans)} loans since Rang De became an RBI-registered P2P platform in 2019. Scroll to watch them switch on.</p>
+      <p class="cue"><i></i>Scroll</p>
+    </div></section>
+
+    ${Y.map((y, i) => `<section class="step yr" data-scene="year" data-i="${i}" data-year="${y.year}"><div class="card">
+      <p class="eyebrow">${i === Y.length - 1 ? 'Today' : 'Year ' + (i + 1)}</p>
+      <span class="year">${y.year}</span>
+      <p class="lead">${i === Y.length - 1 ? `${fmt(S.loans)} lights, and counting.` : CAPTIONS[y.year] || ''}</p>
+    </div></section>`).join('')}
+
+    <section class="step" id="facts" data-scene="facts"><div class="card">
+      <p class="eyebrow">${fmt(S.loans)} lights · ${S.states} states</p>
+      <h2>Behind every light is a <em>farm, a shop, a loom.</em></h2>
+      <div class="facts"><div><b>${S.women}%</b><span>of borrowers are women</span></div><div><b>${k(S.jobs)}</b><span>jobs created</span></div><div><b>${k(S.investors)}</b><span>social investors</span></div></div>
+      <p class="lead">Keep scrolling to meet a few people investors have already backed, or hover any bright dot.</p>
+      <a class="jump" href="#waiting">Or skip to the ${W8.length} people still waiting →</a>
+    </div></section>
+
+    ${FEATURED.map(p => `<section class="step" data-scene="person" data-key="${p.key}"><div class="card">
+      <img class="photo" src="${photo(p.photo, 760, 476)}" alt="${esc(p.name)}" loading="lazy">
+      <div class="person-head"><img src="${photo(p.photo, 160, 160)}" alt="" loading="lazy"><div><p class="where">${esc(p.district)}, ${esc(p.state)}</p><h2>${esc(p.name)}</h2></div></div>
+      <p class="lead">${outcome(p)} ${esc(p.need)}</p>
+      <p class="fine">${stateLine(p.state)}</p>
+      ${statusTag(p) ? `<span class="tag">${statusTag(p)}</span>` : ''}
+    </div></section>`).join('')}
+
+    <section class="step" id="hometown" data-scene="home"><div class="card">
+      <p class="eyebrow">Find your hometown</p>
+      <h2>Where did <em>you</em> grow up?</h2>
+      <div class="search"><input id="q" type="search" placeholder="District or city" autocomplete="off" aria-label="Your hometown district or city"><ul class="sugg" id="sg" hidden></ul></div>
+      <div id="res" class="result"></div>
+    </div></section>
+
+    <section class="step" id="waiting" data-scene="waitIntro"><div class="card">
+      <p class="eyebrow">The dim lights</p>
+      <h2>${W8.length} people are <em>waiting in the dark</em> right now.</h2>
+      <p class="lead">A Rang De partner has met each of them. They need social investors to switch their light on. Here are the ${CLOSE.length} closest to getting there.</p>
+      <p class="fine">Listings as of ${esc(D.asOf)}. The rate on each card is the most an investor can earn on that loan, paid back with the principal as the entrepreneur repays.</p>
+    </div></section>
+
+    ${CLOSE.map(p => { const pct = pctOf(p); return `<section class="step" data-scene="wait" data-key="${p.key}"><div class="card">
+      <img class="photo" src="${photo(p.photo, 760, 476)}" alt="${esc(p.name)}" loading="lazy">
+      <div class="person-head"><img src="${photo(p.photo, 160, 160)}" alt="" loading="lazy"><div><p class="where">${esc(p.district)}, ${esc(p.state)}</p><h2>${esc(p.name)}</h2></div></div>
+      <p class="lead">${esc(p.need)}</p>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="meta"><span>${pct}% funded</span><span>Up to ${p.rate}% p.a.</span></div>
+      <a class="btn solid" data-light="${p.key}" href="${profile(p, 'light_one_up')}" target="_blank" rel="noopener">Light up ${esc(first(p))}’s light</a>
+    </div></section>`; }).join('')}
+
+    <section class="step" id="finale" data-scene="finale"><div class="card">
+      <p class="eyebrow">Light one up</p>
+      <h2>Every light started with <em>one person saying yes.</em></h2>
+      <p class="lead">Pick someone to back from ₹500. Your light switches on once their loan is fully funded.</p>
+      <p class="trust"><span>RBI-registered NBFC-P2P</span><span>${S.repaid}% of principal repaid</span><span>From ₹500</span></p>
+      <div class="chips">${CLOSE.map(p => `<button data-pick="${p.key}" aria-pressed="false"><img src="${photo(p.photo, 80, 80)}" alt="">${esc(first(p))}</button>`).join('')}</div>
+      <div id="done"></div>
+    </div></section>
+
+    <footer class="step" data-scene="finale"><div class="card">
+      <a class="btn solid" href="https://rangde.in/invest/individuals?${utm('footer')}" target="_blank" rel="noopener">See everyone on Rang De</a>
+      <p class="fine">Not ready yet? <a href="https://luma.com/rangde-live-with-ram-and-smita" target="_blank" rel="noopener">Join the live Q&amp;A with our founders</a>, Saturdays at 11 AM IST.</p>
+      <p class="fine">Investments carry risk. Rang De is an RBI-registered NBFC-P2P; RBI does not guarantee repayment.</p>
+      <details class="fine"><summary>About this map ▾</summary><p>
+        One light per loan fulfilled on Rang De since P2P lending began in Sep 2019 (${fmt(S.loans)} as of ${esc(D.asOf)}, from rangde.in).
+        Year totals for ${Y.filter(y => !y.est).map(y => y.year).join(', ')} come from Rang De’s published stats; ${Y.filter(y => y.est).map(y => y.year).join(', ')} are estimated in between.
+        State totals for Assam, Rajasthan, Madhya Pradesh and Maharashtra are from rangde.in; how lights spread within states, and across other states, is approximate.
+        People shown are real Rang De listings.</p></details>
+    </div></footer>`;
+
+  /* ── scenes ── */
+  let scene = '', sceneKey = '';
+  const lit = new Set();
+  function setScene(name, key) {
+    if (name === scene && key === sceneKey) return;
+    scene = name; sceneKey = key; tipShift = 0;
+    const p = key && byKey[key];
+    rail.classList.toggle('off', !['year', 'facts'].includes(name));
+    st.hiState = -1;
+    homeEl.hidden = !home || !['home', 'waitIntro', 'wait'].includes(name);
+    switch (name) {
+      case 'hero': st.dimTarget = 0; showMarks('none'); hideTip(); zoomOut(); counter.classList.add('off'); break;
+      case 'year': st.dimTarget = 0; showMarks('none'); hideTip(); zoomOut(); break;
+      case 'facts': st.shown = S.loans; st.dimTarget = 0; showMarks('story'); hideTip(); zoomOut(); setCounter(S.loans, `loans backed · ${D.asOf}`); railYear(Y.length - 1); break;
+      case 'person': st.shown = S.loans; st.dimTarget = 0; showMarks('story'); focusOn(p, 3); st.hiState = STATES.findIndex(s => s.name === p.state); setCounter(S.loans, `loans backed · ${D.asOf}`); break;
+      case 'home': st.shown = S.loans; st.dimTarget = 0; showMarks('story'); hideTip(); setCounter(S.loans, `loans backed · ${D.asOf}`); if (home) { zoomTo(home.x, home.y, 2.2); st.hiState = home.si; } else zoomOut(); break;
+      case 'waitIntro': st.shown = S.loans; st.dimTarget = 1; showMarks('wait'); hideTip(); zoomOut(); setCounter(W8.length, 'still waiting'); break;
+      case 'wait': st.shown = S.loans; st.dimTarget = lit.has(key) ? 0.3 : 1; showMarks('wait'); focusOn(p, 3.2); setCounter(W8.length, 'still waiting'); break;
+      case 'finale': st.shown = S.loans; st.dimTarget = lit.size ? 0 : 0.6; showMarks('wait'); hideTip(); zoomOut(); setCounter(S.loans, 'loans backed'); break;
+    }
+    st.dirty = true; kick();
+  }
+  function focusOn(p, z) {
+    zoomTo(p.x, p.y, z);
+    if (wide()) tipShift = 170; // leave room for the card to the right of the light
+    showTip(p, true, `<div class="t"><small>${esc(p.district)}, ${esc(p.state)}</small><b>${esc(first(p))}</b></div>`);
+    tip.classList.add('plain');
+  }
+
+  /* ── scroll engine ── */
+  const stepEls = [...document.querySelectorAll('main [data-scene]')];
+  const yearEls = stepEls.filter(e => e.dataset.scene === 'year');
+  const loansAt = f => {
+    if (f <= -1) return 0;
+    if (f < 0) return Y[0].loans * (f + 1);
+    const i = Math.min(Y.length - 1, Math.floor(f)), j = Math.min(Y.length - 1, i + 1);
+    return Y[i].loans + (Y[j].loans - Y[i].loans) * (f - i);
+  };
+  function onScroll() {
+    const mid = VH * 0.55;
+    let best = null, bd = Infinity;
+    for (const el of stepEls) {
+      const r = el.getBoundingClientRect();
+      if (r.top <= mid && r.bottom >= mid) { best = el; break; }
+      const d = Math.min(Math.abs(r.top - mid), Math.abs(r.bottom - mid));
+      if (d < bd) { bd = d; best = el; }
+    }
+    if (!best) return;
+    const name = best.dataset.scene;
+    if (name === 'hero' || name === 'year') {
+      // Continuous: where you are between two year cards decides how many lights are on.
+      const c = yearEls.map(e => { const r = e.getBoundingClientRect(); return (r.top + r.bottom) / 2; });
+      const H = c[1] - c[0] || VH;
+      let f;
+      if (mid <= c[0]) f = Math.max(-1, (mid - c[0]) / H);
+      else if (mid >= c[c.length - 1]) f = Y.length - 1;
+      else { const i = c.findIndex((v, n) => mid >= v && mid < c[n + 1]); f = i + (mid - c[i]) / (c[i + 1] - c[i]); }
+      st.shown = loansAt(f); st.dirty = true;
+      const yi = Math.max(0, Math.round(f)), atCard = Math.abs(f - yi) < 0.2;
+      if (f > -1) setCounter(atCard ? Y[yi].loans : Math.round(st.shown / 100) * 100, `loans backed · ${Y[yi].year}`);
+      railYear(f);
+    }
+    setScene(name, best.dataset.key || '');
+    kick();
+  }
+  let ticking = false;
+  addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; onScroll(); }); } }, { passive: true });
+
+  /* ── hometown ── */
+  const ALIASES = { bengaluru: 'Bengaluru Urban', bangalore: 'Bengaluru Urban', bombay: 'Mumbai', gurgaon: 'Gurugram', allahabad: 'Prayagraj', mysore: 'Mysuru', calcutta: 'Kolkata', madras: 'Chennai', baroda: 'Vadodara', trivandrum: 'Thiruvananthapuram', newdelhi: 'Delhi', kochi: 'Ernakulam', cochin: 'Ernakulam', guwahati: 'Kamrup Metropolitan', noida: 'Gautam Buddha Nagar', poona: 'Pune' };
+  const nrm = s => s.toLowerCase().normalize('NFD').replace(/[^a-z]/g, '');
+  function search(q) {
+    const n = nrm(q); if (n.length < 2) return [];
+    const alias = ALIASES[n] && nrm(ALIASES[n]);
+    const score = d => { const a = nrm(d.name), b = nrm(d.state); if (alias && a === alias) return 0; if (a === n) return 1; if (a.startsWith(n)) return 2; if (a.includes(n)) return 3; if (b.startsWith(n)) return 4; return 9; };
+    return DIST.map(d => [d, score(d)]).filter(x => x[1] < 9).sort((a, b) => a[1] - b[1] || a[0].name.localeCompare(b[0].name)).slice(0, 5).map(x => x[0]);
+  }
+  const q = $('#q'), sg = $('#sg');
+  q.addEventListener('input', () => {
+    const r = search(q.value); sg.hidden = !r.length;
+    sg.innerHTML = r.map((d, i) => `<li><button data-i="${i}">${esc(d.name)} <small>${esc(d.state)}</small></button></li>`).join('');
+    sg.querySelectorAll('button').forEach(b => b.onclick = () => { q.value = r[+b.dataset.i].name; sg.hidden = true; pickHome(r[+b.dataset.i]); });
+  });
+  q.addEventListener('keydown', e => { if (e.key === 'Enter') { const r = search(q.value); if (r[0]) { q.value = r[0].name; sg.hidden = true; pickHome(r[0]); } } });
+  function pickHome(d) {
+    home = d; homeEl.hidden = false; st.hiState = d.si; zoomTo(d.x, d.y, 2.2);
+    const dist = p => Math.hypot(p.x - d.x, p.y - d.y) * D.kmPerUnit;
+    const km = p => { const v = dist(p); return v < 15 ? 'right next to you' : `${Math.round(v / 10) * 10 || 10} km away`; };
+    const near = [...STORIES].sort((a, b) => dist(a) - dist(b))[0], wait = [...W8].sort((a, b) => dist(a) - dist(b))[0];
+    const s = STATES[d.si];
+    $('#res').innerHTML = `
+      <span class="big">${esc(d.name)}, ${esc(s.name)}</span>
+      <span>${s.backed ? `${k(s.backed)} entrepreneurs in ${esc(s.name)} have been backed on Rang De.` : s.lit ? stateLine(s.name) : `No lights mapped in ${esc(s.name)} yet.`}</span>
+      ${near ? `<span>Nearest light with a story: <b>${esc(near.name)}</b> in ${esc(near.district)}, ${km(near)}.</span>` : ''}
+      ${wait ? `<span>${dist(wait) < 300 ? 'Someone near you is still in the dark' : 'Closest person still in the dark'}: <b>${esc(first(wait))}</b> in ${esc(wait.district)}, ${km(wait)}. Keep scrolling.</span>` : ''}`;
+    st.dirty = true; kick();
+  }
+
+  /* ── light one up ── */
+  function ignite(p) {
+    lit.add(p.key); p.el.classList.add('lit');
+    const [x, y] = toScreen(p.x, p.y);
+    for (let i = 0; i < 3; i++) setTimeout(() => { const b = document.createElement('span'); b.className = 'burst'; b.style.left = x + 'px'; b.style.top = y + 'px'; marks.appendChild(b); setTimeout(() => b.remove(), 1400); }, i * 220);
+    st.dimTarget = 0.3; kick();
+    document.querySelectorAll('[data-pick]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pick === p.key));
+    const text = `I’m helping switch on a light in ${p.district}, ${p.state} 💡\n\nEvery light on this map is a rural entrepreneur who got a loan through Rang De. Find your hometown and see who's still waiting:\n${SHARE_URL}?${utm('share_light')}`;
+    $('#done').innerHTML = `<div class="done">
+      <p class="result"><span class="big">${esc(first(p))}’s light is on its way.</span><span>It switches on for real once the loan is fully funded. Bring a friend to help.</span></p>
+      <a class="btn solid" href="${profile(p, 'light_one_up')}" target="_blank" rel="noopener">Back ${esc(first(p))} from ₹500</a>
+      <div class="msg">${esc(text)}</div>
+      <a class="btn wa" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">Share on WhatsApp</a></div>`;
+  }
+  document.addEventListener('click', e => {
+    const a = e.target.closest('[data-light]'); if (a) { ignite(byKey[a.dataset.light]); return; }
+    const b = e.target.closest('[data-pick]'); if (b) ignite(byKey[b.dataset.pick]);
+  });
+
+  /* ── map interactions: tap a state, zoom, drag ── */
+  let drag = null, dragged = false;
+  cv.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; drag = { x: e.clientX, y: e.clientY }; dragged = false; });
+  addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 3) dragged = true;
+    user.x -= dx / view.s; user.y -= dy / view.s; drag = { x: e.clientX, y: e.clientY };
+    Object.assign(view, target()); st.dirty = true; kick();
+  });
+  addEventListener('pointerup', () => { drag = null; });
+  cv.addEventListener('click', e => {
+    if (dragged || scene === 'hero' || scene === 'year') return;
+    const [mx, my] = toMap(e.clientX, e.clientY);
+    const si = STATES.findIndex(s => hit.isPointInPath(s.p, mx, my));
+    if (si < 0) { hideTip(); return; }
+    const s = STATES[si];
+    st.hiState = si; st.dirty = true; kick();
+    showTip({ x: mx, y: my, name: s.name }, true, `<div class="t"><small>${s.lit ? 'Lit up on Rang De' : 'No lights mapped yet'}</small><b>${esc(s.name)}</b>${s.backed ? `<span>${k(s.backed)} entrepreneurs backed</span>` : ''}</div>`);
+  });
+  $('#zin').onclick = () => { user.z = Math.min(6, user.z * 1.5); kick(); };
+  $('#zout').onclick = () => { user.z = Math.max(1, user.z / 1.5); if (user.z === 1) { user.x = 0; user.y = 0; } kick(); };
+
+  /* ── list view ── */
+  const list = $('#list');
+  const item = p => `<button class="item" data-go="${p.key}"><img src="${photo(p.photo, 180, 200)}" alt="" loading="lazy"><div><small>${esc(p.district)}, ${esc(p.state)}</small><b>${esc(p.name)}</b><span>${esc(p.need)}</span><small>${p.waiting ? `${pctOf(p)}% funded` : statusTag(p)}</small></div></button>`;
+  list.innerHTML = `<div class="wrap">
+    <div><p class="eyebrow">Still waiting · ${esc(D.asOf)}</p><h2>Lights you can switch on</h2></div><div class="grid">${[...W8].sort((a, b) => b.raised / b.goal - a.raised / a.goal).map(item).join('')}</div>
+    <div><p class="eyebrow">Recently on Rang De</p><h2>Stories on the map</h2></div><div class="grid">${STORIES.map(item).join('')}</div></div>`;
+  function setView(isList) {
+    list.classList.toggle('on', isList);
+    $('#vMap').setAttribute('aria-pressed', !isList); $('#vList').setAttribute('aria-pressed', isList);
+    document.body.style.overflow = isList ? 'hidden' : '';
+  }
+  $('#vMap').onclick = () => setView(false);
+  $('#vList').onclick = () => setView(true);
+  list.addEventListener('click', e => {
+    const b = e.target.closest('[data-go]'); if (!b) return;
+    const p = byKey[b.dataset.go]; setView(false);
+    const stepEl = document.querySelector(`main [data-key="${p.key}"]`);
+    if (stepEl) stepEl.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    else { showMarks(p.waiting ? 'wait' : 'story'); p.el.hidden = false; focusOn(p, 3.2); }
+  });
+  addEventListener('keydown', e => { if (e.key === 'Escape') { setView(false); if (pinned) hideTip(); } });
+
+  /* ── boot ── */
+  addEventListener('resize', () => { measure(); Object.assign(view, target()); onScroll(); kick(); });
+  measure(); Object.assign(view, target()); onScroll(); draw();
+})();
+</script>
+</body>
+</html>

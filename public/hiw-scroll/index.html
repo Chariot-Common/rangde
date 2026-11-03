@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>How it works · scroll wireframe</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1B2A4A; --l1: #B4BFD3; --l2: #7F8DAA; --l4: #4E9A63; --l4f: #E3EEDF;
+    --rb: #FBF1E2; --ab: #EAF3FC; --rekha: #E0663A; --arjun: #2E8FD6;
+    --green: #62AF1D; --gold: #E8B33A; --red: #D64545; --u: 1;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ab); font-family: Inter, system-ui, sans-serif; color: var(--ink); }
+  body.mobile { overflow: hidden; height: 100svh; }
+  #stage { position: fixed; inset: 0; overflow: hidden; background: var(--ab); }
+  .world { position: absolute; inset: 0; }
+  #rw { background: var(--rb); }
+  #aw { background: var(--ab); }
+  .box { position: absolute; overflow: hidden; }
+  .layer, .plane { position: absolute; left: 0; bottom: 0; will-change: transform; }
+  .layer svg { display: block; overflow: visible; }
+  .plane { height: 100%; width: 1px; }
+  svg text { font-family: "Patrick Hand", cursive; }
+  .hide-labels .lbl { display: none; }
+
+  /* Characters (wireframe placeholders) */
+  .ch { position: absolute; bottom: 0; display: flex; flex-direction: column; align-items: center; transform: translateX(-50%); }
+  .ch .head { width: calc(50px * var(--u)); height: calc(46px * var(--u)); border-radius: calc(15px * var(--u)); background: var(--c); position: relative; }
+  .ch .head i { position: absolute; top: 28%; width: 26%; height: 28%; border-radius: 50%; background: #fff; }
+  .ch .head i::after { content: ""; position: absolute; left: 30%; top: 30%; width: 46%; height: 46%; border-radius: 50%; background: var(--ink); }
+  .ch .head i:first-child { left: 20%; } .ch .head i:last-child { left: 54%; }
+  .ch.flip .head i::after { left: 4%; }
+  .ch .body { width: calc(44px * var(--u)); height: calc(50px * var(--u)); border-radius: calc(12px * var(--u)); background: var(--c); opacity: .82; margin-top: calc(4px * var(--u)); }
+  .ch .legs { display: flex; gap: calc(8px * var(--u)); }
+  .ch .legs b { display: block; width: calc(11px * var(--u)); height: calc(22px * var(--u)); border-radius: calc(4px * var(--u)); background: var(--ink); transform-origin: top center; }
+  .ch.walk .legs b:first-child { animation: step .32s ease-in-out infinite alternate; }
+  .ch.walk .legs b:last-child { animation: step .32s ease-in-out infinite alternate-reverse; }
+  .ch.walk { animation: bob .32s ease-in-out infinite alternate; }
+  @keyframes step { from { transform: rotate(18deg); } to { transform: rotate(-18deg); } }
+  @keyframes bob { from { margin-bottom: 0; } to { margin-bottom: calc(4px * var(--u)); } }
+  .ch.sil .head, .ch.sil .body { background: rgba(27,42,74,.18); }
+  .ch.sil .head i { display: none; }
+  .ch.sil .legs b { background: rgba(27,42,74,.18); }
+  .ch .nm { position: absolute; top: 100%; margin-top: 4px; font: 13px "Patrick Hand", cursive; white-space: nowrap; opacity: .75; }
+  .ch .mood { position: absolute; bottom: 100%; left: 60%; margin-bottom: 4px; padding: 1px 9px; border: 1px solid var(--ink); border-radius: 12px; background: #fff; font: 14px "Patrick Hand", cursive; white-space: nowrap; transition: opacity .2s, transform .2s; }
+  .ch .mood.off { opacity: 0; transform: translateY(4px); }
+  .ch .tick { position: absolute; top: -10px; right: -12px; width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; font: 700 13px/22px Inter; text-align: center; transition: transform .25s cubic-bezier(.3,1.6,.5,1); transform: scale(0); }
+  .ch .tick.on { transform: scale(1); }
+
+  /* Hero props on the character plane */
+  .prop { position: absolute; bottom: 0; transform: translateX(-50%); border: 1.5px dashed var(--ink); border-radius: 8px; background: rgba(255,255,255,.7); display: flex; align-items: center; justify-content: center; text-align: center; font: 13px "Patrick Hand", cursive; padding: 4px; }
+  .prop.broken { border-color: var(--red); color: var(--red); }
+  .prop.shake { animation: shake .12s linear infinite; }
+  @keyframes shake { 0%,100% { transform: translateX(-50%) rotate(0); } 25% { transform: translateX(-52%) rotate(-2deg); } 75% { transform: translateX(-48%) rotate(2deg); } }
+  .think { position: absolute; transform: translateX(-50%); padding: 8px 14px; border: 1.5px solid var(--ink); border-radius: 20px; background: #fff; font: 16px "Patrick Hand", cursive; white-space: nowrap; transition: opacity .25s; }
+
+  /* Overlays */
+  #seam { position: absolute; inset: 0; pointer-events: none; }
+  .ov { position: absolute; transition: opacity .15s; will-change: transform, opacity; }
+  #cap { font-weight: 700; letter-spacing: -.01em; line-height: 1.15; max-width: 520px; }
+  .card { background: #fff; border: 1.5px solid var(--ink); border-radius: 14px; padding: 14px; box-shadow: 0 8px 24px rgba(27,42,74,.08); }
+  .card .k { font-size: 11px; color: #8A93A3; }
+  .card .v { font-weight: 700; }
+  .pillg { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; color: var(--green); background: rgba(98,175,29,.14); transform: scale(0); transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+  .pillg.on { transform: scale(1); }
+  .chip { border: 1.5px solid var(--arjun); color: var(--arjun); border-radius: 8px; padding: 7px 10px; font-size: 13px; font-weight: 600; margin-top: 6px; transition: background .2s, color .2s; }
+  .chip.sel { background: var(--arjun); color: #fff; }
+  .btn { background: var(--ink); color: #fff; border-radius: 8px; padding: 8px; text-align: center; font-size: 13px; font-weight: 700; margin-top: 8px; transition: transform .15s; }
+  .btn.press { transform: scale(.95); }
+  .ok { background: var(--green); color: #fff; border-radius: 20px; padding: 9px 16px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .bubble { position: absolute; width: 58px; height: 58px; border-radius: 50%; background: #fff; border: 1.5px solid var(--ink); transition: transform .3s cubic-bezier(.3,1.6,.5,1); transform: scale(0); }
+  .bubble.on { transform: scale(1); }
+  .bubble::before { content: ""; position: absolute; left: 25%; top: 22%; width: 50%; height: 50%; border-radius: 30%; background: var(--c); }
+  .bubble span { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 3px; font: 13px "Patrick Hand", cursive; white-space: nowrap; }
+  .bubble b { position: absolute; right: -6px; top: -8px; color: var(--red); font-size: 20px; transition: transform .2s; transform: scale(0); }
+  .bubble b.on { transform: scale(1); }
+  .head-mini { display: inline-block; width: 30px; height: 28px; border-radius: 9px; background: #9DB4CC; margin-right: 8px; transform: scale(0); transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
+  .head-mini.on { transform: scale(1); }
+  .coin { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: var(--gold); color: #fff; font: 700 12px/22px Inter; text-align: center; box-shadow: 0 2px 0 #c9952a; }
+  .coin.note { width: 28px; height: 16px; margin: -8px 0 0 -14px; border-radius: 3px; background: #5FA052; box-shadow: none; }
+  .bar { height: 8px; border-radius: 4px; background: #E4E6EA; margin: 8px 0; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--green); border-radius: 4px; }
+  #cta { display: flex; gap: 8px; }
+  #cta a { padding: 13px 18px; border-radius: 8px; font-weight: 700; font-size: 14px; text-decoration: none; white-space: nowrap; }
+  #cta a:first-child { background: var(--arjun); color: #fff; }
+  #cta a:last-child { background: #fff; color: var(--arjun); border: 1.5px solid var(--arjun); }
+
+  /* Scroll drivers */
+  #scroller { position: fixed; inset: 0; overflow-x: auto; overflow-y: hidden; z-index: 5; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  #scroller::-webkit-scrollbar { display: none; }
+  #scroller div { height: 1px; }
+  #spacer { width: 1px; }
+  .hint { position: absolute; right: 18px; bottom: 16px; font: 16px "Patrick Hand", cursive; opacity: .6; }
+
+  /* Debug HUD (not part of the design) */
+  #hud { position: fixed; z-index: 10; right: 10px; top: 10px; display: flex; gap: 6px; align-items: center; font: 600 11px Inter; background: rgba(27,42,74,.88); color: #fff; padding: 6px 8px; border-radius: 10px; }
+  #hud button { font: 600 11px Inter; border: 0; border-radius: 6px; padding: 5px 8px; background: #fff; color: var(--ink); cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="world" id="rw"><div class="box" id="rbox"></div></div>
+  <div class="world" id="aw"><div class="box" id="abox"></div></div>
+  <svg id="seam"><path d="" fill="none" stroke="#1B2A4A" stroke-width="5" stroke-linecap="round"/></svg>
+
+  <div class="ov" id="cap"></div>
+
+  <div class="ov" id="bubbles">
+    <div class="bubble" style="--c:#7A4E2D;left:0"><b>✕</b><span>Moneylender</span></div>
+    <div class="bubble" style="--c:#8A93A3;left:86px"><b>✕</b><span>Family locker</span></div>
+    <div class="bubble" style="--c:#D9A21B;left:172px"><b>✕</b><span>Mahila Mandal</span></div>
+  </div>
+
+  <div class="ov card" id="profile" style="width:210px">
+    <div style="display:flex;gap:10px;align-items:center"><div style="width:34px;height:34px;border-radius:50%;background:var(--rekha)"></div><div><div class="v" style="font-size:14px">Rekha Bai</div><div class="k">Tailor · Rajasthan</div></div></div>
+    <div class="v" style="font-size:14px;margin:10px 0 8px">₹40,000 to fix &amp; grow</div>
+    <span class="pillg">ID ✓</span> <span class="pillg">Visit ✓</span> <span class="pillg">Vouched ✓</span>
+    <div style="margin-top:8px"><span class="pillg" id="listed" style="color:#fff;background:var(--green)">Listed on Rang De</span></div>
+  </div>
+
+  <div class="ov" id="crowd"><span class="head-mini"></span><span class="head-mini"></span><span class="head-mini"></span><span class="head-mini"></span><span class="head-mini"></span><div style="font:13px 'Patrick Hand';opacity:.7;margin-top:4px">others back her too</div></div>
+
+  <div class="ov card" id="back" style="width:190px">
+    <div class="v" style="font-size:15px">Back Rekha</div>
+    <div class="chip">₹500</div><div class="chip">₹2,000</div><div class="chip" id="c5k">₹5,000</div>
+    <div class="btn" id="bbtn">Back ₹5,000</div>
+    <div class="ok" id="bok" style="margin-top:10px;text-align:center;transform:scale(0);transition:transform .3s cubic-bezier(.3,1.6,.5,1)">✓ ₹5,000 sent</div>
+  </div>
+
+  <div class="ov ok" id="pill">✓ ₹5,000 sent</div>
+
+  <div class="ov card" id="track" style="width:210px">
+    <div class="k">Repayments</div>
+    <div class="v" style="font-size:14px" id="trackv">₹1,500 of ₹5,000 back</div>
+    <div class="bar"><i id="trackb" style="width:30%"></i></div>
+    <div style="font-size:12px;font-weight:600;color:var(--green)" id="tracke">+ ₹60 earned so far</div>
+  </div>
+
+  <div class="ov card" id="credit" style="width:190px">
+    <div class="k">Credit history</div>
+    <div style="display:flex;gap:3px;margin:8px 0" id="creditbar"></div>
+    <div style="font-size:12px;font-weight:700;color:var(--green)">✓ Repaid on time</div>
+    <div class="k" style="margin-top:2px">Score rising ↑</div>
+  </div>
+  <div class="ov card" id="returns" style="width:200px">
+    <div class="k">After 12 months</div>
+    <div class="v" style="font-size:17px;margin-top:4px">₹5,000 → ₹5,425</div>
+    <div class="k" style="margin-top:4px">up to 8.5% p.a. · example</div>
+  </div>
+  <div class="ov" id="cta"><a href="#">Start investing</a><a href="#">See the details</a></div>
+
+  <div id="coins"></div>
+  <div class="hint" id="hint"></div>
+</div>
+
+<div id="scroller"><div id="track-w"></div></div>
+<div id="spacer"></div>
+
+<div id="hud"><span id="hudt">Scene 1/10</span><button id="prev">◀</button><button id="next">▶</button><button id="lbl">Labels</button></div>
+
+<script>
+(() => {
+  const N = 10, PMAX = 9.5;
+  // Per-scene keyframes. The camera, seam and characters hold for the first half of each
+  // scene (the scene's own action) and travel to the next scene in the second half.
+  const SEAM = [.5, .5, .78, .78, .78, .55, .22, .55, .45, .5];
+  const CAMR = [380, 400, 420, 1200, 2000, 2100, 2850, 3550, 3550, 3560];
+  const CAMA = [600, 650, 700, 800, 2000, 2100, 2100, 2150, 3400, 3450];
+  const CAP = [
+    'Rekha and Arjun have never met.',
+    'Rekha stitches clothes in her village. Arjun works in Bengaluru.',
+    'Then her sewing machine breaks.',
+    'She can’t get the money to fix it.',
+    'A local partner visits. Her neighbours vouch for her.',
+    'She’s checked on the ground, then listed on Rang De.',
+    'Arjun backs her. So do others.',
+    'The money reaches her. Her machine runs again.',
+    'She repays bit by bit. Arjun tracks every rupee.',
+    'She builds a credit history. He earns up to 8.5% p.a.',
+  ];
+  const CHARS = [
+    { id: 'rekha', w: 'r', name: 'Rekha', c: 'var(--rekha)', x: [300, 320, 320, 1040, 1900, 1980, 2850, 3440, 3420, 3420], v: [1,1,1,1,1,1,1,1,1,1], mood: ['', 'sewing', 'oh no', 'stuck', 'hopeful', '', 'hopeful', 'overjoyed', 'proud', 'proud'] },
+    { id: 'officer', w: 'r', name: 'Field officer', c: '#639922', x: [1450,1450,1450,1450,1760,1800,1800,1800,1800,1800], v: [0,0,0,0,1,1,0,0,0,0], mood: ['', '', '', '', 'listening', 'stamping', '', '', '', ''] },
+    { id: 'elder', w: 'r', name: 'Elder', c: '#9A9A9A', x: [2180,2180,2180,2180,2180,2180,2180,2180,2180,2180], v: [0,0,0,0,1,1,1,0,0,0], tick: 4 },
+    { id: 'neigh', w: 'r', name: 'Neighbour', c: '#D9A21B', x: [2330,2330,2330,2330,2330,2330,2330,3300,3690,3690], v: [0,0,0,0,1,1,1,0,1,1], tick: 4, mood: ['', '', '', '', '', '', '', '', 'hired!', ''] },
+    { id: 'arjun', w: 'a', name: 'Arjun', c: 'var(--arjun)', x: [650, 660, 700, 760, 2000, 2050, 2040, 2100, 3350, 3400], v: [1,1,1,1,1,1,1,1,1,1], mood: ['', 'scrolling', '', '', '', 'ooh', 'tapping', 'pleased', 'happy', 'happy'] },
+  ];
+  const SP = { L1: .3, L2: .85, L3: 1, L4: 1.35 };
+
+  // ---------- wireframe layer art (world units; 600 tall, ground at y=540) ----------
+  // SVG presentation attributes can't read CSS variables, so the palette is inlined here.
+  const HEX = { ink: '#1B2A4A', l1: '#B4BFD3', l2: '#7F8DAA', l4: '#4E9A63', l4f: '#E3EEDF' };
+  const sv = (sp, body, width = 6000) =>
+    `<svg data-sp="${sp}" viewBox="-1500 0 ${width + 1500} 600" preserveAspectRatio="xMinYMax meet">${body.replace(/var\(--(ink|l1|l2|l4f|l4)\)/g, (_, k) => HEX[k])}</svg>`;
+  const at = (x, sp) => x * sp;
+  const st = (c, w = 2, extra = '') => `fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" ${extra}`;
+  const lbl = (x, y, t, c) => `<text class="lbl" x="${x}" y="${y}" font-size="16" fill="${c}">${t}</text>`;
+  const cloud = (x, y, sp) => `<rect x="${at(x, sp)}" y="${y}" width="70" height="22" rx="11" ${st('var(--l1)')}/><rect x="${at(x, sp) + 16}" y="${y - 12}" width="38" height="22" rx="11" ${st('var(--l1)')}/>`;
+  const plant = (x, sp, s = 1) => `<ellipse cx="${at(x, sp)}" cy="${600}" rx="${70 * s}" ry="${115 * s}" fill="var(--l4f)" ${st('var(--l4)', 2).replace('fill="none" ', '')}/><path d="M${at(x, sp)} 600 L${at(x, sp) - 30 * s} ${520 - 20 * s} M${at(x, sp)} 600 L${at(x, sp) + 25 * s} ${510 - 20 * s}" ${st('var(--l4)', 2)}/>`;
+
+  const R = {
+    L1: (() => { const s = SP.L1; let b = ''; [100, 700, 1350, 2050, 2700, 3400, 4100].forEach((x, i) => b += cloud(x, 90 + (i % 2) * 40, s));
+      b += `<path d="M${at(-400, s)} 470 Q${at(600, s)} 380 ${at(1700, s)} 470 T${at(4400, s)} 470" ${st('var(--l1)')}/>`;
+      [1500, 1650, 2600, 2750, 3000].forEach((x, i) => b += `<rect x="${at(x, s)}" y="${430 + (i % 2) * 10}" width="46" height="${40 - (i % 2) * 10}" ${st('var(--l1)')}/>`);
+      b += lbl(at(20, s), 30, 'L1 · sky & far · 0.3×', 'var(--l1)'); return sv(s, b); })(),
+    L2: (() => { const s = SP.L2, X = (x) => at(x, s); let b = '';
+      b += `<rect x="${X(40)}" y="200" width="600" height="340" ${st('var(--l2)')}/><rect x="${X(40) + 50}" y="280" width="110" height="130" ${st('var(--l2)')}/><path d="M${X(40) + 260} 200 V230 M${X(40) + 200} 236 H${X(40) + 320}" ${st('var(--l2)', 3)}/><rect x="${X(40) + 470}" y="260" width="90" height="12" ${st('var(--l2)')}/>`;
+      b += `<rect x="${X(700)}" y="300" width="80" height="240" ${st('var(--l2)', 2, 'stroke-dasharray="8 6"')}/>` + lbl(X(40) + 10, 226, 'L2 · home (cutaway)', 'var(--l2)');
+      b += `<rect x="${X(900)}" y="230" width="560" height="310" ${st('var(--l2)')}/><rect x="${X(900) + 110}" y="250" width="340" height="50" ${st('var(--l2)')}/><rect x="${X(900) + 80}" y="330" width="400" height="210" ${st('var(--l2)')}/><circle cx="${X(900) + 520}" cy="290" r="18" ${st('var(--l2)')}/>` + lbl(X(900) + 10, 256, 'L2 · bank', 'var(--l2)');
+      b += `<rect id="shutter" x="${X(900) + 80}" y="330" width="400" height="0" fill="rgba(127,141,170,.45)" stroke="var(--l2)" stroke-width="2"/>`;
+      b += `<rect x="${X(1640)}" y="340" width="190" height="200" ${st('var(--l2)')}/><rect x="${X(2440)}" y="350" width="170" height="190" ${st('var(--l2)')}/><circle cx="${X(2150)}" cy="250" r="190" ${st('var(--l2)')}/><path d="M${X(2150)} 430 V540" ${st('var(--l2)', 5)}/>` + lbl(X(2010), 60, 'L2 · neem tree + courtyard', 'var(--l2)');
+      b += `<rect x="${X(2620)}" y="470" width="520" height="70" ${st('var(--l2)')}/><path d="M${X(2950)} 200 V470 M${X(2620)} 240 Q${X(2800)} 290 ${X(2950)} 210" ${st('var(--l2)')}/>` + lbl(X(2630), 460, 'L2 · lane wall', 'var(--l2)');
+      b += `<rect x="${X(3150)}" y="210" width="800" height="330" ${st('var(--l2)')}/><path d="M${X(3150)} 300 H${X(3150) + 800} L${X(3150) + 760} 360 H${X(3150) + 40} Z" ${st('var(--l2)')}/><rect x="${X(3150) + 250}" y="225" width="300" height="50" ${st('var(--l2)')}/><path d="M${X(3150) + 80} 400 Q${X(3150) + 400} 440 ${X(3150) + 720} 400" ${st('var(--l2)', 2, 'stroke-dasharray="4 6"')}/>` + lbl(X(3150) + 10, 236, 'L2 · Rekha’s shop', 'var(--l2)');
+      return sv(s, b); })(),
+    L3: (() => { let b = `<path d="M-1500 540 H6000" ${st('var(--ink)', 2)}/>`;
+      b += `<rect x="1500" y="500" width="130" height="40" ${st('var(--ink)', 2, 'stroke-dasharray="8 6"')}/>` + lbl(1505, 495, 'L3 bench', 'var(--ink)');
+      b += `<rect x="2230" y="512" width="220" height="16" ${st('var(--ink)', 2, 'stroke-dasharray="8 6"')}/>` + lbl(2235, 505, 'L3 charpai', 'var(--ink)');
+      b += `<rect x="3120" y="540" width="860" height="12" ${st('var(--ink)')}/>`;
+      [200, 900, 1700, 2700, 3300].forEach((x) => b += `<circle cx="${x}" cy="548" r="5" ${st('var(--ink)', 1.5)}/><path d="M${x + 40} 540 l6 -14 l6 14 l6 -10" ${st('var(--ink)', 1.5)}/>`);
+      b += lbl(20, 580, 'L3 · ground & props · 1×', 'var(--ink)'); return sv(1, b); })(),
+    L4: (() => { const s = SP.L4; let b = ''; [120, 860, 1650, 2550, 3150, 3950].forEach((x, i) => b += plant(x, s, i % 2 ? 1.1 : .9));
+      b += lbl(at(140, s) + 70, 590, 'L4 · foreground · 1.35×', 'var(--l4)'); return sv(s, b); })(),
+  };
+  const A = {
+    L1: (() => { const s = SP.L1; let b = ''; [200, 900, 1700, 2500, 3200, 3900].forEach((x, i) => b += cloud(x, 80 + (i % 2) * 40, s));
+      [[150, 230], [260, 180], [380, 250], [520, 200], [2900, 210], [3050, 170], [3200, 240], [3360, 190], [3520, 230], [3700, 200], [3860, 250]].forEach(([x, y]) => b += `<rect x="${at(x, s)}" y="${y}" width="60" height="${470 - y}" ${st('var(--l1)')}/>`);
+      b += lbl(at(20, s), 30, 'L1 · sky & far · 0.3×', 'var(--l1)'); return sv(s, b); })(),
+    L2: (() => { const s = SP.L2, X = (x) => at(x, s); let b = `<path d="M${X(-600)} 180 H${X(2850)}" ${st('var(--l2)')}/>`;
+      b += `<rect x="${X(150)}" y="230" width="460" height="220" ${st('var(--l2)')}/><rect x="${X(800)}" y="250" width="90" height="110" ${st('var(--l2)')}/><rect x="${X(940)}" y="280" width="70" height="80" ${st('var(--l2)')}/>` + lbl(X(160), 222, 'L2 · living room', 'var(--l2)');
+      b += `<path d="M${X(1400)} 540 V260 Q${X(1400) + 60} 200 ${X(1400) + 120} 260 V540" ${st('var(--l2)')}/>`;
+      b += `<rect x="${X(1550)}" y="260" width="200" height="180" ${st('var(--l2)')}/><path d="M${X(1550)} 320 H${X(1750)} M${X(1550)} 380 H${X(1750)}" ${st('var(--l2)')}/><circle cx="${X(2000)}" cy="270" r="26" ${st('var(--l2)')}/>` + lbl(X(1560), 252, 'L2 · work corner', 'var(--l2)');
+      b += `<rect x="${X(2700)}" y="220" width="140" height="320" ${st('var(--l2)')}/><path d="M${X(2850)} 440 H${X(4100)}" ${st('var(--l2)', 3)}/>`;
+      for (let x = 2880; x < 4100; x += 70) b += `<path d="M${X(x)} 440 V540" ${st('var(--l2)', 1.5)}/>`;
+      b += lbl(X(2860), 430, 'L2 · balcony', 'var(--l2)'); return sv(s, b); })(),
+    L3: (() => { let b = `<path d="M-1500 540 H6000" ${st('var(--ink)', 2)}/>`;
+      b += `<rect x="480" y="460" width="330" height="80" rx="14" ${st('var(--ink)', 2, 'stroke-dasharray="8 6"')}/>` + lbl(490, 455, 'L3 sofa', 'var(--ink)');
+      b += `<path d="M960 540 V330 M930 330 H990 L975 300 H945 Z" ${st('var(--ink)', 2)}/>`;
+      b += `<rect x="1880" y="440" width="330" height="100" ${st('var(--ink)', 2, 'stroke-dasharray="8 6"')}/><rect x="2060" y="390" width="90" height="50" ${st('var(--ink)', 2)}/>` + lbl(1890, 435, 'L3 desk + laptop', 'var(--ink)');
+      b += `<rect x="3520" y="490" width="70" height="50" ${st('var(--ink)', 2, 'stroke-dasharray="8 6"')}/>`;
+      b += lbl(20, 580, 'L3 · floor & furniture · 1×', 'var(--ink)'); return sv(1, b); })(),
+    L4: (() => { const s = SP.L4; let b = ''; [100, 1250, 2600, 3950].forEach((x, i) => b += plant(x, s, i % 2 ? 1.1 : .95)); return sv(s, b); })(),
+  };
+
+  // ---------- build DOM ----------
+  const $ = (s) => document.querySelector(s);
+  const stage = $('#stage'), rbox = $('#rbox'), abox = $('#abox');
+  const worlds = { r: { box: rbox, art: R, cam: CAMR, plane: null, layers: [] }, a: { box: abox, art: A, cam: CAMA, plane: null, layers: [] } };
+  for (const w of Object.values(worlds)) {
+    for (const k of ['L1', 'L2', 'L3']) { const d = document.createElement('div'); d.className = 'layer'; d.dataset.sp = SP[k]; d.innerHTML = w.art[k]; w.box.appendChild(d); w.layers.push(d); }
+    w.plane = document.createElement('div'); w.plane.className = 'plane'; w.box.appendChild(w.plane);
+    const d = document.createElement('div'); d.className = 'layer'; d.dataset.sp = SP.L4; d.innerHTML = w.art.L4; w.box.appendChild(d); w.layers.push(d);
+  }
+  const shutter = document.getElementById('shutter');
+  // Hero props + thought bubble on Rekha's plane
+  const mk = (cls, html, plane) => { const e = document.createElement('div'); e.className = cls; e.innerHTML = html; plane.appendChild(e); return e; };
+  const machineHome = mk('prop', 'sewing machine', worlds.r.plane);
+  const machineShop = mk('prop', 'machine · fixed ✨', worlds.r.plane);
+  const think = mk('think', '₹ for the repair?', worlds.r.plane);
+  const chars = CHARS.map((c) => {
+    const e = mk('ch', `<div class="mood off"></div><div class="tick">✓</div><div class="head"><i></i><i></i></div><div class="body"></div><div class="legs"><b></b><b></b></div><div class="nm">${c.name}</div>`, worlds[c.w].plane);
+    e.style.setProperty('--c', c.c); return { ...c, el: e, mood: c.mood || [], last: null };
+  });
+  const coins = Array.from({ length: 8 }, (_, i) => { const e = document.createElement('div'); e.className = 'coin' + (i % 3 === 2 ? ' note' : ''); e.textContent = i % 3 === 2 ? '' : '₹'; $('#coins').appendChild(e); return e; });
+  const creditbar = $('#creditbar'); for (let i = 0; i < 10; i++) { const b = document.createElement('i'); b.style.cssText = 'display:block;width:12px;height:12px;border-radius:3px;background:#E4E6EA'; creditbar.appendChild(b); }
+
+  // ---------- helpers ----------
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const sm = (t) => { t = clamp(t); return t * t * (3 - 2 * t); };
+  const lerp = (a, b, t) => a + (b - a) * t;
+  function kf(arr, p) { const k = clamp(Math.floor(p), 0, N - 1), t = p - k; if (k >= N - 1 || t < .5) return arr[k]; return lerp(arr[k], arr[k + 1], ease((t - .5) / .5)); }
+  const vis = (k, p) => sm((p - (k - .15)) / .15) * (k === N - 1 ? 1 : 1 - sm((p - (k + .55)) / .15));
+  const act = (k, p) => clamp((p - k) / .5);
+  const show = (el, o, x, y, anchor = 'tl') => {
+    el.style.opacity = o; el.style.visibility = o < .01 ? 'hidden' : 'visible';
+    if (x == null) return;
+    const w = el.offsetWidth, h = el.offsetHeight;
+    const dx = anchor.includes('c') ? -w / 2 : 0, dy = anchor.includes('m') ? -h / 2 : 0;
+    el.style.transform = `translate(${Math.round(x + dx)}px, ${Math.round(y + dy)}px)`;
+  };
+  const place = (el, b, fx, fy) => [b.l + b.w * fx - el.offsetWidth / 2, b.t + b.h * fy - el.offsetHeight / 2];
+  const bez = (p0, c, p1, t) => { const u = 1 - t; return [u * u * p0[0] + 2 * u * t * c[0] + t * t * p1[0], u * u * p0[1] + 2 * u * t * c[1] + t * t * p1[1]]; };
+
+  // ---------- scroll driver ----------
+  let mobile = false, W = 0, H = 0, u = 1, p = 0;
+  const scroller = $('#scroller'), trackW = $('#track-w'), spacer = $('#spacer');
+  function layout() {
+    W = innerWidth; H = innerHeight; mobile = W < 768;
+    document.body.classList.toggle('mobile', mobile);
+    u = mobile ? Math.min(W / 600, H / 1300) : clamp(H / 760, .75, 1.25);
+    stage.style.setProperty('--u', u);
+    scroller.style.display = mobile ? 'block' : 'none';
+    trackW.style.width = (PMAX + 1) * W + 'px';
+    spacer.style.height = mobile ? '0' : (PMAX * H + H) + 'px';
+    for (const w of Object.values(worlds)) for (const l of w.layers) { const svg = l.firstChild; svg.style.height = 600 * u + 'px'; svg.style.width = 7500 * u + 'px'; }
+    $('#hint').textContent = mobile ? 'swipe →' : 'scroll ↓';
+    read(); render();
+  }
+  function read() { p = clamp(mobile ? scroller.scrollLeft / W : scrollY / H, 0, PMAX); }
+  function go(k) { k = clamp(Math.round(k), 0, N - 1); if (mobile) scroller.scrollTo({ left: k * W, behavior: 'smooth' }); else scrollTo({ top: k * H, behavior: 'smooth' }); }
+
+  // ---------- render ----------
+  function boxes(seam) {
+    if (mobile) { const sy = seam * H; return { r: { l: 0, t: 0, w: W, h: sy - 14 }, a: { l: 0, t: sy + 10, w: W, h: H - sy - 10 }, sy };
+    } else { const sx = seam * W; return { r: { l: 0, t: 0, w: sx - 16, h: H }, a: { l: sx + 10, t: 0, w: W - sx - 10, h: H }, sx }; }
+  }
+  function render() {
+    const k = clamp(Math.floor(p), 0, N - 1), t = p - k, seam = kf(SEAM, p), B = boxes(seam);
+    // Bands, seam and clips
+    let cr, ca, sp;
+    if (mobile) { const y = B.sy; cr = `M0 0 L${W} 0 L${W} ${y - 10} Q${W / 2} ${y - 22} 0 ${y + 10} Z`; ca = `M0 ${y + 10} Q${W / 2} ${y - 22} ${W} ${y - 10} L${W} ${H} L0 ${H} Z`; sp = `M0 ${y + 10} Q${W / 2} ${y - 22} ${W} ${y - 10}`; }
+    else { const x = B.sx; cr = `M0 0 L${x - 10} 0 Q${x - 22} ${H / 2} ${x + 10} ${H} L0 ${H} Z`; ca = `M${x - 10} 0 L${W} 0 L${W} ${H} L${x + 10} ${H} Q${x - 22} ${H / 2} ${x - 10} 0 Z`; sp = `M${x - 10} 0 Q${x - 22} ${H / 2} ${x + 10} ${H}`; }
+    $('#rw').style.clipPath = `path('${cr}')`; $('#aw').style.clipPath = `path('${ca}')`;
+    $('#seam').setAttribute('width', W); $('#seam').setAttribute('height', H); $('#seam path').setAttribute('d', sp);
+    const geo = {};
+    for (const [key, w] of Object.entries(worlds)) {
+      const b = B[key]; Object.assign(w.box.style, { left: b.l + 'px', top: b.t + 'px', width: b.w + 'px', height: b.h + 'px' });
+      const cam = kf(w.cam, p);
+      // Opening: the world draws in from the back, one layer at a time.
+      w.layers.forEach((l, i) => { l.style.transform = `translate3d(${b.w / 2 - (cam * l.dataset.sp + 1500) * u}px,0,0)`; l.style.opacity = k === 0 ? sm(.35 + p * 2.6 - i * .25) : 1; });
+      w.plane.style.transform = `translate3d(${b.w / 2 - cam * u}px,0,0)`;
+      w.plane.style.height = b.h + 'px';
+      geo[key] = { b, cam, x: (wx) => b.l + b.w / 2 + (wx - cam) * u, gy: b.t + b.h - 60 * u };
+    }
+    // Ground plane sits 60 units above the box bottom
+    for (const w of Object.values(worlds)) w.plane.style.bottom = 60 * u + 'px';
+
+    // Characters
+    for (const c of chars) {
+      const x = kf(c.x, p), o = kf(c.v, p);
+      c.el.style.left = x * u + 'px'; c.el.style.opacity = o; c.el.style.visibility = o < .02 ? 'hidden' : 'visible';
+      const moving = c.last != null && Math.abs(x - c.last) > .4;
+      c.el.classList.toggle('walk', moving); if (moving) c.el.classList.toggle('flip', x < c.last);
+      c.last = x;
+      c.el.classList.toggle('sil', (c.id === 'rekha' || c.id === 'arjun') && p < .35);
+      const m = c.mood[k] || '', mEl = c.el.querySelector('.mood');
+      if (m) mEl.textContent = m; mEl.classList.toggle('off', !m || t > .55);
+      if (c.tick != null) c.el.querySelector('.tick').classList.toggle('on', p >= c.tick + (c.id === 'elder' ? .1 : .3) && p < c.tick + 2.5);
+    }
+
+    // Rekha's machine: works, then snaps in scene 3; the fixed one waits at her shop.
+    machineHome.style.left = 470 * u + 'px'; machineHome.style.width = 150 * u + 'px'; machineHome.style.height = 80 * u + 'px';
+    const broken = p >= 2.12; machineHome.classList.toggle('broken', broken); machineHome.textContent = broken ? 'machine · broken ⚡' : 'sewing machine';
+    machineHome.classList.toggle('shake', p >= 2.02 && p < 2.2);
+    machineShop.style.left = 3560 * u + 'px'; machineShop.style.width = 150 * u + 'px'; machineShop.style.height = 80 * u + 'px';
+    machineShop.style.opacity = p > 7.3 ? 1 : .25;
+    think.style.left = 560 * u + 'px'; think.style.bottom = 150 * u + 'px'; think.style.opacity = (k === 2 && t > .2 && t < .6) ? 1 : 0;
+    shutter.setAttribute('height', 210 * (p < 3 ? 0 : p >= 3.5 ? 1 : ease(act(3, p))));
+
+    // Caption: in the sky of whichever world has the focus
+    const cap = $('#cap'); let ck, co;
+    if (t < .75 || k === N - 1) { ck = k; co = (k === 0 ? 1 : sm(t / .1)) * (k === N - 1 ? 1 : 1 - sm((t - .6) / .15)); } else { ck = k + 1; co = sm((t - .85) / .15); }
+    if (cap.dataset.k != ck) { cap.textContent = CAP[ck]; cap.dataset.k = ck; }
+    const focusR = SEAM[ck] >= .5, fb = focusR ? geo.r.b : geo.a.b;
+    cap.style.fontSize = (mobile ? 22 : 30) + 'px'; cap.style.width = Math.min(fb.w - 48, 520) + 'px';
+    show(cap, co, fb.l + (mobile ? 22 : 40), fb.t + (mobile ? (focusR ? 30 : 26) : 36));
+
+    // 04 · bubbles
+    const bb = $('#bubbles'), a3 = act(3, p);
+    show(bb, vis(3, p), geo.r.b.l + 22, geo.r.b.t + (mobile ? 110 : 130));
+    bb.querySelectorAll('.bubble').forEach((e, i) => { e.classList.toggle('on', a3 > .1 + i * .22); e.querySelector('b').classList.toggle('on', a3 > .25 + i * .22); });
+
+    // 06 · profile card on the seam; stamps land, then it drops into Arjun's world
+    const pr = $('#profile'), a5 = act(5, p);
+    let px = mobile ? W / 2 : B.sx, py = mobile ? B.sy : H * .45;
+    if (k === 5 && t > .5) { const e = ease((t - .5) / .5); const [tx, ty] = [geo.a.b.l + geo.a.b.w * .62, geo.a.b.t + geo.a.b.h * .5]; px = lerp(px, tx, e); py = lerp(py, ty, e); }
+    show(pr, vis(5, p) * (k === 5 && t > .5 ? 1 - sm((t - .8) / .2) : 1), px, py, 'cm');
+    pr.querySelectorAll('.pillg').forEach((e, i) => e.classList.toggle('on', a5 > .15 + i * .22));
+
+    // 07 · Back Rekha card → success state; other investors pop in
+    const bk = $('#back'), a6 = act(6, p);
+    const [bx, by] = place(bk, geo.a.b, mobile ? .68 : .62, .5);
+    show(bk, vis(6, p), bx, by);
+    $('#c5k').classList.toggle('sel', a6 > .25); $('#bbtn').classList.toggle('press', a6 > .45 && a6 < .55);
+    $('#bok').style.transform = `scale(${a6 > .55 ? 1 : 0})`;
+    const cw = $('#crowd'); show(cw, vis(6, p), geo.a.b.l + (mobile ? 22 : 40), geo.a.b.t + (mobile ? 90 : 120));
+    cw.querySelectorAll('.head-mini').forEach((e, i) => e.classList.toggle('on', a6 > .65 + i * .07));
+
+    // 08 · money flies out of his success state into her shop (UPI style)
+    const pill = $('#pill'), a7 = act(7, p);
+    const [plx, ply] = place(pill, geo.a.b, mobile ? .62 : .6, .45);
+    show(pill, vis(7, p), plx, ply);
+    const src7 = [plx + pill.offsetWidth / 2, ply], dst7 = [geo.r.x(3560), geo.r.gy - 50 * u];
+    // 09 · coins come back from her to his tracker
+    const tr = $('#track'), a8 = act(8, p);
+    const [tx8, ty8] = place(tr, geo.a.b, mobile ? .62 : .6, .5);
+    show(tr, vis(8, p), tx8, ty8);
+    const back = Math.round(1500 + a8 * 2250); $('#trackv').textContent = `₹${back.toLocaleString('en-IN')} of ₹5,000 back`;
+    $('#trackb').style.width = (back / 50) + '%'; $('#tracke').textContent = `+ ₹${Math.round(60 + a8 * 150)} earned so far`;
+    const src8 = [geo.r.x(kf(CHARS[0].x, p)), geo.r.gy - 90 * u], dst8 = [tx8 + 30, ty8];
+    let route = null, prog = 0;
+    if (k === 7) { route = [src7, dst7]; prog = a7; } else if (k === 8) { route = [src8, dst8]; prog = a8; }
+    coins.forEach((e, i) => {
+      if (!route || vis(k, p) < .05) { e.style.opacity = 0; return; }
+      const c = clamp(prog * 1.7 - i * .1), [s0, s1] = route;
+      const ctrl = mobile ? [(s0[0] + s1[0]) / 2 + 130, (s0[1] + s1[1]) / 2] : [(s0[0] + s1[0]) / 2, Math.min(s0[1], s1[1]) - 150];
+      const [x, y] = bez(s0, ctrl, s1, ease(c));
+      e.style.opacity = c > 0 && c < 1 ? 1 : 0; e.style.transform = `translate(${x}px,${y}px) rotate(${c * 360}deg)`;
+    });
+
+    // 10 · impact on both sides + CTAs
+    const a9 = act(9, p);
+    const cr2 = $('#credit'); const [cx9, cy9] = place(cr2, geo.r.b, mobile ? .68 : .66, mobile ? .55 : .45); show(cr2, vis(9, p), cx9, cy9);
+    creditbar.querySelectorAll('i').forEach((e, i) => e.style.background = a9 > i * .08 ? 'var(--green)' : '#E4E6EA');
+    const rt = $('#returns'); const [rx9, ry9] = place(rt, geo.a.b, mobile ? .66 : .62, mobile ? .4 : .42); show(rt, vis(9, p) * sm(a9 * 2 - .3), rx9, ry9);
+    const cta = $('#cta'); show(cta, vis(9, p) * sm(a9 * 2 - 1), W / 2, H - (mobile ? 74 : 92), 'c');
+
+    $('#hint').style.opacity = p < .3 ? .6 : 0;
+    $('#hudt').textContent = `Scene ${k + 1}/10 · ${p.toFixed(2)}`;
+  }
+
+  let raf = 0;
+  const tick = () => { raf = 0; read(); render(); };
+  const onScroll = () => { if (!raf) raf = requestAnimationFrame(tick); };
+  addEventListener('scroll', onScroll, { passive: true });
+  scroller.addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', layout);
+  // Desktop wheel → vertical page scroll is native; arrow keys too.
+  $('#prev').onclick = () => go(Math.ceil(p) - 1);
+  $('#next').onclick = () => go(Math.floor(p) + 1);
+  $('#lbl').onclick = () => stage.classList.toggle('hide-labels');
+  document.fonts && document.fonts.ready.then(layout);
+  layout();
+})();
+</script>
+</body>
+</html>

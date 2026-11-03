@@ -10,7 +10,7 @@ import { PAGE_READY_EVENT } from "@/lib/use-page-ready";
  * the initial HTML too, so it covers the page from first paint — not just after
  * hydration — avoiding a flash of an unstyled/half-loaded page on slow connections.
  */
-const MAX_WAIT_MS = 1500;
+const MAX_WAIT_MS = 800;
 
 export function PageLoader() {
   // Always starts visible on both server and client — `document.readyState` is

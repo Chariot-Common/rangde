@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Extra Life · A Rang De story game</title>
+<meta name="description" content="Meena has a big school order and ₹2,000. Walk her village, haggle with the moneylender, fight the byaaj, and find out why every door closes. Can you win without an extra life?">
+<meta property="og:title" content="Extra Life: Meena needs ₹48,000. You have 4 lives.">
+<meta property="og:description" content="A 5-minute story game about borrowing in rural India. Moneylender, bank, chit fund, family. Can you win?">
+<meta name="theme-color" content="#2A2420">
+<link rel="icon" href="logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2A2420; --ink-60:rgba(42,36,32,.62); --paper:#FFF7EC; --card:#FFFDF8;
+    --green:#5E7B3A; --red:#D6453D; --gold:#F2B43C; --blue:#0DAADE; --purple:#6B3A6E;
+    --display:"Baloo 2", Inter, sans-serif; --sans:Inter, system-ui, sans-serif; --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; background:#1C1916; color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow:hidden; overscroll-behavior:none; }
+  body{ display:flex; align-items:center; justify-content:center; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; touch-action:manipulation; }
+  a{ color:inherit; }
+  button:focus-visible, a:focus-visible, input:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+
+  /* The phone: full screen on phones, a portrait frame on desktop (matches the Figma 390×724 frames). */
+  .phone{ position:relative; width:100vw; height:100dvh; overflow:hidden; background:#E9D8C8; }
+  @media (min-width:600px){ .phone{ height:min(94dvh, 860px); width:calc(min(94dvh, 860px) * 390 / 760); border-radius:36px; box-shadow:0 0 0 10px #000, 0 30px 80px rgba(0,0,0,.6); } }
+  canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+
+  /* HUD */
+  .hud{ position:absolute; z-index:4; left:0; right:0; top:0; padding:max(12px, env(safe-area-inset-top)) 12px 0; display:flex; justify-content:space-between; align-items:flex-start; gap:8px; pointer-events:none; }
+  .hud > *{ pointer-events:auto; }
+  .left{ display:flex; flex-direction:column; gap:6px; }
+  .hearts{ display:flex; gap:3px; }
+  .hearts i{ width:22px; height:20px; display:block; background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21s-9-5.6-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.4-9 12-9 12z' fill='%23D6453D' stroke='%232A2420' stroke-width='1.6'/%3E%3C/svg%3E"); transition:transform .3s; }
+  .hearts i.gold{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21s-9-5.6-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.4-9 12-9 12z' fill='%23F2B43C' stroke='%232A2420' stroke-width='1.6'/%3E%3C/svg%3E"); animation:pop .6s var(--ease); }
+  .hearts i.gone{ opacity:.22; filter:grayscale(1); }
+  .hearts i.break{ animation:break .8s both; }
+  @keyframes break{ 20%{ transform:rotate(-15deg) scale(1.2); } 40%{ transform:rotate(15deg); } 100%{ transform:scale(.7); opacity:.22; filter:grayscale(1); } }
+  @keyframes pop{ 0%{ transform:scale(0); } 70%{ transform:scale(1.4); } }
+  .chip{ font-family:var(--display); font-weight:700; font-size:13px; line-height:16px; padding:4px 10px 3px; border-radius:999px; background:rgba(255,253,248,.85); border:2px solid var(--ink); align-self:flex-start; }
+  .right{ display:flex; align-items:flex-start; gap:6px; }
+  .wallet{ font-family:var(--display); font-weight:800; font-size:22px; line-height:24px; padding:6px 12px 4px; border-radius:14px; background:var(--card); border:2.5px solid var(--ink); box-shadow:0 3px 0 var(--ink); font-variant-numeric:tabular-nums; min-width:96px; text-align:center; transition:color .3s, background .3s; }
+  .wallet small{ display:block; font-family:var(--sans); font-size:9px; line-height:10px; font-weight:800; letter-spacing:.08em; color:var(--ink-60); }
+  .wallet.neg{ background:#FFE1DD; color:var(--red); animation:shake .4s; }
+  .wallet.bump{ animation:bump .35s var(--ease); }
+  @keyframes bump{ 50%{ transform:scale(1.12); } }
+  @keyframes shake{ 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); } }
+  .bag{ position:relative; width:74px; height:78px; }
+  .bag svg.sack{ position:absolute; inset:0; width:100%; height:100%; }
+  .bag .slots{ position:absolute; left:10px; right:10px; top:28px; display:flex; justify-content:center; gap:1px; }
+  .bag .slots span{ width:18px; height:18px; opacity:.18; filter:grayscale(1); transition:all .4s var(--ease); }
+  .bag .slots span.in{ opacity:1; filter:none; transform:translateY(-14px) scale(1.25); }
+  .bag .slots svg{ width:100%; height:100%; }
+  .bag.got{ animation:bump .4s var(--ease); }
+  .mute{ width:30px; height:30px; border-radius:50%; background:var(--card); border:2px solid var(--ink); font-size:14px; }
+
+  /* Small floating action button, like most mobile games */
+  .actbtn{ position:absolute; z-index:3; right:16px; bottom:max(18px, env(safe-area-inset-bottom)); display:flex; align-items:center; gap:8px; padding:0 18px 0 8px; height:56px; border-radius:999px; background:var(--gold); border:3px solid var(--ink); box-shadow:0 4px 0 var(--ink); font-family:var(--display); font-weight:800; font-size:17px; transform:scale(0); transition:transform .25s var(--ease); }
+  .actbtn.on{ transform:scale(1); animation:ready 1.2s ease-in-out infinite; }
+  .actbtn i{ width:40px; height:40px; border-radius:50%; background:#fff; border:2px solid var(--ink); display:flex; align-items:center; justify-content:center; font-style:normal; font-size:20px; }
+  .actbtn:active{ transform:translateY(3px); box-shadow:none; }
+  @keyframes ready{ 50%{ transform:translateY(-3px); } }
+  .hint{ position:absolute; z-index:3; left:50%; bottom:max(24px, env(safe-area-inset-bottom)); transform:translateX(-50%); font-family:var(--display); font-weight:800; font-size:15px; color:#fff; background:rgba(42,36,32,.72); padding:8px 16px; border-radius:999px; white-space:nowrap; pointer-events:none; transition:opacity .4s; }
+  .hint.off{ opacity:0; }
+  .tapmark{ position:absolute; z-index:2; width:34px; height:34px; margin:-17px 0 0 -17px; border:3px solid #fff; border-radius:50%; pointer-events:none; animation:tapmark .5s ease-out forwards; }
+  @keyframes tapmark{ from{ transform:scale(.3); opacity:1; } to{ transform:scale(1.4); opacity:0; } }
+
+  /* Dialogue sheet sits over the ground strip */
+  .sheet{ position:absolute; z-index:5; left:10px; right:10px; bottom:max(10px, env(safe-area-inset-bottom)); background:var(--card); border:3px solid var(--ink); border-radius:22px; box-shadow:0 6px 0 var(--ink); padding:14px 14px 12px; display:flex; flex-direction:column; gap:10px; transform:translateY(130%); transition:transform .35s var(--ease); max-height:62%; overflow:auto; }
+  .sheet.on{ transform:none; }
+  .who{ display:flex; align-items:center; gap:10px; }
+  .who canvas, .who img{ position:static; width:44px; height:44px; border-radius:50%; border:2px solid var(--ink); background:#F4E6D6; flex:none; object-fit:cover; object-position:top; }
+  .who b{ font-family:var(--display); font-weight:800; font-size:17px; line-height:18px; }
+  .who small{ display:block; font-size:11px; font-weight:600; color:var(--ink-60); }
+  .say{ font-size:16px; line-height:23px; font-weight:600; min-height:46px; }
+  .say b{ font-weight:800; }
+  .opts{ display:flex; flex-direction:column; gap:8px; }
+  .opts.row{ flex-direction:row; flex-wrap:wrap; }
+  .opts.row button{ flex:1; min-width:96px; }
+  .opt{ padding:11px 14px; border:2.5px solid var(--ink); border-radius:14px; background:#fff; box-shadow:0 3px 0 var(--ink); font-weight:800; font-size:15px; line-height:20px; text-align:left; transition:transform .1s; }
+  .opt:active{ transform:translateY(3px); box-shadow:none; }
+  .opt.primary{ background:var(--gold); }
+  .opt.blue{ background:var(--blue); color:#fff; }
+  .opt small{ display:block; font-weight:600; font-size:12px; color:var(--ink-60); }
+  .opt[disabled]{ opacity:.45; }
+  .tap{ align-self:flex-end; font-family:var(--display); font-weight:800; font-size:13px; color:var(--ink-60); }
+  .items{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .item{ display:flex; flex-direction:column; align-items:center; gap:2px; padding:10px 6px 8px; border:2.5px solid var(--ink); border-radius:14px; background:#fff; box-shadow:0 3px 0 var(--ink); }
+  .item svg{ width:46px; height:46px; }
+  .item b{ font-size:13px; font-weight:800; }
+  .item span{ font-family:var(--display); font-weight:800; font-size:15px; }
+  .item.bought{ background:#E4F1D3; box-shadow:none; transform:translateY(3px); }
+  .item.short{ animation:shake .4s; border-color:var(--red); }
+  .contract{ background:#FFF6DA; border:2px dashed var(--ink); border-radius:10px; padding:10px 12px; font-family:"Courier New", monospace; font-size:14px; line-height:20px; transform:rotate(-1deg); }
+
+  /* Fight banner */
+  .fight{ position:absolute; z-index:4; left:12px; right:12px; top:22%; display:none; flex-direction:column; align-items:center; gap:8px; pointer-events:none; text-align:center; }
+  .fight.on{ display:flex; }
+  .fight h3{ font-family:var(--display); font-weight:800; font-size:26px; line-height:28px; color:#fff; -webkit-text-stroke:1.5px var(--ink); paint-order:stroke fill; text-shadow:0 3px 0 var(--ink); }
+  .fight p{ font-weight:800; font-size:14px; background:var(--card); border:2px solid var(--ink); border-radius:999px; padding:4px 12px; }
+  .bars{ width:80%; display:flex; flex-direction:column; gap:5px; }
+  .bar{ height:14px; border:2.5px solid var(--ink); border-radius:8px; background:#fff; overflow:hidden; }
+  .bar i{ display:block; height:100%; width:100%; background:var(--red); transition:width .12s; }
+  .bar.time i{ background:var(--gold); transition:none; }
+
+  /* Full-screen cards */
+  .modal{ position:absolute; z-index:7; inset:0; display:none; align-items:center; justify-content:center; padding:max(16px, env(safe-area-inset-top)) 14px 16px; background:rgba(28,25,22,.55); overflow:auto; }
+  .modal.on{ display:flex; }
+  .mcard{ width:100%; max-width:380px; margin:auto; background:var(--card); border:3px solid var(--ink); border-radius:24px; box-shadow:0 8px 0 var(--ink); padding:20px 18px 16px; display:flex; flex-direction:column; gap:12px; animation:rise .45s var(--ease); }
+  @keyframes rise{ from{ opacity:0; transform:translateY(24px) scale(.96); } }
+  .mcard h2{ font-family:var(--display); font-weight:800; font-size:30px; line-height:32px; letter-spacing:-.01em; }
+  .mcard h2 em{ font-style:normal; color:var(--red); }
+  .k{ font-family:var(--display); font-weight:800; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-60); }
+  .lead{ font-size:15px; line-height:22px; font-weight:600; }
+  .soft{ font-size:14px; line-height:21px; font-weight:500; color:var(--ink-60); }
+  .ledger{ display:grid; grid-template-columns:1fr auto; gap:5px 12px; font-size:14px; font-weight:600; background:#FFF6DA; border:2px solid var(--ink); border-radius:12px; padding:10px 12px; }
+  .ledger b{ text-align:right; font-weight:800; font-variant-numeric:tabular-nums; }
+  .ledger .neg{ color:var(--red); } .ledger .pos{ color:var(--green); }
+  .ledger .tot{ border-top:2px solid var(--ink); padding-top:6px; font-weight:800; font-size:15px; }
+  .fact{ background:var(--paper); border:2px dashed var(--ink); border-radius:12px; padding:10px 12px; font-size:13px; line-height:19px; font-weight:500; }
+  .fact b{ font-weight:800; } .fact small{ display:block; margin-top:4px; font-size:11px; color:var(--ink-60); }
+  .btn{ display:flex; align-items:center; justify-content:center; width:100%; min-height:52px; padding:0 16px; border:3px solid var(--ink); border-radius:16px; box-shadow:0 4px 0 var(--ink); font-family:var(--display); font-weight:800; font-size:18px; text-decoration:none; background:#fff; text-align:center; line-height:20px; }
+  .btn:active{ transform:translateY(4px); box-shadow:none; }
+  .btn.go{ background:var(--gold); } .btn.blue{ background:var(--blue); color:#fff; } .btn.wa{ background:#25D366; }
+  .doors{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .door{ display:flex; flex-direction:column; align-items:flex-start; gap:4px; padding:12px; border:3px solid var(--ink); border-radius:16px; box-shadow:0 4px 0 var(--ink); text-align:left; background:var(--c); color:#fff; min-height:112px; }
+  .door b{ font-family:var(--display); font-weight:800; font-size:19px; line-height:20px; }
+  .door span{ font-size:12px; line-height:16px; font-weight:600; opacity:.95; }
+  .door i{ font-style:normal; font-size:26px; }
+  .door[disabled]{ background:#CFC6BB; color:var(--ink-60); box-shadow:none; transform:translateY(4px); }
+  .door[disabled] i{ filter:grayscale(1); }
+  .people{ display:flex; flex-direction:column; gap:8px; }
+  .person{ display:flex; gap:10px; align-items:center; text-decoration:none; padding:8px; border:2px solid var(--ink); border-radius:14px; background:var(--paper); }
+  .person img{ width:56px; height:56px; border-radius:12px; object-fit:cover; flex:none; border:2px solid var(--ink); }
+  .person b{ display:block; font-size:15px; font-weight:800; } .person span{ display:block; font-size:12px; font-weight:600; color:var(--ink-60); } .person em{ display:block; font-style:normal; font-size:12px; line-height:16px; }
+  .fine{ font-size:11px; line-height:16px; color:var(--ink-60); }
+  .row2{ display:flex; gap:8px; } .row2 > *{ flex:1; }
+  .dark{ background:var(--ink); color:#fff; text-align:center; align-items:center; box-shadow:0 8px 0 var(--red); }
+  .dark .soft{ color:rgba(255,255,255,.72); }
+  .portal{ width:110px; height:110px; border-radius:50%; background:conic-gradient(#0DAADE, #7CC242, #F2B43C, #D6453D, #B65FCF, #0DAADE); animation:spin 2.4s linear infinite; position:relative; }
+  .portal::after{ content:"1UP"; position:absolute; inset:16px; border-radius:50%; background:var(--ink); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:800; font-size:26px; color:var(--gold); animation:spin 2.4s linear infinite reverse; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* Flying coins and items */
+  .fx{ position:absolute; inset:0; z-index:6; pointer-events:none; overflow:hidden; }
+  .fly{ position:absolute; left:0; top:0; width:22px; height:22px; margin:-11px 0 0 -11px; }
+  .coin{ border-radius:50%; background:radial-gradient(circle at 35% 35%, #FFE48A, #F2B43C 60%, #C98A12); border:2px solid #8A5A00; box-shadow:0 1px 0 rgba(0,0,0,.3); }
+  .float{ position:absolute; font-family:var(--display); font-weight:800; font-size:18px; white-space:nowrap; transform:translate(-50%,-50%); -webkit-text-stroke:3px #fff; paint-order:stroke fill; animation:floatUp 1.6s var(--ease) forwards; }
+  @keyframes floatUp{ 0%{ opacity:0; transform:translate(-50%,-30%) scale(.7); } 15%{ opacity:1; transform:translate(-50%,-50%) scale(1.1); } 100%{ opacity:0; transform:translate(-50%,-180%) scale(1); } }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <canvas id="c" aria-label="Game: Meena's village"></canvas>
+  <div class="hud">
+    <div class="left">
+      <div class="hearts" id="hearts" aria-label="Lives"></div>
+      <span class="chip" id="where">EXTRA LIFE</span>
+    </div>
+    <div class="right">
+      <div class="wallet" id="wallet" aria-live="polite"><small>IN THE BAG</small><span id="cash">₹2,000</span></div>
+      <div class="bag" id="bag" aria-label="Meena's bag">
+        <svg class="sack" viewBox="0 0 74 78"><path d="M22 14c2-8 28-8 30 0" fill="none" stroke="#6B4A2B" stroke-width="4" stroke-linecap="round"/><path d="M12 30c0-10 8-16 25-16s25 6 25 16l4 34c1 8-5 12-13 12H21c-8 0-14-4-13-12z" fill="#C9A26B" stroke="#2A2420" stroke-width="2.5"/><path d="M14 36h46" stroke="#8A6A3E" stroke-width="2" stroke-dasharray="4 3"/><path d="M27 52l5 5 9-11" fill="none" stroke="#8A6A3E" stroke-width="2" opacity=".0"/></svg>
+        <div class="slots" id="slots"></div>
+      </div>
+      <button class="mute" id="mute" aria-label="Sound on">🔊</button>
+    </div>
+  </div>
+  <div class="fight" id="fight"><h3 id="fTitle"></h3><p id="fSub"></p><div class="bars"><div class="bar"><i id="fHp"></i></div><div class="bar time"><i id="fTime"></i></div></div></div>
+  <button class="actbtn" id="actbtn" aria-label="Interact"><i>👆</i><span id="aLbl"></span></button>
+  <div class="hint" id="hint">Tap anywhere to walk · tap people to talk</div>
+  <div class="sheet" id="sheet" role="dialog" aria-live="polite"></div>
+  <div class="fx" id="fx"></div>
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const phone = $('#phone'), cv = $('#c'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rupees = n => (n < 0 ? '−₹' : '₹') + Math.abs(Math.round(n)).toLocaleString('en-IN');
+  const wait = ms => new Promise(r => setTimeout(r, reduce ? Math.min(ms, 150) : ms));
+  const NABARD = 'NABARD Rural Economic Conditions & Sentiments Survey, July 2026';
+  const HERE = location.origin + location.pathname;
+  const utm = c => `utm_source=extra_life&utm_medium=game&utm_campaign=${c}`;
+
+  /* ─────────── Money rules (one wallet, one rule per lender) ─────────── */
+  const SAVINGS = 2000;
+  const ORDER_PAY = 60000;               // 200 uniforms × ₹300, paid by the school at the end of term
+  const ITEMS = {
+    F: { name: 'Fabric', price: 15000 },
+    T: { name: 'Thread & buttons', price: 5000 },
+    M: { name: 'Sewing machine', price: 30000 },
+  };
+  const NEED = Object.values(ITEMS).reduce((a, i) => a + i.price, 0) - SAVINGS; // ₹48,000
+  // Live on rangde.in on 20 Oct 2026. Refresh before sharing widely.
+  const WAITING = [
+    { key: 'priyanka-593', name: 'Priyanka', where: 'Buldhana, Maharashtra', need: 'Needs credit for dairy supplies and animal feed.', photo: 'https://rangde.imgix.net/bImg/5035-img.jpg' },
+    { key: 'pukan-888', name: 'Pukan', where: 'Dhubri, Assam', need: 'Needs printers and a micro ATM for his services shop.', photo: 'https://rangde.imgix.net/bImg/10020698-img.jpg' },
+    { key: 'aribam-286', name: 'Aribam', where: 'Imphal East, Manipur', need: 'Building a shed for mushroom cultivation.', photo: 'https://rangde.imgix.net/bImg/MKF-09-RG-26-27-img.jpg' },
+  ];
+
+  /* ─────────── Item art (used in the bag, the shop and the world) ─────────── */
+  const ICON = {
+    F: '<svg viewBox="0 0 48 48"><rect x="6" y="30" width="36" height="10" rx="3" fill="#6B3A6E" stroke="#2A2420" stroke-width="2"/><rect x="8" y="21" width="32" height="10" rx="3" fill="#3F7A4A" stroke="#2A2420" stroke-width="2"/><rect x="10" y="12" width="28" height="10" rx="3" fill="#E0A23A" stroke="#2A2420" stroke-width="2"/><path d="M14 35h20M13 26h22M16 17h16" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-dasharray="3 3"/></svg>',
+    T: '<svg viewBox="0 0 48 48"><rect x="12" y="6" width="24" height="6" rx="2" fill="#8A5A34" stroke="#2A2420" stroke-width="2"/><rect x="12" y="36" width="24" height="6" rx="2" fill="#8A5A34" stroke="#2A2420" stroke-width="2"/><rect x="15" y="12" width="18" height="24" fill="#D6453D" stroke="#2A2420" stroke-width="2"/><path d="M15 17l18 4M15 23l18 4M15 29l18 4" stroke="#fff" stroke-opacity=".55" stroke-width="2"/><circle cx="40" cy="30" r="4" fill="#fff" stroke="#2A2420" stroke-width="2"/></svg>',
+    M: '<svg viewBox="0 0 48 48"><path d="M8 18c0-5 3-8 8-8h20c4 0 6 3 6 6v14h-8V18H18v4h-6z" fill="#2E2A29" stroke="#2A2420" stroke-width="2"/><rect x="5" y="34" width="38" height="7" rx="2" fill="#B8823F" stroke="#2A2420" stroke-width="2"/><path d="M13 22v8M11 30h4" stroke="#2A2420" stroke-width="2.5" stroke-linecap="round"/><circle cx="38" cy="22" r="4" fill="#C9C1B5" stroke="#2A2420" stroke-width="2"/><path d="M14 13h16" stroke="#F2B43C" stroke-width="2"/></svg>',
+  };
+  const iconImg = {};
+  Object.entries(ICON).forEach(([k, s]) => { const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')); iconImg[k] = im; });
+
+  /* ─────────── Figma art: load sheets and cut out each drawing ─────────── */
+  const load = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+  function cut(img, col, row, cols = 3, rows = 2) {
+    const cw = img.width / cols, ch = img.height / rows;
+    const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    const g = c.getContext('2d'); g.drawImage(img, col * cw, row * ch, cw, ch, 0, 0, cw, ch);
+    const d = g.getImageData(0, 0, cw, ch).data; let x0 = cw, y0 = ch, x1 = 0, y1 = 0;
+    for (let y = 0; y < ch; y += 2) for (let x = 0; x < cw; x += 2) if (d[(y * cw + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
+    const t = document.createElement('canvas'); t.width = Math.max(1, x1 - x0 + 2); t.height = Math.max(1, y1 - y0 + 2);
+    t.getContext('2d').drawImage(c, x0, y0, t.width, t.height, 0, 0, t.width, t.height);
+    return t;
+  }
+  const ART = {};
+  async function loadArt() {
+    const [meena, houses, trees, plants, stall] = await Promise.all(['art/meena.png', 'art/houses.png', 'art/trees.png', 'art/plants.png', 'art/stall.png'].map(load));
+    ART.meena = meena; ART.stall = stall;
+    if (houses) Object.assign(ART, { hut: cut(houses, 0, 0), hut2: cut(houses, 1, 0), block: cut(houses, 2, 0), tile: cut(houses, 0, 1), white: cut(houses, 1, 1), kiosk: cut(houses, 2, 1) });
+    if (trees) Object.assign(ART, { sapling: cut(trees, 0, 0), tree: cut(trees, 1, 0), banyan: cut(trees, 2, 0), bare: cut(trees, 0, 1), twisted: cut(trees, 1, 1), bush: cut(trees, 2, 1) });
+    if (plants) Object.assign(ART, { grass: cut(plants, 0, 0), herbs: cut(plants, 1, 0), wall: cut(plants, 2, 0), thorny: cut(plants, 0, 1), dry: cut(plants, 1, 1), hay: cut(plants, 2, 1) });
+  }
+
+  /* ─────────── Flat people (same style as the Figma characters) ─────────── */
+  const LOOKS = {
+    lalaji:   { name: 'Lalaji', role: 'Moneylender', skin: '#D49A6A', hair: '#EDEDED', top: '#F4F1EA', bottom: '#F4F1EA', accent: '#3B2F2A', cap: '#3B2F2A', stache: true, belly: true, man: true },
+    head:     { name: 'Mr Kulkarni', role: 'School headmaster', skin: '#C68E5F', hair: '#2F2622', top: '#8A6A4A', bottom: '#4B4F5C', accent: '#F4F1EA', glasses: true, man: true },
+    shop:     { name: 'Raju bhai', role: 'Shopkeeper', skin: '#B97E52', hair: '#241C18', top: '#3F7A4A', bottom: '#F0E6D2', accent: '#E0A23A', man: true },
+    officer:  { name: 'Bank officer', role: 'Loan desk', skin: '#C68E5F', hair: '#241C18', top: '#9DB8DA', bottom: '#3E4657', accent: '#2C4A7A', glasses: true, tie: true, man: true },
+    kamala:   { name: 'Kamala tai', role: 'Runs the chit', skin: '#B97E52', hair: '#241C18', top: '#E0A23A', bottom: '#C0392B', accent: '#F2D16B', bun: true },
+    sharma:   { name: 'Sharmaji', role: 'Chit member', skin: '#C68E5F', hair: '#555', top: '#5C6E8C', bottom: '#F0E6D2', accent: '#333', stache: true, man: true },
+    nb1:      { name: 'Neighbour', skin: '#A86F45', hair: '#241C18', top: '#2E8B7A', bottom: '#7A3B6E', accent: '#F2D16B', bun: true },
+    nb2:      { name: 'Neighbour', skin: '#C68E5F', hair: '#241C18', top: '#D97B9C', bottom: '#5C3A6E', accent: '#F2D16B', bun: true },
+    aunty1:   { name: 'Pushpa aunty', skin: '#C68E5F', hair: '#3A2E2A', top: '#E26D5C', bottom: '#F2A65A', accent: '#F2D16B', bun: true, belly: true },
+    aunty2:   { name: 'Leela aunty', skin: '#B97E52', hair: '#3A2E2A', top: '#B65FCF', bottom: '#F2D16B', accent: '#E26D5C', bun: true, belly: true },
+    brother:  { name: 'Ravi', role: 'Your brother, on the phone', skin: '#B97E52', hair: '#241C18', top: '#4F8EF7', bottom: '#2F3542', accent: '#fff', man: true },
+    partner:  { name: 'Asha', role: 'Rang De partner', skin: '#B97E52', hair: '#241C18', top: '#0DAADE', bottom: '#1F5E86', accent: '#fff', bun: true, badge: true },
+  };
+  function drawPerson(g, x, gy, look, h = 104, t = 0, face = 1) {
+    const s = h / 104; g.save(); g.translate(x, gy); g.scale(s * face, s);
+    const bob = Math.sin(t * 2) * 1.2;
+    g.lineJoin = 'round'; g.lineWidth = 2; g.strokeStyle = '#2A2420';
+    // shadow
+    g.fillStyle = 'rgba(0,0,0,.15)'; g.beginPath(); g.ellipse(0, 0, 22, 5, 0, 0, Math.PI * 2); g.fill();
+    // legs / skirt
+    g.fillStyle = look.bottom;
+    if (look.man) { g.beginPath(); g.roundRect(-14, -44, 12, 44, 4); g.fill(); g.stroke(); g.beginPath(); g.roundRect(2, -44, 12, 44, 4); g.fill(); g.stroke(); }
+    else { g.beginPath(); g.moveTo(-18, -48); g.lineTo(18, -48); g.lineTo(22, -2); g.lineTo(-22, -2); g.closePath(); g.fill(); g.stroke(); g.fillStyle = look.accent; g.fillRect(-22, -8, 44, 5); }
+    g.fillStyle = '#6B4A2B'; g.beginPath(); g.ellipse(-8, -1, 8, 3.5, 0, 0, Math.PI * 2); g.fill(); g.beginPath(); g.ellipse(8, -1, 8, 3.5, 0, 0, Math.PI * 2); g.fill();
+    // body
+    g.translate(0, bob);
+    g.fillStyle = look.top; const bw = look.belly ? 23 : 19;
+    g.beginPath(); g.roundRect(-bw, -84, bw * 2, 42, 12); g.fill(); g.stroke();
+    if (!look.man) { g.fillStyle = look.accent; g.beginPath(); g.moveTo(-bw + 4, -82); g.lineTo(-bw + 12, -82); g.lineTo(bw - 2, -46); g.lineTo(bw - 10, -46); g.closePath(); g.fill(); }
+    if (look.tie) { g.fillStyle = look.accent; g.beginPath(); g.moveTo(-3, -82); g.lineTo(3, -82); g.lineTo(5, -58); g.lineTo(0, -54); g.lineTo(-5, -58); g.closePath(); g.fill(); }
+    if (look.badge) { g.fillStyle = '#fff'; g.beginPath(); g.roundRect(6, -76, 10, 7, 2); g.fill(); g.stroke(); }
+    // arms
+    g.fillStyle = look.skin; g.beginPath(); g.roundRect(-bw - 7, -80, 8, 30, 4); g.fill(); g.stroke(); g.beginPath(); g.roundRect(bw - 1, -80, 8, 30, 4); g.fill(); g.stroke();
+    // head
+    g.fillStyle = look.skin; g.beginPath(); g.arc(0, -98, 16, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.fillStyle = look.hair;
+    if (look.cap) { g.fillStyle = look.cap; g.beginPath(); g.roundRect(-14, -118, 28, 9, 3); g.fill(); g.stroke(); }
+    else { g.beginPath(); g.arc(0, -101, 16, Math.PI * 1.05, Math.PI * 1.95); g.closePath(); g.fill(); if (look.bun) { g.beginPath(); g.arc(-15, -96, 6, 0, Math.PI * 2); g.fill(); } }
+    g.fillStyle = '#2A2420'; g.beginPath(); g.arc(-5, -98, 1.8, 0, 7); g.arc(5, -98, 1.8, 0, 7); g.fill();
+    if (look.glasses) { g.lineWidth = 1.4; g.strokeRect(-9, -101, 7, 6); g.strokeRect(2, -101, 7, 6); g.lineWidth = 2; }
+    if (look.stache) { g.fillStyle = '#EDEDED'; if (look.hair !== '#EDEDED') g.fillStyle = '#3A2E2A'; g.beginPath(); g.ellipse(0, -91, 7, 2.6, 0, 0, Math.PI * 2); g.fill(); }
+    else { g.strokeStyle = '#7A4A32'; g.lineWidth = 1.5; g.beginPath(); g.arc(0, -92, 3.5, .2, Math.PI - .2); g.stroke(); }
+    if (!look.man) { g.fillStyle = '#C0392B'; g.beginPath(); g.arc(0, -105, 1.6, 0, 7); g.fill(); }
+    g.restore();
+  }
+  const portraits = {};
+  function portrait(key) {
+    if (portraits[key]) return portraits[key];
+    const c = document.createElement('canvas'); c.width = c.height = 88; const g = c.getContext('2d');
+    if (key === 'meena' && ART.meena) { const m = ART.meena; g.drawImage(m, m.width * .2, m.height * .08, m.width * .6, m.width * .6, 0, 0, 88, 88); }
+    else if (LOOKS[key]) { g.fillStyle = '#F4E6D6'; g.fillRect(0, 0, 88, 88); drawPerson(g, 44, 260, LOOKS[key], 230); }
+    return (portraits[key] = c.toDataURL());
+  }
+
+  /* ─────────── Monsters: the problems you fight ─────────── */
+  function drawByaaj(g, x, y, size, t, hurt) {
+    g.save(); g.translate(x + (hurt ? Math.sin(t * 60) * 4 : 0), y); const s = size;
+    const wob = i => Math.sin(t * 4 + i) * s * .05;
+    g.fillStyle = hurt ? '#FF8A7A' : '#D6453D'; g.strokeStyle = '#2A2420'; g.lineWidth = 3;
+    g.beginPath(); for (let i = 0; i <= 12; i++) { const a = (i / 12) * Math.PI * 2, r = s * (i % 2 ? .92 : 1) + wob(i); g.lineTo(Math.cos(a) * r, Math.sin(a) * r * .9); } g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#F2B43C'; g.beginPath(); g.moveTo(-s * .55, -s * .7); g.lineTo(-s * .35, -s * 1.15); g.lineTo(-s * .2, -s * .78); g.fill(); g.stroke(); g.beginPath(); g.moveTo(s * .55, -s * .7); g.lineTo(s * .35, -s * 1.15); g.lineTo(s * .2, -s * .78); g.fill(); g.stroke();
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(-s * .3, -s * .2, s * .2, 0, 7); g.arc(s * .3, -s * .2, s * .2, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = '#2A2420'; g.font = `800 ${Math.round(s * .26)}px "Baloo 2"`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('%', -s * .3, -s * .18); g.fillText('%', s * .3, -s * .18);
+    g.fillStyle = '#5A1410'; g.beginPath(); g.ellipse(0, s * .3, s * .45, s * .22, 0, 0, Math.PI); g.fill();
+    g.fillStyle = '#fff'; for (let i = -2; i <= 2; i++) { g.beginPath(); g.moveTo(i * s * .17 - s * .07, s * .3); g.lineTo(i * s * .17, s * .42); g.lineTo(i * s * .17 + s * .07, s * .3); g.fill(); }
+    g.fillStyle = '#fff'; g.font = `800 ${Math.round(s * .3)}px "Baloo 2"`; g.fillText('BYAAJ', 0, s * 1.15);
+    g.restore();
+  }
+  function drawPapers(g, x, y, t, n) {
+    for (let i = 0; i < n; i++) {
+      const a = t * 2.2 + i * (Math.PI * 2 / n), r = 46 + Math.sin(t * 3 + i) * 10;
+      g.save(); g.translate(x + Math.cos(a) * r, y + Math.sin(a) * r * .6); g.rotate(Math.sin(t * 4 + i) * .6);
+      g.fillStyle = '#fff'; g.strokeStyle = '#2A2420'; g.lineWidth = 2; g.beginPath(); g.roundRect(-13, -16, 26, 32, 3); g.fill(); g.stroke();
+      g.strokeStyle = '#9DB8DA'; g.lineWidth = 2; for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(-8, -9 + k * 6); g.lineTo(8, -9 + k * 6); g.stroke(); }
+      g.fillStyle = '#D6453D'; g.font = '800 9px Inter'; g.textAlign = 'center'; g.fillText('✗', 7, 12);
+      g.restore();
+    }
+  }
+  function drawImp(g, x, y, s, t, hurt) {
+    g.save(); g.translate(x + (hurt ? Math.sin(t * 60) * 4 : 0), y + Math.sin(t * 5) * 4);
+    g.fillStyle = hurt ? '#D9A8E8' : '#8E4FB0'; g.strokeStyle = '#2A2420'; g.lineWidth = 3;
+    g.beginPath(); g.arc(0, 0, s, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = '#F2B43C'; g.beginPath(); g.arc(0, 0, s * .62, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = '#2A2420'; g.font = `800 ${Math.round(s * .55)}px "Baloo 2"`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('₹', 0, s * .05);
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(-s * .45, -s * .75, s * .18, 0, 7); g.arc(s * .45, -s * .75, s * .18, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = '#fff'; g.font = `800 ${Math.round(s * .32)}px "Baloo 2"`; g.fillText('₹2,500/MONTH', 0, s * 1.45);
+    g.restore();
+  }
+  function drawBubbles(g, x, y, t, n, words) {
+    for (let i = 0; i < n; i++) {
+      const bx = x + Math.sin(t * 1.7 + i * 2.1) * 70, by = y - 30 + Math.cos(t * 1.3 + i * 1.7) * 40 - i * 6;
+      g.save(); g.translate(bx, by);
+      g.fillStyle = '#fff'; g.strokeStyle = '#2A2420'; g.lineWidth = 2.5; g.beginPath(); g.roundRect(-38, -14, 76, 28, 14); g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(-6, 14); g.lineTo(-12, 22); g.lineTo(2, 14); g.fill();
+      g.fillStyle = '#B65FCF'; g.font = '800 11px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(words[i % words.length], 0, 1);
+      g.restore();
+    }
+  }
+
+  /* ─────────── Levels: palettes from the Figma level structure ─────────── */
+  const PAL = {
+    village: { sky: ['#EDBFA9', '#F3E5DC'], hill: '#C9B49A', ground: '#808C55', ground2: '#6F7A48', label: 'Greens, browns & sepias' },
+    lender:  { sky: ['#8F949A', '#C9CBCC'], hill: '#7D817E', ground: '#6E7458', ground2: '#5E634B' },
+    bank:    { sky: ['#6F8DB8', '#BCCBDF'], hill: '#7F95B0', ground: '#56716A', ground2: '#48615A' },
+    chit:    { sky: ['#7CCDF2', '#E6F7FF'], hill: '#9CCB8A', ground: '#7FA243', ground2: '#6C8C37' },
+    family:  { sky: ['#F4BE7E', '#FCE8C8'], hill: '#E2B07A', ground: '#A0723F', ground2: '#8A6235' },
+    rangde:  { sky: ['#F5B4D6', '#FCE6F2'], hill: '#E6B9D4', ground: '#C99A5A', ground2: '#B3874C' },
+    real:    { sky: ['#F7C6E2', '#BFE6FA'], hill: '#D9C3E8', ground: '#D3A45F', ground2: '#BD8F50' },
+  };
+
+  /* ─────────── Runtime state ─────────── */
+  const S = {};
+  function newRun() { Object.assign(S, { lives: 4, extra: false, tried: [], t0: Date.now(), muted: S.muted || false }); resetLife(); }
+  function resetLife() { Object.assign(S, { wallet: SAVINGS, bag: { F: false, T: false, M: false }, ledger: [['Meena’s savings', SAVINGS]], owed: 0, rate: 3, flags: {} }); renderHud(); }
+
+  let W = 390, H = 760, GY = 525, dpr = 1;      // logical size; GY = ground line
+  let L = null, cam = 0, busy = false, fightOn = null, t = 0, last = 0;
+  const P = { x: 120, dir: 1, moving: false, anim: 0, auto: null };
+  const keys = { l: false, r: false };
+  const floats = [], parts = [];
+
+  function resize() {
+    const r = phone.getBoundingClientRect();
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = 390; H = Math.round(390 * r.height / r.width);
+    GY = H - Math.max(140, Math.round(H * .2));
+    cv.width = W * dpr; cv.height = H * dpr;
+  }
+
+  /* ─────────── Level building ─────────── */
+  // A level is: palette, width, scenery, actors you can talk to, and story triggers.
+  function setLevel(def) {
+    L = { ...def, actors: (def.actors || []).map(a => ({ ...a })), triggers: (def.triggers || []).map(tr => ({ ...tr })), gate: def.gate ?? def.width - 40, extras: [] };
+    P.x = def.start ?? 90; P.dir = 1; P.target = null; cam = Math.max(0, P.x - W * .35);
+    $('#where').textContent = def.label;
+    // Scenery: deterministic scatter from the Figma asset sheets.
+    let seed = def.seed || 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const farSet = def.far || ['hut', 'hut2', 'block', 'tree', 'sapling', 'bare'], midSet = def.mid || ['tree', 'banyan', 'sapling', 'tile', 'hut'];
+    L.far = []; for (let x = -60; x < def.width + 200; x += 70 + rnd() * 90) L.far.push({ k: farSet[Math.floor(rnd() * farSet.length)], x, h: 34 + rnd() * 26 });
+    L.mid = []; for (let x = 0; x < def.width + 200; x += 180 + rnd() * 200) L.mid.push({ k: midSet[Math.floor(rnd() * midSet.length)], x, h: 70 + rnd() * 50 });
+    L.fore = []; for (let x = 0; x < def.width + 100; x += 60 + rnd() * 120) L.fore.push({ k: ['grass', 'herbs', 'dry', 'grass'][Math.floor(rnd() * 4)], x, h: 22 + rnd() * 16 });
+    L.clouds = Array.from({ length: 6 }, (_, i) => ({ x: i * 160 + rnd() * 80, y: 70 + rnd() * (GY * .35), s: .7 + rnd() * .6 }));
+    renderHud();
+  }
+
+  /* ─────────── Drawing ─────────── */
+  function sprite(img, x, gy, h, alpha = 1, flip = false) {
+    if (!img) return; const w = img.width * h / img.height;
+    ctx.globalAlpha = alpha; if (flip) { ctx.save(); ctx.translate(x, 0); ctx.scale(-1, 1); ctx.drawImage(img, -w / 2, gy - h, w, h); ctx.restore(); } else ctx.drawImage(img, x - w / 2, gy - h, w, h); ctx.globalAlpha = 1;
+  }
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const pal = PAL[L.pal];
+    const sky = ctx.createLinearGradient(0, 0, 0, GY); sky.addColorStop(0, pal.sky[0]); sky.addColorStop(1, pal.sky[1]);
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, GY + 2);
+    // Clouds (sky layer, 20%)
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    L.clouds.forEach(c => { const x = ((c.x - cam * .1 + t * 6 * c.s) % (W + 240) + W + 240) % (W + 240) - 120; ctx.beginPath(); ctx.ellipse(x, c.y, 46 * c.s, 15 * c.s, 0, 0, 7); ctx.ellipse(x + 26 * c.s, c.y - 10 * c.s, 30 * c.s, 15 * c.s, 0, 0, 7); ctx.ellipse(x - 24 * c.s, c.y - 6 * c.s, 24 * c.s, 12 * c.s, 0, 0, 7); ctx.fill(); });
+    // Hills (scenery layer)
+    ctx.fillStyle = pal.hill; ctx.globalAlpha = .55; ctx.beginPath(); ctx.moveTo(0, GY);
+    for (let x = 0; x <= W; x += 10) { const wx = x + cam * .2; ctx.lineTo(x, GY - 26 - Math.sin(wx / 90) * 14 - Math.sin(wx / 37) * 6); }
+    ctx.lineTo(W, GY); ctx.fill(); ctx.globalAlpha = 1;
+    // Far (64–72%) and mid (80%) scenery
+    L.far.forEach(o => { const x = o.x - cam * .45; if (x > -80 && x < W + 80) sprite(ART[o.k], x, GY - 4, o.h, .62); });
+    L.mid.forEach(o => { const x = o.x - cam * .75; if (x > -120 && x < W + 120) sprite(ART[o.k], x, GY + 2, o.h, .82); });
+    // Ground
+    ctx.fillStyle = pal.ground; ctx.fillRect(0, GY, W, H - GY);
+    ctx.fillStyle = pal.ground2; ctx.fillRect(0, GY, W, 6);
+    ctx.fillStyle = 'rgba(255,255,255,.12)'; for (let x = (-cam % 40 + 40) % 40 - 40; x < W; x += 40) ctx.fillRect(x, GY + 16, 22, 3);
+    // Landmarks and people (100%)
+    const vis = (x, m = 200) => x > -m && x < W + m;
+    (L.props || []).forEach(o => { const x = o.x - cam; if (vis(x)) { if (o.draw) o.draw(ctx, x, GY); else sprite(ART[o.k], x, GY + 4, o.h); if (o.sign) signBoard(x + (o.sx || 0), GY - o.h + (o.sy || 10), o.sign, o.sc); } });
+    L.actors.concat(L.extras).forEach(a => { if (a.hidden) return; const x = a.x - cam; if (!vis(x)) return; if (a.draw) a.draw(ctx, x, GY, t); else drawPerson(ctx, x, GY + 2, LOOKS[a.look], a.h || 104, t + a.x, a.face || -1); });
+    // Meena
+    drawMeena(P.x - cam);
+    // Fight art
+    if (fightOn) fightOn.draw(ctx, t);
+    // Foreground grass (nearby layer)
+    L.fore.forEach(o => { const x = o.x - cam * 1.12; if (x > -40 && x < W + 40) sprite(ART[o.k], x, GY + 30, o.h, .95); });
+    // Prompt bubble over the nearest actor
+    const near = nearest();
+    if (near && !busy && !fightOn) bubble(near.x - cam, GY - (near.h || 104) - 26, near.prompt || 'Talk');
+    if (!busy && !fightOn && L.gate < L.width - 40 && P.x > L.gate - 60) bubble(P.x - cam, GY - 150, L.gateMsg || 'Not yet…', true);
+    // Particles & floats
+    parts.forEach(p => { ctx.fillStyle = p.c; ctx.globalAlpha = Math.max(0, 1 - p.t / p.life); ctx.beginPath(); ctx.arc(p.x - cam, p.y, p.r, 0, 7); ctx.fill(); ctx.globalAlpha = 1; });
+    // Direction hint when the way is clear
+    if (!busy && !fightOn && L.hint && P.x < L.hint.x - 40) { const ax = W - 34, ay = GY - 70 + Math.sin(t * 5) * 4; ctx.fillStyle = 'rgba(255,253,248,.9)'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(ax - 24, ay - 18, 48, 36, 18); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#2A2420'; ctx.font = '800 18px "Baloo 2"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('→', ax, ay + 1); }
+  }
+  function drawMeena(x) {
+    const h = 118, img = ART.meena;
+    const walk = P.moving ? Math.sin(P.anim * 0.18) : 0;
+    ctx.fillStyle = 'rgba(0,0,0,.15)'; ctx.beginPath(); ctx.ellipse(x, GY + 4, 24, 5, 0, 0, 7); ctx.fill();
+    if (!img) { drawPerson(ctx, x, GY + 2, { skin: '#C68E5F', hair: '#3A2E2A', top: '#3F7A4A', bottom: '#5C2E5E', accent: '#E0A23A', bun: true }, 104, t, P.dir); return; }
+    const w = img.width * h / img.height;
+    ctx.save(); ctx.translate(x, GY + 4 - Math.abs(walk) * 4); ctx.rotate(walk * .05); ctx.scale(P.dir, 1);
+    ctx.drawImage(img, -w / 2, -h, w, h); ctx.restore();
+  }
+  function bubble(x, y, text, warn) {
+    ctx.font = '800 14px "Baloo 2"'; const w = ctx.measureText(text).width + 34;
+    const by = y + Math.sin(t * 4) * 3;
+    ctx.fillStyle = warn ? '#FFF1D6' : '#FFFDF8'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.roundRect(x - w / 2, by - 15, w, 30, 15); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 6, by + 15); ctx.lineTo(x, by + 23); ctx.lineTo(x + 6, by + 15); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#2A2420'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText((warn ? '' : '👆 ') + text, x, by + 1);
+  }
+  function signBoard(x, y, text, color = '#6B4A2B') {
+    ctx.font = '800 13px "Baloo 2"'; const w = ctx.measureText(text).width + 20;
+    ctx.fillStyle = color; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(x - w / 2, y - 12, w, 24, 5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFF7EC'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+  }
+  // Custom buildings that aren't in the asset sheets.
+  const BUILD = {
+    school(g, x, gy) { sprite(ART.block, x, gy + 4, 120); signBoard(x, gy - 132, 'SCHOOL', '#3F7A4A'); g.fillStyle = '#2A2420'; g.fillRect(x + 78, gy - 170, 3, 170); g.fillStyle = '#FF9933'; g.fillRect(x + 81, gy - 170, 30, 7); g.fillStyle = '#fff'; g.fillRect(x + 81, gy - 163, 30, 7); g.fillStyle = '#138808'; g.fillRect(x + 81, gy - 156, 30, 7); },
+    bank(g, x, gy) {
+      g.fillStyle = '#E4E9F0'; g.strokeStyle = '#2A2420'; g.lineWidth = 2.5; g.beginPath(); g.rect(x - 90, gy - 150, 180, 150); g.fill(); g.stroke();
+      g.fillStyle = '#2C4A7A'; g.beginPath(); g.moveTo(x - 104, gy - 150); g.lineTo(x, gy - 192); g.lineTo(x + 104, gy - 150); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = '#C9D3E0'; for (let i = 0; i < 4; i++) { g.beginPath(); g.rect(x - 76 + i * 46, gy - 140, 14, 140); g.fill(); g.stroke(); }
+      g.fillStyle = '#5B6B82'; g.beginPath(); g.rect(x - 18, gy - 64, 36, 64); g.fill(); g.stroke();
+      signBoard(x, gy - 166, 'BANK', '#2C4A7A');
+    },
+    pot(g, x, gy) { g.fillStyle = '#B5652B'; g.strokeStyle = '#2A2420'; g.lineWidth = 2.5; g.beginPath(); g.ellipse(x, gy - 20, 24, 20, 0, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#8A4A1E'; g.beginPath(); g.roundRect(x - 14, gy - 46, 28, 10, 4); g.fill(); g.stroke(); g.fillStyle = '#F2B43C'; for (let i = 0; i < 5; i++) { g.beginPath(); g.arc(x - 10 + i * 5, gy - 48 - (i % 2) * 4, 5, 0, 7); g.fill(); g.stroke(); } signBoard(x, gy - 74, '₹50,000 POT', '#6B3A6E'); },
+    phone(g, x, gy, tt) { const y = gy - 150 + Math.sin(tt * 6) * 3; g.fillStyle = '#2A2420'; g.beginPath(); g.roundRect(x - 12, y - 22, 24, 40, 5); g.fill(); g.fillStyle = '#7CC242'; g.beginPath(); g.roundRect(x - 9, y - 18, 18, 28, 3); g.fill(); g.fillStyle = '#fff'; g.font = '800 11px Inter'; g.textAlign = 'center'; g.fillText('📞', x, y - 2); },
+    standee(p) { return (g, x, gy) => { const im = p.img; g.fillStyle = '#fff'; g.strokeStyle = '#2A2420'; g.lineWidth = 2.5; g.save(); g.translate(x, gy - 90); g.rotate(-.04); g.beginPath(); g.roundRect(-46, -60, 92, 112, 6); g.fill(); g.stroke(); if (im && im.complete && im.naturalWidth) g.drawImage(im, -38, -52, 76, 76); else { g.fillStyle = '#E8DCCB'; g.fillRect(-38, -52, 76, 76); } g.fillStyle = '#2A2420'; g.font = '800 13px "Baloo 2"'; g.textAlign = 'center'; g.fillText(p.name, 0, 40); g.restore(); g.fillStyle = '#8A5A34'; g.fillRect(x - 3, gy - 30, 6, 30); }; },
+  };
+
+  /* ─────────── Input ─────────── */
+  const modalOn = () => $('#modal').classList.contains('on');
+  // Tap anywhere to walk there; tap a person or shop to walk over and talk.
+  let holding = false;
+  function tapAt(e) {
+    const r = phone.getBoundingClientRect(), sc = r.width / W;
+    const lx = (e.clientX - r.left) / sc, ly = (e.clientY - r.top) / sc, wx = lx + cam;
+    let hitA = null, bd = 46;
+    L.actors.concat(L.extras).forEach(a => { if (a.hidden || !a.act) return; const d = Math.abs(a.x - wx); if (d < bd && ly > GY - (a.h || 104) - 60 && ly < GY + 40) { bd = d; hitA = a; } });
+    P.target = hitA ? { x: hitA.x + (P.x < hitA.x ? -56 : 56), actor: hitA } : { x: wx };
+    const m = document.createElement('div'); m.className = 'tapmark'; m.style.left = (e.clientX - r.left) + 'px'; m.style.top = (e.clientY - r.top) + 'px'; $('#fx').appendChild(m); setTimeout(() => m.remove(), 520);
+    $('#hint').classList.add('off');
+  }
+  cv.addEventListener('pointerdown', e => {
+    unlockAudio();
+    if (fightOn) return fightOn.hit();
+    if (busy || modalOn() || !L) return;
+    holding = true; tapAt(e);
+  });
+  cv.addEventListener('pointermove', e => { if (holding && !busy && !fightOn && !P.target?.actor) tapAt(e); });
+  addEventListener('pointerup', () => { holding = false; });
+  $('#actbtn').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); act(); });
+  addEventListener('keydown', e => {
+    if (e.repeat && !fightOn) return;
+    if (['ArrowLeft', 'a', 'A'].includes(e.key)) keys.l = true;
+    if (['ArrowRight', 'd', 'D'].includes(e.key)) keys.r = true;
+    if ([' ', 'Enter', 'e', 'E', 'ArrowUp'].includes(e.key)) { e.preventDefault(); unlockAudio(); if (sheetResolve && sheetKey) sheetKey(); else act(); }
+  });
+  addEventListener('keyup', e => { if (['ArrowLeft', 'a', 'A'].includes(e.key)) keys.l = false; if (['ArrowRight', 'd', 'D'].includes(e.key)) keys.r = false; });
+  function act() {
+    if (fightOn) return fightOn.hit();
+    if (busy || modalOn()) return;
+    const a = nearest(); if (a && a.act) { P.target = null; run(a.act); }
+  }
+  function nearest() { if (!L) return null; let best = null, bd = 70; L.actors.concat(L.extras).forEach(a => { if (a.hidden || !a.act) return; const d = Math.abs(a.x - P.x); if (d < bd) { bd = d; best = a; } }); return best; }
+  async function run(fn) { busy = true; keys.l = keys.r = false; try { await fn(); } finally { busy = false; } }
+
+  /* ─────────── Sound (tiny synth) ─────────── */
+  let AC = null;
+  function unlockAudio() { if (!AC && !S.muted) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch {} } }
+  function tone(f, d = .08, type = 'square', v = .05, slide = 0) { if (!AC || S.muted) return; const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; if (slide) o.frequency.linearRampToValueAtTime(f + slide, AC.currentTime + d); g.gain.value = v; g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + d); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime + d); }
+  const SFX = { coin: () => { tone(988, .06); setTimeout(() => tone(1319, .1), 60); }, bad: () => tone(220, .25, 'sawtooth', .05, -120), hit: () => tone(140 + Math.random() * 60, .07, 'square', .06, -60), buy: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .09), i * 70)), lose: () => [392, 330, 262, 196].forEach((f, i) => setTimeout(() => tone(f, .18, 'triangle', .07), i * 160)), win: () => [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, .14, 'triangle', .07), i * 110)), blip: () => tone(660, .03, 'square', .02) };
+  $('#mute').onclick = () => { S.muted = !S.muted; $('#mute').textContent = S.muted ? '🔇' : '🔊'; $('#mute').setAttribute('aria-label', S.muted ? 'Sound off' : 'Sound on'); };
+
+  /* ─────────── HUD, money and the bag ─────────── */
+  function renderHud(broke) {
+    const total = 4 + (S.extra ? 1 : 0);
+    $('#hearts').innerHTML = Array.from({ length: total }, (_, i) => `<i class="${S.extra && i === 4 ? 'gold' : i < S.lives ? '' : 'gone'} ${broke === i ? 'break' : ''}"></i>`).join('');
+    $('#hearts').setAttribute('aria-label', `${S.lives + (S.extra ? 1 : 0)} lives`);
+    $('#cash').textContent = rupees(S.wallet);
+    $('#wallet').classList.toggle('neg', S.wallet < 0);
+    $('#slots').innerHTML = Object.keys(ITEMS).map(k => `<span class="${S.bag[k] ? 'in' : ''}" title="${ITEMS[k].name}">${ICON[k]}</span>`).join('');
+  }
+  const screenPos = (wx, wy) => { const r = phone.getBoundingClientRect(), s = r.width / W; return [(wx - cam) * s, wy * s]; };
+  const elPos = el => { const a = el.getBoundingClientRect(), b = phone.getBoundingClientRect(); return [a.left - b.left + a.width / 2, a.top - b.top + a.height / 2]; };
+  function flyTo(node, from, to, dur = 700, delay = 0) {
+    const fx = $('#fx'); fx.appendChild(node); node.style.transform = `translate(${from[0]}px,${from[1]}px)`;
+    const mid = [(from[0] + to[0]) / 2, Math.min(from[1], to[1]) - 80];
+    const anim = node.animate([{ transform: `translate(${from[0]}px,${from[1]}px) scale(1)` }, { transform: `translate(${mid[0]}px,${mid[1]}px) scale(1.3)` }, { transform: `translate(${to[0]}px,${to[1]}px) scale(.6)` }], { duration: reduce ? 1 : dur, delay, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'forwards' });
+    return anim.finished.then(() => node.remove());
+  }
+  function floatText(text, color, wx = P.x, wy = GY - 140) { const [x, y] = screenPos(wx, wy); const d = document.createElement('div'); d.className = 'float'; d.style.left = x + 'px'; d.style.top = y + 'px'; d.style.color = color; d.textContent = text; $('#fx').appendChild(d); setTimeout(() => d.remove(), 1700); }
+  function countTo(target) {
+    const from = S.wallet; S.wallet = target; const t0 = performance.now(), el = $('#cash'), w = $('#wallet');
+    w.classList.remove('bump'); void w.offsetWidth; w.classList.add('bump');
+    const step = now => { const p = Math.min(1, (now - t0) / 600); el.textContent = rupees(from + (target - from) * p); if (p < 1) requestAnimationFrame(step); else renderHud(); };
+    requestAnimationFrame(step);
+  }
+  // Every rupee in or out goes through here, so the ledger always adds up.
+  async function money(delta, label, { from, coins, noLedger } = {}) {
+    if (!noLedger) S.ledger.push([label, delta]);
+    const bag = elPos($('#wallet'));
+    const n = Math.min(12, Math.max(3, Math.round(Math.abs(delta) / 4000)));
+    if (delta > 0) {
+      const src = from || screenPos(P.x + 60, GY - 120);
+      const flights = Array.from({ length: coins || n }, (_, i) => { const c = document.createElement('div'); c.className = 'fly coin'; return flyTo(c, [src[0] + (Math.random() - .5) * 40, src[1] + (Math.random() - .5) * 30], bag, 650, i * 55).then(SFX.coin); });
+      floatText('+' + rupees(delta), '#3F7A4A');
+      await Promise.all(flights);
+    } else {
+      const dst = from || screenPos(P.x + 90, GY - 100);
+      Array.from({ length: n }, (_, i) => { const c = document.createElement('div'); c.className = 'fly coin'; flyTo(c, bag, [dst[0] + (Math.random() - .5) * 40, dst[1] + (Math.random() - .5) * 20], 600, i * 45); });
+      floatText(rupees(delta) + '  ' + label.split(' (')[0], '#D6453D'); SFX.bad();
+      await wait(650);
+    }
+    countTo(S.wallet + delta);
+    await wait(500);
+  }
+  async function putInBag(k, wx) {
+    const ic = document.createElement('div'); ic.className = 'fly'; ic.style.width = ic.style.height = '44px'; ic.style.margin = '-22px 0 0 -22px'; ic.innerHTML = ICON[k];
+    await flyTo(ic, screenPos(wx, GY - 90), elPos($('#bag')), 800);
+    S.bag[k] = true; renderHud(); const b = $('#bag'); b.classList.remove('got'); void b.offsetWidth; b.classList.add('got'); SFX.buy();
+  }
+  function burst(wx, wy, color, n = 18) { for (let i = 0; i < n; i++) parts.push({ x: wx, y: wy, vx: (Math.random() - .5) * 260, vy: -Math.random() * 260 - 60, r: 3 + Math.random() * 3, c: color || ['#F2B43C', '#D6453D', '#7CC242', '#0DAADE'][i % 4], t: 0, life: 1.1 }); }
+
+  /* ─────────── Dialogue sheet ─────────── */
+  let sheetResolve = null, sheetKey = null;
+  function say(who, text, choices, opts = {}) {
+    const sheet = $('#sheet');
+    const look = who === 'meena' ? { name: 'Meena', role: 'Tailor' } : who === 'narrator' ? null : LOOKS[who];
+    const head = look ? `<div class="who"><img src="${portrait(who)}" alt=""><span><b>${look.name}</b><small>${look.role || ''}</small></span></div>` : '';
+    const list = choices && choices.length ? choices : null;
+    sheet.innerHTML = `${head}<p class="say" id="sayTxt"></p>${opts.extra || ''}${list ? `<div class="opts ${opts.row ? 'row' : ''}">${list.map((c, i) => { const o = typeof c === 'string' ? { t: c } : c; return `<button class="opt ${o.cls || (i === 0 && !opts.row ? '' : '')}" data-i="${i}" ${o.disabled ? 'disabled' : ''}>${o.t}${o.sub ? `<small>${o.sub}</small>` : ''}</button>`; }).join('')}</div>` : '<span class="tap">TAP TO CONTINUE ▸</span>'}`;
+    sheet.classList.add('on');
+    // Typewriter, tap to finish.
+    const el = $('#sayTxt'); let i = 0, done = false; const full = text;
+    const tick = () => { if (done) return; i += 2; el.innerHTML = full.slice(0, i).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') ; if (i % 6 === 0) SFX.blip(); if (i < full.length) setTimeout(tick, 18); else { done = true; el.innerHTML = full.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); } };
+    if (reduce) { done = true; el.innerHTML = full.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); } else tick();
+    return new Promise(res => {
+      const finish = v => { sheet.classList.remove('on'); sheetResolve = sheetKey = null; sheet.onclick = null; res(v); };
+      sheetResolve = finish;
+      if (list) { sheet.querySelectorAll('[data-i]').forEach(b => b.onclick = e => { e.stopPropagation(); if (!done) { done = true; el.innerHTML = full.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); } finish(+b.dataset.i); }); sheetKey = () => { if (!done) { done = true; el.innerHTML = full.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); } }; }
+      else { const next = () => { if (!done) { done = true; el.innerHTML = full.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); return; } finish(0); }; sheet.onclick = next; sheetKey = next; }
+    });
+  }
+  const close = () => { $('#sheet').classList.remove('on'); };
+
+  /* ─────────── Full-screen cards ─────────── */
+  function card(html, cls = '') {
+    const m = $('#modal'); m.innerHTML = `<div class="mcard ${cls}">${html}</div>`; m.classList.add('on'); m.scrollTop = 0;
+    return new Promise(res => m.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { m.classList.remove('on'); res(b.dataset.go); }));
+  }
+
+  /* ─────────── Fights: tap to fight the problem ─────────── */
+  // You can win a fight. You can't win the system: winning only limits the damage.
+  function fight({ title, sub, hp = 12, time = 4.5, art, onHit, rival }) {
+    return new Promise(res => {
+      let left = hp, tl = time, hurt = 0, ended = false;
+      const box = $('#fight');
+      $('#fTitle').textContent = title; $('#fSub').textContent = sub + ' · tap anywhere!'; box.classList.add('on');
+      $('#actbtn').classList.remove('on');
+      const mx = P.x + 120;
+      fightOn = {
+        draw(g, tt) { art(g, mx - cam, GY - 110, tt, hurt > 0, 1 - left / hp); },
+        hit() { if (ended) return; left = Math.max(0, left - 1); hurt = .12; SFX.hit(); burst(mx + (Math.random() - .5) * 40, GY - 110 + (Math.random() - .5) * 40, null, 5); onHit && onHit(hp - left); $('#fHp').style.width = (left / hp * 100) + '%'; if (left === 0) end(true); },
+        tick(dt) { if (ended) return; tl -= dt; hurt = Math.max(0, hurt - dt); $('#fTime').style.width = Math.max(0, tl / time * 100) + '%'; rival && rival(dt, time - tl); if (tl <= 0) end(left === 0); },
+      };
+      $('#fHp').style.width = '100%'; $('#fTime').style.width = '100%';
+      function end(won) { ended = true; setTimeout(() => { fightOn = null; box.classList.remove('on'); res({ won, hits: hp - left }); }, 450); }
+    });
+  }
+
+  /* ─────────── Walk Meena automatically (cutscenes) ─────────── */
+  const walkTo = x => new Promise(res => { P.auto = { x, res }; });
+
+  /* ─────────── Shared scenes ─────────── */
+  // The shop: tap items to put them in the bag. Prices never change.
+  async function shopScene(shopX, { onShort } = {}) {
+    while (true) {
+      const opts = Object.entries(ITEMS).map(([k, it]) => ({ k, it }));
+      const choice = await say('shop', S.bag.F && S.bag.T && S.bag.M ? 'Everything for the order is in your bag. All the best, Meena ji!' : `What do you need, Meena ji? **Cash only.** You have **${rupees(S.wallet)}**.`, ['Done'], {
+        extra: `<div class="items">${opts.map(({ k, it }) => `<button class="item ${S.bag[k] ? 'bought' : ''}" data-k="${k}" ${S.bag[k] ? 'disabled' : ''}>${ICON[k]}<b>${it.name}</b><span>${S.bag[k] ? 'In bag ✓' : rupees(it.price)}</span></button>`).join('')}</div>`,
+      });
+      if (choice === 'leave' || choice === 0) return;
+      const k = choice; const it = ITEMS[k];
+      if (S.wallet >= it.price) { await money(-it.price, `${it.name}`, { from: screenPos(shopX, GY - 80) }); await putInBag(k, shopX); }
+      else {
+        SFX.bad(); floatText(`Short by ${rupees(it.price - S.wallet)}`, '#D6453D');
+        if (onShort) { const r = await onShort(k); if (r === 'stop') return; }
+        else { await say('meena', `${rupees(it.price)} for the ${it.name.toLowerCase()}… I only have ${rupees(S.wallet)}.`); }
+      }
+    }
+  }
+  // say() resolves to an item key when one of the shop items is tapped.
+  document.addEventListener('click', e => { const b = e.target.closest('#sheet .item'); if (b && sheetResolve) { e.stopPropagation(); sheetResolve(b.dataset.k); } }, true);
+
+  async function deliver(schoolX) {
+    const all = S.bag.F && S.bag.T && S.bag.M;
+    if (!all) { await say('head', `Meena ji? Where are the uniforms? Without them, I’ll have to give the order to someone in town.`); return false; }
+    await say('head', `200 uniforms, beautifully stitched! The school pays **${rupees(ORDER_PAY)}** at the end of term.`);
+    return true;
+  }
+
+  async function loseLife({ title, lines, fact, why }) {
+    SFX.lose();
+    const broke = S.lives - 1; S.lives--; renderHud(broke); S.tried.push(L.key);
+    const end = S.wallet, net = end - SAVINGS;
+    await wait(700);
+    const rows = S.ledger.map(([l, v]) => `<span>${l}</span><b class="${v < 0 ? 'neg' : 'pos'}">${v < 0 ? '−' : '+'}₹${Math.abs(v).toLocaleString('en-IN')}</b>`).join('');
+    await card(`
+      <p class="k">Life ${4 - S.lives} of 4 · ${L.short}</p>
+      <h2>${title}</h2>
+      <p class="lead">${why}</p>
+      <div class="ledger">${rows}<span class="tot">Meena ends with</span><b class="tot ${end < 0 ? 'neg' : ''}">${rupees(end)}</b></div>
+      ${lines || ''}
+      <p class="soft">${net < 0 ? `That’s <b>${rupees(-net)} less</b> than she started with, ` : ''}${Object.keys(ITEMS).every(k => S.bag[k]) ? '' : 'and the order went to someone else.'}</p>
+      <div class="fact">${fact}</div>
+      <button class="btn go" data-go="1">${S.lives ? 'REWIND & TRY ANOTHER DOOR' : 'CONTINUE'}</button>`);
+    if (S.lives > 0) chooseDoor(); else gameOver();
+  }
+
+  /* ─────────── Chapter 0: the order ─────────── */
+  async function chapterOrder() {
+    setLevel({
+      key: 'village', short: 'The order', label: 'MEENA’S VILLAGE', pal: 'village', width: 1500, start: 150, seed: 11, gate: 640, gateMsg: 'Talk to the headmaster first',
+      hint: { x: 1250 },
+      props: [{ k: 'white', x: 140, h: 150 }, { k: 'banyan', x: 430, h: 170 }, { draw: BUILD.school, x: 1380 }, { k: 'stall', x: 1080, h: 120 }, { k: 'hay', x: 900, h: 40 }],
+      actors: [
+        { look: 'head', x: 580, prompt: 'Talk', act: async () => {
+          await say('head', 'Meena ji! The school needs **200 uniforms** for the new term. Can you do it by the end of the month?');
+          await say('head', `We pay **${rupees(ORDER_PAY)}** when the term ends. I trust your stitching more than any shop in town.`, ['I’ll do it!']);
+          await say('meena', 'My first big order! I’ll need **fabric, thread** and a **second sewing machine**. Let’s go see Raju bhai at the shop.');
+          L.gate = L.width - 40; L.actors[0].act = async () => say('head', 'The shop is just down the road, Meena ji.');
+        } },
+        { look: 'shop', x: 1130, prompt: 'Shop', act: async () => {
+          await say('shop', 'Meena ji! A school order? Wonderful. Here’s what it costs:', [], { extra: `<div class="items">${Object.entries(ITEMS).map(([k, it]) => `<div class="item">${ICON[k]}<b>${it.name}</b><span>${rupees(it.price)}</span></div>`).join('')}</div>` });
+          await say('meena', `That’s **₹50,000**. My savings are ${rupees(SAVINGS)}. I need **${rupees(NEED)} more**, and fast.`);
+          await say('shop', 'Cash only, Meena ji. Come back when you have it.');
+          chooseDoor();
+        } },
+      ],
+    });
+    await wait(400);
+    await say('meena', 'Another quiet day in the tailoring shop… Oh! Is that the headmaster coming down the road?');
+  }
+
+  /* ─────────── The four doors ─────────── */
+  const DOORS = {
+    lender: { name: 'Lalaji', sub: 'The moneylender. Cash today, no papers.', c: '#7D817E', icon: '💰', go: () => doorLender() },
+    bank:   { name: 'The bank', sub: 'Low interest. Two buses to town.', c: '#4E6E9E', icon: '🏦', go: () => doorBank() },
+    chit:   { name: 'The chit', sub: 'Kamala tai’s savings circle.', c: '#5E9A3A', icon: '🏺', go: () => doorChit() },
+    family: { name: 'Family', sub: 'Call your brother in the city.', c: '#C27A35', icon: '📞', go: () => doorFamily() },
+  };
+  async function chooseDoor() {
+    close();
+    const left = Object.keys(DOORS).filter(k => !S.tried.includes(k));
+    const pick = await card(`
+      <p class="k">${S.tried.length ? `Rewind · ${S.lives} ${S.lives === 1 ? 'life' : 'lives'} left` : 'Meena needs ' + rupees(NEED)}</p>
+      <h2>${S.tried.length ? 'What if she’d gone somewhere else?' : 'Where should Meena go?'}</h2>
+      <p class="soft">Each door is one life. Every time, Meena starts with ${rupees(SAVINGS)} and the same order.</p>
+      <div class="doors">${Object.entries(DOORS).map(([k, d]) => `<button class="door" data-go="${k}" style="--c:${d.c}" ${S.tried.includes(k) ? 'disabled' : ''}><i>${d.icon}</i><b>${d.name}</b><span>${S.tried.includes(k) ? 'Tried. Door closed.' : d.sub}</span></button>`).join('')}</div>`);
+    resetLife();
+    DOORS[pick].go();
+  }
+
+  /* ─────────── Door 1: Lalaji ─────────── */
+  async function doorLender() {
+    const month = async (n, owedNote) => {
+      const due = Math.round(S.owed * S.rate / 100);
+      await say('narrator', `**Month ${n}.** ${owedNote} Lalaji’s byaaj is due: ${S.rate}% of ${rupees(S.owed)} = **${rupees(due)}**.`, ['Fight the collector!']);
+      const r = await fight({ title: `MONTH ${n}: BYAAJ!`, sub: 'Tap fast to fight off the collector', hp: 10 + n * 3, time: 4.5, art: (g, x, y, tt, hurt, dmg) => drawByaaj(g, x, y, 46 + n * 6 - dmg * 10, tt, hurt) });
+      await money(-due, `Byaaj, month ${n}`);
+      if (r.won) floatText('You fought off the late fee!', '#3F7A4A'); else { await say('lalaji', 'Late again, Meena? **₹500 late fee.** Rules are rules.'); await money(-500, `Late fee, month ${n}`); }
+    };
+    setLevel({
+      key: 'lender', short: 'Lalaji', label: 'LALAJI · THE MONEYLENDER', pal: 'lender', width: 2100, start: 70, seed: 23, gate: 400, gateMsg: 'Lalaji is waiting…',
+      far: ['bare', 'twisted', 'hut2', 'block', 'dry'], mid: ['bare', 'twisted', 'tile', 'thorny'],
+      props: [{ k: 'tile', x: 300, h: 140, sign: 'LALAJI', sy: -4 }, { k: 'stall', x: 1050, h: 120 }, { draw: BUILD.school, x: 1950 }],
+      triggers: [
+        { x: 1400, fn: async () => { await month(1, 'Meena sews day and night.'); } },
+      ],
+      actors: [
+        { look: 'lalaji', x: 360, prompt: 'Ask Lalaji', act: async () => {
+          const a = await say('lalaji', '₹48,000? Arre, done, today itself. **Five rupees per hundred.**', [{ t: '“Two rupees.”' }, { t: '“Four, final.”' }, { t: '“Okay, five.”' }], { row: true });
+          if (a === 2) { S.rate = 5; await say('lalaji', 'Smart woman. No time wasted.'); }
+          else { S.rate = 3; await say('lalaji', a === 0 ? 'Two?! For two I’d lend to my own son. …Chalo, **three**. Only for you.' : 'Four? You’re a hard woman, Meena. **Three.** Last offer.'); burst(P.x + 40, GY - 140, null, 30); floatText('YOU WON THE HAGGLE!', '#3F7A4A'); SFX.win(); await wait(800); }
+          await say('lalaji', 'I’ll make it a round ₹50,000. Small thing: ₹5,000 file charge, I cut it today. And your gold bangles stay with me.', ['Show me the paper'], {});
+          await say('narrator', 'Lalaji unfolds a paper.', ['Sign it'], { extra: `<div class="contract">Loan: ₹50,000<br>File charge: ₹5,000 (cut today)<br>Byaaj: ₹${S.rate} per ₹100 <b>per month</b><br>Security: gold bangles</div>` });
+          S.owed = 50000;
+          await money(50000, 'Loan from Lalaji', { from: screenPos(360, GY - 100), coins: 12 });
+          await money(-5000, 'File charge (cut on day one)');
+          L.gate = L.width - 40; L.hint = { x: 1050 };
+          const me = L.actors[0]; me.act = async () => say('lalaji', `Go, go. I’ll see you every month for the byaaj. ${S.rate} per hundred.`);
+          await say('meena', `${rupees(S.wallet)} in the bag. Now to Raju bhai’s shop!`);
+        } },
+        { look: 'shop', x: 1100, prompt: 'Shop', act: async () => {
+          await shopScene(1100, { onShort: async k => {
+            if (S.flags.more) { await say('meena', 'I can’t take any more from Lalaji…'); return 'stop'; }
+            L.extras.push({ look: 'lalaji', x: P.x - 70, face: 1 });
+            const c = await say('lalaji', `Short, Meena? Don’t worry. Take **₹10,000 more**. Same byaaj, ${S.rate} per hundred, now on ₹60,000.`, ['Take it', 'No, I’ll manage']);
+            if (c === 0) { S.flags.more = true; S.owed += 10000; await money(10000, 'More from Lalaji', { coins: 6 }); }
+            L.extras.pop();
+            return c === 0 ? 'again' : 'stop';
+          } });
+          L.hint = { x: 1950 };
+        } },
+        { look: 'head', x: 1890, prompt: 'Deliver', act: async () => {
+          const ok = await deliver(1950);
+          if (ok) {
+            await say('narrator', 'Now Meena waits for the end of term. **Lalaji doesn’t wait.**', ['Fight on']);
+            for (const n of [2, 3, 4]) await month(n, n === 2 ? 'The uniforms are delivered. No payment yet.' : 'Still waiting for the school to pay.');
+            await say('head', `End of term! Here’s your **${rupees(ORDER_PAY)}**, Meena ji.`);
+            await money(ORDER_PAY, 'School pays for the order', { from: screenPos(1890, GY - 100), coins: 12 });
+          }
+          L.extras.push({ look: 'lalaji', x: P.x - 80, face: 1 });
+          await say('lalaji', `Time to settle, Meena. **${rupees(S.owed)}** principal, today. Then you get your bangles back.`);
+          await money(-S.owed, 'Paid back to Lalaji');
+          await loseLife({
+            title: S.wallet < 0 ? 'Debt trap' : 'Worked for Lalaji',
+            why: ok ? `Meena did everything right: 200 uniforms, on time. The byaaj ate the profit${S.wallet < 0 ? ', and then some. Her bag went into the red' : ''}.` : 'Without the machine, there was no order. The byaaj kept coming anyway.',
+            fact: `Lalaji is made up. The pattern isn’t: informal loans in rural India average <b>almost 18%</b> interest a year. That’s the average, before file charges and gold.<small>Source: ${NABARD}</small>`,
+            lines: `<p class="soft">${S.rate}% a month is about ${S.rate * 12}% a year, before the file charge.</p>`,
+          });
+        } },
+      ],
+    });
+    await wait(300);
+    await say('meena', 'Lalaji lends to everyone in the village. No papers, no questions. Let’s ask him.');
+  }
+
+  /* ─────────── Door 2: the bank ─────────── */
+  async function doorBank() {
+    setLevel({
+      key: 'bank', short: 'The bank', label: 'THE BANK · TOWN BRANCH', pal: 'bank', width: 1500, start: 70, seed: 41, hint: { x: 1150 },
+      far: ['block', 'block', 'bare', 'tile'], mid: ['block', 'bare', 'sapling', 'block'],
+      props: [{ draw: BUILD.bank, x: 1200 }],
+      triggers: [{ x: 420, fn: async () => { await say('narrator', 'Two buses to the town branch. **₹100 each way.**'); await money(-200, 'Bus fare to town and back'); } }],
+      actors: [{ look: 'officer', x: 1110, prompt: 'Loan desk', act: async () => {
+        await say('officer', 'A business loan? Fill this form, madam. And attach: **land papers, credit history, income tax returns, salary slips.**', ['Let me find them!']);
+        const docs = ['✗ No land papers', '✗ No credit history', '✗ No tax returns', '✗ No salary slips'];
+        let shown = 0;
+        await fight({ title: 'PAPERWORK STORM!', sub: 'Tap to grab the papers you need', hp: 12, time: 5, art: (g, x, y, tt, hurt, dmg) => drawPapers(g, x, y, tt, Math.max(1, Math.round(8 - dmg * 7))), onHit: h => { if (h % 3 === 0 && shown < docs.length) { floatText(docs[shown++], '#D6453D', P.x + 120, GY - 190); } } });
+        await say('meena', 'Every paper says the same thing… My customers pay me in cash. I’ve never had a loan. I don’t own the land.');
+        const c = await say('officer', 'No credit history, madam. I can’t sanction.', ['But I have a school order letter!', 'What about a smaller loan?']);
+        await say('officer', c === 0 ? 'Very nice order, madam. But I need papers, not letters.' : 'Same papers for a small loan, madam. Next!');
+        await loseLife({
+          title: 'Loan declined',
+          why: 'The money was right there. Meena did nothing wrong. She just doesn’t fit the form.',
+          fact: `<b>99.92%</b> of India’s villages have a banking outlet within 5 km. Yet <b>nearly half</b> of rural households still borrow from moneylenders, friends and family. A bank nearby isn’t a loan.<small>Sources: Ministry of Finance, Aug 2026; ${NABARD}</small>`,
+        });
+      } }],
+    });
+    await wait(300);
+    await say('meena', 'The bank has the lowest interest. It’s a long way, but let’s try.');
+  }
+
+  /* ─────────── Door 3: the chit ─────────── */
+  async function doorChit() {
+    setLevel({
+      key: 'chit', short: 'The chit', label: 'THE CHIT · KAMALA TAI’S CIRCLE', pal: 'chit', width: 1900, start: 70, seed: 57, gate: 760, gateMsg: 'Talk to Kamala tai', hint: { x: 650 },
+      far: ['tree', 'sapling', 'hut', 'tile', 'banyan'], mid: ['tree', 'banyan', 'sapling', 'hut'],
+      props: [{ k: 'banyan', x: 560, h: 190 }, { draw: BUILD.pot, x: 640 }, { k: 'stall', x: 1250, h: 120 }, { draw: BUILD.school, x: 1760 }],
+      actors: [
+        { look: 'nb1', x: 520, face: 1 }, { look: 'sharma', x: 700 }, { look: 'nb2', x: 590, face: 1, h: 98 },
+        { look: 'kamala', x: 670, prompt: 'Ask Kamala tai', act: async () => {
+          await say('kamala', '20 of us each put in **₹2,500 a month**. Every month, one person takes home the **₹50,000 pot**.');
+          const c = await say('kamala', 'Need it this month? Then bid: whoever **gives up the biggest discount** takes the pot. Or wait for your turn.', ['Bid for it!', 'Wait for my turn']);
+          if (c === 1) {
+            await say('kamala', 'Your turn? Let me see… **month 14**. The school won’t wait that long, Meena.');
+            return loseLife({ title: 'Too slow', why: 'The pot comes when the circle decides, not when you need it.', fact: chitFact });
+          }
+          let mine = 0, rivalBid = 15, next = .5;
+          const r = await fight({ title: 'THE AUCTION!', sub: 'Tap to raise your discount', hp: 7, time: 5.5,
+            art: (g, x, y) => { g.fillStyle = '#fff'; g.strokeStyle = '#2A2420'; g.lineWidth = 3; g.beginPath(); g.roundRect(x - 80, y - 60, 160, 110, 16); g.fill(); g.stroke(); g.fillStyle = '#2A2420'; g.font = '800 15px "Baloo 2"'; g.textAlign = 'center'; g.fillText('YOU', x - 38, y - 34); g.fillText('SHARMAJI', x + 38, y - 34); g.font = '800 34px "Baloo 2"'; g.fillStyle = mine > rivalBid ? '#3F7A4A' : '#D6453D'; g.fillText(mine + '%', x - 38, y + 6); g.fillStyle = '#6B3A6E'; g.fillText(rivalBid + '%', x + 38, y + 6); g.font = '700 12px Inter'; g.fillStyle = '#2A2420'; g.fillText(`Pot after discount: ${rupees(50000 * (1 - Math.max(mine, rivalBid) / 100))}`, x, y + 36); },
+            onHit: () => { mine = Math.min(50, mine + 5); },
+            rival: (dt, el) => { next -= dt; if (next <= 0 && rivalBid < 30) { rivalBid += 5; next = .9; floatText(`Sharmaji: ${rivalBid}%!`, '#6B3A6E', 700, GY - 200); } } });
+          if (mine <= rivalBid) {
+            await say('kamala', `Sharmaji takes it at ${rivalBid}%. Your turn will come, Meena… in month 14.`);
+            return loseLife({ title: 'Outbid', why: 'Someone needed it more, or bid harder. The pot went to Sharmaji.', fact: chitFact });
+          }
+          S.flags.disc = mine; const pot = 50000 * (1 - mine / 100);
+          await say('kamala', `Sold to Meena at **${mine}% off**! The pot is ₹50,000 minus ${mine}%: **${rupees(pot)}**.`);
+          await money(pot, `Chit pot (₹50,000 − ${mine}%)`, { from: screenPos(640, GY - 60), coins: 10 });
+          await say('kamala', 'And like everyone, you pay **₹2,500 this month**, and every month after, for 20 months.');
+          await money(-2500, 'Chit installment, month 1');
+          L.gate = L.width - 40; L.hint = { x: 1250 };
+          L.actors.find(a => a.look === 'kamala').act = async () => say('kamala', 'See you next month with your ₹2,500, Meena.');
+        } },
+        { look: 'shop', x: 1300, prompt: 'Shop', act: async () => { await shopScene(1300); L.hint = { x: 1760 }; } },
+        { look: 'head', x: 1700, prompt: 'Deliver', act: async () => {
+          await say('narrator', '**Month 2.** The installment collector comes knocking.', ['Fight it!']);
+          const r = await fight({ title: 'INSTALLMENT DAY!', sub: 'Tap fast to fight it off', hp: 14, time: 4.5, art: (g, x, y, tt, hurt, dmg) => drawImp(g, x, y, 44 - dmg * 8, tt, hurt) });
+          await money(-2500, 'Chit installment, month 2');
+          if (r.won) floatText('Fought it off… for this month', '#3F7A4A');
+          const ok = await deliver(1760);
+          const pot = 50000 * (1 - S.flags.disc / 100);
+          await loseLife({
+            title: ok ? 'Won… sort of' : 'Not enough',
+            why: `Meena won the pot at ${S.flags.disc}% off: ${rupees(pot)} for an order that needs ₹50,000. ${ok ? '' : 'She couldn’t buy everything.'}`,
+            lines: `<p class="soft">And she still owes <b>18 more installments of ₹2,500 (${rupees(45000)})</b>: ₹50,000 in all, for ${rupees(pot)}.</p>`,
+            fact: chitFact,
+          });
+        } },
+      ],
+    });
+    await wait(300);
+    await say('meena', 'Kamala tai runs a savings circle under the big banyan tree. Maybe the pot can help.');
+  }
+  const chitFact = 'Chit funds are legal when registered under the <b>Chit Funds Act, 1982</b>. Informal chits have no such protection: if the organiser disappears, so does the money. Either way, it comes when the group decides, not when you need it.';
+
+  /* ─────────── Door 4: family ─────────── */
+  async function doorFamily() {
+    setLevel({
+      key: 'family', short: 'Family', label: 'FAMILY · A CALL TO THE CITY', pal: 'family', width: 1700, start: 120, seed: 77, gate: 330, gateMsg: 'Call your brother first', hint: { x: 260 },
+      far: ['hut', 'tile', 'tree', 'hay', 'white'], mid: ['tree', 'tile', 'hay', 'white'],
+      props: [{ k: 'white', x: 120, h: 150 }, { k: 'stall', x: 1150, h: 120 }, { draw: BUILD.school, x: 1560 }],
+      triggers: [
+        { x: 700, fn: async () => gossip(1, 'aunty1', 760) },
+        { x: 950, fn: async () => gossip(2, 'aunty2', 1010) },
+      ],
+      actors: [
+        { draw: BUILD.phone, x: 260, h: 130, prompt: 'Call Ravi', act: async () => {
+          await say('brother', 'Didi! A school order? That’s wonderful.');
+          const c = await say('meena', `Ravi… I need ${rupees(NEED)}. Can you help?`, ['Ask for all of it', 'Ask for ₹15,000']);
+          await say('brother', c === 0 ? 'Long silence… Didi, I just paid Chintu’s school fees. All I have is **₹10,000**. I’ll send it now.' : 'I can manage **₹10,000**, Didi. Next month, maybe more.');
+          await money(10000, 'From Ravi (to pay back)', { coins: 6 });
+          L.gate = L.width - 40; L.hint = { x: 1150 };
+          L.actors[0].act = async () => say('meena', 'I can’t ask Ravi for more. He has his own family.');
+          await say('meena', 'Thank you, Ravi. Now… let’s hope nobody finds out.');
+        } },
+        { look: 'shop', x: 1200, prompt: 'Shop', act: async () => { await shopScene(1200); L.hint = { x: 1560 }; } },
+        { look: 'head', x: 1500, prompt: 'Deliver', act: async () => {
+          const ok = await deliver(1560);
+          await loseLife({
+            title: 'Not enough',
+            why: `₹10,000 helped. ${rupees(NEED - 10000)} was still missing. And now the loan comes up at every wedding.`,
+            lines: S.flags.gossip ? `<p class="soft">Gossip you fought off: ${S.flags.gossip}. It still reached the whole village.</p>` : '',
+            fact: `<b>23.6%</b> of rural households borrow only from informal sources like moneylenders, friends and family. Another <b>25.3%</b> use both.<small>Source: ${NABARD}</small>`,
+          });
+        } },
+      ],
+    });
+    await wait(300);
+    await say('meena', 'Maybe Ravi can help. He works in the city now.');
+  }
+  async function gossip(n, who, x) {
+    L.extras.push({ look: who, x, face: -1 });
+    await say(who, n === 1 ? 'Meena! I heard you asked your brother for money? Tsk, tsk.' : 'Borrowing from family for a business? What will people say!', ['Fight the gossip!']);
+    const words = ['psst…', 'BORROWING?!', 'tsk tsk', 'her BROTHER!', 'shameful…', 'did you hear?'];
+    const r = await fight({ title: 'GOSSIP ATTACK!', sub: 'Tap to pop the gossip', hp: 12, time: 4.5, art: (g, gx, gy, tt, hurt, dmg) => drawBubbles(g, gx, gy, tt, Math.max(1, Math.round(6 - dmg * 5)), words) });
+    if (r.won) { S.flags.gossip = (S.flags.gossip || 0) + 1; floatText('Popped! (for now)', '#3F7A4A'); } else floatText('Everyone knows!', '#B65FCF');
+    L.extras.pop();
+  }
+
+  /* ─────────── Game over → extra life ─────────── */
+  async function gameOver() {
+    const secs = Math.round((Date.now() - S.t0) / 1000);
+    await card(`
+      <p class="k">All 4 lives used</p>
+      <h2 style="color:#D6453D">GAME OVER</h2>
+      <p class="lead">Every door closed. The order went to someone in town.</p>
+      <p class="soft">You played for ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}. Millions of Indians live this.</p>
+      <div class="portal" aria-hidden="true" style="margin:6px auto"></div>
+      <p class="lead">An extra life appeared.</p>
+      <button class="btn go" data-go="1">CONTINUE? ▸</button>`, 'dark');
+    S.extra = true; S.tried = []; resetLife(); SFX.win();
+    extraLife();
+  }
+
+  async function extraLife() {
+    const investors = ['Priya, Pune', 'Arjun, Dubai', 'Fatima, Hyderabad', 'Rohan, London', 'Meera, Chennai', 'Kabir, Delhi', 'Anita, Singapore', 'Joseph, Kochi', 'Sneha, Bengaluru', 'Vikram, Jaipur'];
+    setLevel({
+      key: 'rangde', short: 'Extra life', label: 'EXTRA LIFE · RANG DE', pal: 'rangde', width: 1800, start: 150, seed: 91, gate: 420, gateMsg: 'Someone is coming…', hint: { x: 380 },
+      far: ['tree', 'sapling', 'white', 'tile', 'banyan'], mid: ['tree', 'banyan', 'white', 'sapling'],
+      props: [{ k: 'white', x: 140, h: 150 }, { k: 'stall', x: 1050, h: 120 }, { draw: BUILD.school, x: 1650 }],
+      actors: [
+        { look: 'partner', x: 380, prompt: 'Meet Asha', act: async () => {
+          await say('partner', 'Namaste Meena ji. I’m Asha, from a local partner that works with **Rang De**. Can I see your business?', ['Show her the order letter']);
+          await say('partner', 'A school order, and look at this stitching. **This is a good loan.** We look at your business, not at land papers.');
+          await say('partner', 'We’ll put your loan up on Rang De. People across India each back a small part of it, from ₹500.', ['Let’s do it!']);
+          // 100 social investors × ₹500.
+          for (let i = 0; i < 10; i++) {
+            floatText(`${investors[i]} +₹5,000`, '#0DAADE', P.x + (i % 2 ? 60 : -60), GY - 200 - (i % 3) * 30);
+            await money(5000, 'Investors', { from: [Math.random() * 300 + 40, -10], coins: 4, noLedger: true });
+          }
+          S.ledger.push(['Loan from 100 social investors on Rang De', 50000]);
+          await say('partner', 'Fully funded! You’ll repay in **monthly installments** from your earnings, and we’ll be here if you need help.');
+          L.gate = L.width - 40; L.hint = { x: 1050 };
+          L.actors[0].act = async () => say('partner', 'Go, Meena ji. The school is waiting!');
+        } },
+        { look: 'shop', x: 1100, prompt: 'Shop', act: async () => { await shopScene(1100); L.hint = { x: 1650 }; } },
+        { look: 'head', x: 1590, prompt: 'Deliver', act: async () => {
+          const ok = await deliver(1650);
+          if (!ok) return say('meena', 'I still need to buy everything at the shop first!');
+          await say('narrator', 'Meena repays her installments month by month. At the end of term, the school pays.');
+          await money(ORDER_PAY, 'School pays for the order', { from: screenPos(1590, GY - 100), coins: 12 });
+          SFX.win(); burst(P.x, GY - 150, null, 60);
+          await win();
+        } },
+      ],
+    });
+    await wait(300);
+    await say('narrator', '**Rewind to day one.** Same order, same ₹2,000. One thing is different this time.');
+  }
+
+  async function win() {
+    await card(`
+      <p class="k">Extra life</p>
+      <h2 style="color:#3F7A4A">YOU WIN!</h2>
+      <p class="lead">Fabric, thread and a new machine. 200 uniforms, delivered. The school pays, and Meena repays her loan month by month from what she earns.</p>
+      <p class="soft">No gold in anyone’s cupboard. No pot that floats away. Credit shaped around her business.</p>
+      <div class="fact">You couldn’t win without an extra life. <b>Neither can Meena.</b> 86% of India’s eligible population has no access to formal credit.<small>Source: rangde.in</small></div>
+      <button class="btn go" data-go="1">MEET REAL ENTREPRENEURS ▸</button>`);
+    realPeople();
+  }
+
+  /* ─────────── Real people (Figma level 7) → call to action (level 8) ─────────── */
+  async function realPeople() {
+    WAITING.forEach(p => { if (!p.img) { p.img = new Image(); p.img.crossOrigin = 'anonymous'; p.img.src = `${p.photo}?auto=compress,format&w=200&h=200&fit=crop&crop=faces`; } });
+    setLevel({
+      key: 'real', short: 'Real people', label: 'REAL PEOPLE, WAITING TODAY', pal: 'real', width: 1500, start: 80, seed: 101, hint: { x: 1350 },
+      far: ['tree', 'white', 'sapling', 'tile'], mid: ['tree', 'banyan', 'sapling'],
+      props: [],
+      actors: WAITING.map((p, i) => ({ draw: BUILD.standee(p), x: 380 + i * 360, h: 150, prompt: `Meet ${p.name}`, act: async () => {
+        const c = await say('narrator', `**${p.name}**, ${p.where}. ${p.need} Waiting on Rang De right now.`, [{ t: `Back ${p.name} from ₹500 ↗`, cls: 'blue' }, 'Keep walking']);
+        if (c === 0) open(`https://rangde.in/i/${p.key}?${utm('real_people')}`, '_blank', 'noopener');
+      } })).concat([{ draw: (g, x, gy) => { signBoard(x, gy - 120, 'BE AN EXTRA LIFE →', '#0DAADE'); g.fillStyle = '#8A5A34'; g.fillRect(x - 3, gy - 108, 6, 108); }, x: 1420, h: 130, prompt: 'Finish', act: async () => cta() }]),
+    });
+    await wait(300);
+    await say('meena', 'Meena is made up. **These three people are real**, and waiting for their extra life on Rang De today.');
+  }
+
+  async function cta() {
+    const share = `I lost all 4 lives trying to help Meena fill one school order 💔 Lalaji's byaaj ate the profit, the bank wanted papers, the chit pot shrank.\n\nCan you do better? 🎮 ${HERE}?${utm('share')}`;
+    await card(`
+      <p class="k">Now it’s your turn</p>
+      <h2>Be someone’s <em style="color:#0DAADE">extra life.</em></h2>
+      <p class="soft">Back a rural entrepreneur from ₹500 on Rang De and get repaid every month.</p>
+      <div class="people">${WAITING.map(p => `<a class="person" href="https://rangde.in/i/${p.key}?${utm('finale')}" target="_blank" rel="noopener"><img src="${p.photo}?auto=compress,format&w=120&h=120&fit=crop&crop=faces" alt=""><span><b>${p.name}</b><span>${p.where}</span><em>${p.need}</em></span></a>`).join('')}</div>
+      <a class="btn blue" href="https://rangde.in/invest/individuals?${utm('finale_all')}" target="_blank" rel="noopener">SEE EVERYONE WAITING ↗</a>
+      <div class="row2"><a class="btn wa" href="https://wa.me/?text=${encodeURIComponent(share)}" target="_blank" rel="noopener">CHALLENGE A FRIEND</a><button class="btn" data-go="again">PLAY AGAIN</button></div>
+      <p class="fine">Meena, Lalaji and the village are made up. Listings as of 20 Oct 2026. Investments carry risk. Rang De is an RBI-registered NBFC-P2P; RBI does not guarantee repayment.</p>`);
+    start();
+  }
+
+  /* ─────────── Loop ─────────── */
+  function update(dt) {
+    t += dt;
+    if (fightOn) fightOn.tick(dt);
+    if (P.auto) { const d = P.auto.x - P.x; if (Math.abs(d) < 3) { const r = P.auto.res; P.auto = null; P.moving = false; r(); } else { P.dir = Math.sign(d); P.x += P.dir * 140 * dt; P.moving = true; P.anim += 140 * dt; } }
+    else if (!busy && !fightOn && L && !modalOn()) {
+      let v = (keys.r ? 1 : 0) - (keys.l ? 1 : 0);
+      if (v) P.target = null;
+      else if (P.target) { const d = Math.max(40, Math.min(L.gate, P.target.x)) - P.x; if (Math.abs(d) < 4) { const a = P.target.actor; P.target = null; if (a) { P.dir = a.x > P.x ? 1 : -1; run(a.act); } } else v = Math.sign(d); }
+      P.moving = v !== 0; if (v) { P.dir = v; P.x += v * 170 * dt; P.anim += 170 * dt; }
+      const before = P.x; P.x = Math.max(40, Math.min(L.gate, P.x)); if (P.x !== before && P.target && !P.target.actor) P.target = null;
+      for (const tr of L.triggers) if (!tr.done && P.x >= tr.x) { tr.done = true; run(tr.fn); break; }
+    } else P.moving = false;
+    if (L) { const target = Math.max(0, Math.min(L.width - W, P.x - W * .38)); cam += (target - cam) * Math.min(1, dt * 6); }
+    parts.forEach(p => { p.t += dt; p.vy += 600 * dt; p.x += p.vx * dt; p.y += p.vy * dt; }); for (let i = parts.length - 1; i >= 0; i--) if (parts[i].t > parts[i].life) parts.splice(i, 1);
+    // Interact button shows what you can do here.
+    if (!fightOn) { const n = !busy && !modalOn() && !P.moving && nearest(); $('#actbtn').classList.toggle('on', !!n); if (n) $('#aLbl').textContent = n.prompt || 'Talk'; }
+  }
+  function loop(now) { const dt = Math.min(.05, Math.max(0, (now - last) / 1000)); last = now; if (L) { update(dt); draw(); } requestAnimationFrame(loop); }
+
+  /* ─────────── Start ─────────── */
+  async function start() {
+    newRun();
+    await chapterOrder();
+  }
+  async function boot() {
+    resize(); addEventListener('resize', () => { resize(); });
+    await Promise.all([loadArt(), document.fonts.ready]);
+    newRun();
+    // Title over the village.
+    setLevel({ key: 'title', short: '', label: 'EXTRA LIFE', pal: 'village', width: 1200, start: 300, seed: 5, props: [{ k: 'white', x: 260, h: 150 }, { k: 'banyan', x: 520, h: 170 }, { k: 'stall', x: 820, h: 120 }] });
+    requestAnimationFrame(t0 => { last = t0; requestAnimationFrame(loop); });
+    await card(`
+      <p class="k">A Rang De story game</p>
+      <h2>Extra Life</h2>
+      <p class="lead">Meena is a tailor. A school wants 200 uniforms. She has ${rupees(SAVINGS)}. She needs ${rupees(NEED)} more.</p>
+      <div class="items" style="grid-template-columns:repeat(3,1fr)">${Object.entries(ITEMS).map(([k, it]) => `<div class="item">${ICON[k]}<b>${it.name}</b><span>${rupees(it.price)}</span></div>`).join('')}</div>
+      <p class="soft">Tap anywhere to walk. Tap people and shops to talk. When a problem attacks, tap fast to fight it. You have <b>4 lives</b>.</p>
+      <button class="btn go" data-go="1">PLAY ▸</button>
+      <p class="fine">Meena and her village are made up. The doors she knocks on are real. Want to run and jump? <a href="./">Play the platform version</a>.</p>`);
+    unlockAudio();
+    start();
+  }
+  // ?debug exposes hooks for automated checks.
+  if (new URLSearchParams(location.search).has('debug')) window.__game = { S, P, get L() { return L; }, keys, act, get busy() { return busy; }, get fight() { return !!fightOn; }, hit: () => fightOn && fightOn.hit(), sheet: () => sheetResolve, pick: v => sheetResolve && sheetResolve(v), step: (dt = .05, n = 1) => { for (let i = 0; i < n; i++) update(dt); } };
+  boot();
+})();
+</script>
+</body>
+</html>

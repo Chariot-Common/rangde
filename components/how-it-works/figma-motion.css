@@ -30,8 +30,9 @@
 .hfm .c2-trig{top:0;gap:4px;align-items:center}
 .hfm .c2-details{right:0;top:28px;flex-direction:column;gap:16px}
 .hfm .cr,.hfm .loc-row{display:flex;gap:4px;align-items:center;height:12px}
-.hfm .crpill{width:18px;height:12px;display:inline-block}
+.hfm .crpill{width:18px;height:12px;display:inline-flex;align-items:center}
 .hfm .meta{display:flex;gap:16px;align-items:center;justify-content:center;width:100%}
+.hfm .meta .m{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
 .hfm .meta .m .v{font:700 14px/20px var(--font-inter),sans-serif;white-space:nowrap}
 .hfm .meta .m .t10.dot{border-bottom:1px dotted rgba(41,45,54,.4);display:inline-block;padding-bottom:0}
 .hfm .vdiv{width:1px;height:28px;background:rgba(41,45,54,.16);display:block;flex:none}
@@ -198,3 +199,74 @@
 .hfm #s1-ticks{margin-top:6px}
 /* step 2: card names keep the title's bold 18px (step 3's .nm rule was reaching them) */
 .hfm .c2-title .nm{font:inherit;white-space:normal}
+
+/* step 3: the payment story with the shared avatars (see step3-flow.js) */
+.hfm .s3f{position:absolute;inset:0;overflow:hidden;background:#fff}
+.hfm .s3f *{box-sizing:border-box;margin:0}
+.hfm .s3f-world{position:absolute;left:0;top:0;width:625px;height:1624px;transform-origin:0 0;will-change:transform}
+.hfm .s3f-lines{position:absolute;left:0;top:0;width:625px;height:1624px;overflow:visible;pointer-events:none}
+.hfm .s3f-card{position:absolute;left:144px;width:380px;background:#f1f2f5;border-radius:8px;overflow:hidden;font-family:var(--font-inter),sans-serif;color:#292d36;font-feature-settings:"lnum" 1,"pnum" 1}
+.hfm .s3f-ttl{padding:24px 0 8px;text-align:center;font-size:11px;line-height:16px;letter-spacing:.88px;text-transform:uppercase;font-weight:500}
+.hfm .s3f-row{display:flex;align-items:center;padding:16px;gap:16px;border-top:1px solid rgba(41,45,54,.08)}
+.hfm .s3f-ttl+.s3f-row{border-top:0}
+.hfm .s3f-slot{width:32px;height:32px;border-radius:50%;background:rgba(41,45,54,.07);flex:none}
+.hfm .s3f-nm,.hfm .s3f-am{font-size:16px;line-height:24px;font-weight:500}
+.hfm .s3f-am{margin-left:auto}
+.hfm .s3f-bd{background:#e7e7e7;padding:8px 8px 16px}
+.hfm .s3f-in{position:relative;height:124px}
+.hfm .s3f-tot{position:absolute;left:16px;right:16px;top:8px;height:24px;display:flex;align-items:center;font-weight:700;font-size:16px;line-height:24px}
+.hfm .s3f-tot img{width:16px;height:16px;margin-left:4px}
+.hfm .s3f-tot .s3f-v{margin-left:auto}
+.hfm .s3f-sub{position:absolute;left:16px;right:16px;top:40px;font-size:14px;line-height:20px;font-weight:500;color:rgba(41,45,54,.64);display:flex;flex-direction:column;gap:8px}
+.hfm .s3f-sub div{display:flex;justify-content:space-between;height:20px}
+.hfm .s3f-btn{position:relative;background:#62af1d;color:#fff;text-align:center;padding:16px;transform-origin:50% 50%;font-family:var(--font-inter),sans-serif}
+.hfm .s3f-btn b{display:block;font-size:14px;line-height:20px;padding:4px 0}
+.hfm .s3f-btn small{display:block;font-size:11px;line-height:16px;letter-spacing:.88px;text-transform:uppercase;font-weight:500;color:#f1f2f5}
+.hfm .s3f-pay{display:flex;align-items:center;justify-content:center;height:60px}
+.hfm .s3f-pay b{padding:0}
+.hfm .s3f-tint{position:absolute;inset:0;background:rgba(255,255,255,.18);opacity:0}
+.hfm .s3f-paytxt{position:relative;display:flex;align-items:center;gap:6px}
+.hfm .s3f-paytick{position:relative;width:20px;height:20px;transform:scale(0);flex:none}
+.hfm .s3f-paytick svg,.hfm .s3f-badge svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.hfm .s3f-paylbl{display:grid}
+.hfm .s3f-paylbl b{grid-area:1/1;white-space:nowrap}
+.hfm .s3f-paylbl b+b{opacity:0}
+.hfm .s3f-amt2{padding:24px 0 8px;text-align:center}
+.hfm .s3f-big{font-size:24px;line-height:32px;font-weight:700}
+.hfm .s3f-lbl{margin-top:8px;font-size:11px;line-height:16px;letter-spacing:.88px;text-transform:uppercase;font-weight:500}
+.hfm .s3f-trio{height:88px}
+.hfm .s3f-chip{position:absolute;padding:8px 16px;background:#f1f2f5;border-radius:8px;font:700 11px/16px var(--font-inter),sans-serif;letter-spacing:.88px;text-transform:uppercase;white-space:nowrap;box-shadow:0 0 0 10px #fff;transform-origin:50% 50%;z-index:40;color:#292d36}
+.hfm .s3f-tn{position:absolute;inset:0;border-radius:8px;background:rgba(98,175,29,.3);opacity:0}
+.hfm .s3f-chip span{position:relative}
+.hfm .s3f-fav{position:absolute;border-radius:50%;overflow:hidden;background:#a8d8f0}
+.hfm .s3f-fav img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.hfm .s3f-fring{position:absolute;pointer-events:none;overflow:visible}
+.hfm .s3f-succ{position:absolute;left:248px;top:1562px;width:173px;height:16px}
+.hfm .s3f-badge{position:absolute;left:0;top:1px;width:15px;height:14px;transform:scale(0)}
+.hfm .s3f-tx{position:absolute;left:0;top:0;width:173px;text-align:center;font:700 11px/16px var(--font-inter),sans-serif;letter-spacing:.88px;text-transform:uppercase;color:rgba(41,45,54,.8);white-space:nowrap}
+
+/* step 2: the green card that grows out of the Invest button: enter or pick an amount, then continue */
+.hfm .s2ac{position:absolute;left:37px;top:24px;width:300px;padding:16px;background:#fff;border-radius:12px;overflow:hidden;font-family:var(--font-inter),sans-serif;color:#292d36;opacity:0;box-shadow:0 0 0 1px rgba(41,45,54,.1),0 8px 24px rgba(41,45,54,.12)}
+.hfm .s2ac *{box-sizing:border-box;margin:0}
+.hfm .s2ac-in{opacity:0}
+.hfm .s2ac-head{display:flex;align-items:center;gap:10px}
+.hfm .s2ac-av{position:relative;width:32px;height:32px;border-radius:50%;overflow:hidden;background:#a8d8f0;flex:none;box-shadow:0 0 0 2px #fff}
+.hfm .s2ac-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hfm .s2ac-name{font:700 14px/20px var(--font-inter),sans-serif}
+.hfm .s2ac-sub{font:500 11px/16px var(--font-inter),sans-serif;color:rgba(41,45,54,.64)}
+.hfm .s2ac-lbl{margin-top:14px;font:500 11px/16px var(--font-inter),sans-serif;letter-spacing:.88px;text-transform:uppercase;color:rgba(41,45,54,.64)}
+.hfm .s2ac-field{display:flex;align-items:center;gap:6px;height:52px;margin-top:6px;padding:0 14px;border-radius:8px;background:#f6f4ef;color:#292d36;box-shadow:0 0 0 0 rgba(98,175,29,0)}
+.hfm .s2ac-cur{font:700 24px/32px var(--font-inter),sans-serif;color:rgba(41,45,54,.5)}
+.hfm .s2ac-val{font:700 28px/36px var(--font-inter),sans-serif;font-variant-numeric:tabular-nums}
+.hfm .s2ac-caret{display:block;width:2px;height:26px;margin-left:-2px;background:#0daade;animation:s2ac-blink 1s steps(1) infinite}
+@keyframes s2ac-blink{50%{opacity:0}}
+.hfm .s2ac-chips{position:relative;height:32px;margin-top:16px}
+.hfm .s2ac-bgs{position:absolute;inset:0;display:flex;gap:8px}
+.hfm .s2ac-bgs i{display:block;flex:1;border-radius:8px;background:#f1efe9}
+.hfm .s2ac-sel{display:block;position:absolute;left:0;top:0;width:61px;height:32px;border-radius:8px;background:#62af1d}
+.hfm .s2ac-txt{position:absolute;inset:0;display:flex;gap:8px}
+.hfm .s2ac-txt span{flex:1;display:flex;align-items:center;justify-content:center;font:700 12px/16px var(--font-inter),sans-serif;color:#4a4f5a}
+.hfm .s2ac-note{margin-top:14px;text-align:center;font:500 11px/16px var(--font-inter),sans-serif;color:rgba(41,45,54,.64)}
+.hfm .s2ac-btn{margin-top:12px;height:40px;border-radius:8px;background:#62af1d;color:#fff;display:flex;align-items:center;justify-content:center;font:700 14px/20px var(--font-inter),sans-serif;transform-origin:50% 50%}
+.hfm .s2ac-done{display:none;position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;opacity:0}
+.hfm .s2ac-done svg{display:block;width:100%;height:100%}

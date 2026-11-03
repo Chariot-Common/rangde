@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { testimonialsRow1, testimonialsRow2 } from "@/lib/content";
+import { stories, testimonialsRow1, testimonialsRow2 } from "@/lib/content";
+import { StoryCard } from "@/components/sections/hero/StoryCard";
 import { TestimonialMarquee } from "./TestimonialMarquee";
 import { TestimonialCard } from "./TestimonialCard";
 import { SwipeCarousel } from "@/components/ui/SwipeCarousel";
@@ -10,7 +11,11 @@ import { useRangDeStats } from "@/components/providers/StatsProvider";
 
 const allTestimonials = [...testimonialsRow1, ...testimonialsRow2];
 
-export function Testimonials() {
+/**
+ * `withStories` (Version B): the investors' words on the top strip, ticking left, and the
+ * borrowers' success stories on the bottom strip, ticking right.
+ */
+export function Testimonials({ withStories = false }: { withStories?: boolean }) {
   const { investors } = useRangDeStats();
   return (
     <section className="mx-2 flex flex-col items-center gap-8 overflow-hidden rounded-[16px] bg-white px-4 py-12 sm:gap-sp9 sm:px-8 sm:py-16 lg:py-sp12">
@@ -28,7 +33,7 @@ export function Testimonials() {
       {/* Mobile (<768px): edge to edge (-mx-4 undoes the section padding), the current card
           centred with its neighbours peeking in, moving on every 3 seconds — same as the
           hero's story cards. */}
-      <div className="-mx-4 w-[calc(100%+2rem)] pb-sp6 md:hidden">
+      <div className="-mx-4 flex w-[calc(100%+2rem)] flex-col gap-4 pb-sp6 md:hidden">
         <SwipeCarousel
           items={allTestimonials}
           peek
@@ -38,12 +43,38 @@ export function Testimonials() {
             <TestimonialCard key={i} testimonial={testimonial} align="left" variant="grid" />
           )}
         />
+        {withStories && (
+          <SwipeCarousel
+            items={stories}
+            peek
+            autoAdvanceMs={3000}
+            ariaLabel="Borrower success stories"
+            renderItem={(story, i) => <StoryCard key={i} story={story} variant="grid" loading="lazy" />}
+          />
+        )}
       </div>
 
       {/* Bleeds past the section padding (-mx-8 = sm:px-8) so the rows run edge to edge. */}
       <div className="hidden w-[calc(100%+4rem)] flex-col gap-sp3 pb-sp6 md:-mx-8 md:flex">
-        <TestimonialMarquee items={testimonialsRow1} align="left" direction="forward" />
-        <TestimonialMarquee items={testimonialsRow2} align="left" direction="reverse" />
+        {withStories ? (
+          <>
+            <TestimonialMarquee items={allTestimonials} align="left" direction="forward" />
+            <div className="group w-full overflow-hidden">
+              <div className="flex w-max items-stretch gap-sp3 animate-marquee-reverse group-hover:[animation-play-state:paused]">
+                {Array.from({ length: 8 }, () => stories)
+                  .flat()
+                  .map((story, i) => (
+                    <StoryCard key={i} story={story} hiddenFromAT={i >= stories.length} loading="lazy" />
+                  ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <TestimonialMarquee items={testimonialsRow1} align="left" direction="forward" />
+            <TestimonialMarquee items={testimonialsRow2} align="left" direction="reverse" />
+          </>
+        )}
       </div>
 
       <Link

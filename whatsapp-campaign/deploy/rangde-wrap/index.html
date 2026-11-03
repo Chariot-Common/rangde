@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rang De Wrap · Your 2026</title>
+<meta name="description" content="Your 2026 on Rang De: where your money travelled, who it reached, the families behind them, and what came back.">
+<meta property="og:title" content="My 2026 on Rang De">
+<meta property="og:description" content="Where my money went, who it reached, and what came back.">
+<meta name="theme-color" content="#292D36">
+<link rel="icon" href="logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Alan+Sans:wght@500;700;800;900&family=Geist:wght@400;500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* Rang De palette (rangde.org): cream, ink, and four colour families, light → deep */
+  :root{
+    --cream:#F7F3ED; --ink:#292D36; --yellow:#FFBE07; --red:#E5322D;
+    --green-1:#CBE0B8; --green-3:#3A6E0C; --teal-2:#20B67A; --teal-3:#084A2F; --teal-m:#A9DAC6;
+    --blue-1:#CBE8F6; --blue-3:#00517A; --purple-1:#DDD1F0; --purple-2:#7033CC; --purple-3:#330C6E; --purple-m:#C7B2E5;
+    --display:"Alan Sans", Geist, sans-serif; --sans:Geist, system-ui, sans-serif; --hand:Kalam, cursive;
+    --ease:cubic-bezier(.22,1,.36,1); --pop:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; background:#1B1D23; color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+  body{ display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; }
+  a{ color:inherit; }
+  button:focus-visible, a:focus-visible, input:focus-visible{ outline:3px solid var(--purple-2); outline-offset:2px; }
+
+  .frame{ position:relative; width:min(100vw, calc(100dvh * 9 / 16)); height:min(100dvh, calc(100vw * 16 / 9)); overflow:hidden; background:var(--cream); color:var(--ink); transition:background .6s var(--ease), color .4s; }
+  @media (min-width:700px){ .frame{ height:min(92dvh, 860px); width:calc(min(92dvh, 860px) * 9 / 16); border-radius:28px; box-shadow:0 30px 80px rgba(0,0,0,.45); } }
+
+  .top{ position:absolute; z-index:8; left:0; right:0; top:0; padding:12px 14px 0; display:flex; flex-direction:column; gap:10px; }
+  .bars{ display:flex; gap:4px; }
+  .bars i{ flex:1; height:3px; border-radius:3px; background:color-mix(in srgb, currentColor 28%, transparent); overflow:hidden; }
+  .bars i b{ display:block; height:100%; width:0; background:currentColor; }
+  .who{ display:flex; align-items:center; justify-content:space-between; }
+  .who .chip{ background:#fff; border-radius:8px; padding:3px 6px; display:flex; } .who img{ height:20px; }
+  .who span{ font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; opacity:.85; }
+  .who button{ font-size:22px; line-height:1; padding:2px 6px; }
+  .tap{ position:absolute; z-index:6; top:0; bottom:0; } .tap.l{ left:0; width:28%; } .tap.r{ right:0; width:72%; }
+
+  /* The single line: one thick thread runs through the whole story. On each slide it draws that slide's icon without lifting. */
+  .thread{ position:absolute; z-index:4; inset:0; width:100%; height:100%; pointer-events:none; }
+  .thread path{ fill:none; stroke-width:1.25; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:1; stroke-dashoffset:1; }
+  .thread.go path{ animation:draw 2.2s .1s var(--ease) forwards; }
+
+  .slide{ position:absolute; z-index:5; inset:0; padding:84px 24px 76px; display:flex; flex-direction:column; pointer-events:none; }
+  .slide .act{ pointer-events:auto; }
+  .in{ animation:rise .7s var(--ease) both; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(22px); } }
+  @keyframes popin{ from{ opacity:0; transform:scale(0); } }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  .pop{ animation:popin .55s var(--pop) both; transform-box:fill-box; transform-origin:center; }
+  .ln{ stroke-dasharray:1; stroke-dashoffset:1; animation:draw var(--d, 1.2s) var(--t, 0s) var(--ease) forwards; }
+  .k{ font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; opacity:.8; }
+  .big{ font-family:var(--display); font-weight:800; font-size:38px; line-height:41px; letter-spacing:-.025em; }
+  .p{ font-size:16px; line-height:23px; font-weight:500; }
+  .p b{ font-weight:700; }
+  .push{ margin-top:auto; }
+  .gap{ display:flex; flex-direction:column; gap:12px; }
+  .sample{ display:inline-block; align-self:flex-start; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; padding:4px 9px; border-radius:999px; border:1.5px solid currentColor; opacity:.7; }
+  .viz{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; margin:10px 0; }
+  .viz > svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:50px; padding:0 16px; border-radius:999px; font-weight:700; font-size:15px; text-decoration:none; text-align:center; transition:transform .15s; }
+  .btn:active{ transform:scale(.97); }
+  .btn.w{ background:var(--cream); color:var(--ink); } .btn.o{ border:2px solid currentColor; } .btn.wa{ background:#25D366; color:#0b3d1f; } .btn.go{ background:var(--purple-2); color:#fff; }
+  .row{ display:flex; gap:10px; } .row > *{ flex:1; }
+  .switch{ display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; font-weight:600; padding:10px 14px; border-radius:14px; background:rgba(41,45,54,.08); }
+  .switch input{ width:44px; height:24px; accent-color:var(--purple-2); }
+  .fine{ font-size:11px; line-height:16px; opacity:.7; }
+
+  /* Loading */
+  .loader{ position:absolute; left:50%; top:44%; width:min(78%, 360px); aspect-ratio:1; transform:translate(-50%,-50%); }
+  .loader svg{ width:100%; height:100%; overflow:visible; }
+  .loader .spin{ animation:spin 24s 3.4s linear infinite; transform-origin:center; transform-box:fill-box; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .loader .powder{ fill-opacity:0; animation:powder 1s 2.9s var(--ease) forwards; }
+  @keyframes powder{ to{ fill-opacity:.95; } }
+  .loadmsg{ position:absolute; left:0; right:0; bottom:25%; text-align:center; font-family:var(--display); font-weight:700; font-size:19px; }
+  .loadmsg span{ display:inline-block; animation:rise .45s var(--ease) both; }
+
+  .title-name{ font-family:var(--display); font-weight:900; font-size:56px; line-height:.98; letter-spacing:-.04em; }
+  .title-name em{ font-style:normal; color:var(--purple-2); }
+
+  /* Travel map */
+  .map .st{ fill:rgba(255,255,255,.08); stroke:rgba(255,255,255,.3); stroke-width:1.2; }
+  .map .route{ fill:none; stroke:var(--yellow); stroke-width:8; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:1; }
+  .map text{ font-family:Geist; font-weight:700; paint-order:stroke; stroke:#00517A; stroke-width:10px; stroke-linejoin:round; }
+
+  /* Things */
+  .tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:18px 0 14px; }
+  .tile{ min-height:118px; border-radius:6px; padding:14px 12px 12px; display:flex; flex-direction:column; gap:2px; animation:popin .6s var(--pop) both; }
+  .tile b{ font-family:var(--display); font-weight:900; font-size:34px; line-height:36px; margin-top:auto; }
+  .tile > span:last-child{ font-size:11px; font-weight:700; line-height:14px; }
+
+  /* Families */
+  .flowers{ display:grid; grid-template-columns:repeat(6,1fr); gap:2px; margin:14px 0 8px; }
+  .flowers svg{ width:100%; height:auto; overflow:visible; }
+  .key{ display:flex; gap:16px; font-size:12px; font-weight:600; align-items:center; }
+  .key i{ display:inline-block; border-radius:50%; margin-right:6px; vertical-align:middle; }
+
+  /* Note */
+  .note{ position:relative; background:#FFFDF8 repeating-linear-gradient(transparent 0 33px, rgba(0,81,122,.14) 33px 34px); background-position:0 20px; color:var(--ink); border-radius:6px; padding:22px 20px 16px; transform:rotate(-1.6deg); box-shadow:0 18px 40px rgba(0,81,122,.22); margin-top:18px; animation:rise .8s var(--pop) both; }
+  .note .doodle{ position:absolute; right:-14px; top:-26px; width:66px; height:66px; border-radius:6px; padding:10px; transform:rotate(6deg); }
+  .hand{ font-family:var(--hand); font-size:22px; line-height:34px; }
+  .hand span{ display:inline-block; white-space:pre; opacity:0; animation:ink .35s ease-out forwards; }
+  @keyframes ink{ from{ opacity:0; filter:blur(3px); transform:translateY(4px); } to{ opacity:1; filter:none; transform:none; } }
+  .trans{ font-size:13px; line-height:19px; font-weight:500; margin-top:12px; opacity:.8; }
+  .sig{ font-family:var(--hand); font-weight:700; font-size:20px; text-align:right; margin-top:4px; }
+
+  /* Earnings */
+  .grow{ position:relative; flex:1; min-height:0; display:flex; align-items:center; justify-content:center; margin:6px 0; }
+  .grow svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .coin{ position:relative; width:92px; height:92px; border-radius:50%; background:var(--purple-3); border:4px solid var(--ink); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:900; font-size:30px; color:var(--yellow); animation:swell 2.4s .3s var(--ease) both; }
+  @keyframes swell{ from{ transform:scale(.7); } to{ transform:scale(var(--g, 1.3)); } }
+  .eq{ display:flex; align-items:baseline; gap:12px; font-family:var(--display); font-weight:900; }
+  .eq b{ font-size:64px; line-height:1; letter-spacing:-.03em; } .eq span{ font-size:28px; opacity:.6; }
+
+  /* Rangoli mosaic: square tiles, like a floor drawn tile by tile */
+  .tl{ transform-box:fill-box; transform-origin:center; animation:tile .6s var(--t, 0s) var(--pop) both; }
+  @keyframes tile{ from{ opacity:0; transform:scale(.3) rotate(-14deg); } }
+  .lb{ animation:rise .5s var(--t, 0s) var(--ease) both; }
+  .legend{ display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; font-weight:600; }
+  .legend span{ display:flex; align-items:center; gap:6px; }
+  .legend i{ width:12px; height:12px; border-radius:3px; flex:none; }
+  .card-prev{ border-radius:16px; overflow:hidden; box-shadow:0 12px 36px rgba(0,0,0,.45); height:52%; aspect-ratio:9/16; align-self:center; }
+  .card-prev img{ display:block; width:100%; height:100%; object-fit:cover; }
+
+  /* Landing */
+  .screen{ position:absolute; z-index:9; inset:0; padding:56px 22px 22px; display:flex; flex-direction:column; gap:14px; overflow:auto; background:var(--cream); }
+  .screen[hidden]{ display:none; }
+  .screen h1{ font-family:var(--display); font-weight:900; font-size:48px; line-height:48px; letter-spacing:-.035em; }
+  .screen h1 em{ font-style:normal; color:var(--purple-2); }
+  .preview{ width:100%; max-width:340px; align-self:center; }
+  .preview svg{ width:100%; height:auto; display:block; overflow:visible; }
+  .pick{ display:flex; gap:8px; }
+  .pick button{ flex:1; padding:8px 6px; border-radius:14px; border:2px solid rgba(41,45,54,.2); text-align:center; font-size:12px; font-weight:500; line-height:15px; }
+  .pick button b{ display:block; font-family:var(--display); font-weight:800; font-size:15px; }
+  .pick button[aria-pressed="true"]{ background:var(--purple-2); color:#fff; border-color:var(--purple-2); }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:.01s !important; animation-delay:0s !important; transition:none !important; } }
+  .still *{ animation-duration:.01s !important; animation-delay:0s !important; animation-iteration-count:1 !important; transition:none !important; }
+</style>
+</head>
+<body>
+<div class="frame" id="frame">
+  <div class="top" id="top" hidden>
+    <div class="bars" id="bars"></div>
+    <div class="who"><span class="chip"><img src="logo.svg" alt="Rang De"></span><span id="whoName"></span><button id="close" aria-label="Close">×</button></div>
+  </div>
+  <svg class="thread" id="thread" viewBox="0 0 100 178" preserveAspectRatio="none" aria-hidden="true" hidden><path pathLength="1"/></svg>
+  <div class="slide" id="slide" aria-live="polite"></div>
+  <button class="tap l" id="tapL" aria-label="Previous" hidden></button>
+  <button class="tap r" id="tapR" aria-label="Next" hidden></button>
+  <section class="screen" id="landing">
+    <p class="k">Rang De Wrap · 2026</p>
+    <h1>Your 2026<br>on <em>Rang De.</em></h1>
+    <p class="p">Where your money travelled, who it reached, the families behind them, and what came back.</p>
+    <div class="preview" id="landingRg"></div>
+    <p class="k">Three sample investors</p>
+    <div class="pick" id="pick"></div>
+    <button class="btn go" id="play">Play the Wrap</button>
+    <p class="fine">Prototype. The real Wrap reads everything from the investor’s Rang De account; they never type a thing.</p>
+  </section>
+</div>
+
+<script src="india.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const fmt = n => Math.round(n).toLocaleString('en-IN');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const STILL = new URLSearchParams(location.search).has('still'); // review mode: every animation jumps to its end
+  if (STILL) document.documentElement.classList.add('still');
+  const PAUSE = STILL || new URLSearchParams(location.search).has('pause');
+
+  /* ─────────── What the money bought: clean, filled icons (24×24). `c` is the cut-out colour. ─────────── */
+  const ICONS = {
+    cow: (f, c) => `<path fill="${f}" d="M7 3.2c.2 1.5.9 2.3 2 2.6L7.6 6C6.4 5.4 6.2 4.2 7 3.2zM17 3.2c-.2 1.5-.9 2.3-2 2.6l1.4.2c1.2-.6 1.4-1.8.6-2.8zM5.2 6.4C3.4 6.2 2 7.2 2.3 8.4c.3 1.1 1.9 1.6 3.9 1.3zM18.8 6.4c1.8-.2 3.2.8 2.9 2-.3 1.1-1.9 1.6-3.9 1.3zM7.6 5.8h8.8c.9 0 1.5.8 1.4 1.6l-.5 6.2H6.7l-.5-6.2c-.1-.8.5-1.6 1.4-1.6zM9.6 12.6h4.8c2 0 3.6 1.6 3.6 3.6v.6c0 2-1.6 3.6-3.6 3.6H9.6c-2 0-3.6-1.6-3.6-3.6v-.6c0-2 1.6-3.6 3.6-3.6z"/><g fill="${c}"><circle cx="9.4" cy="9.6" r="1"/><circle cx="14.6" cy="9.6" r="1"/><circle cx="10.2" cy="16.6" r="1"/><circle cx="13.8" cy="16.6" r="1"/></g>`,
+    goat: (f, c) => `<path fill="${f}" d="M8.6 6C6.2 5 5 3.1 5.6 1.4c1.2 1.6 2.6 2.7 4.5 3.4zM15.4 6c2.4-1 3.6-2.9 3-4.6-1.2 1.6-2.6 2.7-4.5 3.4zM8.2 7.2 2.8 9.2l4.9 1zM15.8 7.2l5.4 2-4.9 1zM8 5.4h8l-1.2 10.1c-.3 2.2-1.4 3.5-2.8 3.5s-2.5-1.3-2.8-3.5zM10.8 18.3 12 22.6l1.2-4.3z"/><g fill="${c}"><circle cx="10.1" cy="9.4" r=".9"/><circle cx="13.9" cy="9.4" r=".9"/></g>`,
+    hen: (f, c) => `<path fill="${f}" d="M4 13c0-4 3-6.5 7-6.5 1.5 0 2.6.4 3.5 1L16 5l2.5 1-1 2.8c.7.9 1 2 1 3.2 0 4.5-3.2 7.5-7.5 7.5S4 16.5 4 13zM14.5 4.6c.2-1.6 1.6-2.2 2.4-1.2.9-.7 2.2 0 1.8 1.3zM18.2 8.4l3.2 1.3-3.2 1zM4.8 11.6 1.4 7.4l1.2 6.3zM9.4 19.2h1.5v3.3H9.4zM13 19.2h1.5v3.3H13z"/><g fill="${c}"><circle cx="15.7" cy="8.3" r=".8"/><path d="M7.2 12.8c1.6 2.2 4.4 2.8 6.6 1.4-1.8-.3-4-1-6.6-1.4z"/></g>`,
+    sewing: (f, c) => `<path fill="${f}" d="M2.5 18.4h19V21h-19zM5 18.4V8.6C5 6.6 6.6 5 8.6 5H18c1.7 0 3 1.3 3 3v4.6h-4V9.2H9v9.2zM15.2 12.6h1.6v3.8h-1.6zM13.8 16.2h4.4v1.3h-4.4z"/><circle fill="${f}" cx="11.4" cy="3.4" r="1.5"/><circle fill="${c}" cx="18.4" cy="8.2" r="1"/>`,
+    loom: (f) => `<path fill="${f}" d="M3 3h18v2.2H3zM3 18.8h18V21H3zM4 3h2.2v18H4zM17.8 3H20v18h-2.2zM8.6 5.2h1.3v13.6H8.6zM11.35 5.2h1.3v13.6h-1.3zM14.1 5.2h1.3v13.6h-1.3zM6.2 10.9h11.6v2.2H6.2z"/>`,
+    seed: (f) => `<path fill="${f}" d="M2.6 20.8c1.6-3.4 4.8-5.2 9.4-5.2s7.8 1.8 9.4 5.2zM11.2 8.6h1.6v7.8h-1.6zM12 10.6C12 6.4 9 3.8 4.2 3.8c0 4.5 3.1 6.8 7.8 6.8zM12 9C12 4.9 14.7 2.4 19.8 2.4c0 4.6-3.1 6.6-7.8 6.6z"/>`,
+    wheat: (f) => `<path fill="${f}" d="M11.3 7h1.4v15h-1.4z"/><g fill="${f}">${[5.5, 9.5, 13.5].map(y => `<ellipse cx="9.4" cy="${y + 1}" rx="2.6" ry="1.35" transform="rotate(35 9.4 ${y + 1})"/><ellipse cx="14.6" cy="${y + 1}" rx="2.6" ry="1.35" transform="rotate(-35 14.6 ${y + 1})"/>`).join('')}<ellipse cx="12" cy="3.6" rx="1.3" ry="2.4"/></g>`,
+    fish: (f, c) => `<path fill="${f}" d="M1.8 12c3-5 9.6-6 14.2-1.4.6.6.6 2.2 0 2.8C11.4 18 4.8 17 1.8 12zM15.4 12l6.2-4.6v9.2z"/><circle fill="${c}" cx="5.8" cy="11.2" r="1.1"/><path fill="none" stroke="${c}" stroke-width="1.3" stroke-linecap="round" d="M8.6 8.9c.9 2 .9 4.2 0 6.2"/>`,
+    boat: (f) => `<path fill="${f}" d="M1.8 15h20.4l-3.2 5.4H5zM11.3 2.6h1.4V15h-1.4zM13.2 3.6l6.6 9.8h-6.6zM10.8 6.4l-5.2 7h5.2z"/>`,
+    shop: (f, c) => `<path fill="${f}" d="M2 9 3 4h18l1 5a2.5 2.5 0 0 1-5 0 2.5 2.5 0 0 1-5 0 2.5 2.5 0 0 1-5 0 2.5 2.5 0 0 1-5 0zM4 12.6h16V21H4z"/><path fill="${c}" d="M10 15h4v6h-4z"/>`,
+  };
+  const MOTIF = {
+    cow: { cat: 'animal', one: 'cow', many: 'cows' }, goat: { cat: 'animal', one: 'goat', many: 'goats' }, hen: { cat: 'animal', one: 'flock of hens', many: 'flocks of hens' },
+    sewing: { cat: 'craft', one: 'sewing machine', many: 'sewing machines' }, loom: { cat: 'craft', one: 'handloom', many: 'handlooms' },
+    seed: { cat: 'farm', one: 'bag of seeds', many: 'bags of seeds' }, wheat: { cat: 'farm', one: 'wheat harvest', many: 'wheat harvests' },
+    fish: { cat: 'fish', one: 'fishing net', many: 'fishing nets' }, boat: { cat: 'fish', one: 'boat repair', many: 'boat repairs' },
+    shop: { cat: 'shop', one: 'kirana restock', many: 'kirana restocks' },
+  };
+  // Each kind of work gets one Rang De colour family: tile colour + icon colour
+  const CATS = {
+    animal: { bg: '#FFBE07', fg: '#330C6E', label: 'Animals' },
+    farm:   { bg: '#3A6E0C', fg: '#CBE0B8', label: 'Farming' },
+    craft:  { bg: '#7033CC', fg: '#F7F3ED', label: 'Craft' },
+    fish:   { bg: '#00517A', fg: '#A8D8F0', label: 'Fisheries' },
+    shop:   { bg: '#20B67A', fg: '#084A2F', label: 'Shops' },
+  };
+  const icon = (m, size = 24) => { const c = CATS[MOTIF[m].cat]; return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" style="display:block">${ICONS[m](c.fg, c.bg)}</svg>`; };
+
+  /* ─────────── Sample investors (in the real Wrap, all of this comes from their account) ─────────── */
+  const PLACES = { Pune: [18.52, 73.86], Dubai: [25.2, 55.27], Chennai: [13.08, 80.27], Udaipur: [24.58, 73.71], Dhar: [22.6, 75.3], Nashik: [20, 73.79], Dhubri: [26.02, 89.98], Imphal: [24.81, 93.94], Buldhana: [20.53, 76.18], Puri: [19.81, 85.83], Bhuj: [23.25, 69.67], Varanasi: [25.32, 82.97], Kolhapur: [16.7, 74.24], Barmer: [25.75, 71.39], Jorhat: [26.75, 94.2], Kalahandi: [19.91, 83.17], Bankura: [23.23, 87.07], Kanchipuram: [12.83, 79.7], Malda: [25, 88.14], Theni: [10.01, 77.48], Raichur: [16.2, 77.36] };
+  // loans: [first name, place, what it bought, woman?, ₹]
+  // chain: the same first rupees, lent, repaid and lent again (indices into loans, one per year)
+  // put: their own money in; growth: what ₹1 of it is worth now
+  const INVESTORS = [
+    { name: 'Ananya', home: 'Pune', since: 2023, put: 10000, growth: 1.3, chain: [0, 11, 6, 4], loans: [
+      ['Kamla', 'Udaipur', 'cow', 1, 1000], ['Sunita', 'Dhar', 'sewing', 1, 1000], ['Bhagwati', 'Barmer', 'goat', 1, 500], ['Rajesh', 'Nashik', 'seed', 0, 1000], ['Lakshmi', 'Kanchipuram', 'loom', 1, 1000], ['Geeta', 'Dhar', 'shop', 1, 500],
+      ['Anil', 'Puri', 'fish', 0, 1000], ['Parvati', 'Kolhapur', 'cow', 1, 500], ['Ramesh', 'Buldhana', 'wheat', 0, 1000], ['Meera', 'Varanasi', 'loom', 1, 1000], ['Saroj', 'Udaipur', 'hen', 1, 500], ['Rina', 'Dhubri', 'fish', 1, 1000],
+      ['Asha', 'Bankura', 'sewing', 1, 500], ['Pooja', 'Imphal', 'seed', 1, 1000], ['Mohan', 'Kalahandi', 'cow', 0, 500], ['Shanti', 'Bhuj', 'sewing', 1, 1000], ['Usha', 'Malda', 'shop', 1, 1000], ['Kiran', 'Jorhat', 'goat', 0, 500] ],
+      note: { i: 0, lang: 'hi', orig: 'गाय आने के बाद बच्चों को रोज़ दूध मिलता है। जो बचता है, डेयरी में बेचती हूँ। इस साल छोटी की स्कूल फ़ीस मैंने खुद भरी। आपका बहुत धन्यवाद।', en: 'Since the cow came, the children get milk every day. What’s left, I sell to the dairy. This year I paid my youngest’s school fees myself. Thank you so much.' } },
+    { name: 'Rohan', home: 'Dubai', nri: true, since: 2024, put: 12000, growth: 1.12, chain: [0, 4, 9], loans: [
+      ['Fatima', 'Bhuj', 'sewing', 1, 2000], ['Jaya', 'Varanasi', 'loom', 1, 2000], ['Salma', 'Malda', 'sewing', 1, 1000], ['Dipali', 'Jorhat', 'loom', 1, 2000], ['Rafiq', 'Puri', 'boat', 0, 1000], ['Nirmala', 'Kanchipuram', 'loom', 1, 2000],
+      ['Babita', 'Bankura', 'sewing', 1, 1000], ['Hari', 'Dhubri', 'fish', 0, 1000], ['Leela', 'Udaipur', 'shop', 1, 1000], ['Mamta', 'Imphal', 'loom', 1, 2000], ['Gopal', 'Kalahandi', 'seed', 0, 1000], ['Sushila', 'Barmer', 'sewing', 1, 1000] ],
+      note: { i: 0, lang: 'hi', orig: 'अब मैं घर से ही ब्लाउज़ सिलती हूँ। ईद से पहले इतने ऑर्डर आए कि बहन को भी साथ बैठाना पड़ा। शुक्रिया।', en: 'Now I stitch blouses from home. Before Eid there were so many orders that my sister had to join me. Thank you.' } },
+    { name: 'Meera', home: 'Chennai', since: 2021, put: 6000, growth: 1.46, chain: [0, 3, 7, 11, 18, 10], loans: [
+      ['Selvi', 'Theni', 'seed', 1, 500], ['Murugan', 'Theni', 'wheat', 0, 500], ['Kavya', 'Raichur', 'seed', 1, 500], ['Basamma', 'Raichur', 'cow', 1, 500], ['Ravi', 'Buldhana', 'wheat', 0, 500], ['Sharada', 'Kolhapur', 'seed', 1, 500],
+      ['Durga', 'Dhar', 'hen', 1, 500], ['Lata', 'Nashik', 'seed', 1, 500], ['Gauri', 'Udaipur', 'cow', 1, 500], ['Prakash', 'Kalahandi', 'wheat', 0, 500], ['Anjali', 'Puri', 'fish', 1, 500], ['Sita', 'Varanasi', 'seed', 1, 500],
+      ['Rekha', 'Barmer', 'goat', 1, 500], ['Vinod', 'Raichur', 'shop', 0, 500], ['Kamala', 'Kanchipuram', 'loom', 1, 500], ['Neela', 'Theni', 'seed', 1, 500], ['Manju', 'Bankura', 'wheat', 1, 500], ['Lalita', 'Kolhapur', 'cow', 1, 500],
+      ['Shobha', 'Dhubri', 'seed', 1, 500], ['Yamuna', 'Imphal', 'seed', 1, 500], ['Kusum', 'Malda', 'hen', 1, 500], ['Raju', 'Jorhat', 'wheat', 0, 500], ['Indira', 'Bhuj', 'sewing', 1, 500], ['Padma', 'Theni', 'seed', 1, 500] ],
+      note: { i: 0, lang: 'ta', orig: 'இந்த வருடம் நல்ல விளைச்சல். கடனை நேரத்தில் கட்டினேன். அடுத்த முறை இன்னும் ஒரு ஏக்கர் பயிரிடுவேன். நன்றி.', en: 'A good harvest this year. I repaid the loan on time. Next season I’ll plant one more acre. Thank you.' } },
+  ];
+  const COMMUNITY = { women: 63 };
+  const hashOf = s => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+  // Household size per borrower (sample; the real number comes from the loan application)
+  const famOf = name => 2 + [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % 4;
+
+  const km = (a, b) => { const [la1, lo1] = PLACES[a], [la2, lo2] = PLACES[b], r = Math.PI / 180, x = Math.sin((la2 - la1) * r / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin((lo2 - lo1) * r / 2) ** 2; return 6371 * 2 * Math.asin(Math.sqrt(x)); };
+  function insights(inv) {
+    const L = inv.loans.map(([who, place, motif, woman, amt]) => ({ who, place, motif, woman: !!woman, amt, cat: MOTIF[motif].cat, fam: famOf(who) }));
+    const things = {}; L.forEach(l => things[l.motif] = (things[l.motif] || 0) + 1);
+    const cats = {}; L.forEach(l => cats[l.cat] = (cats[l.cat] || 0) + 1);
+    const chain = inv.chain.map(i => L[i]);
+    const chainKm = chain.reduce((a, l, i) => a + km(i ? chain[i - 1].place : inv.home, l.place), 0);
+    return { L, things: Object.entries(things).sort((a, b) => b[1] - a[1]), cats: Object.entries(cats).sort((a, b) => b[1] - a[1]),
+      chain, chainKm, women: L.filter(l => l.woman).length, families: L.reduce((a, l) => a + l.fam, 0),
+      now: inv.put * inv.growth, earned: inv.put * (inv.growth - 1), note: { ...inv.note, l: L[inv.note.i] } };
+  }
+
+  /* ─────────── The rangoli, as a mosaic of square tiles ───────────
+     Every person you backed is one tile: its colour is the kind of work, its icon is what they bought,
+     a red dot is a woman. Between them sit rangoli pattern tiles (kolam dots, lotus, diamonds, scallops…),
+     so the whole thing reads like a floor drawn tile by tile. Places are called out around the edge. */
+  const PAIRS = [['#F7F3ED', '#7033CC'], ['#FFBE07', '#330C6E'], ['#DDD1F0', '#7033CC'], ['#CBE0B8', '#3A6E0C'], ['#330C6E', '#FFBE07'], ['#C6E6D9', '#084A2F'], ['#CBE8F6', '#00517A'], ['#F7F3ED', '#E5322D'], ['#E5322D', '#F7F3ED'], ['#084A2F', '#A9DAC6']];
+  const PATTERNS = [
+    f => [22, 50, 78].flatMap(y => [22, 50, 78].map(x => `<circle cx="${x}" cy="${y}" r="9" fill="${f}"/>`)).join(''),                                          // kolam dots
+    (f, b) => [0, 90, 180, 270].map(a => `<ellipse cx="50" cy="26" rx="15" ry="23" fill="${f}" transform="rotate(${a} 50 50)"/>`).join('') + `<circle cx="50" cy="50" r="7" fill="${b}"/>`, // lotus
+    (f, b) => `<path d="M50 8 92 50 50 92 8 50z" fill="${f}"/><path d="M50 28 72 50 50 72 28 50z" fill="${b}"/><path d="M50 41 59 50 50 59 41 50z" fill="${f}"/>`, // diamonds
+    f => [33, 66, 99].map(y => [0, 33.3, 66.6].map(x => `<path d="M${x} ${y}a16.67 16.67 0 0 1 33.33 0z" fill="${f}"/>`).join('')).join(''),               // scallops
+    (f, b) => `<circle cx="50" cy="50" r="38" fill="${f}"/><circle cx="50" cy="50" r="17" fill="${b}"/>`,                                                    // ring
+    f => `<path d="M0 0A100 100 0 0 1 100 100H0z" fill="${f}"/>`,                                                                                             // quarter
+    (f, b) => `<rect x="22" y="22" width="56" height="56" fill="${f}"/><rect x="22" y="22" width="56" height="56" fill="${f}" transform="rotate(45 50 50)"/><circle cx="50" cy="50" r="10" fill="${b}"/>`, // star
+    f => `<path d="M8 92Q8 8 92 8 92 92 8 92z" fill="${f}"/>`,                                                                                                // leaf
+    (f, b) => [[50, 24], [76, 50], [50, 76], [24, 50]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="15" fill="${f}"/>`).join('') + `<circle cx="50" cy="50" r="13" fill="${f}"/><circle cx="50" cy="50" r="5" fill="${b}"/>`, // flower
+    f => [20, 50, 80].map(y => `<path d="M4 ${y + 10}l16-16 15 16 15-16 15 16 15-16 16 16" fill="none" stroke="${f}" stroke-width="8"/>`).join(''), // chevrons
+  ];
+  function rand(seed) { let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const patternTile = (R, x, y, id) => {
+    const [b, f] = PAIRS[Math.floor(R() * PAIRS.length)], p = PATTERNS[Math.floor(R() * PATTERNS.length)], rot = [0, 90, 180, 270][Math.floor(R() * 4)];
+    return [`<clipPath id="${id}"><rect x="${x}" y="${y}" width="100" height="100"/></clipPath>`, `<g clip-path="url(#${id})"><rect x="${x}" y="${y}" width="100" height="100" fill="${b}"/><g transform="translate(${x} ${y}) rotate(${rot} 50 50)">${p(f, b)}</g></g>`];
+  };
+  const personTile = (l, x, y) => { const k = CATS[l.cat]; return `<rect x="${x}" y="${y}" width="100" height="100" fill="${k.bg}"/><g transform="translate(${x + 18} ${y + 18}) scale(${64 / 24})">${ICONS[l.motif](k.fg, k.bg)}</g>${l.woman ? `<circle cx="${x + 86}" cy="${y + 14}" r="7" fill="#E5322D" stroke="${k.bg}" stroke-width="2"/>` : ''}`; };
+  function mosaic(inv, I, { anim = false, labels = false, uid = 'm' } = {}) {
+    const R = rand(hashOf(inv.name)), n = I.L.length, C = 6, S = 100;
+    const fillers = Math.max(4, Math.round(n / 2.6)), rows = Math.ceil((n + fillers) / C), total = rows * C;
+    // Irregular edge: leave a few top-row cells open, so it isn't a perfect block
+    const empty = new Set([1, 4, 2].slice(0, Math.max(1, Math.min(3, total - n - fillers))));
+    const open = [...Array(total).keys()].filter(i => !empty.has(i));
+    // Spread people evenly through the open cells, rangoli patterns in between
+    const step = open.length / n, personAt = new Map();
+    I.L.forEach((l, i) => personAt.set(open[Math.min(open.length - 1, Math.floor(i * step + R() * Math.max(0, step - 1)))], l));
+    let out = '', defs = '';
+    const tAt = (r, c) => (.2 + (r + c) * .09).toFixed(2);
+    open.forEach(cell => {
+      const r = Math.floor(cell / C), c = cell % C, x = c * S, y = r * S, l = personAt.get(cell), cls = anim ? ` class="tl" style="--t:${tAt(r, c)}s"` : '';
+      if (l) out += `<g${cls}>${personTile(l, x, y)}</g>`;
+      else { const [d, g] = patternTile(R, x, y, `${uid}${cell}`); defs += d; out += `<g${cls}>${g}</g>`; }
+    });
+    // One bold disc where four tiles meet, like the big circle in a festival floor
+    const cr = 1 + Math.floor(R() * (rows - 1)), cc = 1 + Math.floor(R() * (C - 1));
+    out += `<g${anim ? ` class="tl" style="--t:${(+tAt(rows, C) + .1).toFixed(2)}s"` : ''}><circle cx="${cc * S}" cy="${cr * S}" r="36" fill="#E5322D"/><circle cx="${cc * S}" cy="${cr * S}" r="13" fill="#F7F3ED"/></g>`;
+    let lab = '', pad = 16;
+    if (labels) {
+      pad = 104;
+      // Call out the places: a few above and below, never the same place twice, never overlapping.
+      // Each label sits on an underline that runs right from its leader line (left, near the right edge).
+      const seen = new Set(), topRow = Math.min(...[...personAt.keys()].map(cell => Math.floor(cell / C)));
+      const callouts = [];
+      [[topRow, -1], [rows - 1, 1]].forEach(([rowIdx, dir]) => {
+        const taken = [];
+        open.filter(cell => Math.floor(cell / C) === rowIdx && personAt.has(cell)).forEach(cell => {
+          const c = cell % C, x = c * S + 50, name = personAt.get(cell).place.toUpperCase(), w = name.length * 15 + 14, side = c >= 4 ? -1 : 1;
+          const span = side > 0 ? [x - 4, x + w] : [x - w, x + 4];
+          if (seen.has(name) || taken.some(([a, b]) => span[0] < b + 16 && span[1] > a - 16)) return;
+          seen.add(name); taken.push(span); callouts.push({ cell, dir, x, name, w, side });
+        });
+      });
+      callouts.forEach(({ cell, dir, x, name, w, side }, i) => {
+        const r = Math.floor(cell / C), y0 = dir < 0 ? r * S : (r + 1) * S, y1 = dir < 0 ? -56 : rows * S + 56, t = (+tAt(rows, C) + .4 + i * .12).toFixed(2);
+        lab += `<g${anim ? ` class="lb" style="--t:${t}s"` : ''}><path d="M${x} ${y0}V${y1}h${side * w}" fill="none" stroke="#292D36" stroke-width="2.6"/><text x="${x + side * 8}" y="${y1 - 11}" text-anchor="${side > 0 ? 'start' : 'end'}" font-family="Alan Sans, Geist, sans-serif" font-weight="700" font-size="25" fill="#292D36">${esc(name)}</text></g>`;
+      });
+    }
+    const w = C * S, h = rows * S;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${w + pad * 2} ${h + pad * 2}"><defs>${defs}</defs>${out}${lab}</svg>`;
+  }
+  // A single row of rangoli tiles for the title: a teaser strip of the same mosaic
+  function mosaicStrip() {
+    const R = rand(hashOf(INV.name) + 3), seq = I.L.slice(0, 3);
+    let out = '', defs = '';
+    for (let c = 0; c < 6; c++) {
+      const x = c * 100, l = c % 2 ? seq[(c - 1) / 2] : null, t = `class="tl" style="--t:${(.5 + c * .1).toFixed(2)}s"`;
+      if (l) out += `<g ${t}>${personTile(l, x, 0)}</g>`;
+      else { const [d, g] = patternTile(R, x, 0, `ts${c}`); defs += d; out += `<g ${t}>${g}</g>`; }
+    }
+    return `<svg viewBox="0 0 600 100" style="height:auto"><defs>${defs}</defs>${out}</svg>`;
+  }
+
+  /* ─────────── Small drawings ─────────── */
+  // A diamond as a plain path (no transform attribute, so the pop-in animation can't knock it out of place)
+  const diamond = (x, y, r) => `M${x} ${y - r}L${x + r} ${y}L${x} ${y + r}L${x - r} ${y}Z`;
+  const pathOf = pts => 'M' + pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join('L');
+  // Loading: a kolam drawn with one line (a spirograph) over a lotus in powder colour, inside a ring of diamonds
+  function loaderArt() {
+    const spiro = [], rose = [];
+    for (let i = 0; i <= 1400; i++) { const t = i / 1400 * Math.PI * 10, R = 8, r = 5, d = 4.2, k = 150 / (R - r + d); spiro.push([((R - r) * Math.cos(t) + d * Math.cos((R - r) / r * t)) * k, ((R - r) * Math.sin(t) - d * Math.sin((R - r) / r * t)) * k]); }
+    for (let i = 0; i <= 480; i++) { const t = i / 480 * Math.PI * 2, r = 96 * Math.cos(4 * t); rose.push([r * Math.cos(t), r * Math.sin(t)]); }
+    const dots = Array.from({ length: 32 }, (_, i) => { const a = i / 32 * Math.PI * 2, x = (Math.cos(a) * 186).toFixed(1), y = (Math.sin(a) * 186).toFixed(1); return `<path class="pop" d="${diamond(+x, +y, 7)}" fill="${['#FFBE07', '#20B67A', '#3EAAE0', '#E5322D'][i % 4]}" style="animation-delay:${(i * .02).toFixed(2)}s"/>`; }).join('');
+    return `<svg viewBox="-200 -200 400 400"><g class="spin">${dots}
+      <path class="ln powder" pathLength="1" d="${pathOf(rose)}Z" fill="#7033CC" fill-rule="evenodd" stroke="#C7B2E5" stroke-width="3" style="--t:.9s;--d:2s"/>
+      <path class="ln" pathLength="1" d="${pathOf(spiro)}" fill="none" stroke="#FFBE07" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="--t:.3s;--d:3.2s"/>
+      <circle class="pop" r="20" fill="#E5322D" style="animation-delay:3.1s"/><circle class="pop" r="8" fill="#F7F3ED" style="animation-delay:3.3s"/></g></svg>`;
+  }
+  function face(l, x, y, s, delay) {
+    const w = l.woman, skin = w ? '#7033CC' : '#C7B2E5', line = w ? '#F7F3ED' : '#330C6E';
+    return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(2)})"><g class="pop" style="animation-delay:${delay.toFixed(2)}s" stroke="${line}" stroke-width="2.8" stroke-linecap="round" fill="none">
+      ${w ? '<circle cx="-22" cy="-17" r="8" fill="#330C6E" stroke="none"/>' : ''}<circle r="22" fill="${skin}" stroke="none"/><path d="M-8 -3h.1M8 -3h.1" stroke-width="5"/><path d="M-7 8C-3 12 3 12 7 8"/>
+      ${w ? '<path d="M-21 -6C-17 -27 17 -27 21 -6C13 -16 -13 -16 -21 -6Z" fill="#330C6E" stroke="none"/><circle cy="-10" r="3.4" fill="#E5322D" stroke="none"/>' : '<path d="M-20 -9C-15 -25 15 -25 20 -9C12 -16 -12 -16 -20 -9Z" fill="#330C6E" stroke="none"/>'}</g></g>`;
+  }
+  function womenRing() {
+    const n = I.L.length, R = 150, s = Math.min(1.05, (Math.PI * 2 * R / n) / 52);
+    const rose = []; for (let i = 0; i <= 360; i++) { const t = i / 360 * Math.PI * 2, r = 92 * Math.cos(4 * t); rose.push([r * Math.cos(t), r * Math.sin(t)]); }
+    // Women first, so they read as one arc of the circle
+    const order = [...I.L].sort((a, b) => b.woman - a.woman);
+    return `<svg viewBox="-200 -200 400 400">
+      <circle class="ln" pathLength="1" r="${R}" fill="none" stroke="#7033CC" stroke-width="5" style="--t:.2s;--d:1.4s"/>
+      <path class="ln" pathLength="1" d="${pathOf(rose)}Z" fill="none" stroke="#C7B2E5" stroke-width="3" style="--t:.5s;--d:1.8s"/>
+      ${order.map((l, i) => { const a = (i / n) * Math.PI * 2 - Math.PI / 2; return face(l, Math.cos(a) * R, Math.sin(a) * R, s, .6 + i * .07); }).join('')}
+      <text class="pop" y="26" text-anchor="middle" fill="#330C6E" font-family="Alan Sans" font-weight="900" font-size="84" style="animation-delay:${(.8 + n * .07).toFixed(2)}s">${I.women}</text>
+    </svg>`;
+  }
+  function flower(l, i) {
+    const c = CATS[l.cat], d0 = .3 + i * .04;
+    const petals = Array.from({ length: l.fam }, (_, k) => { const a = k / l.fam * Math.PI * 2 - Math.PI / 2; return `<circle class="pop" cx="${(Math.cos(a) * 19).toFixed(1)}" cy="${(Math.sin(a) * 19).toFixed(1)}" r="6.5" fill="#A9DAC6" style="animation-delay:${(1.6 + i * .05 + k * .08).toFixed(2)}s"/>`; }).join('');
+    return `<svg viewBox="-30 -30 60 60"><circle class="ln" pathLength="1" r="19" fill="none" stroke="rgba(169,218,198,.4)" stroke-width="1.4" style="--t:${(1.2 + i * .04).toFixed(2)}s;--d:.8s"/>${petals}<rect class="pop" x="-10" y="-10" width="20" height="20" rx="2" fill="${c.bg}" stroke="#F7F3ED" stroke-width="2.5" style="animation-delay:${d0.toFixed(2)}s"/></svg>`;
+  }
+  function spiral() {
+    const pts = []; for (let i = 0; i <= 600; i++) { const t = i / 600 * Math.PI * 7, r = 58 + t * 7.2; pts.push([Math.cos(t) * r, Math.sin(t) * r * .82]); }
+    const beads = Array.from({ length: 10 }, (_, k) => { const t = (k + 1) / 11 * Math.PI * 7, r = 58 + t * 7.2, x = (Math.cos(t) * r).toFixed(1), y = (Math.sin(t) * r * .82).toFixed(1); return `<path class="pop" d="${diamond(+x, +y, 10)}" fill="${['#7033CC', '#00517A', '#3A6E0C', '#E5322D'][k % 4]}" style="animation-delay:${(.4 + k * .2).toFixed(2)}s"/>`; }).join('');
+    return `<svg viewBox="-220 -200 440 400" preserveAspectRatio="xMidYMid meet"><path class="ln" pathLength="1" d="${pathOf(pts)}" fill="none" stroke="#330C6E" stroke-width="5" stroke-linecap="round" style="--t:.2s;--d:2.4s"/>${beads}</svg>`;
+  }
+
+  /* ─────────── The thread's icons ───────────
+     One continuous stroke each, in a 10×10 box: enter at the bottom-left (0, 9.6), leave at the bottom-right (10, 9.6).
+     Only absolute L and C commands, so every number pair can be scaled straight into the thread. */
+  const roseIcon = (() => { const p = []; for (let i = 0; i <= 64; i++) { const t = Math.PI / 4 + i / 64 * Math.PI * 2, r = 4.6 * Math.cos(2 * t); p.push([5 + r * Math.cos(t), 4.6 + r * Math.sin(t)]); } return 'L5 4.6' + p.map(([x, y]) => `L${x.toFixed(2)} ${y.toFixed(2)}`).join('') + 'L10 9.6'; })();
+  const TICON = {
+    loop: 'C3 9.6 7.6 8 7.2 4.2C6.8 .8 2.2 1 2.6 4.4C3 8 7.6 9.6 10 9.6',
+    pin: 'L5 9.6C2 6 1.4 4.6 1.4 3.6C1.4 1.4 3 .2 5 .2C7 .2 8.6 1.4 8.6 3.6C8.6 4.6 8 6 5 9.6L10 9.6',
+    heart: 'L5 9.6C1.2 6.4 0 4.4 1 2.6C2.2 .6 4.4 1 5 3C5.6 1 7.8 .6 9 2.6C10 4.4 8.8 6.4 5 9.6L10 9.6',
+    sprout: 'L5 9.6L5 5.4C5 2.4 2.6 1.2 .8 1.2C.8 3.6 2.6 5.4 5 5.4C5 3 7 1 9.4 1C9.4 3.8 7.4 5.6 5 6.2L5 9.6L10 9.6',
+    house: 'L1.4 9.6L1.4 4.8L5 1.2L8.6 4.8L8.6 9.6L6.2 9.6L6.2 6.6L3.8 6.6L3.8 9.6L10 9.6',
+    bubble: 'C2 9.6 2.6 8.8 2.6 7.6C1.2 6.8 .4 5.6 .4 4.4C.4 1.8 2.6 .4 5 .4C7.6 .4 9.6 1.8 9.6 4.4C9.6 7 7.6 8.4 5 8.4C4 8.4 3.2 8.2 2.6 7.6C3 9.6 8 9.6 10 9.6',
+    rise: 'L3 6.4L5.4 7.8L9 2L6.6 2.2L9 2L9 4.6C9.4 7 9.6 9.6 10 9.6',
+    rose: roseIcon,
+  };
+  // (x, y) in the icon box → (ox + x·s, oy + y·s) in the 100×178 thread box
+  const placeIcon = (d, ox, oy, s) => { let k = 0; return d.replace(/-?\d*\.?\d+/g, v => (k++ % 2 ? oy + +v * s : ox + +v * s).toFixed(2)); };
+  function threadPath(a, { out: b, icon }) {
+    const ox = 74, oy = 159, s = 1.5, sy = oy + 9.6 * s, ex = ox + 10 * s;
+    return `M-3 ${a}C30 ${a} ${ox - 22} ${sy} ${ox} ${sy}${placeIcon(TICON[icon], ox, oy, s)}C${ex + 5} ${sy} ${100 - 4} ${b} 103 ${b}`;
+  }
+
+  /* ─────────── Slides ─────────── */
+  const frame = $('#frame'), slideEl = $('#slide'), threadEl = $('#thread');
+  let INV = INVESTORS[0], I = insights(INV), idx = 0, t0 = 0, dur = 0, paused = false, hideAmt = false, raf = 0, timers = [];
+  const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+  const thingName = (m, c) => c > 1 ? MOTIF[m].many : MOTIF[m].one;
+  const rupees = n => hideAmt ? '' : `₹${fmt(n)}`;
+
+  // th: where the thread leaves the slide (y in a 100×178 box), the icon it draws on the way, and its colour
+  const SLIDES = [
+    // Loading
+    { bg: '#330C6E', fg: '#F7F3ED', d: 5600, th: { out: 173, icon: 'loop', c: '#FFBE07' }, html: () => {
+      const top = I.things[0], msgs = ['Following your rupee…', `Counting the ${MOTIF[top[0]].many}…`, 'Meeting the families…', `Here’s your 2026, ${INV.name}.`];
+      msgs.forEach((m, i) => later(() => { const el = $('#loadmsg'); if (el) el.innerHTML = `<span>${esc(m)}</span>`; }, i * 1300));
+      return `<div class="loader">${loaderArt()}</div><p class="loadmsg" id="loadmsg"></p>`; } },
+    // Title
+    { bg: '#F7F3ED', d: 4200, th: { out: 173, icon: 'heart', c: '#7033CC' }, html: () => `
+        <p class="k in">Rang De Wrap · 2026</p>
+        <p class="title-name in" style="margin-top:18px;animation-delay:.15s">${esc(INV.name)}, your money had a <em>busy year.</em></p>
+        <div class="viz">${mosaicStrip()}</div>
+        <p class="p in" style="animation-delay:.4s">Where it went, who it reached, and what came back.</p>
+        <span class="sample in" style="margin-top:12px;animation-delay:.5s">Sample investor · ${esc(INV.home)}${INV.nri ? ' (NRI)' : ''}</span>` },
+    // 1 · Reinvestment: how your money travels
+    { bg: '#00517A', fg: '#F7F3ED', d: 8500, th: { out: 173, icon: 'pin', c: '#FFBE07' }, html: () => travelSlide() },
+    // 2 · Women
+    { bg: '#DDD1F0', d: 6500, th: { out: 173, icon: 'heart', c: '#7033CC' }, html: () => `
+        <p class="k in">Who you backed</p>
+        <p class="big in" style="animation-delay:.1s">${I.women} of your ${I.L.length} were women.</p>
+        <div class="viz">${womenRing()}</div>
+        <p class="p in" style="animation-delay:1.6s">Across Rang De, ${COMMUNITY.women}% of borrowers are women. You’re ahead at <b>${Math.round(I.women / I.L.length * 100)}%</b>.</p>` },
+    // 3 · What they got with your money
+    { bg: '#CBE0B8', d: 7000, th: { out: 173, icon: 'sprout', c: '#3A6E0C' }, html: () => { const t = I.things; return `
+        <p class="k in">What they got with your money</p>
+        <p class="big in" style="animation-delay:.1s">${t[0][1]} ${thingName(...t[0])}, ${t[1][1]} ${thingName(...t[1])} and more.</p>
+        <div class="tiles">${t.slice(0, 6).map(([m, c], i) => { const k = CATS[MOTIF[m].cat]; return `<div class="tile" style="background:${k.bg};color:${k.fg};animation-delay:${.3 + i * .12}s"><span style="display:block;animation:popin .5s ${(.6 + i * .12).toFixed(2)}s var(--pop) both">${icon(m, 44)}</span><b>${c}</b><span>${thingName(m, c)}</span></div>`; }).join('')}</div>
+        <p class="p in push" style="animation-delay:1.2s">Each loan bought something that earns: milk to sell, clothes to stitch, a crop to harvest. You funded a share of each, alongside other investors.</p>`; } },
+    // 4 · People and their families
+    { bg: '#084A2F', fg: '#F7F3ED', d: 7500, th: { out: 173, icon: 'house', c: '#A9DAC6' }, html: () => `
+        <p class="k in">How many lives you touched</p>
+        <p class="big in" style="animation-delay:.1s">${I.L.length} people.<br><span style="color:#FFBE07">${I.L.length + I.families} lives.</span></p>
+        <div class="flowers">${I.L.map(flower).join('')}</div>
+        <div class="key in" style="animation-delay:2.4s"><span><i style="width:13px;height:13px;border-radius:2px;background:${CATS[I.cats[0][0]].bg};border:2px solid #F7F3ED"></i>Person you backed</span><span><i style="width:9px;height:9px;background:#A9DAC6"></i>Their family</span></div>
+        <p class="p in push" style="animation-delay:2.6s">Every loan feeds a whole household. Your ${I.L.length} loans also reached <b>${I.families} people at home</b>: children, parents, in-laws.</p>
+        <span class="sample in" style="margin-top:8px;animation-delay:2.8s">Sample household sizes</span>` },
+    // 5 · A note from a family
+    { bg: '#CBE8F6', d: 9000, th: { out: 173, icon: 'bubble', c: '#00517A' }, html: () => { const n = I.note, l = n.l, k = CATS[l.cat]; return `
+        <p class="k in">A note from ${esc(l.who)}’s family</p>
+        <div class="note"><div class="doodle" style="background:${k.bg}">${icon(l.motif, 46)}</div>
+          <p class="hand" lang="${n.lang}">${n.orig.split(' ').map((w, i) => `<span style="animation-delay:${(.7 + i * .12).toFixed(2)}s">${esc(w)} </span>`).join('')}</p>
+          <p class="trans">${esc(n.en)}</p>
+          <p class="sig">— ${esc(l.who)}, ${esc(l.place)}</p></div>
+        <p class="p in push" style="animation-delay:.6s">${l.woman ? 'She' : 'He'} got a ${MOTIF[l.motif].one} with the loan you helped fund.</p>
+        <span class="sample in" style="margin-top:8px;animation-delay:.7s">Sample note · real notes only with consent</span>`; } },
+    // 6 · ₹1 → ₹1.3: what you earned
+    { bg: '#FFBE07', d: 8000, th: { out: 173, icon: 'rise', c: '#330C6E' }, html: () => {
+      const g = INV.growth, steps = 24;
+      if (!STILL) for (let k = 1; k <= steps; k++) later(() => { const el = $('#mult'); if (el) el.textContent = '₹' + (1 + (g - 1) * k / steps).toFixed(2); }, 300 + k * 95);
+      return `
+        <p class="k in">What came back</p>
+        <div class="eq in" style="animation-delay:.1s"><b>₹1</b><span>→</span><b id="mult" style="color:#7033CC">₹${STILL ? g.toFixed(2) : '1.00'}</b></div>
+        <div class="grow">${spiral()}<div class="coin" style="--g:${g}">₹1</div></div>
+        <p class="big in" style="font-size:30px;line-height:34px;animation-delay:2.6s">${hideAmt ? `You’ve earned ${Math.round((g - 1) * 100)}% on what you put in.` : `So far, you’ve earned ₹${fmt(I.earned)}.`}</p>
+        <p class="p in" style="margin-top:6px;animation-delay:2.8s">${hideAmt ? 'Every rupee you put in is now worth' : `You put in <b>${rupees(INV.put)}</b>. It’s now worth <b>${rupees(I.now)}</b>. Every rupee is worth`} ₹${g.toFixed(2)}, and it helped someone on the way.</p>
+        <label class="switch act" style="margin-top:12px"><span>Hide amounts when I share</span><input type="checkbox" id="hideAmt" ${hideAmt ? 'checked' : ''}></label>
+        <p class="fine" style="margin-top:8px">Sample figures. Returns depend on repayments and are not guaranteed.</p>`; } },
+    // The rangoli: everything above, in one picture
+    { bg: '#F7F3ED', d: 9000, th: { out: 173, icon: 'rose', c: '#E5322D' }, html: () => `
+        <p class="k in">All of it, in one picture</p>
+        <p class="big in" style="font-size:30px;line-height:34px;animation-delay:.1s">Your 2026, drawn like a rangoli.</p>
+        <div class="viz">${mosaic(INV, I, { anim: true, labels: true, uid: 's' })}</div>
+        <div class="legend in" style="animation-delay:2.6s">
+          ${I.cats.map(([c]) => `<span><i style="background:${CATS[c].bg}"></i>${CATS[c].label}</span>`).join('')}
+          <span><i style="background:#E5322D;border-radius:50%"></i>A woman</span>
+        </div>
+        <p class="fine in" style="margin-top:8px;animation-delay:2.8s">Each icon tile is one person you backed and what they bought. The patterned tiles are the rangoli in between.</p>` },
+    // Share
+    { bg: '#292D36', fg: '#F7F3ED', d: 0, share: true, html: () => `
+        <p class="k">Your share card</p>
+        <div class="card-prev act" style="margin-top:10px"><img id="cardImg" alt="Your Rang De Wrap share card"></div>
+        <div class="gap push act">
+          <label class="switch" style="background:rgba(247,243,237,.1)"><span>Hide amounts</span><input type="checkbox" id="hideAmt2" ${hideAmt ? 'checked' : ''}></label>
+          <div class="row"><button class="btn w" id="dl">Save image</button><a class="btn wa" id="wa" target="_blank" rel="noopener">WhatsApp</a></div>
+          <div class="row"><button class="btn o" id="replay">Replay</button><a class="btn o" href="https://rangde.in/invest/individuals?utm_source=wrap&utm_medium=story" target="_blank" rel="noopener">Who’s next ↗</a></div>
+        </div>` },
+  ];
+
+  function travelSlide() {
+    const A = window.AFTER_DARK, K = Math.cos(22 * Math.PI / 180), SC = 1000 / ((97.5 - 68) * K);
+    const pj = ([la, lo]) => [(lo - 68) * K * SC, (37.6 - la) * SC];
+    const abroad = INV.nri, h = abroad ? [-160, 380] : pj(PLACES[INV.home]);
+    const pts = [h, ...I.chain.map(l => pj(PLACES[l.place]))], n = I.chain.length, D = 3.6;
+    let d = `M${h[0].toFixed(0)} ${h[1].toFixed(0)}`;
+    for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x, y] = pts[i]; d += `Q${((x0 + x) / 2).toFixed(0)} ${(Math.min(y0, y) - 170).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)}`; }
+    const states = A ? A.states.map(s => `<path class="st" d="${s.path}"/>`).join('') : '';
+    const pins = I.chain.map((l, i) => { const [x, y] = pts[i + 1], t = .4 + D * (i + 1) / n, k = CATS[l.cat]; return `<g class="pop" style="animation-delay:${t.toFixed(2)}s"><rect x="${(x - 26).toFixed(0)}" y="${(y - 26).toFixed(0)}" width="52" height="52" rx="4" fill="${k.bg}" stroke="#F7F3ED" stroke-width="4"/><g transform="translate(${(x - 20).toFixed(0)} ${(y - 20).toFixed(0)}) scale(${40 / 24})">${ICONS[l.motif](k.fg, k.bg)}</g><text x="${(x > 760 ? x - 38 : x + 38).toFixed(0)}" y="${(y + 12).toFixed(0)}" fill="#fff" font-size="34" text-anchor="${x > 760 ? 'end' : 'start'}">${INV.since + i} · ${esc(l.who)}</text></g>`; }).join('');
+    const first = I.chain[0], last = I.chain[n - 1];
+    return `
+      <p class="k in">How your money travels</p>
+      <p class="big in" style="animation-delay:.1s">Lent ${n} times. Still going.</p>
+      <div class="viz"><svg class="map" viewBox="${abroad ? '-260 -40 1290 1220' : '-40 -40 1080 1220'}">${states}
+        <path id="route" class="route" pathLength="1" d="${d}" style="animation:draw ${D}s .4s linear forwards"/>
+        <circle cx="${h[0].toFixed(0)}" cy="${h[1].toFixed(0)}" r="18" fill="#FFBE07" stroke="#292D36" stroke-width="5"/><text x="${h[0].toFixed(0)}" y="${(h[1] + 56).toFixed(0)}" fill="#FFBE07" font-size="38" text-anchor="middle">${esc(INV.home)}</text>
+        ${pins}
+        ${STILL ? '' : `<g><circle r="22" fill="#FFBE07" stroke="#292D36" stroke-width="5"/><text y="12" text-anchor="middle" fill="#292D36" font-size="30" style="stroke:none">₹</text><animateMotion dur="${D}s" begin="0.4s" fill="freeze" calcMode="linear" keyPoints="0;1" keyTimes="0;1"><mpath href="#route"/></animateMotion></g>`}
+      </svg></div>
+      <p class="p in" style="animation-delay:${(D + .3).toFixed(1)}s">The same ${hideAmt ? 'money' : rupees(first.amt)} you lent ${esc(first.who)} in ${INV.since} came back and went out again, ${n - 1} time${n > 2 ? 's' : ''}. Today it’s with <b>${esc(last.who)} in ${esc(last.place)}</b>. ${fmt(I.chainKm)} km so far.</p>`;
+  }
+
+  const bars = $('#bars');
+  function startStory() {
+    I = insights(INV);
+    $('#whoName').textContent = `${INV.name}’s 2026`;
+    bars.innerHTML = SLIDES.map(() => '<i><b></b></i>').join('');
+    $('#landing').hidden = true;
+    ['#top', '#tapL', '#tapR'].forEach(s => $(s).hidden = false);
+    show(0);
+  }
+  function show(i) {
+    idx = Math.max(0, Math.min(SLIDES.length - 1, i));
+    const s = SLIDES[idx];
+    timers.forEach(clearTimeout); timers = [];
+    frame.style.background = s.bg; frame.style.color = s.fg || '#292D36';
+    $('#top').style.color = s.fg || '#292D36';
+    threadEl.hidden = !s.th;
+    if (s.th) { const p = threadEl.firstChild; p.setAttribute('d', threadPath(idx ? SLIDES[idx - 1].th.out : 173, s.th)); p.style.stroke = s.th.c; threadEl.classList.remove('go'); void threadEl.getBoundingClientRect(); threadEl.classList.add('go'); }
+    slideEl.innerHTML = s.html();
+    [...bars.children].forEach((b, j) => b.firstChild.style.width = j < idx ? '100%' : '0');
+    const h1 = $('#hideAmt'), h2 = $('#hideAmt2');
+    if (h1) h1.onchange = () => { hideAmt = h1.checked; show(idx); };
+    if (h2) h2.onchange = () => { hideAmt = h2.checked; setupShare(); };
+    if (s.share) setupShare();
+    dur = PAUSE ? 0 : s.d; t0 = performance.now(); paused = false;
+    cancelAnimationFrame(raf); if (dur) raf = requestAnimationFrame(tick);
+  }
+  let lastT = 0;
+  function tick(now) {
+    if (paused) t0 += now - lastT; lastT = now;
+    const p = Math.min(1, (now - t0) / dur);
+    bars.children[idx].firstChild.style.width = p * 100 + '%';
+    if (p >= 1) return show(idx + 1);
+    raf = requestAnimationFrame(tick);
+  }
+  $('#tapR').onclick = () => idx < SLIDES.length - 1 && show(idx + 1);
+  $('#tapL').onclick = () => show(idx - 1);
+  ['pointerdown', 'pointerup', 'pointercancel', 'pointerleave'].forEach(ev => frame.addEventListener(ev, e => { if (e.target.closest('.act, button, a, input, label, .screen')) return; paused = ev === 'pointerdown'; }));
+  addEventListener('keydown', e => { if ($('#landing').hidden) { if (e.key === 'ArrowRight') $('#tapR').click(); if (e.key === 'ArrowLeft') $('#tapL').click(); } });
+  $('#close').onclick = toLanding;
+
+  /* ─────────── Share card (1080×1920): a rangoli burst framing your tiles, your name, four numbers ─────────── */
+  let cardBlob = null;
+  const svgImg = svg => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+  async function drawCard() {
+    await Promise.all(['900 120px "Alan Sans"', '700 40px "Alan Sans"', '600 30px Geist'].map(f => document.fonts.load(f)));
+    const c = document.createElement('canvas'); c.width = 1080; c.height = 1920; const g = c.getContext('2d');
+    g.fillStyle = '#DDD1F0'; g.fillRect(0, 0, 1080, 1920);
+    // Burst: 8-point stars of rotated squares and a ring of diamonds, in Rang De colours
+    const cx = 540, cy = 620;
+    const sq = (s, rot, col) => { g.save(); g.translate(cx, cy); g.rotate(rot); g.fillStyle = col; g.fillRect(-s / 2, -s / 2, s, s); g.restore(); };
+    for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; g.save(); g.translate(cx + Math.cos(a) * 440, cy + Math.sin(a) * 440); g.rotate(a + Math.PI / 4); g.fillStyle = ['#7033CC', '#FFBE07', '#20B67A', '#E5322D'][i % 4]; g.fillRect(-24, -24, 48, 48); g.restore(); }
+    sq(680, 0, '#330C6E'); sq(680, Math.PI / 4, '#330C6E'); sq(600, Math.PI / 8, '#FFBE07'); sq(600, -Math.PI / 8, '#FFBE07');
+    // Your tiles in the middle
+    const im = await svgImg(mosaic(INV, I, { uid: 'c' }));
+    if (im) { const box = 480, ar = (im.naturalWidth || 1) / (im.naturalHeight || 1), w = ar >= 1 ? box : box * ar, h = ar >= 1 ? box / ar : box; g.fillStyle = '#F7F3ED'; g.fillRect(cx - w / 2 - 12, cy - h / 2 - 12, w + 24, h + 24); g.drawImage(im, cx - w / 2, cy - h / 2, w, h); }
+    g.fillStyle = '#292D36'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.font = '700 34px "Alan Sans"'; g.fillText('MY 2026 ON RANG DE', 540, 1180);
+    g.font = '900 150px "Alan Sans"'; g.fillText(INV.name, 540, 1330, 960);
+    const cells = [[`${I.chain.length}×`, 'lent and re-lent'], [`${I.women}/${I.L.length}`, 'were women'], [fmt(I.L.length + I.families), 'lives reached'], [`₹${INV.growth.toFixed(2)}`, hideAmt ? 'what my ₹1 became' : `₹${fmt(I.earned)} earned`]];
+    cells.forEach(([v, l], i) => { const x = 300 + (i % 2) * 480, y = 1490 + Math.floor(i / 2) * 175; g.font = '900 84px "Alan Sans"'; g.fillText(v, x, y, 420); g.font = '600 32px Geist'; g.fillText(l, x, y + 48, 420); });
+    g.textAlign = 'left'; g.font = '700 30px "Alan Sans"'; g.fillText('rangde.in', 80, 1840);
+    g.textAlign = 'right'; g.fillText('#RANGDEWRAP', 1000, 1840);
+    const url = c.toDataURL('image/png'), img = $('#cardImg'); if (img) img.src = url;
+    cardBlob = await new Promise(r => c.toBlob(r, 'image/png'));
+  }
+  function setupShare() {
+    drawCard();
+    const top = I.things[0];
+    const text = `My 2026 on Rang De 🪔 My money was lent ${I.chain.length} times and travelled ${fmt(I.chainKm)} km. ${I.women} of the ${I.L.length} people I backed were women, and together with their families that’s ${fmt(I.L.length + I.families)} lives. It became ${top[1]} ${thingName(top[0], top[1])}, and every ₹1 I put in is now ₹${INV.growth.toFixed(2)}.\n\nWhat would yours look like? ${location.origin + location.pathname}?utm_source=wrap&utm_medium=share`;
+    $('#wa').href = 'https://wa.me/?text=' + encodeURIComponent(text);
+    $('#dl').onclick = async () => {
+      if (!cardBlob) await drawCard();
+      const file = new File([cardBlob], 'rang-de-wrap.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], text }); return; } catch {} }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(cardBlob); a.download = 'rang-de-wrap.png'; a.click();
+    };
+    $('#replay').onclick = () => show(0);
+  }
+
+  /* ─────────── Landing ─────────── */
+  function renderLanding() {
+    $('#landingRg').innerHTML = mosaic(INV, insights(INV), { labels: true, uid: 'l' });
+    $('#pick').innerHTML = INVESTORS.map((v, i) => `<button data-i="${i}" aria-pressed="${v === INV}"><b>${v.name}</b>${v.home}${v.nri ? ' (NRI)' : ''}<br>${v.loans.length} people</button>`).join('');
+    $('#pick').querySelectorAll('button').forEach(b => b.onclick = () => { INV = INVESTORS[+b.dataset.i]; renderLanding(); });
+  }
+  function toLanding() {
+    cancelAnimationFrame(raf); timers.forEach(clearTimeout); threadEl.hidden = true;
+    ['#top', '#tapL', '#tapR'].forEach(s => $(s).hidden = true);
+    slideEl.innerHTML = ''; frame.style.background = ''; frame.style.color = '';
+    $('#landing').hidden = false; renderLanding();
+  }
+  $('#play').onclick = startStory;
+  if (PAUSE) window.__show = n => { if (!$('#landing').hidden) startStory(); show(n); };
+  if (PAUSE) window.__pick = n => { INV = INVESTORS[n]; renderLanding(); };
+  renderLanding();
+})();
+</script>
+</body>
+</html>

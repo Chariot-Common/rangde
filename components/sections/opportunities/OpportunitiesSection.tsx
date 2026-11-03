@@ -8,12 +8,14 @@ import { LiveSignal } from "./LiveSignal";
  * fetched (and revalidated) on the server, only the tab + scroll behaviour ships as JS.
  */
 export async function OpportunitiesSection() {
-  const individuals = await getIndividualOpportunities();
+  // One card (and one in the count) per person, the same rule India After Dark uses, so both
+  // sites say the same number of people are waiting.
+  const individuals = uniqueBorrowers(await getIndividualOpportunities());
 
   return (
     <section
       id="opportunities"
-      className="mx-2 flex scroll-mt-[calc(var(--navbar-bottom)+8px)] flex-col items-center gap-8 overflow-hidden rounded-[16px] bg-white py-12 sm:gap-10 sm:py-16 lg:py-sp12"
+      className="mx-2 flex scroll-mt-[calc(var(--navbar-bottom)+8px)] flex-col items-center gap-8 overflow-hidden rounded-[16px] bg-[#cbe8f6] py-12 sm:gap-10 sm:py-16 lg:py-sp12"
     >
       <div className="flex flex-col items-center gap-3 px-4 text-center">
         {/* Figma "Section 9": the count in grey, then "Live now" on its own line in ink. */}
@@ -26,7 +28,8 @@ export async function OpportunitiesSection() {
         </h2>
       </div>
 
-      <OpportunitiesTabs individuals={uniqueBorrowers(individuals)} states={STATE_OPPORTUNITIES} funds={FUNDS_OPEN ? FUND_OPPORTUNITIES : []} />
+      {/* The founders' call CTA now lives in the founders section, just before the FAQs. */}
+      <OpportunitiesTabs individuals={individuals} states={STATE_OPPORTUNITIES} funds={FUNDS_OPEN ? FUND_OPPORTUNITIES : []} />
     </section>
   );
 }

@@ -22,6 +22,11 @@ const EXPLORE_URL: Record<TabKey, string> = {
 
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
+// The live feed can list 70+ people. The row shows the first dozen, in rangde.in's own order, and
+// ends with a card to see the rest there: every card carries photos and rolling-digit numbers, and
+// rendering them all added about 10,000 elements to the page.
+const MAX_CARDS = 12;
+
 interface Props {
   individuals: IndividualOpportunity[];
   states: StateOpportunity[];
@@ -75,9 +80,20 @@ export function OpportunitiesTabs({ individuals, states, funds }: Props) {
       <div id={`opps-${tab}`} role="tabpanel" className="w-full">
         {tab === "individuals" && (
           <CardRow key="individuals">
-            {individuals.map((o) => (
+            {individuals.slice(0, MAX_CARDS).map((o) => (
               <IndividualCard key={o.key} o={o} />
             ))}
+            {individuals.length > MAX_CARDS && (
+              <a
+                href={EXPLORE_URL.individuals}
+                className="flex w-[280px] shrink-0 snap-start flex-col items-center justify-center gap-3 rounded-[16px] bg-white/60 p-6 text-center font-display text-p2 font-bold text-primary ring-1 ring-primary/16 transition-colors hover:bg-white sm:w-[300px]"
+              >
+                See all {individuals.length} people on Rang De
+                <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </a>
+            )}
           </CardRow>
         )}
         {tab === "states" && (
@@ -122,7 +138,7 @@ export function OpportunitiesTabs({ individuals, states, funds }: Props) {
 }
 
 const TRUST = [
-  { label: "₹500 minimum investment", icon: <path d="M7 5h10M7 9h10M10 5c4 0 4 8 0 8H7l7 7" /> },
+  { label: "₹500 minimum investment", icon: <><circle cx="12" cy="12" r="8" /><path d="M12 8v8M9 12h6" /></> },
   { label: "Secured by Razorpay", icon: <><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></> },
   { label: "Regulated by RBI", icon: <><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></> },
 ];

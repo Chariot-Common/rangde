@@ -8,7 +8,15 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
  * focus; on touch, a tap opens it and tapping anywhere else closes it. (Not a toggle: a
  * click also fires focus first, so toggling would immediately close it again.)
  */
-export function SourceTip({ children, source }: { children: ReactNode; source: string }) {
+export function SourceTip({
+  children,
+  source,
+  placement = "top",
+}: {
+  children: ReactNode;
+  source: string;
+  placement?: "top" | "bottom";
+}) {
   const [open, setOpen] = useState(false);
   const id = useId();
   const ref = useRef<HTMLSpanElement>(null);
@@ -42,12 +50,22 @@ export function SourceTip({ children, source }: { children: ReactNode; source: s
       <span
         id={id}
         role="tooltip"
-        className={`pointer-events-none absolute bottom-[calc(100%+10px)] left-1/2 z-20 w-[240px] -translate-x-1/2 rounded-[8px] bg-[#1d1f24] px-3 py-2 text-left font-display text-[12px] font-medium leading-[17px] text-white shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-[opacity,transform] duration-150 ${
-          open ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
+        className={`pointer-events-none absolute ${placement === "top" ? "bottom-[calc(100%+10px)]" : "top-[calc(100%+10px)]"} left-1/2 z-20 w-[240px] -translate-x-1/2 rounded-[8px] bg-[#1d1f24] px-3 py-2 text-left font-display text-[12px] font-medium leading-[17px] text-white shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-[opacity,transform] duration-150 ${
+          open
+            ? "translate-y-0 opacity-100"
+            : placement === "top"
+              ? "translate-y-1 opacity-0"
+              : "-translate-y-1 opacity-0"
         }`}
       >
         {source}
-        <span className="absolute left-1/2 top-full -translate-x-1/2 border-x-[6px] border-t-[6px] border-x-transparent border-t-[#1d1f24]" />
+        <span
+          className={`absolute left-1/2 -translate-x-1/2 border-x-[6px] border-x-transparent ${
+            placement === "top"
+              ? "top-full border-t-[6px] border-t-[#1d1f24]"
+              : "bottom-full border-b-[6px] border-b-[#1d1f24]"
+          }`}
+        />
       </span>
     </span>
   );

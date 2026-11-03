@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Extra Life: Run · A Rang De game</title>
+<meta name="description" content="Run, jump and stomp through Meena's village. Every lender gives you money, and every lender takes it back. Can you win without an extra life?">
+<meta property="og:title" content="Extra Life: Run. ₹48,000 to find. 4 lives.">
+<meta property="og:description" content="A platform game about borrowing in rural India. Stomp the byaaj, dodge the paperwork, and find the extra life.">
+<meta name="theme-color" content="#2A2420">
+<link rel="icon" href="logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2A2420; --ink-60:rgba(42,36,32,.62); --paper:#FFF7EC; --card:#FFFDF8;
+    --green:#3F7A4A; --red:#D6453D; --gold:#F2B43C; --blue:#0DAADE;
+    --display:"Baloo 2", Inter, sans-serif; --sans:Inter, system-ui, sans-serif; --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; background:#1C1916; color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; overflow:hidden; overscroll-behavior:none; }
+  body{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)); user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; touch-action:manipulation; }
+  a{ color:inherit; }
+  button:focus-visible, a:focus-visible{ outline:3px solid var(--blue); outline-offset:2px; }
+
+  .game{ position:relative; }
+  canvas{ display:block; width:100%; height:100%; border-radius:18px; border:3px solid #000; background:#EDBFA9; touch-action:none; }
+
+  /* HUD over the top of the game */
+  .hud{ position:absolute; z-index:3; left:0; right:0; top:0; padding:10px 12px; display:flex; justify-content:space-between; align-items:flex-start; gap:8px; pointer-events:none; }
+  .hud > *{ pointer-events:auto; }
+  .left{ display:flex; flex-direction:column; gap:5px; }
+  .hearts{ display:flex; gap:3px; }
+  .hearts i{ width:20px; height:18px; display:block; background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21s-9-5.6-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.4-9 12-9 12z' fill='%23D6453D' stroke='%232A2420' stroke-width='1.6'/%3E%3C/svg%3E"); }
+  .hearts i.gold{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21s-9-5.6-9-12a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.4-9 12-9 12z' fill='%23F2B43C' stroke='%232A2420' stroke-width='1.6'/%3E%3C/svg%3E"); }
+  .hearts i.gone{ opacity:.22; filter:grayscale(1); }
+  .hearts i.break{ animation:break .8s both; }
+  @keyframes break{ 20%{ transform:rotate(-15deg) scale(1.2); } 40%{ transform:rotate(15deg); } 100%{ transform:scale(.7); opacity:.22; filter:grayscale(1); } }
+  .chip{ font-family:var(--display); font-weight:700; font-size:12px; line-height:15px; padding:3px 9px 2px; border-radius:999px; background:rgba(255,253,248,.9); border:2px solid var(--ink); align-self:flex-start; }
+  .right{ display:flex; align-items:flex-start; gap:6px; }
+  .wallet{ font-family:var(--display); font-weight:800; font-size:20px; line-height:22px; padding:5px 10px 3px; border-radius:12px; background:var(--card); border:2.5px solid var(--ink); box-shadow:0 3px 0 var(--ink); font-variant-numeric:tabular-nums; min-width:90px; text-align:center; }
+  .wallet small{ display:block; font-family:var(--sans); font-size:8px; line-height:9px; font-weight:800; letter-spacing:.08em; color:var(--ink-60); }
+  .wallet.neg{ background:#FFE1DD; color:var(--red); }
+  .wallet.bump{ animation:bump .3s var(--ease); }
+  @keyframes bump{ 50%{ transform:scale(1.12); } }
+  .owe{ font-family:var(--display); font-weight:800; font-size:12px; line-height:14px; color:#fff; background:var(--red); border:2px solid var(--ink); border-radius:999px; padding:3px 8px 1px; margin-top:4px; text-align:center; }
+  .owe[hidden]{ display:none; }
+  .bag{ position:relative; width:62px; height:64px; }
+  .bag svg.sack{ position:absolute; inset:0; width:100%; height:100%; }
+  .bag .slots{ position:absolute; left:6px; right:6px; top:24px; display:flex; justify-content:center; gap:1px; }
+  .bag .slots span{ width:16px; height:16px; opacity:.2; filter:grayscale(1); transition:all .4s var(--ease); }
+  .bag .slots span.in{ opacity:1; filter:none; transform:translateY(-12px) scale(1.25); }
+  .bag .slots svg{ width:100%; height:100%; }
+  .bag.got{ animation:bump .4s var(--ease); }
+  .mute{ width:28px; height:28px; border-radius:50%; background:var(--card); border:2px solid var(--ink); font-size:13px; }
+
+  /* Small round touch buttons, only on touch screens */
+  .pad{ width:min(100%, 1100px); display:flex; justify-content:space-between; align-items:center; padding:0 6px; }
+  .pad .lr{ display:flex; gap:12px; }
+  .pad button{ width:66px; height:66px; border-radius:50%; background:#3A332D; border:3px solid #000; box-shadow:0 4px 0 #000; color:#fff; display:flex; align-items:center; justify-content:center; }
+  .pad button svg{ width:30px; height:30px; }
+  .pad button.jump{ width:82px; height:82px; background:var(--gold); color:var(--ink); font-family:var(--display); font-weight:800; font-size:17px; }
+  .pad button.snip{ background:#E07B39; font-size:30px; color:#fff; }
+  .pad button.on{ transform:translateY(3px); box-shadow:0 1px 0 #000; }
+  .keys{ font-family:var(--display); font-weight:700; font-size:14px; color:rgba(255,255,255,.6); }
+  @media (hover:hover) and (pointer:fine){ .pad{ display:none; } }
+  @media not ((hover:hover) and (pointer:fine)){ .keys{ display:none; } }
+
+  /* Dialogue sheet */
+  .sheet{ position:absolute; z-index:5; left:10px; right:10px; top:74px; max-width:560px; margin:0 auto; background:var(--card); border:3px solid var(--ink); border-radius:18px; box-shadow:0 5px 0 var(--ink); padding:12px 14px; display:flex; flex-direction:column; gap:8px; transform:translateY(-12px) scale(.96); opacity:0; pointer-events:none; transition:transform .3s var(--ease), opacity .3s; max-height:calc(100% - 84px); overflow:auto; }
+  .sheet.on{ transform:none; opacity:1; pointer-events:auto; }
+  .who{ display:flex; align-items:center; gap:10px; }
+  .who img{ width:40px; height:40px; border-radius:50%; border:2px solid var(--ink); background:#F4E6D6; flex:none; object-fit:cover; }
+  .who b{ font-family:var(--display); font-weight:800; font-size:16px; line-height:17px; }
+  .who small{ display:block; font-size:11px; font-weight:600; color:var(--ink-60); }
+  .say{ font-size:15px; line-height:21px; font-weight:600; }
+  .say b{ font-weight:800; }
+  .opts{ display:flex; gap:8px; flex-wrap:wrap; }
+  .opt{ flex:1; min-width:120px; padding:10px 12px; border:2.5px solid var(--ink); border-radius:12px; background:#fff; box-shadow:0 3px 0 var(--ink); font-weight:800; font-size:14px; line-height:18px; }
+  .opt:active{ transform:translateY(3px); box-shadow:none; }
+  .tap{ align-self:flex-end; font-family:var(--display); font-weight:800; font-size:12px; color:var(--ink-60); }
+  .contract{ background:#FFF6DA; border:2px dashed var(--ink); border-radius:10px; padding:8px 12px; font-family:"Courier New", monospace; font-size:13px; line-height:19px; }
+
+  /* Full cards */
+  .modal{ position:fixed; z-index:7; inset:0; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(28,25,22,.6); overflow:auto; }
+  .modal.on{ display:flex; }
+  .mcard{ width:100%; max-width:420px; margin:auto; background:var(--card); border:3px solid var(--ink); border-radius:22px; box-shadow:0 8px 0 var(--ink); padding:18px; display:flex; flex-direction:column; gap:11px; animation:rise .4s var(--ease); }
+  @keyframes rise{ from{ opacity:0; transform:translateY(20px) scale(.96); } }
+  .mcard h2{ font-family:var(--display); font-weight:800; font-size:28px; line-height:30px; }
+  .k{ font-family:var(--display); font-weight:800; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-60); }
+  .lead{ font-size:15px; line-height:22px; font-weight:600; }
+  .soft{ font-size:14px; line-height:20px; font-weight:500; color:var(--ink-60); }
+  .ledger{ display:grid; grid-template-columns:1fr auto; gap:4px 12px; font-size:13px; font-weight:600; background:#FFF6DA; border:2px solid var(--ink); border-radius:12px; padding:10px 12px; }
+  .ledger b{ text-align:right; font-weight:800; font-variant-numeric:tabular-nums; }
+  .ledger .neg{ color:var(--red); } .ledger .pos{ color:var(--green); }
+  .ledger .tot{ border-top:2px solid var(--ink); padding-top:5px; font-size:14px; font-weight:800; }
+  .fact{ background:var(--paper); border:2px dashed var(--ink); border-radius:12px; padding:10px 12px; font-size:13px; line-height:19px; font-weight:500; }
+  .fact b{ font-weight:800; } .fact small{ display:block; margin-top:4px; font-size:11px; color:var(--ink-60); }
+  .btn{ display:flex; align-items:center; justify-content:center; width:100%; min-height:50px; padding:0 16px; border:3px solid var(--ink); border-radius:14px; box-shadow:0 4px 0 var(--ink); font-family:var(--display); font-weight:800; font-size:17px; text-decoration:none; background:#fff; text-align:center; line-height:20px; }
+  .btn:active{ transform:translateY(4px); box-shadow:none; }
+  .btn.go{ background:var(--gold); } .btn.blue{ background:var(--blue); color:#fff; } .btn.wa{ background:#25D366; }
+  .items{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .item{ display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 4px; border:2.5px solid var(--ink); border-radius:12px; background:#fff; text-align:center; }
+  .item svg{ width:40px; height:40px; } .item b{ font-size:12px; font-weight:800; } .item span{ font-family:var(--display); font-weight:800; font-size:14px; }
+  .doors{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .door{ display:flex; flex-direction:column; align-items:flex-start; gap:3px; padding:12px; border:3px solid var(--ink); border-radius:14px; box-shadow:0 4px 0 var(--ink); text-align:left; background:var(--c); color:#fff; min-height:104px; }
+  .door b{ font-family:var(--display); font-weight:800; font-size:18px; line-height:19px; }
+  .door span{ font-size:12px; line-height:15px; font-weight:600; }
+  .door i{ font-style:normal; font-size:24px; }
+  .door[disabled]{ background:#CFC6BB; color:var(--ink-60); box-shadow:none; transform:translateY(4px); }
+  .people{ display:flex; flex-direction:column; gap:8px; }
+  .person{ display:flex; gap:10px; align-items:center; text-decoration:none; padding:8px; border:2px solid var(--ink); border-radius:12px; background:var(--paper); }
+  .person img{ width:52px; height:52px; border-radius:10px; object-fit:cover; flex:none; border:2px solid var(--ink); }
+  .person b{ display:block; font-size:14px; font-weight:800; } .person span{ display:block; font-size:12px; font-weight:600; color:var(--ink-60); } .person em{ display:block; font-style:normal; font-size:12px; line-height:16px; }
+  .fine{ font-size:11px; line-height:16px; color:var(--ink-60); }
+  .row2{ display:flex; gap:8px; } .row2 > *{ flex:1; }
+  .dark{ background:var(--ink); color:#fff; text-align:center; align-items:center; box-shadow:0 8px 0 var(--red); }
+  .dark .soft{ color:rgba(255,255,255,.72); }
+  .portal{ width:100px; height:100px; border-radius:50%; background:conic-gradient(#0DAADE, #7CC242, #F2B43C, #D6453D, #B65FCF, #0DAADE); animation:spin 2.4s linear infinite; position:relative; margin:4px auto; }
+  .portal::after{ content:"1UP"; position:absolute; inset:15px; border-radius:50%; background:var(--ink); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:800; font-size:24px; color:var(--gold); animation:spin 2.4s linear infinite reverse; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .fx{ position:absolute; inset:0; z-index:4; pointer-events:none; overflow:hidden; border-radius:18px; }
+  .fly{ position:absolute; left:0; top:0; width:18px; height:18px; margin:-9px 0 0 -9px; }
+  .coin{ border-radius:50%; background:radial-gradient(circle at 35% 35%, #FFE48A, #F2B43C 60%, #C98A12); border:2px solid #8A5A00; }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="game" id="game">
+  <canvas id="c" aria-label="Game screen"></canvas>
+  <div class="hud">
+    <div class="left"><div class="hearts" id="hearts" aria-label="Lives"></div><span class="chip" id="where">EXTRA LIFE: RUN</span></div>
+    <div class="right">
+      <div><div class="wallet" id="wallet" aria-live="polite"><small>IN THE BAG</small><span id="cash">₹2,000</span></div><div class="owe" id="owe" hidden></div></div>
+      <div class="bag" id="bag" aria-label="Meena's bag"><svg class="sack" viewBox="0 0 74 78"><path d="M22 14c2-8 28-8 30 0" fill="none" stroke="#6B4A2B" stroke-width="4" stroke-linecap="round"/><path d="M12 30c0-10 8-16 25-16s25 6 25 16l4 34c1 8-5 12-13 12H21c-8 0-14-4-13-12z" fill="#C9A26B" stroke="#2A2420" stroke-width="2.5"/><path d="M14 36h46" stroke="#8A6A3E" stroke-width="2" stroke-dasharray="4 3"/></svg><div class="slots" id="slots"></div></div>
+      <button class="mute" id="mute" aria-label="Sound on">🔊</button>
+    </div>
+  </div>
+  <div class="fx" id="fx"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-live="polite"></div>
+</div>
+<div class="pad">
+  <div class="lr">
+    <button data-k="l" aria-label="Run left"><svg viewBox="0 0 48 48"><path d="M30 10L14 24l16 14" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button data-k="r" aria-label="Run right"><svg viewBox="0 0 48 48"><path d="M18 10l16 14-16 14" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+  <div class="lr"><button class="snip" data-k="f" aria-label="Throw scissors">✂</button><button class="jump" data-k="j" aria-label="Jump">JUMP</button></div>
+</div>
+<p class="keys">← → to run · SPACE to jump · F to throw scissors · stomp or snip the problems</p>
+<div class="modal" id="modal"></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const game = $('#game'), cv = $('#c'), ctx = cv.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rupees = n => (n < 0 ? '−₹' : '₹') + Math.abs(Math.round(n)).toLocaleString('en-IN');
+  const wait = ms => new Promise(r => setTimeout(r, reduce ? Math.min(ms, 120) : ms));
+  const NABARD = 'NABARD Rural Economic Conditions & Sentiments Survey, July 2026';
+  const HERE = location.origin + location.pathname;
+  const utm = c => `utm_source=extra_life_run&utm_medium=game&utm_campaign=${c}`;
+
+  /* ─────────── Money rules: same as the story game ─────────── */
+  const SAVINGS = 2000, ORDER_PAY = 60000, COIN = 100;
+  const ITEMS = { F: { name: 'Fabric', price: 15000 }, T: { name: 'Thread & buttons', price: 5000 }, M: { name: 'Sewing machine', price: 30000 } };
+  const NEED = 50000 - SAVINGS;
+  // Live on rangde.in on 20 Oct 2026. Refresh before sharing widely.
+  const WAITING = [
+    { key: 'priyanka-593', name: 'Priyanka', where: 'Buldhana, Maharashtra', need: 'Needs credit for dairy supplies and animal feed.', photo: 'https://rangde.imgix.net/bImg/5035-img.jpg' },
+    { key: 'pukan-888', name: 'Pukan', where: 'Dhubri, Assam', need: 'Needs printers and a micro ATM for his services shop.', photo: 'https://rangde.imgix.net/bImg/10020698-img.jpg' },
+    { key: 'aribam-286', name: 'Aribam', where: 'Imphal East, Manipur', need: 'Building a shed for mushroom cultivation.', photo: 'https://rangde.imgix.net/bImg/MKF-09-RG-26-27-img.jpg' },
+  ];
+  const ICON = {
+    F: '<svg viewBox="0 0 48 48"><rect x="6" y="30" width="36" height="10" rx="3" fill="#6B3A6E" stroke="#2A2420" stroke-width="2"/><rect x="8" y="21" width="32" height="10" rx="3" fill="#3F7A4A" stroke="#2A2420" stroke-width="2"/><rect x="10" y="12" width="28" height="10" rx="3" fill="#E0A23A" stroke="#2A2420" stroke-width="2"/><path d="M14 35h20M13 26h22M16 17h16" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-dasharray="3 3"/></svg>',
+    T: '<svg viewBox="0 0 48 48"><rect x="12" y="6" width="24" height="6" rx="2" fill="#8A5A34" stroke="#2A2420" stroke-width="2"/><rect x="12" y="36" width="24" height="6" rx="2" fill="#8A5A34" stroke="#2A2420" stroke-width="2"/><rect x="15" y="12" width="18" height="24" fill="#D6453D" stroke="#2A2420" stroke-width="2"/><path d="M15 17l18 4M15 23l18 4M15 29l18 4" stroke="#fff" stroke-opacity=".55" stroke-width="2"/></svg>',
+    M: '<svg viewBox="0 0 48 48"><path d="M8 18c0-5 3-8 8-8h20c4 0 6 3 6 6v14h-8V18H18v4h-6z" fill="#2E2A29" stroke="#2A2420" stroke-width="2"/><rect x="5" y="34" width="38" height="7" rx="2" fill="#B8823F" stroke="#2A2420" stroke-width="2"/><path d="M13 22v8M11 30h4" stroke="#2A2420" stroke-width="2.5" stroke-linecap="round"/><circle cx="38" cy="22" r="4" fill="#C9C1B5" stroke="#2A2420" stroke-width="2"/></svg>',
+  };
+  const iconImg = {};
+  Object.entries(ICON).forEach(([k, s]) => { const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')); iconImg[k] = im; });
+
+  /* ─────────── Figma art ─────────── */
+  const load = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+  function cut(img, col, row, cols = 3, rows = 2) {
+    const cw = img.width / cols, ch = img.height / rows, c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    const g = c.getContext('2d'); g.drawImage(img, col * cw, row * ch, cw, ch, 0, 0, cw, ch);
+    const d = g.getImageData(0, 0, cw, ch).data; let x0 = cw, y0 = ch, x1 = 0, y1 = 0;
+    for (let y = 0; y < ch; y += 2) for (let x = 0; x < cw; x += 2) if (d[(y * cw + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
+    const t = document.createElement('canvas'); t.width = Math.max(1, x1 - x0 + 2); t.height = Math.max(1, y1 - y0 + 2); t.getContext('2d').drawImage(c, x0, y0, t.width, t.height, 0, 0, t.width, t.height); return t;
+  }
+  const ART = {};
+  async function loadArt() {
+    const [meena, houses, trees, plants, stall] = await Promise.all(['art/meena.png', 'art/houses.png', 'art/trees.png', 'art/plants.png', 'art/stall.png'].map(load));
+    ART.meena = meena; ART.stall = stall;
+    if (houses) Object.assign(ART, { hut: cut(houses, 0, 0), hut2: cut(houses, 1, 0), block: cut(houses, 2, 0), tile: cut(houses, 0, 1), white: cut(houses, 1, 1), kiosk: cut(houses, 2, 1) });
+    if (trees) Object.assign(ART, { sapling: cut(trees, 0, 0), tree: cut(trees, 1, 0), banyan: cut(trees, 2, 0), bare: cut(trees, 0, 1), twisted: cut(trees, 1, 1), bush: cut(trees, 2, 1) });
+    if (plants) Object.assign(ART, { grass: cut(plants, 0, 0), herbs: cut(plants, 1, 0), wall: cut(plants, 2, 0), thorny: cut(plants, 0, 1), dry: cut(plants, 1, 1), hay: cut(plants, 2, 1) });
+  }
+
+  /* ─────────── People and problems (flat style) ─────────── */
+  const LOOKS = {
+    lalaji:  { name: 'Lalaji', role: 'Moneylender', skin: '#D49A6A', hair: '#EDEDED', top: '#F4F1EA', bottom: '#F4F1EA', accent: '#3B2F2A', cap: '#3B2F2A', stache: true, belly: true, man: true },
+    head:    { name: 'Mr Kulkarni', role: 'School headmaster', skin: '#C68E5F', hair: '#2F2622', top: '#8A6A4A', bottom: '#4B4F5C', accent: '#fff', glasses: true, man: true },
+    officer: { name: 'Bank officer', role: 'Loan desk', skin: '#C68E5F', hair: '#241C18', top: '#9DB8DA', bottom: '#3E4657', accent: '#2C4A7A', glasses: true, tie: true, man: true },
+    kamala:  { name: 'Kamala tai', role: 'Runs the chit', skin: '#B97E52', hair: '#241C18', top: '#E0A23A', bottom: '#C0392B', accent: '#F2D16B', bun: true },
+    brother: { name: 'Ravi', role: 'Your brother', skin: '#B97E52', hair: '#241C18', top: '#4F8EF7', bottom: '#2F3542', accent: '#fff', man: true },
+    aunty:   { name: 'Pushpa aunty', skin: '#C68E5F', hair: '#3A2E2A', top: '#E26D5C', bottom: '#F2A65A', accent: '#F2D16B', bun: true, belly: true },
+    partner: { name: 'Asha', role: 'Rang De partner', skin: '#B97E52', hair: '#241C18', top: '#0DAADE', bottom: '#1F5E86', accent: '#fff', bun: true, badge: true },
+  };
+  function drawPerson(g, x, gy, look, h = 70, t = 0, face = -1) {
+    const s = h / 104; g.save(); g.translate(x, gy); g.scale(s * face, s); g.lineJoin = 'round'; g.lineWidth = 2.4; g.strokeStyle = '#2A2420';
+    g.fillStyle = 'rgba(0,0,0,.15)'; g.beginPath(); g.ellipse(0, 0, 22, 5, 0, 0, 7); g.fill();
+    g.fillStyle = look.bottom;
+    if (look.man) { g.beginPath(); g.roundRect(-14, -44, 12, 44, 4); g.fill(); g.stroke(); g.beginPath(); g.roundRect(2, -44, 12, 44, 4); g.fill(); g.stroke(); }
+    else { g.beginPath(); g.moveTo(-18, -48); g.lineTo(18, -48); g.lineTo(22, -2); g.lineTo(-22, -2); g.closePath(); g.fill(); g.stroke(); g.fillStyle = look.accent; g.fillRect(-22, -8, 44, 5); }
+    g.translate(0, Math.sin(t * 2) * 1.2);
+    const bw = look.belly ? 23 : 19; g.fillStyle = look.top; g.beginPath(); g.roundRect(-bw, -84, bw * 2, 42, 12); g.fill(); g.stroke();
+    if (!look.man) { g.fillStyle = look.accent; g.beginPath(); g.moveTo(-bw + 4, -82); g.lineTo(-bw + 12, -82); g.lineTo(bw - 2, -46); g.lineTo(bw - 10, -46); g.closePath(); g.fill(); }
+    if (look.tie) { g.fillStyle = look.accent; g.beginPath(); g.moveTo(-3, -82); g.lineTo(3, -82); g.lineTo(5, -58); g.lineTo(0, -54); g.lineTo(-5, -58); g.closePath(); g.fill(); }
+    if (look.badge) { g.fillStyle = '#fff'; g.beginPath(); g.roundRect(6, -76, 10, 7, 2); g.fill(); g.stroke(); }
+    g.fillStyle = look.skin; g.beginPath(); g.roundRect(-bw - 7, -80, 8, 30, 4); g.fill(); g.stroke(); g.beginPath(); g.roundRect(bw - 1, -80, 8, 30, 4); g.fill(); g.stroke();
+    g.beginPath(); g.arc(0, -98, 16, 0, 7); g.fill(); g.stroke();
+    if (look.cap) { g.fillStyle = look.cap; g.beginPath(); g.roundRect(-14, -118, 28, 9, 3); g.fill(); g.stroke(); }
+    else { g.fillStyle = look.hair; g.beginPath(); g.arc(0, -101, 16, Math.PI * 1.05, Math.PI * 1.95); g.closePath(); g.fill(); if (look.bun) { g.beginPath(); g.arc(-15, -96, 6, 0, 7); g.fill(); } }
+    g.fillStyle = '#2A2420'; g.beginPath(); g.arc(-5, -98, 1.8, 0, 7); g.arc(5, -98, 1.8, 0, 7); g.fill();
+    if (look.glasses) { g.lineWidth = 1.4; g.strokeRect(-9, -101, 7, 6); g.strokeRect(2, -101, 7, 6); }
+    if (look.stache) { g.fillStyle = look.hair === '#EDEDED' ? '#EDEDED' : '#3A2E2A'; g.beginPath(); g.ellipse(0, -91, 7, 2.6, 0, 0, 7); g.fill(); }
+    g.restore();
+  }
+  const portraits = {};
+  function portrait(key) {
+    if (portraits[key]) return portraits[key];
+    const c = document.createElement('canvas'); c.width = c.height = 88; const g = c.getContext('2d');
+    if (key === 'meena' && ART.meena) { const m = ART.meena; g.drawImage(m, m.width * .2, m.height * .08, m.width * .6, m.width * .6, 0, 0, 88, 88); }
+    else if (LOOKS[key]) { g.fillStyle = '#F4E6D6'; g.fillRect(0, 0, 88, 88); drawPerson(g, 44, 260, LOOKS[key], 230, 0, 1); }
+    return (portraits[key] = c.toDataURL());
+  }
+  function drawByaaj(g, x, y, s, t, squash = 0) {
+    g.save(); g.translate(x, y); g.scale(1 + squash * .4, 1 - squash * .6);
+    g.fillStyle = '#D6453D'; g.strokeStyle = '#2A2420'; g.lineWidth = 2.5;
+    g.beginPath(); for (let i = 0; i <= 12; i++) { const a = (i / 12) * Math.PI * 2, r = s * (i % 2 ? .9 : 1) + Math.sin(t * 6 + i) * s * .05; g.lineTo(Math.cos(a) * r, Math.sin(a) * r * .85); } g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#F2B43C'; g.beginPath(); g.moveTo(-s * .55, -s * .6); g.lineTo(-s * .35, -s * 1.1); g.lineTo(-s * .15, -s * .7); g.fill(); g.stroke(); g.beginPath(); g.moveTo(s * .55, -s * .6); g.lineTo(s * .35, -s * 1.1); g.lineTo(s * .15, -s * .7); g.fill(); g.stroke();
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(-s * .3, -s * .15, s * .22, 0, 7); g.arc(s * .3, -s * .15, s * .22, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = '#2A2420'; g.font = `800 ${Math.round(s * .3)}px "Baloo 2"`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('%', -s * .3, -s * .12); g.fillText('%', s * .3, -s * .12);
+    g.fillStyle = '#5A1410'; g.beginPath(); g.ellipse(0, s * .35, s * .4, s * .2, 0, 0, Math.PI); g.fill();
+    g.restore();
+  }
+  function drawPaper(g, x, y, t) { g.save(); g.translate(x, y); g.rotate(Math.sin(t * 5) * .4); g.fillStyle = '#fff'; g.strokeStyle = '#2A2420'; g.lineWidth = 2; g.beginPath(); g.roundRect(-12, -15, 24, 30, 3); g.fill(); g.stroke(); g.strokeStyle = '#9DB8DA'; for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(-7, -8 + k * 6); g.lineTo(7, -8 + k * 6); g.stroke(); } g.fillStyle = '#D6453D'; g.font = '800 12px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('✗', 0, 9); g.restore(); }
+  function drawImp(g, x, y, s, t) { g.save(); g.translate(x, y); g.fillStyle = '#8E4FB0'; g.strokeStyle = '#2A2420'; g.lineWidth = 2.5; g.beginPath(); g.arc(0, 0, s, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#F2B43C'; g.beginPath(); g.arc(0, 2, s * .6, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#2A2420'; g.font = `800 ${Math.round(s * .7)}px "Baloo 2"`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('₹', 0, 3); g.fillStyle = '#fff'; g.beginPath(); g.arc(-s * .45, -s * .7, s * .2, 0, 7); g.arc(s * .45, -s * .7, s * .2, 0, 7); g.fill(); g.stroke(); g.restore(); }
+  const TAGS = { byaaj: 'BYAAJ', clock: 'COME TOMORROW', imp: 'INSTALLMENT' };
+  function drawClock(g, x, y, s, t) { g.save(); g.translate(x, y); g.rotate(Math.sin(t * 8) * .15); g.fillStyle = '#E4E9F0'; g.strokeStyle = '#2A2420'; g.lineWidth = 2.5; g.beginPath(); g.arc(0, 0, s, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#D6453D'; g.beginPath(); g.arc(-s * .7, -s * .85, s * .32, 0, 7); g.arc(s * .7, -s * .85, s * .32, 0, 7); g.fill(); g.stroke(); g.strokeStyle = '#2A2420'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(t * 6) * s * .7, Math.sin(t * 6) * s * .7); g.moveTo(0, 0); g.lineTo(0, -s * .5); g.stroke(); g.fillStyle = '#2A2420'; g.beginPath(); g.arc(-s * .35, s * .3, 2, 0, 7); g.arc(s * .35, s * .3, 2, 0, 7); g.fill(); g.restore(); }
+  function drawScissors(g, x, y, t) { g.save(); g.translate(x, y); g.rotate(t * 18); g.strokeStyle = '#2A2420'; g.lineWidth = 2; g.fillStyle = '#C9CED6'; g.beginPath(); g.moveTo(0, 0); g.lineTo(13, -3); g.lineTo(13, 0); g.closePath(); g.moveTo(0, 0); g.lineTo(13, 3); g.lineTo(13, 0); g.fill(); g.stroke(); g.fillStyle = '#E07B39'; g.beginPath(); g.ellipse(-6, -4, 5, 3.5, 0, 0, 7); g.fill(); g.stroke(); g.beginPath(); g.ellipse(-6, 4, 5, 3.5, 0, 0, 7); g.fill(); g.stroke(); g.restore(); }
+  function tag(g, x, y, text, col) { g.font = '800 9px Inter'; const w = g.measureText(text).width + 10; g.fillStyle = col; g.beginPath(); g.roundRect(x - w / 2, y - 8, w, 14, 7); g.fill(); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, x, y); g.textBaseline = 'alphabetic'; }
+  function drawBubble(g, x, y, word) { g.save(); g.translate(x, y); g.fillStyle = '#fff'; g.strokeStyle = '#2A2420'; g.lineWidth = 2; g.font = '800 11px Inter'; const w = g.measureText(word).width + 16; g.beginPath(); g.roundRect(-w / 2, -11, w, 22, 11); g.fill(); g.stroke(); g.fillStyle = '#B65FCF'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(word, 0, 1); g.restore(); }
+
+  /* ─────────── Palettes (from the Figma level structure) ─────────── */
+  const PAL = {
+    lender: { sky: ['#8F949A', '#D2D3D2'], hill: '#7D817E', ground: '#6E7458', dirt: '#5A5040', far: ['bare', 'twisted', 'hut2', 'block'], mid: ['bare', 'twisted', 'tile', 'thorny'] },
+    bank:   { sky: ['#6F8DB8', '#C3D0E2'], hill: '#7F95B0', ground: '#56716A', dirt: '#4A5550', far: ['block', 'block', 'bare', 'tile'], mid: ['block', 'bare', 'sapling'] },
+    chit:   { sky: ['#7CCDF2', '#E6F7FF'], hill: '#9CCB8A', ground: '#7FA243', dirt: '#7A5A34', far: ['tree', 'sapling', 'hut', 'tile', 'banyan'], mid: ['tree', 'banyan', 'sapling', 'hut'] },
+    family: { sky: ['#F4BE7E', '#FCE8C8'], hill: '#E2B07A', ground: '#A0723F', dirt: '#7A5230', far: ['hut', 'tile', 'tree', 'hay', 'white'], mid: ['tree', 'tile', 'hay', 'white'] },
+    rangde: { sky: ['#F5B4D6', '#FCE6F2'], hill: '#E6B9D4', ground: '#C99A5A', dirt: '#9A7244', far: ['tree', 'sapling', 'white', 'tile', 'banyan'], mid: ['tree', 'banyan', 'white', 'sapling'] },
+  };
+
+  /* ─────────── Level geometry ─────────── */
+  let VW = 640, VH = 360, OFFY = 0; const T = 32, COLS = 96, ROWS = 12, GROUND = 10;
+  const GAPS = [[20, 2], [44, 3], [66, 2]];
+  const PLATS = [[11, 7, 4], [24, 6, 3], [34, 7, 4], [48, 6, 4], [58, 7, 3], [70, 6, 4], [78, 7, 3]];
+  const QS = [[13, 3], [36, 3], [72, 2]];
+  // Charpais: land on one and it throws you high (one sits right before the big gap)
+  const BOUNCE = [41, 62];
+  const COINS = [[6, 9], [7, 9], [8, 9], [12, 6], [14, 6], [25, 5], [26, 5], [35, 6], [37, 6], [41, 4], [42, 3], [43, 3], [49, 5], [50, 5], [59, 6], [71, 5], [73, 5], [79, 6], [54, 9], [55, 9], [56, 9]];
+  const ITEM_AT = { F: 28, T: 52, M: 76 }, SCHOOL = 86, START = 2;
+
+  /* ─────────── State ─────────── */
+  const S = { muted: false };
+  function newRun() { Object.assign(S, { lives: 4, extra: false, tried: [], t0: Date.now() }); }
+  function resetLife() { Object.assign(S, { wallet: SAVINGS, bag: { F: false, T: false, M: false }, ledger: [['Meena’s savings', SAVINGS]], owed: 0, rate: 3, flags: {} }); hud(); }
+  let L = null, running = false, busy = false, t = 0, last = 0, cam = 0;
+  const keys = { l: false, r: false, j: false, f: false }; let jumpPressed = false, firePressed = false;
+
+  /* ─────────── HUD ─────────── */
+  function hud(broke) {
+    const total = 4 + (S.extra ? 1 : 0);
+    $('#hearts').innerHTML = Array.from({ length: total }, (_, i) => `<i class="${S.extra && i === 4 ? 'gold' : i < S.lives ? '' : 'gone'} ${broke === i ? 'break' : ''}"></i>`).join('');
+    $('#cash').textContent = rupees(S.wallet ?? SAVINGS);
+    $('#wallet').classList.toggle('neg', S.wallet < 0);
+    const owe = $('#owe'); owe.hidden = !S.owed; owe.textContent = `OWE ${rupees(S.owed || 0)}`;
+    if (S.bag) $('#slots').innerHTML = Object.keys(ITEMS).map(k => `<span class="${S.bag[k] ? 'in' : ''}">${ICON[k]}</span>`).join('');
+  }
+  function bumpWallet() { const w = $('#wallet'); w.classList.remove('bump'); void w.offsetWidth; w.classList.add('bump'); }
+  // Every rupee goes through here, so the ledger always adds up.
+  function money(delta, label, merge) {
+    if (label) { const row = merge && S.ledger.find(r => r[0] === label); if (row) row[1] += delta; else S.ledger.push([label, delta]); }
+    S.wallet += delta; hud(); bumpWallet();
+  }
+  const toScreen = (wx, wy) => { const r = game.getBoundingClientRect(), s = r.width / VW; return [(wx - cam) * s, (wy + OFFY) * s]; };
+  function coinFly(wx, wy) { const c = document.createElement('div'); c.className = 'fly coin'; $('#fx').appendChild(c); const from = toScreen(wx, wy), a = $('#wallet').getBoundingClientRect(), b = game.getBoundingClientRect(), to = [a.left - b.left + a.width / 2, a.top - b.top + a.height / 2]; c.animate([{ transform: `translate(${from[0]}px,${from[1]}px)` }, { transform: `translate(${to[0]}px,${to[1]}px) scale(.6)` }], { duration: reduce ? 1 : 450, easing: 'cubic-bezier(.5,0,.5,1)' }).finished.then(() => c.remove()); }
+  function itemFly(k, wx, wy) { const c = document.createElement('div'); c.className = 'fly'; c.style.width = c.style.height = '36px'; c.style.margin = '-18px 0 0 -18px'; c.innerHTML = ICON[k]; $('#fx').appendChild(c); const from = toScreen(wx, wy), a = $('#bag').getBoundingClientRect(), b = game.getBoundingClientRect(), to = [a.left - b.left + a.width / 2, a.top - b.top + a.height / 2]; return c.animate([{ transform: `translate(${from[0]}px,${from[1]}px) scale(1.4)` }, { transform: `translate(${(from[0] + to[0]) / 2}px,${Math.min(from[1], to[1]) - 60}px) scale(1.6)` }, { transform: `translate(${to[0]}px,${to[1]}px) scale(.5)` }], { duration: reduce ? 1 : 750, easing: 'ease-in-out' }).finished.then(() => { c.remove(); const g = $('#bag'); g.classList.remove('got'); void g.offsetWidth; g.classList.add('got'); }); }
+
+  /* ─────────── Sound ─────────── */
+  let AC = null;
+  const unlock = () => { if (!AC && !S.muted) try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch {} };
+  function tone(f, d = .08, type = 'square', v = .05, slide = 0) { if (!AC || S.muted) return; const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; if (slide) o.frequency.linearRampToValueAtTime(f + slide, AC.currentTime + d); g.gain.value = v; g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + d); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime + d); }
+  const SFX = { coin: () => { tone(988, .05); setTimeout(() => tone(1319, .08), 50); }, jump: () => tone(330, .12, 'square', .04, 300), stomp: () => tone(180, .12, 'square', .06, -120), hurt: () => tone(220, .25, 'sawtooth', .05, -120), buy: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .09), i * 70)), bump: () => tone(140, .08, 'square', .05), snip: () => { tone(1500, .04, 'square', .03, -600); setTimeout(() => tone(1800, .04, 'square', .03, -600), 50); }, boing: () => tone(200, .3, 'sine', .07, 500), bell: () => [880, 660].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .08), i * 180)), lose: () => [392, 330, 262, 196].forEach((f, i) => setTimeout(() => tone(f, .18, 'triangle', .07), i * 160)), win: () => [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, .14, 'triangle', .07), i * 110)) };
+  $('#mute').onclick = () => { S.muted = !S.muted; $('#mute').textContent = S.muted ? '🔇' : '🔊'; };
+
+  /* ─────────── Input ─────────── */
+  addEventListener('keydown', e => {
+    if (['ArrowLeft', 'a', 'A'].includes(e.key)) keys.l = true;
+    if (['ArrowRight', 'd', 'D'].includes(e.key)) keys.r = true;
+    if ([' ', 'ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); unlock(); if (sheetNext) return sheetNext(); if (!keys.j) jumpPressed = true; keys.j = true; }
+    if (e.key === 'Enter' && sheetNext) sheetNext();
+    if (['f', 'F', 'x', 'X'].includes(e.key)) { unlock(); if (!keys.f) firePressed = true; keys.f = true; }
+  });
+  addEventListener('keyup', e => { if (['f', 'F', 'x', 'X'].includes(e.key)) keys.f = false; if (['ArrowLeft', 'a', 'A'].includes(e.key)) keys.l = false; if (['ArrowRight', 'd', 'D'].includes(e.key)) keys.r = false; if ([' ', 'ArrowUp', 'w', 'W'].includes(e.key)) keys.j = false; });
+  document.querySelectorAll('.pad button').forEach(b => {
+    const k = b.dataset.k;
+    const on = e => { e.preventDefault(); unlock(); if (k === 'j' && !keys.j) jumpPressed = true; if (k === 'f' && !keys.f) firePressed = true; keys[k] = true; b.classList.add('on'); };
+    const off = e => { e.preventDefault(); keys[k] = false; b.classList.remove('on'); };
+    b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
+  });
+
+  /* ─────────── Dialogue & cards ─────────── */
+  let sheetNext = null;
+  function say(who, text, choices, extra = '') {
+    running = false; keys.l = keys.r = false;
+    const look = who === 'meena' ? { name: 'Meena', role: 'Tailor' } : LOOKS[who];
+    const sheet = $('#sheet'), fmtT = text.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+    sheet.innerHTML = `${look ? `<div class="who"><img src="${portrait(who)}" alt=""><span><b>${look.name}</b><small>${look.role || ''}</small></span></div>` : ''}<p class="say">${fmtT}</p>${extra}${choices ? `<div class="opts">${choices.map((c, i) => `<button class="opt" data-i="${i}">${c}</button>`).join('')}</div>` : '<span class="tap">TAP OR SPACE ▸</span>'}`;
+    sheet.classList.add('on');
+    return new Promise(res => {
+      const done = v => { sheet.classList.remove('on'); sheet.onclick = null; sheetNext = null; res(v); };
+      if (choices) sheet.querySelectorAll('[data-i]').forEach(b => b.onclick = e => { e.stopPropagation(); done(+b.dataset.i); });
+      else { sheet.onclick = () => done(0); setTimeout(() => sheetNext = () => done(0), 150); }
+    });
+  }
+  function card(html, cls = '') { running = false; const m = $('#modal'); m.innerHTML = `<div class="mcard ${cls}">${html}</div>`; m.classList.add('on'); m.scrollTop = 0; return new Promise(res => m.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { m.classList.remove('on'); res(b.dataset.go); })); }
+  function resume() { if (L && !L.over) { running = true; last = performance.now(); } }
+  // Pause the run for a story moment, then carry on.
+  async function scene(fn) { busy = true; running = false; try { await fn(); } finally { busy = false; resume(); } }
+
+  /* ─────────── Building a world ─────────── */
+  function buildLevel(world) {
+    const tiles = Array.from({ length: ROWS }, () => Array(COLS).fill('.'));
+    for (let x = 0; x < COLS; x++) for (let y = GROUND; y < ROWS; y++) tiles[y][x] = '#';
+    GAPS.forEach(([x, n]) => { for (let i = 0; i < n; i++) for (let y = GROUND; y < ROWS; y++) tiles[y][x + i] = '.'; });
+    PLATS.forEach(([x, y, n]) => { for (let i = 0; i < n; i++) tiles[y][x + i] = '='; });
+    QS.forEach(([x, y]) => tiles[y][x] = '?');
+    BOUNCE.forEach(x => tiles[GROUND - 1][x] = 'S');
+    let seed = world.seed || 9; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const pal = PAL[world.pal];
+    const l = {
+      world, tiles, t: 0, over: false,
+      coins: COINS.map(([x, y]) => ({ x: x * T + 16, y: y * T + 16, alive: true })),
+      items: Object.entries(ITEM_AT).map(([k, x]) => ({ k, x: x * T + 16, y: GROUND * T - 26, nope: 0 })),
+      enemies: [], shots: [], stars: [], npcs: [], floats: [], parts: [], triggers: [], snips: [], fireCd: 0,
+      p: { x: START * T, y: (GROUND - 2) * T, vx: 0, vy: 0, w: 22, h: 52, onGround: false, face: 1, inv: 0, safeX: START * T, anim: 0, squash: 0 },
+      far: [], mid: [], fore: [],
+    };
+    for (let x = -60; x < COLS * T * .5 + 400; x += 70 + rnd() * 90) l.far.push({ k: pal.far[Math.floor(rnd() * pal.far.length)], x, h: 40 + rnd() * 30 });
+    for (let x = 0; x < COLS * T * .75 + 400; x += 200 + rnd() * 220) l.mid.push({ k: pal.mid[Math.floor(rnd() * pal.mid.length)], x, h: 80 + rnd() * 60 });
+    l.clouds = Array.from({ length: 9 }, (_, i) => ({ x: i * 130 + rnd() * 80, y: 40 + rnd() * 90 - rnd() * OFFY * .8, s: .7 + rnd() * .6 }));
+    // A playful village: kites, birds, marigolds and animals wandering in the back
+    l.kites = Array.from({ length: 3 }, (_, i) => ({ x: 120 + i * 230 + rnd() * 80, y: 50 + rnd() * 50, c: ['#E0357F', '#F2B43C', '#0DAADE'][i], ph: rnd() * 6 }));
+    l.birds = Array.from({ length: 4 }, () => ({ x: rnd() * 800, y: 30 + rnd() * 70, s: .6 + rnd() * .5, v: 30 + rnd() * 30 }));
+    l.flowers = []; for (let x = 3; x < COLS - 2; x += 2 + Math.floor(rnd() * 3)) if (tiles[GROUND][x] === '#' && tiles[GROUND - 1][x] === '.') l.flowers.push({ x: x * T + rnd() * T, c: ['#F2B43C', '#E07B39', '#E0357F', '#fff'][Math.floor(rnd() * 4)] });
+    l.animals = [{ e: '🐄', x: 500, v: 12 }, { e: '🐐', x: 1300, v: -18 }, { e: '🐓', x: 2100, v: 25 }, { e: '🐕', x: 2700, v: -30 }];
+    world.setup(l);
+    return l;
+  }
+  const npc = (look, col, opts = {}) => ({ look, x: col * T, met: false, ...opts });
+
+  /* ─────────── The four lenders, plus the extra life ─────────── */
+  const NABARD_FACT = `<b>23.6%</b> of rural households borrow only from informal sources like moneylenders, friends and family. Another <b>25.3%</b> use both.<small>Source: ${NABARD}</small>`;
+  const WORLDS = {
+    lender: {
+      name: 'Lalaji', label: 'WORLD · LALAJI THE MONEYLENDER', pal: 'lender', seed: 21, icon: '💰', color: '#7D817E', sub: 'Cash today. No papers.',
+      setup(l) {
+        l.npcs.push(npc('lalaji', 6, { talk: lalajiDeal }));
+        // A month passes at each calendar; Lalaji's byaaj is due every time.
+        [32, 60].forEach((c, i) => l.triggers.push({ x: c * T, fn: () => byaajMonth(i + 1) }));
+        l.spawnEvery = 5; l.nextSpawn = 4;
+        l.calendars = [32, 60];
+      },
+      onShort: async k => {
+        if (S.flags.more) return;
+        const c = await say('lalaji', `Short, Meena? Take **₹10,000 more**. Same byaaj, ${S.rate} per hundred, now on ₹60,000.`, ['Take it', 'No, I’ll manage']);
+        if (c === 0) { S.flags.more = true; S.owed += 10000; money(10000, 'More from Lalaji'); for (let i = 0; i < 6; i++) setTimeout(() => coinFly(L.p.x, L.p.y), i * 60); }
+      },
+      hit: () => { money(-1000, 'Byaaj collectors grabbed', true); float('COLLECTOR −₹1,000', '#D6453D'); },
+      async finish(ok) {
+        if (ok) {
+          await say('head', `200 uniforms! The school pays **${rupees(ORDER_PAY)}** at the end of term, in 3 months.`);
+          for (const n of [3, 4, 5]) { const due = Math.round(S.owed * S.rate / 100); money(-due, `Byaaj, months 3–5 (waiting for the school)`, true); float(`MONTH ${n}: BYAAJ ${rupees(-due)}`, '#D6453D'); SFX.hurt(); await wait(700); }
+          await say('head', `End of term. Here’s your **${rupees(ORDER_PAY)}**, Meena ji.`); money(ORDER_PAY, 'School pays for the order');
+        }
+        await say('lalaji', `Time to settle. **${rupees(S.owed)}** principal, today. Then you get your bangles back.`);
+        money(-S.owed, 'Paid back to Lalaji'); S.owed = 0; hud();
+        return {
+          title: S.wallet < 0 ? 'Debt trap' : 'Worked for Lalaji',
+          why: ok ? `200 uniforms, on time, and the byaaj still ate the profit${S.wallet < SAVINGS ? '. Meena ends up poorer than she started' : ''}.` : 'No machine, no order. The byaaj kept coming anyway.',
+          extra: `<p class="soft">${S.rate}% a month is about ${S.rate * 12}% a year, before the file charge.</p>`,
+          fact: `Lalaji is made up. The pattern isn’t: informal loans in rural India average <b>almost 18%</b> interest a year. That’s the average, before file charges and gold.<small>Source: ${NABARD}</small>`,
+        };
+      },
+    },
+    bank: {
+      name: 'The bank', label: 'WORLD · THE BANK', pal: 'bank', seed: 41, icon: '🏦', color: '#4E6E9E', sub: 'Low interest. Two buses to town.',
+      setup(l) {
+        l.npcs.push(npc('officer', 40, { talk: bankDesk }));
+        l.bank = 42 * T; l.items = []; l.noSchool = true;
+        l.spawnEvery = 2.6; l.nextSpawn = 1.5; l.enemyKind = 'clock';
+        l.triggers.push({ x: 5 * T, fn: async () => { await say('meena', 'Two buses to the town branch. **₹100 each way.** Watch out for the “come back tomorrow”s!'); money(-200, 'Bus fare to town and back'); } });
+      },
+      hit: () => { money(-100, 'Extra bus trips (“come back tomorrow”)', true); float('COME BACK TOMORROW! −₹100', '#4E6E9E'); },
+      async finish() { return { title: 'Loan declined', why: 'Meena did nothing wrong. She just doesn’t fit the form.', fact: `<b>99.92%</b> of India’s villages have a banking outlet within 5 km. Yet <b>nearly half</b> of rural households still borrow from moneylenders, friends and family. A bank nearby isn’t a loan.<small>Sources: Ministry of Finance, Aug 2026; ${NABARD}</small>` }; },
+    },
+    chit: {
+      name: 'The chit', label: 'WORLD · KAMALA TAI’S CHIT', pal: 'chit', seed: 57, icon: '🏺', color: '#5E9A3A', sub: 'Your neighbours’ savings circle.',
+      setup(l) {
+        l.npcs.push(npc('kamala', 7, { talk: chitAuction }));
+        [40, 68].forEach((c, i) => l.triggers.push({ x: c * T, fn: async () => { money(-2500, 'Chit installments', true); float(`INSTALLMENT −₹2,500`, '#8E4FB0'); SFX.hurt(); } }));
+        l.spawnEvery = 4.5; l.calendars = [40, 68];
+      },
+      hit: () => { money(-500, 'Installment imps grabbed', true); float('IMP −₹500', '#8E4FB0'); },
+      async finish() { const pot = 50000 * (1 - S.flags.disc / 100); return { title: 'Won… sort of', why: `Meena won the pot at ${S.flags.disc}% off: ${rupees(pot)} for an order that needs ₹50,000.`, extra: `<p class="soft">And she still owes <b>18 more installments of ₹2,500 (₹45,000)</b>: ₹50,000 in all, for ${rupees(pot)}.</p>`, fact: CHIT_FACT }; },
+    },
+    family: {
+      name: 'Family', label: 'WORLD · FAMILY', pal: 'family', seed: 77, icon: '📞', color: '#C27A35', sub: 'Your brother in the city.',
+      setup(l) {
+        l.npcs.push(npc('brother', 6, { talk: brotherCall }));
+        [26, 48, 70].forEach(c => l.npcs.push(npc('aunty', c, { thrower: true, next: 1 + Math.random() * 2 })));
+      },
+      hit: () => { S.flags.gossip = (S.flags.gossip || 0) + 1; float(['EVERYONE KNOWS!', 'BORROWING?!', 'TSK TSK…', 'HER BROTHER!'][S.flags.gossip % 4], '#B65FCF'); },
+      async finish() { return { title: 'Not enough', why: `₹10,000 helped. ${rupees(NEED - 10000)} was still missing. And now the loan comes up at every wedding.`, extra: S.flags.gossip ? `<p class="soft">Gossip that hit you: ${S.flags.gossip}.</p>` : '', fact: NABARD_FACT }; },
+    },
+  };
+  const RANGDE = {
+    name: 'Rang De', label: 'EXTRA LIFE · RANG DE', pal: 'rangde', seed: 91,
+    setup(l) { l.npcs.push(npc('partner', 6, { talk: rangdeStart })); },
+    async finish(ok) { return ok; },
+  };
+
+  /* ─────────── Story moments ─────────── */
+  async function lalajiDeal() {
+    const a = await say('lalaji', '₹48,000? Arre, done, today itself. **Five rupees per hundred.**', ['“Two rupees.”', '“Four, final.”', '“Okay, five.”']);
+    if (a === 2) { S.rate = 5; await say('lalaji', 'Smart woman. No time wasted.'); }
+    else { S.rate = 3; await say('lalaji', a === 0 ? 'Two?! For two I’d lend to my own son. …Chalo, **three**. Only for you.' : 'Four? You’re a hard woman, Meena. **Three.** Last offer.'); float('YOU WON THE HAGGLE!', '#3F7A4A'); burst(L.p.x, L.p.y - 30, 30); SFX.win(); }
+    await say('lalaji', 'A round ₹50,000. Small thing: ₹5,000 file charge, cut today. Your bangles stay with me.', ['Sign it'], `<div class="contract">Loan: ₹50,000 · File charge: ₹5,000<br>Byaaj: ₹${S.rate} per ₹100 <b>per month</b><br>Security: gold bangles</div>`);
+    S.owed = 50000; money(50000, 'Loan from Lalaji'); money(-5000, 'File charge (cut on day one)');
+    for (let i = 0; i < 12; i++) setTimeout(() => { coinFly(L.p.x + 40, L.p.y); SFX.coin(); }, i * 60);
+    burst(L.p.x + 40, L.p.y, 40);
+    await say('meena', 'Fabric, thread, machine. **Grab them on the way to the school.** And watch out for Lalaji’s collectors…');
+  }
+  async function byaajMonth(n) {
+    const due = Math.round(S.owed * S.rate / 100);
+    money(-due, `Byaaj, months 1–2`, true); float(`MONTH ${n}: BYAAJ ${rupees(-due)}`, '#D6453D'); SFX.hurt();
+    // The byaaj sends more collectors after you.
+    for (let i = 0; i < 2 + n; i++) spawnEnemy(L, 'byaaj', L.p.x + VW * .6 + i * 70);
+  }
+  async function bankDesk() {
+    await say('officer', 'A business loan? Fill this form, madam. Attach **land papers, credit history, income tax returns, salary slips.**', ['I have a school order letter!', 'What about a smaller loan?']);
+    await say('meena', 'My customers pay me in cash. I’ve never had a loan. I don’t own the land.');
+    L.over = true; running = false;
+    L.stamp = { t: 0, text: 'REJECTED' }; SFX.lose(); await wait(1300);
+    await say('officer', '**No credit history, no loan.** Next!');
+    await loseLife(WORLDS.bank, await WORLDS.bank.finish(false), false);
+  }
+  async function chitAuction() {
+    await say('kamala', '20 of us each put in **₹2,500 a month**. Every month, one person takes the **₹50,000 pot**.');
+    const c = await say('kamala', 'Need it now? Then bid: whoever **gives up the biggest discount** takes it. Sharmaji wants it too.', ['Bid for it!', 'Wait for my turn']);
+    if (c === 1) {
+      await say('kamala', 'Your turn? Let me see… **month 14**. The school won’t wait that long, Meena.');
+      L.over = true; running = false;
+      return loseLife(WORLDS.chit, { title: 'Too slow', why: 'The pot comes when the circle decides, not when you need it.', fact: CHIT_FACT }, false);
+    }
+    await say('kamala', '**Jump and headbutt the pots** to raise your bid, 10% each. Beat Sharmaji before the bell! But remember: every 10% comes off your pot.');
+    const l = L; [4, 7, 10].forEach(x => l.tiles[6][x] = '?');
+    l.auction = { t: 8, mine: 0, rival: 10, next: 1.2, pots: [4, 7, 10] };
+  }
+  async function auctionEnd() {
+    const a = L.auction; L.auction = null; L.auctionPots = null; SFX.bell();
+    a.pots.forEach(x => L.tiles[6][x] = '.');
+    if (a.mine <= a.rival) {
+      L.over = true; running = false;
+      await say('kamala', `Ding! **Sharmaji takes it at ${a.rival}%.** Your turn will come, Meena… in month 14.`);
+      return loseLife(WORLDS.chit, { title: 'Outbid', why: `Sharmaji bid ${a.rival}%, you bid ${a.mine}%. The pot went to the one who could give up more.`, fact: CHIT_FACT }, false);
+    }
+    S.flags.disc = a.mine; const pot = 50000 * (1 - a.mine / 100);
+    await say('kamala', `Ding! **Sold to Meena at ${a.mine}% off.** The pot is ₹50,000 minus ${a.mine}%: **${rupees(pot)}**. And you pay ₹2,500 every month, like everyone.`);
+    money(pot, `Chit pot (₹50,000 − ${a.mine}%)`); money(-2500, 'Chit installments', true); for (let i = 0; i < 10; i++) setTimeout(() => { coinFly(L.p.x + 40, L.p.y); SFX.coin(); }, i * 60);
+    L.enemyKind = 'imp'; L.nextSpawn = L.t + 3;
+    await say('meena', 'Fabric, thread, machine. Run! And snip those installment imps.');
+  }
+  const CHIT_FACT = 'Chit funds are legal when registered under the <b>Chit Funds Act, 1982</b>. Informal chits have no such protection: if the organiser disappears, so does the money. Either way, it comes when the group decides, not when you need it.';
+  async function brotherCall() {
+    await say('brother', 'Didi! A school order? That’s wonderful.');
+    await say('meena', `Ravi… I need ${rupees(NEED)}. Can you help?`, ['Ask for all of it', 'Ask for ₹15,000']);
+    await say('brother', 'Didi, I just paid Chintu’s school fees. All I have is **₹10,000**. Sending it now.');
+    money(10000, 'From Ravi (to pay back)'); for (let i = 0; i < 6; i++) setTimeout(() => { coinFly(L.p.x + 40, L.p.y); SFX.coin(); }, i * 60);
+    await say('meena', 'Thank you, Ravi… Now let’s hope the aunties don’t find out.');
+  }
+  async function rangdeStart() {
+    await say('partner', 'Namaste Meena ji. I’m Asha, from a local partner that works with **Rang De**. Can I see your business?', ['Show her the order letter']);
+    await say('partner', 'A school order, and look at this stitching. **This is a good loan.** We look at your business, not land papers.');
+    await say('partner', 'Your loan is going up on Rang De now. **Catch the blue stars:** each one is a social investor backing you with ₹500.');
+    L.starsLeft = 100;
+  }
+
+  /* ─────────── Enemies & effects ─────────── */
+  function spawnEnemy(l, kind, x) {
+    if (kind === 'byaaj') l.enemies.push({ kind, x, y: (GROUND - 1) * T - 10, vx: -70, vy: 0, w: 30, h: 26, alive: true, chase: true });
+    else if (kind === 'paper') l.enemies.push({ kind, x, y: (GROUND - 3) * T, base: (GROUND - 2.5) * T - Math.random() * 60, vx: -110, vy: 0, w: 24, h: 30, alive: true, fly: true });
+    else if (kind === 'imp') l.enemies.push({ kind, x, y: (GROUND - 1) * T - 6, vx: -60, vy: 0, w: 28, h: 28, alive: true });
+    else if (kind === 'clock') l.enemies.push({ kind, x, y: (GROUND - 1) * T - 8, vx: -95, vy: 0, w: 30, h: 30, alive: true, hop: Math.random() * 3 });
+  }
+  function float(text, color, wx, wy) { L.floats.push({ text, color, x: wx ?? L.p.x, y: wy ?? L.p.y - 24, t: 0 }); }
+  function burst(x, y, n, colors) { for (let i = 0; i < n; i++) L.parts.push({ x, y, vx: (Math.random() - .5) * 360, vy: -Math.random() * 360 - 60, t: 0, c: (colors || ['#F2B43C', '#D6453D', '#7CC242', '#0DAADE'])[i % 4] }); }
+
+  /* ─────────── Physics ─────────── */
+  const solid = (l, tx, ty) => { if (tx < 0 || tx >= COLS) return true; if (ty < 0 || ty >= ROWS) return false; return '#=?BS'.includes(l.tiles[ty][tx]); };
+  function moveX(l, b) {
+    b.x += b.vx * DT;
+    const top = Math.floor(b.y / T), bot = Math.floor((b.y + b.h - 1) / T);
+    if (b.vx > 0) { const tx = Math.floor((b.x + b.w) / T); for (let ty = top; ty <= bot; ty++) if (solid(l, tx, ty)) { b.x = tx * T - b.w - .01; b.vx = 0; return true; } }
+    if (b.vx < 0) { const tx = Math.floor(b.x / T); for (let ty = top; ty <= bot; ty++) if (solid(l, tx, ty)) { b.x = (tx + 1) * T + .01; b.vx = 0; return true; } }
+    return false;
+  }
+  function moveY(l, b, isPlayer) {
+    b.y += b.vy * DT;
+    const left = Math.floor(b.x / T), right = Math.floor((b.x + b.w - 1) / T); const was = b.onGround; b.onGround = false;
+    if (b.vy > 0) { const ty = Math.floor((b.y + b.h) / T); for (let tx = left; tx <= right; tx++) if (solid(l, tx, ty)) {
+      b.y = ty * T - b.h;
+      // A charpai throws you up into the sky
+      if (isPlayer && l.tiles[ty][tx] === 'S') { b.vy = -1080; b.squash = -.3; l.boing = { tx, t: 0 }; SFX.boing(); float('BOING!', '#E07B39', tx * T + 16, ty * T - 20); return; }
+      if (isPlayer && !was && b.vy > 300) b.squash = .25; b.vy = 0; b.onGround = true; return; } }
+    if (b.vy < 0) { const ty = Math.floor(b.y / T); for (let tx = left; tx <= right; tx++) if (solid(l, tx, ty)) { b.y = (ty + 1) * T; b.vy = 0; if (isPlayer) { SFX.bump(); if (l.tiles[ty][tx] === '?') hitQ(l, tx, ty); } return; } }
+  }
+  function hitQ(l, tx, ty) {
+    l.tiles[ty][tx] = 'B'; l.bumpQ = { tx, ty, t: 0 };
+    if (l.auction) { const a = l.auction; a.mine = Math.min(60, a.mine + 10); float(`MY BID: ${a.mine}%`, '#3F7A4A', tx * T + 16, ty * T - 10); SFX.coin(); burst(tx * T + 16, ty * T, 10); setTimeout(() => { if (l.auction) l.tiles[ty][tx] = '?'; }, 450); return; }
+    if (l.world.q) l.world.q(l, tx, ty);
+    else { money(500, 'Coins & ? blocks', true); coinFly(tx * T + 16, ty * T - 10); float('+₹500', '#3F7A4A', tx * T + 16, ty * T - 10); SFX.coin(); }
+  }
+  const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+  /* ─────────── Update ─────────── */
+  let DT = 1 / 60;
+  function update(dt) {
+    DT = dt; const l = L, p = l.p, w = l.world; l.t += dt; t += dt;
+    // Run & jump (with coyote time and a jump buffer, so it feels forgiving)
+    const acc = p.onGround ? 1600 : 1100, max = 230;
+    if (keys.l) { p.vx = Math.max(-max, p.vx - acc * dt); p.face = -1; }
+    else if (keys.r) { p.vx = Math.min(max, p.vx + acc * dt); p.face = 1; }
+    else p.vx *= p.onGround ? .78 : .96;
+    p.coyote = p.onGround ? .1 : Math.max(0, (p.coyote || 0) - dt);
+    if (jumpPressed) p.buffer = .12; else p.buffer = Math.max(0, (p.buffer || 0) - dt);
+    jumpPressed = false;
+    if (p.buffer > 0 && p.coyote > 0) { p.vy = -720; p.coyote = 0; p.buffer = 0; p.squash = -.2; SFX.jump(); }
+    if (!keys.j && p.vy < -260) p.vy = -260;
+    p.vy = Math.min(p.vy + 1900 * dt, 900);
+    moveX(l, p); moveY(l, p, true);
+    if (p.onGround) p.safeX = p.x;
+    p.anim += Math.abs(p.vx) * dt; p.squash *= .85; if (p.inv > 0) p.inv -= dt;
+    // Scissors: Meena is a tailor. Snip the problems.
+    l.fireCd -= dt;
+    if (firePressed && l.fireCd <= 0) { l.fireCd = .32; l.snips.push({ x: p.x + p.w / 2 + p.face * 14, y: p.y + 20, vx: p.face * 520 + p.vx * .4, t: 0 }); SFX.snip(); }
+    firePressed = false;
+    l.snips.forEach(sn => {
+      sn.t += dt; sn.x += sn.vx * dt;
+      if (solid(l, Math.floor(sn.x / T), Math.floor(sn.y / T))) sn.done = true;
+      l.enemies.forEach(e => { if (e.alive && !sn.done && overlap({ x: sn.x - 9, y: sn.y - 9, w: 18, h: 18 }, e)) { e.alive = false; e.dead = 0; sn.done = true; burst(e.x + e.w / 2, e.y, 14); SFX.stomp(); float(TAGS[e.kind] ? `SNIP! ${TAGS[e.kind]}` : 'SNIP!', '#3F7A4A', e.x, e.y - 10); } });
+      l.shots.forEach(sh => { if (!sh.hit && !sn.done && Math.abs(sh.x - sn.x) < 34 && Math.abs(sh.y - sn.y) < 18) { sh.hit = true; sn.done = true; float('SNIPPED THE GOSSIP!', '#3F7A4A', sh.x, sh.y); SFX.stomp(); } });
+    });
+    l.snips = l.snips.filter(sn => !sn.done && sn.t < .9);
+    // The chit auction: Sharmaji keeps bidding until the bell
+    if (l.auction) { const a = l.auction; a.t -= dt; a.next -= dt; // He bids back fast when you take the lead, up to 30%
+      if (a.mine >= a.rival && a.rival < 30) a.next = Math.min(a.next, .7);
+      if (a.next <= 0 && a.rival < 30) { a.rival += 10; a.next = 2.2 + Math.random(); float(`SHARMAJI: ${a.rival}%!`, '#6B3A6E', 7 * T, (GROUND - 4) * T); SFX.bump(); } if (a.t <= 0) { a.t = 0; scene(auctionEnd); } }
+    if (l.boing) { l.boing.t += dt; if (l.boing.t > .3) l.boing = null; }
+    l.animals.forEach(an => { an.x += an.v * dt; if (an.x < 0 || an.x > COLS * T * .72) an.v *= -1; });
+    l.birds.forEach(b => { b.x += b.v * dt; if (b.x > VW + 900) b.x = -60; });
+    if (p.y > ROWS * T + 60) { p.x = Math.max(T, p.safeX - 2 * T); p.y = (GROUND - 3) * T; p.vx = p.vy = 0; p.inv = 1.2; float('OOPS!', '#2A2420'); }
+    // Coins
+    l.coins.forEach(c => { if (c.alive && Math.abs(c.x - (p.x + p.w / 2)) < 22 && Math.abs(c.y - (p.y + p.h / 2)) < 34) { c.alive = false; money(COIN, 'Coins & ? blocks', true); coinFly(c.x, c.y); SFX.coin(); } });
+    // Items: touch to buy, if you can afford it
+    l.items.forEach(it => {
+      if (S.bag[it.k]) return;
+      // Anywhere in the column above an item counts, so jumping over it still grabs it.
+      if (Math.abs(it.x - (p.x + p.w / 2)) < 26 && p.y < it.y + 30) {
+        const price = ITEMS[it.k].price;
+        if (S.wallet >= price) { S.bag[it.k] = true; money(-price, ITEMS[it.k].name); itemFly(it.k, it.x, it.y); float(`${ITEMS[it.k].name.toUpperCase()} ✓`, '#3F7A4A', it.x, it.y - 30); burst(it.x, it.y, 20); SFX.buy(); }
+        else if (it.nope <= 0) { it.nope = 2; float(`NEED ${rupees(price)}`, '#D6453D', it.x, it.y - 30); SFX.hurt(); if (w.onShort && !S.flags.more && S.owed) scene(() => w.onShort(it.k)); }
+      }
+      if (it.nope > 0) it.nope -= dt;
+    });
+    // NPCs: walk into them to talk
+    l.npcs.forEach(n => {
+      if (n.thrower) { n.next -= dt; if (n.next <= 0 && Math.abs(n.x - p.x) < VW * .7) { n.next = 1.6 + Math.random(); const words = ['psst…', 'BORROWING?!', 'tsk tsk', 'did you hear?', 'HER BROTHER!']; l.shots.push({ x: n.x, y: (GROUND - 2) * T, vx: (p.x < n.x ? -1 : 1) * 150, vy: -260, w: 60, h: 22, word: words[Math.floor(Math.random() * words.length)] }); } return; }
+      if (!n.met && p.x + p.w > n.x - 40) { n.met = true; p.vx = 0; scene(n.talk); }
+    });
+    // Spawning problems
+    if (l.spawnEvery && (S.owed || l.enemyKind) && l.t > l.nextSpawn) { l.nextSpawn = l.t + l.spawnEvery; spawnEnemy(l, l.enemyKind || 'byaaj', l.cam + VW + 40); }
+    // Enemies
+    l.enemies.forEach(e => {
+      if (!e.alive) { e.dead = (e.dead || 0) + dt; return; }
+      if (e.fly) { e.x += e.vx * dt; e.y = e.base + Math.sin(l.t * 4 + e.x / 50) * 26; }
+      else {
+        if (e.chase) e.vx = (p.x < e.x ? -1 : 1) * 85;
+        if (e.kind === 'clock' && e.onGround) { e.hop -= dt; if (e.hop <= 0) { e.vy = -520; e.hop = 1 + Math.random() * 1.5; } }
+        e.vy = Math.min(e.vy + 1900 * dt, 900);
+        if (moveX(l, e) && !e.chase) e.vx = e.vx > 0 ? -60 : 60;
+        moveY(l, e, false);
+        if (!e.chase && e.onGround) { const ahead = Math.floor((e.x + (e.vx > 0 ? e.w + 1 : -1)) / T), below = Math.floor((e.y + e.h + 1) / T); if (!solid(l, ahead, below)) e.vx *= -1; }
+      }
+      if (e.y > ROWS * T + 60 || e.x < l.cam - 200) e.alive = false;
+      if (overlap(p, e)) {
+        if (p.vy > 50 && p.y + p.h - e.y < 22) { e.alive = false; e.dead = 0; p.vy = keys.j ? -620 : -420; burst(e.x + e.w / 2, e.y, 14); SFX.stomp(); float(e.kind === 'byaaj' ? 'STOMP! …MORE COMING' : e.kind === 'clock' ? 'NOT TOMORROW. TODAY!' : 'STOMP!', '#2A2420', e.x, e.y - 10); }
+        else if (p.inv <= 0) { p.inv = 1.3; p.vx = (p.x < e.x ? -1 : 1) * 260; p.vy = -340; SFX.hurt(); w.hit && w.hit(); }
+      }
+    });
+    l.enemies = l.enemies.filter(e => e.alive || e.dead < .4);
+    // Gossip bubbles thrown by aunties
+    l.shots.forEach(s => { s.vy += 900 * dt; s.x += s.vx * dt; s.y += s.vy * dt; if (s.y > GROUND * T - 20) { s.y = GROUND * T - 20; s.vy *= -.4; s.vx *= .7; s.life = (s.life || 0) + dt; } if (!s.hit && overlap(p, { x: s.x - 30, y: s.y - 11, w: 60, h: 22 })) { s.hit = true; if (p.vy > 50) { p.vy = -420; float('POPPED!', '#3F7A4A', s.x, s.y); SFX.stomp(); } else if (p.inv <= 0) { p.inv = 1; p.vx *= .2; SFX.hurt(); w.hit && w.hit(); } } });
+    l.shots = l.shots.filter(s => !s.hit && (s.life || 0) < 1.2 && s.x > l.cam - 100);
+    // Rang De: investor stars rain down and find you
+    if (l.starsLeft > 0 && l.t > (l.nextStar || 0)) { l.nextStar = l.t + .06; l.starsLeft--; l.stars.push({ x: l.cam + Math.random() * VW, y: -20, vx: 0, vy: 60 }); }
+    l.stars.forEach(s => { const dx = p.x + p.w / 2 - s.x, dy = p.y + 20 - s.y, d = Math.hypot(dx, dy) || 1; s.vx += dx / d * 1400 * dt; s.vy += dy / d * 1400 * dt; s.vx *= .95; s.vy *= .95; s.x += s.vx * dt; s.y += s.vy * dt; if (d < 24) { s.done = true; money(500, 'Loan from 100 social investors on Rang De', true); SFX.coin(); S.flags.inv = (S.flags.inv || 0) + 1; } });
+    l.stars = l.stars.filter(s => !s.done);
+    // Story triggers
+    for (const tr of l.triggers) if (!tr.done && p.x >= tr.x) { tr.done = true; scene(tr.fn); break; }
+    // Effects
+    l.floats.forEach(f => { f.t += dt; f.y -= 30 * dt; }); l.floats = l.floats.filter(f => f.t < 1.6);
+    l.parts.forEach(q => { q.t += dt; q.vy += 1000 * dt; q.x += q.vx * dt; q.y += q.vy * dt; }); l.parts = l.parts.filter(q => q.t < 1.2);
+    if (l.bumpQ) { l.bumpQ.t += dt; if (l.bumpQ.t > .2) l.bumpQ = null; }
+    const target = Math.max(0, Math.min(COLS * T - VW, p.x - VW * .38)); cam += (target - cam) * Math.min(1, dt * 8); l.cam = cam;
+    if (p.x >= SCHOOL * T && !l.over && !l.noSchool) { l.over = true; running = false; finishWorld(); }
+    if (l.stamp) l.stamp.t += dt;
+  }
+
+  /* ─────────── Draw ─────────── */
+  function sprite(img, x, gy, h, alpha = 1) { if (!img) return; const w = img.width * h / img.height; ctx.globalAlpha = alpha; ctx.drawImage(img, x - w / 2, gy - h, w, h); ctx.globalAlpha = 1; }
+  function draw() {
+    const l = L, pal = PAL[l.world.pal], c = Math.round(cam), GY = GROUND * T;
+    const sky = ctx.createLinearGradient(0, 0, 0, GY + OFFY); sky.addColorStop(0, pal.sky[0]); sky.addColorStop(1, pal.sky[1]); ctx.fillStyle = sky; ctx.fillRect(0, 0, VW, VH); ctx.save(); ctx.translate(0, OFFY);
+    ctx.fillStyle = 'rgba(255,255,255,.55)'; l.clouds.forEach(k => { const x = ((k.x - c * .1 + t * 8 * k.s) % (VW + 240) + VW + 240) % (VW + 240) - 120; ctx.beginPath(); ctx.ellipse(x, k.y, 46 * k.s, 15 * k.s, 0, 0, 7); ctx.ellipse(x + 26 * k.s, k.y - 10 * k.s, 30 * k.s, 15 * k.s, 0, 0, 7); ctx.fill(); });
+    ctx.fillStyle = pal.hill; ctx.globalAlpha = .5; ctx.beginPath(); ctx.moveTo(0, GY); for (let x = 0; x <= VW; x += 10) { const wx = x + c * .2; ctx.lineTo(x, GY - 30 - Math.sin(wx / 110) * 18 - Math.sin(wx / 43) * 7); } ctx.lineTo(VW, GY); ctx.fill(); ctx.globalAlpha = 1;
+    l.kites.forEach(k => { const x = ((k.x - c * .15) % (VW + 200) + VW + 200) % (VW + 200) - 100, y = k.y + Math.sin(t * 1.3 + k.ph) * 10, r = Math.sin(t * 1.7 + k.ph) * .25; ctx.strokeStyle = 'rgba(42,36,32,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y + 14); ctx.quadraticCurveTo(x - 30, y + 120, x + 20, GROUND * T); ctx.stroke(); ctx.save(); ctx.translate(x, y); ctx.rotate(r); ctx.fillStyle = k.c; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(11, 0); ctx.lineTo(0, 14); ctx.lineTo(-11, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(0, 14); ctx.moveTo(-11, 0); ctx.lineTo(11, 0); ctx.stroke(); ctx.fillStyle = k.c; ctx.beginPath(); ctx.moveTo(-3, 18); ctx.lineTo(3, 18); ctx.lineTo(0, 13); ctx.fill(); ctx.restore(); });
+    ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 1.6; l.birds.forEach(b => { const x = ((b.x - c * .05) % (VW + 300) + VW + 300) % (VW + 300) - 100, f = Math.sin(t * 9 + b.x) * 4 * b.s; ctx.beginPath(); ctx.moveTo(x - 7 * b.s, b.y - f); ctx.quadraticCurveTo(x - 3 * b.s, b.y - 2, x, b.y); ctx.quadraticCurveTo(x + 3 * b.s, b.y - 2, x + 7 * b.s, b.y - f); ctx.stroke(); });
+    l.far.forEach(o => { const x = o.x - c * .45; if (x > -80 && x < VW + 80) sprite(ART[o.k], x, GY - 2, o.h, .6); });
+    l.mid.forEach(o => { const x = o.x - c * .72; if (x > -140 && x < VW + 140) sprite(ART[o.k], x, GY + 2, o.h, .85); });
+    ctx.font = '26px serif'; ctx.textAlign = 'center'; l.animals.forEach(an => { const x = an.x - c * .72; if (x > -40 && x < VW + 40) { ctx.save(); ctx.translate(x, GY - 4 + Math.abs(Math.sin(t * 6 + an.x)) * -3); ctx.scale(an.v > 0 ? -1 : 1, 1); ctx.fillText(an.e, 0, 0); ctx.restore(); } });
+    // Bunting strung across the village
+    for (let k = 0; k < 4; k++) { const bx = ((k * 260 - c * .6) % (VW + 260) + VW + 260) % (VW + 260) - 130, by = 26 - OFFY * .2; ctx.strokeStyle = 'rgba(42,36,32,.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo(bx + 100, by + 26, bx + 200, by); ctx.stroke(); for (let i = 1; i < 9; i++) { const u = i / 9, px = bx + u * 200, py = by + 4 * u * (1 - u) * 26 * 1 - 0 + 0, sw = Math.sin(t * 3 + i + k) * 2; ctx.fillStyle = ['#E0357F', '#F2B43C', '#3F7A4A', '#0DAADE', '#E07B39'][(i + k) % 5]; ctx.beginPath(); ctx.moveTo(px - 6, py); ctx.lineTo(px + 6, py); ctx.lineTo(px + sw, py + 13); ctx.closePath(); ctx.fill(); } }
+    ctx.save(); ctx.translate(-c, 0);
+    // Marigolds along the path
+    l.flowers.forEach(fl => { if (fl.x < c - 20 || fl.x > c + VW + 20) return; const sw = Math.sin(t * 2.4 + fl.x) * 3; ctx.strokeStyle = '#3F7A4A'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fl.x, GY); ctx.lineTo(fl.x + sw, GY - 12); ctx.stroke(); ctx.fillStyle = fl.c; for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 + t; ctx.beginPath(); ctx.arc(fl.x + sw + Math.cos(a) * 3.5, GY - 14 + Math.sin(a) * 3.5, 3, 0, 7); ctx.fill(); } ctx.fillStyle = '#8A5A00'; ctx.beginPath(); ctx.arc(fl.x + sw, GY - 14, 2.2, 0, 7); ctx.fill(); });
+    // Calendars mark each month
+    (l.calendars || []).forEach(col => { const x = col * T; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(x - 18, GY - 120, 36, 40, 5); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#D6453D'; ctx.fillRect(x - 18, GY - 120, 36, 11); ctx.fillStyle = '#2A2420'; ctx.font = '800 9px Inter'; ctx.textAlign = 'center'; ctx.fillText('MONTH', x, GY - 93); ctx.fillStyle = '#8A5A34'; ctx.fillRect(x - 2, GY - 80, 4, 80); });
+    // Bank building
+    if (l.bank) { const x = l.bank, W2 = 200; ctx.fillStyle = '#E4E9F0'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2.5; ctx.fillRect(x, GY - 170, W2, 170); ctx.strokeRect(x, GY - 170, W2, 170); ctx.fillStyle = '#2C4A7A'; ctx.beginPath(); ctx.moveTo(x - 14, GY - 170); ctx.lineTo(x + W2 / 2, GY - 214); ctx.lineTo(x + W2 + 14, GY - 170); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#F2B43C'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(x + 40 + i * 30, GY - 40, 11, 0, 7); ctx.fill(); ctx.stroke(); } ctx.fillStyle = '#2A2420'; for (let i = 0; i < 11; i++) ctx.fillRect(x + 18 + i * 16, GY - 95, 3, 95); ctx.fillRect(x + 14, GY - 97, W2 - 28, 4); ctx.fillStyle = '#fff'; ctx.font = '800 14px "Baloo 2"'; ctx.textAlign = 'center'; ctx.fillText('BANK · VAULT', x + W2 / 2, GY - 182); ctx.fillStyle = '#2A2420'; ctx.font = '700 10px Inter'; ctx.fillText('PAPERS REQUIRED', x + W2 / 2, GY - 110); }
+    // School (finish)
+    if (!l.noSchool) { const x = SCHOOL * T + 40; sprite(ART.block, x + 60, GY + 4, 150); ctx.fillStyle = '#3F7A4A'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(x + 20, GY - 174, 80, 24, 5); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = '800 14px "Baloo 2"'; ctx.textAlign = 'center'; ctx.fillText('SCHOOL', x + 60, GY - 157); ctx.fillStyle = '#2A2420'; ctx.fillRect(x - 30, GY - 220, 4, 220); ctx.fillStyle = '#FF9933'; ctx.fillRect(x - 26, GY - 220, 40, 9); ctx.fillStyle = '#fff'; ctx.fillRect(x - 26, GY - 211, 40, 9); ctx.fillStyle = '#138808'; ctx.fillRect(x - 26, GY - 202, 40, 9); }
+    // Tiles
+    const c0 = Math.max(0, Math.floor(c / T)), c1 = Math.min(COLS, c0 + VW / T + 2);
+    for (let y = 0; y < ROWS; y++) for (let x = c0; x < c1; x++) {
+      const ch = l.tiles[y][x]; if (ch === '.') continue; let X = x * T, Y = y * T;
+      if (l.bumpQ && l.bumpQ.tx === x && l.bumpQ.ty === y) Y -= Math.sin(l.bumpQ.t / .2 * Math.PI) * 8;
+      if (ch === '#') { ctx.fillStyle = y === GROUND ? pal.ground : pal.dirt; ctx.fillRect(X, Y, T, T); if (y === GROUND) { ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(X, Y, T, 5); ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.fillRect(X + 6, Y + 16, 4, 4); ctx.fillRect(X + 20, Y + 24, 4, 4); } }
+      else if (ch === 'S') { const sq = l.boing && l.boing.tx === x ? Math.sin(l.boing.t / .3 * Math.PI) * 6 : 0; ctx.fillStyle = '#8A5A34'; ctx.fillRect(X + 2, Y + 14, 4, 18); ctx.fillRect(X + T - 6, Y + 14, 4, 18); ctx.fillStyle = '#B07A45'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(X - 4, Y + 8 + sq, T + 8, 9 - sq * .5, 3); ctx.fill(); ctx.stroke(); ctx.strokeStyle = '#F2D16B'; ctx.lineWidth = 1.2; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(X - 2 + i * 7, Y + 9 + sq); ctx.lineTo(X + 3 + i * 7, Y + 16 + sq * .5); ctx.stroke(); } tag(ctx, X + T / 2, Y - 2, 'BOING', '#E07B39'); }
+      else if (ch === '=') { ctx.fillStyle = '#A9743F'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(X + 1, Y + 2, T - 2, T - 10, 5); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#C99057'; ctx.fillRect(X + 4, Y + 5, T - 8, 4); ctx.fillStyle = '#7A5230'; ctx.fillRect(X + T / 2 - 1, Y + 9, 2, T - 18); }
+      else { ctx.fillStyle = ch === '?' ? '#F2B43C' : '#B08A5A'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(X + 1, Y + 1, T - 2, T - 2, 6); ctx.fill(); ctx.stroke(); if (ch === '?') { ctx.fillStyle = '#2A2420'; ctx.font = '800 22px "Baloo 2"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', X + T / 2, Y + T / 2 + 2); ctx.textBaseline = 'alphabetic'; } }
+    }
+    // Coins
+    l.coins.forEach(k => { if (!k.alive) return; const sx = Math.abs(Math.cos(t * 4 + k.x)); ctx.fillStyle = '#F2B43C'; ctx.strokeStyle = '#8A5A00'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(k.x, k.y, 9 * sx + 2, 10, 0, 0, 7); ctx.fill(); ctx.stroke(); if (sx > .5) { ctx.fillStyle = '#8A5A00'; ctx.font = '800 11px "Baloo 2"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('₹', k.x, k.y + 1); ctx.textBaseline = 'alphabetic'; } });
+    // Items
+    l.items.forEach(it => { if (S.bag[it.k]) return; const bob = Math.sin(t * 3 + it.x) * 4, x = it.x, y = it.y + bob; ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.arc(x, y, 30, 0, 7); ctx.fill(); if (iconImg[it.k].complete) ctx.drawImage(iconImg[it.k], x - 22, y - 22, 44, 44); ctx.fillStyle = '#2A2420'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.roundRect(x - 30, y - 52, 60, 18, 9); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#2A2420'; ctx.font = '800 12px "Baloo 2"'; ctx.textAlign = 'center'; ctx.fillText(rupees(ITEMS[it.k].price), x, y - 39); });
+    // NPCs
+    l.npcs.forEach(n => drawPerson(ctx, n.x, GY + 2, LOOKS[n.look], 74, t + n.x, n.x > l.p.x ? -1 : 1));
+    // Enemies
+    l.enemies.forEach(e => {
+      const sq = e.alive ? 0 : Math.min(1, e.dead / .15);
+      if (!e.alive) ctx.globalAlpha = Math.max(0, 1 - e.dead / .4);
+      if (e.kind === 'byaaj') drawByaaj(ctx, e.x + e.w / 2, e.y + e.h / 2, 16, t + e.x, sq);
+      else if (e.kind === 'clock') drawClock(ctx, e.x + e.w / 2, e.y + e.h / 2, 15, t + e.x);
+      else drawImp(ctx, e.x + e.w / 2, e.y + e.h / 2, 14, t);
+      if (e.alive && TAGS[e.kind]) tag(ctx, e.x + e.w / 2, e.y - 12, TAGS[e.kind], { byaaj: '#D6453D', clock: '#4E6E9E', imp: '#8E4FB0' }[e.kind]);
+      ctx.globalAlpha = 1;
+    });
+    l.shots.forEach(s => drawBubble(ctx, s.x, s.y, s.word));
+    l.snips.forEach(sn => drawScissors(ctx, sn.x, sn.y, sn.t));
+    // Investor stars
+    l.stars.forEach(s => { ctx.fillStyle = '#0DAADE'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 - Math.PI / 2, r = i % 2 ? 4 : 10; ctx.lineTo(s.x + Math.cos(a) * r, s.y + Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.stroke(); });
+    // Meena
+    const p = l.p;
+    if (!(p.inv > 0 && Math.floor(p.inv * 14) % 2)) {
+      const img = ART.meena, h = 64, wdt = img ? img.width * h / img.height : 40, run = p.onGround && Math.abs(p.vx) > 20;
+      ctx.fillStyle = 'rgba(0,0,0,.15)'; if (p.onGround) { ctx.beginPath(); ctx.ellipse(p.x + p.w / 2, p.y + p.h + 2, 16, 4, 0, 0, 7); ctx.fill(); }
+      ctx.save(); ctx.translate(p.x + p.w / 2, p.y + p.h + 3 - (run ? Math.abs(Math.sin(p.anim * .06)) * 4 : 0));
+      ctx.rotate(run ? Math.sin(p.anim * .06) * .06 : !p.onGround ? p.face * -.08 : 0);
+      ctx.scale(p.face * (1 + p.squash), 1 - p.squash);
+      if (img) ctx.drawImage(img, -wdt / 2, -h, wdt, h); ctx.restore();
+    }
+    // Particles & floating text
+    l.parts.forEach(q => { ctx.fillStyle = q.c; ctx.globalAlpha = Math.max(0, 1 - q.t / 1.2); ctx.beginPath(); ctx.arc(q.x, q.y, 3.5, 0, 7); ctx.fill(); ctx.globalAlpha = 1; });
+    l.floats.forEach(f => { ctx.globalAlpha = Math.max(0, 1 - f.t / 1.6); ctx.font = '800 15px "Baloo 2"'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.strokeText(f.text, f.x, f.y); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y); ctx.globalAlpha = 1; });
+    ctx.restore();
+    // Foreground grass
+    for (let i = 0; i < 8; i++) { const x = ((i * 140 - c * 1.15) % (VW + 140) + VW + 140) % (VW + 140) - 70; sprite(ART[i % 2 ? 'grass' : 'herbs'], x, 366, 30, .9); }
+    ctx.restore();
+    if (l.auction) { const a = l.auction, bx = VW / 2 - 130, by = 66; ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(bx, by, 260, 74, 14); ctx.fill(); ctx.stroke(); ctx.textAlign = 'center'; ctx.font = '800 11px Inter'; ctx.fillStyle = '#2A2420'; ctx.fillText('YOU', bx + 65, by + 18); ctx.fillText('SHARMAJI', bx + 195, by + 18); ctx.font = '800 28px "Baloo 2"'; ctx.fillStyle = a.mine > a.rival ? '#3F7A4A' : '#D6453D'; ctx.fillText(a.mine + '%', bx + 65, by + 46); ctx.fillStyle = '#6B3A6E'; ctx.fillText(a.rival + '%', bx + 195, by + 46); ctx.fillStyle = '#2A2420'; ctx.font = '800 12px "Baloo 2"'; ctx.fillText('VS', bx + 130, by + 40); ctx.font = '700 10px Inter'; ctx.fillText(`HEADBUTT A POT: +10% · POT ${rupees(50000 * (1 - Math.max(a.mine, a.rival) / 100))}`, bx + 130, by + 64); ctx.fillStyle = '#F2B43C'; ctx.fillRect(bx + 10, by + 68, 240 * a.t / 8, 3); }
+    if (l.stamp) { const k = Math.min(1, l.stamp.t / .25), sc = 2.2 - k * 1.2; ctx.save(); ctx.translate(VW / 2, VH / 2 - 20); ctx.rotate(-.18); ctx.scale(sc, sc); ctx.globalAlpha = Math.min(1, k * 1.5); ctx.strokeStyle = '#D6453D'; ctx.lineWidth = 6; ctx.beginPath(); ctx.roundRect(-120, -34, 240, 68, 10); ctx.stroke(); ctx.fillStyle = '#D6453D'; ctx.font = '800 44px "Baloo 2"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(l.stamp.text, 0, 3); ctx.textBaseline = 'alphabetic'; ctx.restore(); }
+    if (l.world === RANGDE && S.flags.inv) { ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.strokeStyle = '#2A2420'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(VW / 2 - 110, 70, 220, 26, 13); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#0DAADE'; ctx.font = '800 14px "Baloo 2"'; ctx.textAlign = 'center'; ctx.fillText(`${S.flags.inv} SOCIAL INVESTORS × ₹500`, VW / 2, 88); }
+  }
+
+  /* ─────────── Loop ─────────── */
+  let dpr = 1;
+  function resize() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    const touch = !matchMedia('(hover:hover) and (pointer:fine)').matches;
+    const aw = Math.min(innerWidth - 16, 1100), ah = innerHeight - (touch ? 120 : 50) - 16;
+    let w = aw, h = aw * 9 / 16; if (h > ah) { h = ah; w = h * 16 / 9; }
+    if (aw / ah < 1.2) { w = aw; h = Math.min(ah, aw * 1.15); }   // portrait: a squarer view, so the action stays big
+    VW = Math.round(Math.max(380, Math.min(640, 360 * w / h))); VH = Math.round(VW * h / w); OFFY = VH - 360;
+    game.style.width = w + 'px'; game.style.height = h + 'px';
+    cv.width = VW * dpr; cv.height = VH * dpr;
+  }
+  function loop(now) {
+    const dt = Math.min(1 / 30, Math.max(0, (now - last) / 1000)); last = Math.max(last, now);
+    if (L) { if (running) update(dt); else { t += dt; L.floats.forEach(f => { f.t += dt; }); } ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw(); }
+    requestAnimationFrame(loop);
+  }
+
+  /* ─────────── Flow ─────────── */
+  async function startWorld(def) {
+    resetLife(); L = buildLevel(def); cam = 0; $('#where').textContent = def.label;
+    running = true; last = performance.now();
+  }
+  async function finishWorld() {
+    const w = L.world, ok = Object.values(S.bag).every(Boolean);
+    if (w === RANGDE) {
+      if (!ok) { await say('head', 'Meena ji, where is everything? Go back and get the fabric, thread and machine!'); L.over = false; L.p.x = SCHOOL * T - 80; resume(); return; }
+      await say('head', `200 uniforms! The school pays **${rupees(ORDER_PAY)}** at the end of term.`);
+      money(ORDER_PAY, 'School pays for the order'); SFX.win(); burst(L.p.x, L.p.y, 60);
+      await say('partner', 'And you repay your Rang De loan in **monthly installments** from what you earn. Well done, Meena ji!');
+      return win();
+    }
+    if (w !== WORLDS.lender) await say('head', ok ? 'All 200 uniforms? Wonderful!' : 'Meena ji? Where are the uniforms? I’ll have to give the order to someone in town.');
+    await loseLife(w, await w.finish(ok), ok);
+  }
+  async function loseLife(w, r, ok) {
+    SFX.lose(); S.lives--; hud(S.lives); S.tried.push(Object.keys(WORLDS).find(k => WORLDS[k] === w));
+    const end = S.wallet, net = end - SAVINGS;
+    const rows = S.ledger.filter(([, v]) => v).map(([lbl, v]) => `<span>${lbl}</span><b class="${v < 0 ? 'neg' : 'pos'}">${v < 0 ? '−' : '+'}₹${Math.abs(v).toLocaleString('en-IN')}</b>`).join('');
+    await card(`
+      <p class="k">Life ${4 - S.lives} of 4 · ${w.name}</p>
+      <h2>${r.title}</h2>
+      <p class="lead">${r.why}</p>
+      <div class="ledger">${rows}<span class="tot">Meena ends with</span><b class="tot ${end < 0 ? 'neg' : ''}">${rupees(end)}</b></div>
+      ${r.extra || ''}
+      <p class="soft">${net < 0 ? `That’s <b>${rupees(-net)} less</b> than she started with${ok ? '' : ', '}` : ''}${ok ? '.' : 'and the order went to someone else.'}</p>
+      <div class="fact">${r.fact}</div>
+      <button class="btn go" data-go="1">${S.lives ? 'REWIND & TRY ANOTHER DOOR' : 'CONTINUE'}</button>`);
+    if (S.lives > 0) chooseDoor(); else gameOver();
+  }
+  async function chooseDoor() {
+    const pick = await card(`
+      <p class="k">${S.tried.length ? `Rewind · ${S.lives} ${S.lives === 1 ? 'life' : 'lives'} left` : `Meena needs ${rupees(NEED)}`}</p>
+      <h2>${S.tried.length ? 'What if she’d gone somewhere else?' : 'Where should Meena go?'}</h2>
+      <p class="soft">Each door is a world, and one life. Every time, Meena starts with ${rupees(SAVINGS)} and the same order.</p>
+      <div class="doors">${Object.entries(WORLDS).map(([k, d]) => `<button class="door" data-go="${k}" style="--c:${d.color}" ${S.tried.includes(k) ? 'disabled' : ''}><i>${d.icon}</i><b>${d.name}</b><span>${S.tried.includes(k) ? 'Tried. Door closed.' : d.sub}</span></button>`).join('')}</div>`);
+    startWorld(WORLDS[pick]);
+  }
+  async function gameOver() {
+    const secs = Math.round((Date.now() - S.t0) / 1000);
+    await card(`<p class="k">All 4 lives used</p><h2 style="color:#D6453D">GAME OVER</h2><p class="lead">Every door closed. The order went to someone in town.</p><p class="soft">You played for ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}. Millions of Indians live this.</p><div class="portal" aria-hidden="true"></div><p class="lead">An extra life appeared.</p><button class="btn go" data-go="1">CONTINUE? ▸</button>`, 'dark');
+    S.extra = true; SFX.win(); startWorld(RANGDE);
+  }
+  async function win() {
+    await card(`
+      <p class="k">Extra life</p><h2 style="color:#3F7A4A">YOU WIN!</h2>
+      <p class="lead">Fabric, thread and a new machine. 200 uniforms, delivered. Meena repays her loan month by month from what she earns.</p>
+      <div class="fact">You couldn’t win without an extra life. <b>Neither can Meena.</b> 86% of India’s eligible population has no access to formal credit.<small>Source: rangde.in</small></div>
+      <button class="btn go" data-go="1">BE SOMEONE’S EXTRA LIFE ▸</button>`);
+    const share = `I lost all 4 lives trying to help Meena fill one school order 💔 Lalaji's byaaj ate the profit, the bank wanted papers, the chit pot shrank.\n\nCan you beat it? 🎮 ${HERE}?${utm('share')}`;
+    const again = await card(`
+      <p class="k">Now it’s your turn</p><h2>Be someone’s <span style="color:#0DAADE">extra life.</span></h2>
+      <p class="soft">These people are real, and waiting on Rang De today. Back one from ₹500 and get repaid every month.</p>
+      <div class="people">${WAITING.map(p => `<a class="person" href="https://rangde.in/i/${p.key}?${utm('finale')}" target="_blank" rel="noopener"><img src="${p.photo}?auto=compress,format&w=120&h=120&fit=crop&crop=faces" alt=""><span><b>${p.name}</b><span>${p.where}</span><em>${p.need}</em></span></a>`).join('')}</div>
+      <a class="btn blue" href="https://rangde.in/invest/individuals?${utm('finale_all')}" target="_blank" rel="noopener">SEE EVERYONE WAITING ↗</a>
+      <div class="row2"><a class="btn wa" href="https://wa.me/?text=${encodeURIComponent(share)}" target="_blank" rel="noopener">CHALLENGE A FRIEND</a><button class="btn" data-go="again">PLAY AGAIN</button></div>
+      <p class="fine">Meena, Lalaji and the village are made up. Listings as of 20 Oct 2026. Investments carry risk. Rang De is an RBI-registered NBFC-P2P; RBI does not guarantee repayment.</p>`);
+    begin();
+  }
+  async function begin() {
+    newRun(); resetLife(); S.extra = false; hud();
+    L = buildLevel({ ...WORLDS.lender, setup: () => {} }); L.over = true; running = false;
+    await card(`
+      <p class="k">A Rang De platform game</p><h2>Extra Life: Run</h2>
+      <p class="lead">Meena is a tailor. A school wants 200 uniforms. She has ${rupees(SAVINGS)}. She needs ${rupees(NEED)} more.</p>
+      <div class="items">${Object.entries(ITEMS).map(([k, it]) => `<div class="item">${ICON[k]}<b>${it.name}</b><span>${rupees(it.price)}</span></div>`).join('')}</div>
+      <p class="soft">Run and jump to the school. Grab the three things on the way: they go in your bag if you can afford them. <b>Stomp the problems, or throw scissors at them</b> (F, or the ✂ button). Land on a charpai to bounce. Every lender gives you money, and every lender takes it back. You have <b>4 lives</b>.</p>
+      <button class="btn go" data-go="1">PLAY ▸</button>
+      <p class="fine">Prefer a slower story? <a href="./">Play the story version</a>.</p>`);
+    unlock(); chooseDoor();
+  }
+  if (new URLSearchParams(location.search).has('debug')) window.__run = { S, keys, get L() { return L; }, get running() { return running; }, step: (dt = 1 / 60, n = 1) => { for (let i = 0; i < n; i++) if (running) update(dt); }, jump: () => { jumpPressed = true; } };
+  (async () => { resize(); addEventListener('resize', resize); await Promise.all([loadArt(), document.fonts.ready]); requestAnimationFrame(n => { last = n; requestAnimationFrame(loop); }); begin(); })();
+})();
+</script>
+</body>
+</html>

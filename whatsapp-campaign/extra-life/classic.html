@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Extra Life · A borrowing game from Rang De</title>
+<meta name="description" content="You need ₹50,000 in 7 days. You have 4 lives. Try every door Meena has, and find out why none of them open.">
+<meta property="og:title" content="Extra Life: you need ₹50,000 in 7 days. You have 4 lives.">
+<meta property="og:description" content="A 5-minute borrowing game. Bank, moneylender, chit fund, family. Can you win?">
+<meta name="theme-color" content="#FFF4E0">
+<link rel="icon" href="logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FFF4E0; --ink:#1E1B16; --ink-60:rgba(30,27,22,.62); --ink-10:rgba(30,27,22,.1); --card:#fff;
+    --bank:#4F8EF7; --lender:#E5533D; --chit:#9B5DE5; --family:#2FB67C; --rangde:#0DAADE; --gold:#FFC93C; --heart:#E5334B;
+    --pixel:"Press Start 2P", monospace; --sans:Inter, system-ui, sans-serif; --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ background:var(--paper); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+  body{ min-height:100dvh; display:flex; justify-content:center; padding:max(12px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    background-image:radial-gradient(var(--ink-10) 1px, transparent 1px); background-size:18px 18px; }
+  main{ width:100%; max-width:460px; display:flex; flex-direction:column; gap:16px; }
+  button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; }
+  a{ color:inherit; }
+  button:focus-visible, a:focus-visible{ outline:3px solid var(--rangde); outline-offset:3px; }
+
+  /* HUD */
+  .hud{ position:sticky; top:8px; z-index:5; display:flex; align-items:center; gap:12px; padding:10px 12px; background:var(--card); border:3px solid var(--ink); box-shadow:4px 4px 0 var(--ink); border-radius:12px; }
+  .hud[hidden]{ display:none; }
+  .hearts{ display:flex; gap:4px; }
+  .hearts svg{ width:22px; height:20px; transition:transform .3s; }
+  .hearts .gone{ opacity:.18; filter:grayscale(1); }
+  .hearts .break{ animation:break .7s steps(4) both; }
+  .hearts .extra{ animation:pop .6s var(--ease) both; }
+  @keyframes break{ 0%{ transform:none; } 25%{ transform:translateX(-3px) rotate(-12deg); } 50%{ transform:translateX(3px) rotate(12deg); } 100%{ transform:scale(.8); opacity:.18; } }
+  @keyframes pop{ 0%{ transform:scale(0); } 70%{ transform:scale(1.4); } }
+  .day{ font-family:var(--pixel); font-size:10px; line-height:14px; white-space:nowrap; }
+  .meter{ flex:1; display:flex; flex-direction:column; gap:4px; min-width:0; }
+  .meter span{ font-family:var(--sans); font-weight:800; font-size:11px; line-height:12px; color:var(--ink-60); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meter i{ display:block; height:10px; border:2px solid var(--ink); border-radius:3px; background:var(--paper); overflow:hidden; }
+  .meter i b{ display:block; height:100%; width:0; background:var(--family); transition:width 1s var(--ease); }
+
+  /* Cards & type */
+  .card{ background:var(--card); border:3px solid var(--ink); box-shadow:6px 6px 0 var(--ink); border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:14px; animation:in .4s var(--ease); }
+  @keyframes in{ from{ opacity:0; transform:translateY(10px); } }
+  .lvl{ display:flex; align-items:center; gap:12px; }
+  .lvl .ic{ width:52px; height:52px; flex:none; border:3px solid var(--ink); border-radius:12px; display:flex; align-items:center; justify-content:center; background:var(--c, var(--paper)); }
+  .lvl .ic img{ width:32px; height:32px; }
+  .lvl small{ display:block; font-family:var(--pixel); font-size:9px; line-height:12px; color:var(--ink-60); margin-bottom:6px; }
+  .lvl b{ display:block; font-size:20px; font-weight:800; letter-spacing:-.01em; }
+  .pix{ font-family:var(--pixel); line-height:1.4; }
+  h1.pix{ font-size:34px; line-height:44px; letter-spacing:-.02em; }
+  .line{ font-size:18px; line-height:26px; font-weight:600; animation:in .4s var(--ease) both; }
+  .line.soft{ font-size:16px; line-height:24px; font-weight:500; color:var(--ink-60); }
+  .say{ position:relative; background:var(--paper); border:2px solid var(--ink); border-radius:14px; padding:12px 14px; font-size:16px; line-height:23px; font-weight:600; animation:in .4s var(--ease) both; }
+  .say::before{ content:attr(data-who); display:block; font-family:var(--pixel); font-size:8px; color:var(--ink-60); margin-bottom:6px; }
+  .choices{ display:flex; flex-direction:column; gap:10px; }
+  .ch{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; text-align:left; padding:14px 16px; border:3px solid var(--ink); border-radius:12px; background:var(--card); box-shadow:3px 3px 0 var(--ink); font-weight:700; font-size:16px; line-height:21px; transition:transform .1s, box-shadow .1s; }
+  .ch:hover{ background:var(--paper); }
+  .ch:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink); }
+  .ch small{ font-family:var(--pixel); font-size:8px; color:var(--ink-60); white-space:nowrap; }
+  .ch.quick{ border-radius:999px; justify-content:center; }
+  .quickrow{ display:flex; gap:8px; flex-wrap:wrap; } .quickrow .ch{ flex:1; min-width:110px; }
+  .btn{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:54px; padding:0 18px; border:3px solid var(--ink); border-radius:12px; box-shadow:4px 4px 0 var(--ink); font-family:var(--pixel); font-size:12px; text-decoration:none; text-align:center; line-height:18px; transition:transform .1s, box-shadow .1s; }
+  .btn:active{ transform:translate(4px,4px); box-shadow:0 0 0 var(--ink); }
+  .btn.go{ background:var(--gold); }
+  .btn.blue{ background:var(--rangde); color:#fff; }
+  .btn.wa{ background:#25D366; }
+  .btn.plain{ background:var(--card); }
+
+  /* Doors */
+  .doors{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .door{ position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:10px; padding:14px; border:3px solid var(--ink); border-radius:14px; background:var(--c); box-shadow:4px 4px 0 var(--ink); text-align:left; min-height:150px; transition:transform .1s, box-shadow .1s; }
+  .door:active{ transform:translate(4px,4px); box-shadow:0 0 0 var(--ink); }
+  .door .ic{ width:44px; height:44px; border:2px solid var(--ink); border-radius:10px; background:#fff; display:flex; align-items:center; justify-content:center; }
+  .door .ic img{ width:28px; height:28px; }
+  .door b{ font-size:16px; font-weight:800; color:#fff; text-shadow:0 1px 0 rgba(0,0,0,.25); }
+  .door span{ font-size:12px; line-height:16px; font-weight:600; color:rgba(255,255,255,.92); }
+  .door[disabled]{ background:#D9D2C5; box-shadow:none; transform:none; cursor:default; }
+  .door[disabled] b, .door[disabled] span{ color:var(--ink-60); text-shadow:none; }
+  .door[disabled]::after{ content:"✕"; position:absolute; right:10px; top:6px; font-family:var(--pixel); font-size:18px; color:var(--heart); }
+
+  /* Outcomes */
+  .lost{ text-align:center; padding:6px 0; }
+  .lost .pix{ font-size:16px; color:var(--heart); }
+  .lesson{ background:var(--paper); border:2px dashed var(--ink); border-radius:12px; padding:14px; font-size:15px; line-height:22px; font-weight:500; }
+  .lesson b{ font-weight:800; }
+  .lesson small{ display:block; margin-top:8px; font-size:11px; color:var(--ink-60); }
+  .contract{ background:#FFFBEF; border:2px solid var(--ink); border-radius:6px; padding:16px; font-family:"Courier New", monospace; font-size:15px; line-height:22px; display:flex; flex-direction:column; gap:8px; transform:rotate(-1deg); }
+  .contract p{ animation:in .35s var(--ease) both; }
+  .contract .fine{ font-size:12px; line-height:17px; }
+  .maths{ display:grid; grid-template-columns:1fr auto; gap:6px 12px; font-size:15px; font-weight:600; }
+  .maths b{ font-weight:800; text-align:right; font-variant-numeric:tabular-nums; }
+  .maths .tot{ border-top:2px solid var(--ink); padding-top:6px; font-weight:800; }
+  .big-rate{ font-family:var(--pixel); font-size:30px; line-height:36px; color:var(--lender); text-align:center; }
+
+  .screen-dark{ background:var(--ink); color:#fff; border-color:var(--ink); box-shadow:6px 6px 0 var(--heart); text-align:center; align-items:center; }
+  .screen-dark .line.soft{ color:rgba(255,255,255,.7); }
+  .gameover{ font-family:var(--pixel); font-size:30px; line-height:40px; color:var(--heart); animation:blink 1s steps(2) 3; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .oneup{ font-family:var(--pixel); font-size:26px; line-height:34px; color:var(--gold); animation:pop .8s var(--ease) both, glow 1.4s ease-in-out infinite alternate; }
+  @keyframes glow{ to{ text-shadow:0 0 18px rgba(255,201,60,.9); } }
+  .portal{ width:120px; height:120px; border-radius:50%; margin:6px auto; background:conic-gradient(from 0deg, var(--rangde), var(--family), var(--gold), var(--lender), var(--chit), var(--rangde)); animation:spin 2.4s linear infinite; position:relative; }
+  .portal::after{ content:""; position:absolute; inset:16px; border-radius:50%; background:var(--ink); }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .fill{ display:grid; grid-template-columns:repeat(20, 1fr); gap:3px; }
+  .fill i{ aspect-ratio:1; border-radius:3px; border:1.5px solid var(--ink); background:var(--paper); }
+  .fill i.on{ background:var(--family); animation:tile .3s var(--ease) both; }
+  @keyframes tile{ from{ transform:scale(.4); } }
+  .win{ font-family:var(--pixel); font-size:26px; line-height:36px; color:var(--family); text-align:center; }
+  .confetti{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:10; }
+  .confetti i{ position:absolute; top:-12px; width:8px; height:12px; animation:fall linear forwards; }
+  @keyframes fall{ to{ transform:translateY(105vh) rotate(720deg); } }
+  .toast{ position:fixed; left:50%; top:38%; z-index:11; transform:translateX(-50%); font-family:var(--pixel); font-size:20px; color:var(--heart); background:#fff; border:3px solid var(--ink); box-shadow:4px 4px 0 var(--ink); padding:14px 18px; border-radius:12px; animation:toast 1.4s var(--ease) forwards; pointer-events:none; }
+  @keyframes toast{ 0%{ opacity:0; transform:translate(-50%, 10px) scale(.8); } 15%{ opacity:1; transform:translate(-50%,0) scale(1); } 80%{ opacity:1; } 100%{ opacity:0; transform:translate(-50%,-20px); } }
+  .people{ display:flex; flex-direction:column; gap:10px; }
+  .person{ display:flex; gap:12px; align-items:center; text-decoration:none; padding:10px; border:2px solid var(--ink); border-radius:12px; background:var(--paper); }
+  .person img{ width:60px; height:60px; border-radius:10px; object-fit:cover; flex:none; border:2px solid var(--ink); }
+  .person b{ display:block; font-size:15px; font-weight:800; }
+  .person span{ display:block; font-size:12px; font-weight:600; color:var(--ink-60); }
+  .person em{ display:block; font-style:normal; font-size:13px; line-height:18px; font-weight:500; margin-top:2px; }
+  .fine{ font-size:11px; line-height:16px; color:var(--ink-60); }
+  .brand{ display:flex; justify-content:space-between; align-items:center; }
+  .brand img{ height:28px; }
+  .brand span{ font-family:var(--pixel); font-size:9px; color:var(--ink-60); }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand"><img src="logo.svg" alt="Rang De"><span>EXTRA LIFE</span></div>
+  <div class="hud" id="hud" hidden>
+    <div class="hearts" id="hearts" aria-label="Lives"></div>
+    <div class="day" id="day">DAY 1/7</div>
+    <div class="meter"><span id="moneyLbl">₹0 / ₹50,000</span><i><b id="moneyBar"></b></i></div>
+  </div>
+  <div id="stage" aria-live="polite"></div>
+</main>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const stage = $('#stage');
+  const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NABARD = 'NABARD Rural Economic Conditions & Sentiments Survey, July 2026';
+  const GOAL = 50000, DAYS = 7, HERE = location.origin + location.pathname;
+  const utm = c => `utm_source=extra_life&utm_medium=game&utm_campaign=${c}`;
+  // Live on rangde.in on 20 Oct 2026. Refresh before sharing widely.
+  const WAITING = [
+    { key: 'priyanka-593', name: 'Priyanka', where: 'Buldhana, Maharashtra', need: 'Needs credit for dairy supplies and animal feed.', photo: 'https://rangde.imgix.net/bImg/5035-img.jpg' },
+    { key: 'pukan-888', name: 'Pukan', where: 'Dhubri, Assam', need: 'Needs printers and a micro ATM for his services shop.', photo: 'https://rangde.imgix.net/bImg/10020698-img.jpg' },
+    { key: 'aribam-286', name: 'Aribam', where: 'Imphal East, Manipur', need: 'Building a shed for mushroom cultivation.', photo: 'https://rangde.imgix.net/bImg/MKF-09-RG-26-27-img.jpg' },
+  ];
+
+  /* ── state ── */
+  let S;
+  const reset = () => { S = { lives: 4, extra: false, day: 1, money: 0, tried: [], rate: 3, t0: Date.now(), owesLalaji: false }; };
+  reset();
+
+  const HEART = '<svg viewBox="0 0 11 10" shape-rendering="crispEdges"><path fill="#E5334B" d="M1 0h3v1h1v1h1V1h1V0h3v1h1v4h-1v1H9v1H8v1H7v1H6v1H5V9H4V8H3V7H2V6H1V5H0V1h1z"/><path fill="#fff" d="M2 1h1v1H2zM1 2h1v1H1z"/></svg>';
+  const GOLD_HEART = HEART.replace('#E5334B', '#FFC93C');
+  function hud(broke) {
+    $('#hud').hidden = false;
+    const total = 4 + (S.extra ? 1 : 0);
+    $('#hearts').innerHTML = Array.from({ length: total }, (_, i) => {
+      const isExtra = S.extra && i === 4, alive = isExtra ? true : i < S.lives;
+      return `<span class="${alive ? '' : 'gone'} ${broke === i ? 'break' : ''} ${isExtra ? 'extra' : ''}">${isExtra ? GOLD_HEART : HEART}</span>`;
+    }).join('');
+    $('#hearts').setAttribute('aria-label', `${S.lives + (S.extra ? 1 : 0)} lives left`);
+    $('#day').textContent = `DAY ${Math.min(S.day, DAYS)}/${DAYS}`;
+    $('#moneyLbl').textContent = `${fmt(S.money)} / ${fmt(GOAL)}`;
+    $('#moneyBar').style.width = Math.min(100, S.money / GOAL * 100) + '%';
+  }
+  const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 1500); };
+  function confetti() {
+    if (reduce) return;
+    const box = document.createElement('div'); box.className = 'confetti';
+    const cols = ['#FFC93C', '#E5533D', '#4F8EF7', '#2FB67C', '#9B5DE5', '#0DAADE'];
+    box.innerHTML = Array.from({ length: 70 }, () => `<i style="left:${Math.random() * 100}%;background:${cols[Math.floor(Math.random() * cols.length)]};animation-duration:${1.6 + Math.random() * 1.6}s;animation-delay:${Math.random() * .4}s"></i>`).join('');
+    document.body.appendChild(box); setTimeout(() => box.remove(), 3800);
+  }
+  const top = () => window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+
+  /* ── rendering helpers ── */
+  const DOORS = {
+    bank:   { name: 'The bank', sub: 'Low interest. Lots of papers.', c: 'var(--bank)', ic: 'bank' },
+    lender: { name: 'Lalaji', sub: 'The moneylender. Cash today.', c: 'var(--lender)', ic: 'banknotes' },
+    chit:   { name: 'The chit fund', sub: 'Your neighbour’s savings circle.', c: 'var(--chit)', ic: 'network' },
+    family: { name: 'Family', sub: 'Your brother in the city.', c: 'var(--family)', ic: 'shield-check' },
+  };
+  function level(k, step) {
+    const d = DOORS[k];
+    return `<div class="lvl"><span class="ic" style="--c:${d.c}"><img src="icons/${d.ic}.webp" alt=""></span><span><small>DOOR ${S.tried.length + 1} · ${step}</small><b>${d.name}</b></span></div>`;
+  }
+  function card(html, cls = '') { stage.innerHTML = `<div class="card ${cls}">${html}</div>`; top(); }
+  function choices(list) {
+    // list: [label, fn, hint?]
+    const id = 'c' + Math.random().toString(36).slice(2, 7);
+    setTimeout(() => document.querySelectorAll(`#${id} .ch`).forEach((b, i) => b.onclick = () => list[i][1]()), 0);
+    return `<div class="choices" id="${id}">${list.map(([l, , h]) => `<button class="ch">${l}${h ? `<small>${h}</small>` : ''}</button>`).join('')}</div>`;
+  }
+  function quick(list) {
+    const id = 'q' + Math.random().toString(36).slice(2, 7);
+    setTimeout(() => document.querySelectorAll(`#${id} .ch`).forEach((b, i) => b.onclick = () => list[i][1]()), 0);
+    return `<div class="quickrow" id="${id}">${list.map(([l]) => `<button class="ch quick">${l}</button>`).join('')}</div>`;
+  }
+  const say = (who, t) => `<p class="say" data-who="${who}">${t}</p>`;
+  const spend = d => { S.day += d; hud(); };
+
+  /* ── title & intro ── */
+  function title() {
+    $('#hud').hidden = true;
+    card(`
+      <h1 class="pix">EXTRA<br>LIFE</h1>
+      <p class="line">You need <b>₹50,000</b> in <b>7 days</b>.<br>You have <b>4 lives</b>.</p>
+      <p class="line soft">A 5-minute borrowing game. Try every door. See which one opens.</p>
+      <div class="hearts" style="justify-content:flex-start">${HEART.repeat(4).replace(/<svg/g, '<svg style="width:30px;height:28px"')}</div>
+      <button class="btn go" id="start">PRESS START</button>`);
+    $('#start').onclick = intro;
+  }
+  function intro() {
+    reset(); hud();
+    card(`
+      <p class="pix" style="font-size:10px;color:var(--ink-60)">LEVEL 1 · MEET MEENA</p>
+      <p class="line">Meena runs a tailoring shop from her front room.</p>
+      <p class="line soft">A school has ordered 200 uniforms. Fabric and a second machine cost ₹50,000. The fabric seller wants cash within 7 days, or the order goes to someone else.</p>
+      <p class="line soft">You are Meena. Where do you go first?</p>
+      <p class="fine">Meena is a made-up character. The doors she knocks on are real.</p>
+      <button class="btn go" id="go">FIND THE MONEY ></button>`);
+    $('#go').onclick = hub;
+  }
+
+  /* ── the four doors ── */
+  function hub() {
+    hud();
+    if (S.day > DAYS) return gameOver('time');
+    const left = 4 - S.tried.length;
+    stage.innerHTML = `<div class="card">
+      <p class="pix" style="font-size:10px;color:var(--ink-60)">${S.tried.length ? `${left} DOOR${left > 1 ? 'S' : ''} LEFT` : 'CHOOSE A DOOR'}</p>
+      <p class="line">${S.tried.length ? 'That door closed. Where next?' : 'Four places Meena could borrow from.'}</p>
+      <div class="doors">${Object.entries(DOORS).map(([k, d]) => `<button class="door" data-k="${k}" style="--c:${d.c}" ${S.tried.includes(k) ? 'disabled' : ''}><span class="ic"><img src="icons/${d.ic}.webp" alt=""></span><b>${d.name}</b><span>${S.tried.includes(k) ? 'Closed' : d.sub}</span></button>`).join('')}</div>
+    </div>`;
+    top();
+    stage.querySelectorAll('.door:not([disabled])').forEach(b => b.onclick = () => LEVELS[b.dataset.k]());
+  }
+
+  function lose(k, title, body, lesson) {
+    const head = level(k, 'RESULT');
+    S.tried.push(k);
+    const broke = S.lives - 1; S.lives--;
+    hud(broke); toast('−1 LIFE');
+    card(`
+      ${head}
+      <div class="lost"><p class="pix">${title}</p></div>
+      ${body}
+      <div class="lesson">${lesson}</div>
+      <button class="btn ${S.lives ? 'go' : 'plain'}" id="next">${S.lives ? 'TRY ANOTHER DOOR >' : 'CONTINUE >'}</button>`);
+    $('#next').onclick = () => S.lives > 0 ? hub() : gameOver('lives');
+  }
+
+  const LEVELS = {
+    /* Bank: everything is right except the paperwork she doesn't have. */
+    bank() {
+      card(`${level('bank', 'THE BANK')}
+        <p class="line">The nearest branch with a loan officer is two bus rides away.</p>
+        ${choices([['Go today', () => { spend(1); bank2('The officer is at a meeting in the district office. You wait until 4pm.'); }, '−1 DAY'],
+                   ['Wait for Monday, when the officer is in', () => { spend(2); bank2('Good call: he’s there. But that cost you two days.'); }, '−2 DAYS']])}`);
+      function bank2(t) {
+        card(`${level('bank', 'THE BANK')}
+          <p class="line soft">${t}</p>
+          ${say('LOAN OFFICER', 'Land papers? Credit history? Income tax returns? Salary slips?')}
+          <p class="line soft">Meena has none of these. Her customers pay in cash. She does have something else.</p>
+          ${choices([['Show the school’s order letter', () => bank3('He reads it twice. “Very nice order, madam. But I can’t lend on a letter. No credit history, no loan.”')],
+                     ['Offer your sewing machine as security', () => bank3('“A used machine is not security, madam.” He slides the form back across the desk.')]])}`);
+      }
+      function bank3(t) {
+        card(`${level('bank', 'THE BANK')}
+          ${say('LOAN OFFICER', t)}
+          ${choices([['Ask for a smaller loan', () => end('“Same papers for a small loan, madam.”')], ['Thank him and leave', () => end('')]])}`);
+      }
+      function end(extra) {
+        lose('bank', 'LOAN DECLINED', `${extra ? say('LOAN OFFICER', extra) : ''}<p class="line soft">Meena did nothing wrong. She just doesn’t fit the form.</p>`,
+          `<b>99.92%</b> of India’s villages have a banking outlet within 5 km. Yet <b>nearly half</b> of rural households still borrow from moneylenders, friends and family. A bank nearby isn’t a loan.<small>Sources: Ministry of Finance, Aug 2026; ${NABARD}</small>`);
+      }
+    },
+
+    /* Lalaji: the bargaining node. You win the haggle, then read the contract. */
+    lender() {
+      card(`${level('lender', 'LALAJI’S SHOP')}
+        <p class="line soft">Lalaji keeps cash in a steel cupboard. No forms, no bus rides.</p>
+        ${say('LALAJI', '₹50,000? Done, today itself. Five rupees per hundred.')}
+        <p class="pix" style="font-size:10px">HAGGLE!</p>
+        ${quick([['“Two rupees.”', () => haggle('Two? For two I’d lend to my own son! …Chalo, three. Only for you.', 3)],
+                 ['“Four, final.”', () => haggle('Four? You’re a hard woman, Meena. Three. Last offer.', 3)],
+                 ['“Okay, five.”', () => haggle('Smart woman. No time wasted.', 5)]])}`);
+      function haggle(t, rate) {
+        S.rate = rate;
+        card(`${level('lender', 'LALAJI’S SHOP')}
+          ${say('LALAJI', t)}
+          ${rate === 3 ? '<p class="pix" style="font-size:14px;color:var(--family);text-align:center">YOU WON<br>THE HAGGLE!</p>' : ''}
+          <p class="line soft">He takes a paper out of the cupboard.</p>
+          <button class="btn go" id="read">READ THE PAPER ></button>`);
+        if (rate === 3) confetti();
+        $('#read').onclick = contract;
+      }
+      function contract() {
+        spend(1);
+        const fee = 5000, inHand = GOAL - fee, interest = S.rate / 100 * GOAL * 12, cost = interest + fee, apr = Math.round(cost / inHand * 100);
+        card(`${level('lender', 'THE PAPER')}
+          <div class="contract">
+            <p>Loan: ₹50,000</p>
+            <p style="animation-delay:.5s">Interest: ₹${S.rate} per ₹100 <b>per month</b></p>
+            <p style="animation-delay:1s">File charge: ₹5,000, <b>cut today</b></p>
+            <p style="animation-delay:1.5s">Security: gold bangles, kept until fully paid</p>
+            <p class="fine" style="animation-delay:2s">Late payment: Lalaji decides.</p>
+          </div>
+          <div class="maths">
+            <span>Money in Meena’s hand</span><b>${fmt(inHand)}</b>
+            <span>Interest over a year</span><b>${fmt(interest)}</b>
+            <span>Plus the file charge</span><b>${fmt(fee)}</b>
+            <span class="tot">Cost for one year</span><b class="tot">${fmt(cost)}</b>
+          </div>
+          <p class="line soft">You thought you got ${S.rate}%. On the money you actually get, you pay about</p>
+          <p class="big-rate">${apr}% A YEAR</p>
+          ${choices([['Sign it. The order matters.', () => { S.owesLalaji = true; end(true, cost); }],
+                     ['Walk away and keep your bangles', () => end(false)]])}`);
+      }
+      function end(signed, cost) {
+        lose('lender', signed ? 'DEBT TRAP' : 'WALKED AWAY',
+          signed ? `<p class="line soft">Lalaji counts out ₹45,000: ₹5,000 short of the fabric, so the order is still at risk. And over the year Meena will pay him ${fmt(cost)} for it, with her bangles in his cupboard the whole time.</p>`
+                 : `<p class="line soft">Meena keeps her bangles. She loses a day.</p>`,
+          `Lalaji is made up. The pattern isn’t: informal loans in rural India average <b>almost 18%</b> interest a year. That’s the average, before file charges and gold.<small>Source: ${NABARD}</small>`);
+      }
+    },
+
+    /* Chit fund: money comes when the group decides, not when you need it. */
+    chit() {
+      card(`${level('chit', 'THE CHIT FUND')}
+        <p class="line soft">Your neighbour runs a chit: 20 members each put in ₹2,500 a month. Every month, one member takes home the ₹50,000 pot.</p>
+        ${say('NEIGHBOUR', 'This month’s pot goes to whoever accepts the biggest discount. Or wait, and your turn will come.')}
+        ${choices([['Bid for this month’s pot', bid], ['Wait for your turn', () => { spend(2); lose('chit', 'TOO SLOW', '<p class="line soft">Your turn could be month 3. Or month 20. The fabric seller needs cash this week.</p>', lesson); }, '−2 DAYS']])}`);
+      function bid() {
+        spend(2);
+        card(`${level('chit', 'THE AUCTION')}
+          <p class="line soft">Two other members need cash too. The bidding climbs.</p>
+          ${quick([['Bid 20% off', () => lose('chit', 'OUTBID', say('NEIGHBOUR', 'Thirty percent from Sharmaji! Sorry, Meena.') + '<p class="line soft">You lose the auction, and two days.</p>', lesson)],
+                   ['Bid 35% off', () => lose('chit', 'WON… SORT OF', '<p class="line soft">You win the pot, minus 35%: <b>₹32,500</b> in hand. Not enough for the fabric. And you still owe ₹2,500 every month for 20 months: ₹50,000 in all.</p>', lesson)]])}`);
+      }
+      const lesson = `Chit funds are legal when registered under the <b>Chit Funds Act, 1982</b>. Informal chits have no such protection: if the organiser disappears, so does the money. Either way, the money comes when the group decides, not when you need it.`;
+    },
+
+    /* Family: helps a little, costs a lot. */
+    family() {
+      spend(1);
+      card(`${level('family', 'A PHONE CALL')}
+        <p class="line soft">You call your brother in the city.</p>
+        ${choices([['Ask for the whole ₹50,000', () => fam2('Long silence. “Didi, I just paid the school fees… I can send ₹10,000.”')],
+                   ['Ask for ₹15,000 and find the rest', () => fam2('“I can manage ₹10,000. Next month, maybe more.”')]])}`);
+      function fam2(t) {
+        card(`${level('family', 'A PHONE CALL')}
+          ${say('BROTHER', t)}
+          <p class="line soft">₹10,000 helps. By evening, your mother-in-law knows. By Sunday, the whole family does.</p>
+          ${choices([['Take it', () => lose('family', 'NOT ENOUGH', '<p class="line soft">₹40,000 still to find, and a debt that comes up at every wedding.</p>', lesson)],
+                     ['Say no, and thank him', () => lose('family', 'NOT ENOUGH', '<p class="line soft">You keep the peace. You don’t keep the order.</p>', lesson)]])}`);
+      }
+      const lesson = `<b>23.6%</b> of rural households borrow only from informal sources like moneylenders, friends and family. Another <b>25.3%</b> use both.<small>Source: ${NABARD}</small>`;
+    },
+  };
+
+  /* ── game over → extra life ── */
+  function gameOver(why) {
+    hud();
+    const secs = Math.round((Date.now() - S.t0) / 1000), m = Math.floor(secs / 60), s = String(secs % 60).padStart(2, '0');
+    card(`
+      <p class="gameover">GAME<br>OVER</p>
+      <p class="line">${why === 'time' ? 'Time’s up. The order went to someone else.' : 'Every door closed. The order went to someone else.'}</p>
+      <p class="line soft">You played for ${m}:${s}. Millions of Indians live this.</p>
+      <div id="portal"></div>`, 'screen-dark');
+    setTimeout(() => {
+      const p = $('#portal'); if (!p) return;
+      p.innerHTML = `<div class="portal" aria-hidden="true"></div><p class="oneup">1UP</p><p class="line" style="margin:8px 0 16px">An extra life appeared.</p><button class="btn go" id="cont">CONTINUE? ></button>`;
+      $('#cont').onclick = extraLife;
+    }, reduce ? 0 : 2200);
+  }
+
+  function extraLife() {
+    S.extra = true; S.day = Math.min(S.day, DAYS); hud();
+    card(`
+      <div class="lvl"><span class="ic" style="--c:var(--rangde)"><img src="icons/hand-check.webp" alt=""></span><span><small>EXTRA LIFE</small><b>Rang De</b></span></div>
+      <p class="line">A Rang De partner who works in Meena’s area visits her shop.</p>
+      <p class="line soft">They don’t start with land papers. They look at the business itself: her customers, her sales, the school’s order.</p>
+      ${choices([['Show them the order letter', rd2]])}`);
+    function rd2() {
+      card(`
+        <div class="lvl"><span class="ic" style="--c:var(--rangde)"><img src="icons/hand-check.webp" alt=""></span><span><small>EXTRA LIFE</small><b>Rang De</b></span></div>
+        ${say('RANG DE PARTNER', 'This is a good order. Let’s put your loan up on Rang De.')}
+        <p class="line soft">People across India each invest a part of it, from ₹500.</p>
+        <div class="fill" id="fill">${'<i></i>'.repeat(100)}</div>
+        <p class="pix" style="font-size:10px;text-align:center" id="fillLbl">0 SOCIAL INVESTORS</p>`);
+      const cells = [...document.querySelectorAll('#fill i')];
+      let n = 0;
+      const t = setInterval(() => {
+        n = Math.min(100, n + (reduce ? 100 : 4));
+        cells.slice(0, n).forEach(c => c.classList.add('on'));
+        $('#fillLbl').textContent = `${n} SOCIAL INVESTORS`;
+        S.money = n * 500; hud();
+        if (n >= 100) { clearInterval(t); setTimeout(win, 700); }
+      }, 90);
+    }
+  }
+
+  function win() {
+    confetti();
+    const lost = S.tried.length;
+    card(`
+      <p class="win">YOU WIN!</p>
+      <p class="line">Meena buys the fabric. 200 uniforms, delivered on time.</p>
+      <p class="line soft">She repays every month. The people who backed her get their money back, with returns, and can back someone else.</p>
+      <div class="lesson">You couldn’t win without an extra life. <b>Neither can Meena.</b> 86% of India’s eligible population has no access to formal credit.<small>Source: rangde.in</small></div>
+      <button class="btn go" id="be">NOW BE SOMEONE’S EXTRA LIFE ></button>`);
+    $('#be').onclick = finale;
+  }
+
+  function finale() {
+    const share = `I lost all 4 lives trying to borrow ₹50,000 in 7 days 💔 Bank, moneylender, chit fund, family: every door closed.\n\nCan you do better? 🎮 ${HERE}?${utm('share')}`;
+    card(`
+      <p class="pix" style="font-size:14px;line-height:22px">BE SOMEONE’S<br>EXTRA LIFE</p>
+      <p class="line soft">These people are real, and waiting on Rang De right now. Back one from ₹500 and get repaid every month.</p>
+      <div class="people">${WAITING.map(p => `<a class="person" href="https://rangde.in/i/${p.key}?${utm('finale')}" target="_blank" rel="noopener"><img src="${p.photo}?auto=compress,format&w=140&h=140&fit=crop&crop=faces" alt=""><span><b>${p.name}</b><span>${p.where}</span><em>${p.need}</em></span></a>`).join('')}</div>
+      <a class="btn blue" href="https://rangde.in/invest/individuals?${utm('finale_all')}" target="_blank" rel="noopener">SEE EVERYONE WAITING ></a>
+      <a class="btn wa" href="https://wa.me/?text=${encodeURIComponent(share)}" target="_blank" rel="noopener">CHALLENGE A FRIEND</a>
+      <button class="btn plain" id="again">PLAY AGAIN</button>
+      <p class="fine">Listings as of 20 Oct 2026. Investments carry risk. Rang De is an RBI-registered NBFC-P2P; RBI does not guarantee repayment.</p>`);
+    $('#again').onclick = intro;
+  }
+
+  title();
+})();
+</script>
+</body>
+</html>

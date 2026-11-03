@@ -35,7 +35,7 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
   return (
     <div
       aria-hidden={hiddenFromAT || undefined}
-      className={`flex flex-col items-center overflow-hidden rounded-[8px] bg-gradient-to-b from-[rgba(0,81,122,0.72)] to-[#00517a] p-[4px] transition-transform duration-300 ease-out hover:scale-[1.015] ${CARD_WIDTH_CLASSES[variant]}`}
+      className={`flex flex-col items-center overflow-hidden rounded-[8px] bg-[#084a2f] p-[4px] transition-transform duration-300 ease-out hover:scale-[1.015] ${CARD_WIDTH_CLASSES[variant]}`}
     >
       <div className={`relative mb-[-48px] w-full shrink-0 rounded-[4px] ${IMAGE_HEIGHT_CLASSES[variant]}`}>
         {/*

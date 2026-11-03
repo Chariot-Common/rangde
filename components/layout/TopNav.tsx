@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { MobileMenu } from "@/components/MobileMenu";
+import { useCtaLabel } from "@/lib/use-cta-label";
 
 const SCROLL_THRESHOLD = 24;
 
 export function TopNav() {
+  const ctaLabel = useCtaLabel();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -31,11 +33,22 @@ export function TopNav() {
   useEffect(() => {
     const nav = navRef.current;
     if (!nav) return;
-    const updateBottomVar = () => {
-      const bottom = nav.getBoundingClientRect().bottom;
-      document.documentElement.style.setProperty("--navbar-bottom", `${bottom}px`);
+    // Setting a variable on <html> makes the browser recheck styles across the whole page, so it
+    // is only written when the value actually changes (in practice, only while the announcement
+    // bar scrolls away), and measured at most once a frame.
+    let last = "";
+    let raf = 0;
+    const write = () => {
+      raf = 0;
+      const value = `${nav.getBoundingClientRect().bottom}px`;
+      if (value === last) return;
+      last = value;
+      document.documentElement.style.setProperty("--navbar-bottom", value);
     };
-    updateBottomVar();
+    const updateBottomVar = () => {
+      if (!raf) raf = requestAnimationFrame(write);
+    };
+    write();
     window.addEventListener("scroll", updateBottomVar, { passive: true });
     window.addEventListener("resize", updateBottomVar);
     const observer = new ResizeObserver(updateBottomVar);
@@ -44,6 +57,7 @@ export function TopNav() {
       window.removeEventListener("scroll", updateBottomVar);
       window.removeEventListener("resize", updateBottomVar);
       observer.disconnect();
+      cancelAnimationFrame(raf);
     };
   }, []);
 
@@ -112,7 +126,7 @@ export function TopNav() {
             className="!px-[16px]"
             onClick={() => window.location.assign("https://rangde.in/account/signup")}
           >
-            Get started
+            {ctaLabel}
           </Button>
           <Button variant="secondary" size="sm" className="!px-[16px]">
             Sign up / Login

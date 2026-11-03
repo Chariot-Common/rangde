@@ -2,16 +2,19 @@
 
 import Image from "next/image";
 import { useInView } from "motion/react";
-import { useRef } from "react";
+import { createContext, useContext, useRef } from "react";
 import { heroStatsFrom } from "@/lib/content";
 import { useRangDeStats } from "@/components/providers/StatsProvider";
 import { useAnimatedNumber } from "@/lib/use-animated-number";
 
 const COUNT_UP_DURATION = 1800;
 const STAGGER_MS = 100;
+// Count up from 80% of the real figure, not from 0, so the row never reads "0 entrepreneurs"
+// or "₹ 0.00 Cr" before the animation starts (or for anyone who scrolls past quickly).
+const COUNT_FROM = 0.8;
 
 function StatNumber({ target, format, index, inView }: { target: number; format: (n: number) => string; index: number; inView: boolean }) {
-  const value = useAnimatedNumber(inView ? target : 0, {
+  const value = useAnimatedNumber(inView ? target : target * COUNT_FROM, {
     duration: COUNT_UP_DURATION,
     delay: index * STAGGER_MS,
     enabled: inView,
@@ -24,7 +27,9 @@ function StatNumber({ target, format, index, inView }: { target: number; format:
       // Inter's normal digits — its tabular "1" is extra-wide and reads oddly at rest.
       style={{ fontVariantNumeric: value === target ? "normal" : "tabular-nums" }}
     >
-      {format(value)}
+      {/* Screen readers and crawlers get the real figure; the ticking number is decorative. */}
+      <span aria-hidden>{format(value)}</span>
+      <span className="sr-only">{format(target)}</span>
     </p>
   );
 }
@@ -38,9 +43,16 @@ function StatNumber({ target, format, index, inView }: { target: number; format:
 // an inline style would always beat it regardless of viewport width.
 const MOBILE_ORDER_CLASS = ["order-[2]", "order-[3]", "order-[1]", "order-[4]", "order-[5]"];
 
-/** `start`: when given, the numbers wait for it too — the hero's intro turns it on right
- * after its body copy has come in. Either way they only count once the row is on screen. */
-export function HeroStats({ start }: { start?: boolean } = {}) {
+/** Lets a hero that runs its own entrance (VersionHero) hold the count until its turn, without
+ * the page having to wire a prop through. */
+export const HeroStatsStart = createContext<boolean | undefined>(undefined);
+
+/** `start`: when given (or set by HeroStatsStart), the numbers wait for it too — the hero's intro
+ * turns it on right after its body copy has come in. Either way they only count once the row is
+ * on screen. */
+export function HeroStats({ start: startProp }: { start?: boolean } = {}) {
+  const startFromHero = useContext(HeroStatsStart);
+  const start = startProp ?? startFromHero;
   const ref = useRef<HTMLDivElement>(null);
   // Triggers once, the first time the stats row enters the viewport.
   const seen = useInView(ref, { once: true, amount: 0.4 });
@@ -58,7 +70,7 @@ export function HeroStats({ start }: { start?: boolean } = {}) {
         return (
           <div
             key={stat.label}
-            className={`flex flex-col items-center gap-[8px] sm:order-none sm:flex-1 ${MOBILE_ORDER_CLASS[index]} ${
+            className={`flex flex-col items-center ${isRbi ? "gap-[8px]" : "gap-[4px]"} sm:order-none sm:flex-1 ${MOBILE_ORDER_CLASS[index]} ${
               isRbi ? "col-span-2 justify-self-center" : ""
             }`}
           >
@@ -69,7 +81,7 @@ export function HeroStats({ start }: { start?: boolean } = {}) {
                 <Image src={stat.icon} alt="" fill sizes="64px" className="object-cover" />
               </div>
             )}
-            <p className="whitespace-nowrap font-display text-[10px] font-semibold uppercase tracking-[1.2px] text-ink/80 sm:font-eyebrow sm:text-h5 sm:tracking-[1.44px]">
+            <p className="whitespace-nowrap font-display text-[10px] font-semibold uppercase tracking-[1.2px] text-ink/80 sm:font-bold sm:text-h5 sm:tracking-[0.88px]">
               {stat.label}
             </p>
           </div>

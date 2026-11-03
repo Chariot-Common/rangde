@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rang De Wrap · Your year as a rangoli</title>
+<meta name="description" content="Your year on Rang De, drawn as a rangoli: the faces you backed, the things your money bought, and how far it travelled.">
+<meta property="og:title" content="My year on Rang De, as a rangoli">
+<meta property="og:description" content="Cows, looms, sewing machines and the faces behind them. What does your rangoli look like?">
+<meta name="theme-color" content="#0E0B1F">
+<link rel="icon" href="logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Parkinsans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#120E22; --lime:#D7F25C; --pink:#FF4FA3; --teal:#1F7A6A; --orange:#FF6A2B; --plum:#24123D; --cream:#FFF2DF; --gold:#FFC94A; --cobalt:#1F3BA8;
+    --display:Parkinsans, Inter, sans-serif; --sans:Inter, system-ui, sans-serif; --ease:cubic-bezier(.22,1,.36,1); --pop:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; background:#08060F; color:#fff; font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+  body{ display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; }
+  a{ color:inherit; }
+  button:focus-visible, a:focus-visible, input:focus-visible{ outline:3px solid var(--gold); outline-offset:2px; }
+  .backdrop{ position:fixed; inset:0; z-index:-1; background:radial-gradient(circle at 20% 15%, #2B1A55, transparent 50%), radial-gradient(circle at 85% 90%, #5C1440, transparent 45%), #08060F; }
+
+  .frame{ position:relative; width:min(100vw, calc(100dvh * 9 / 16)); height:min(100dvh, calc(100vw * 16 / 9)); overflow:hidden; background:var(--ink); color:#fff; transition:background .6s var(--ease), color .4s; }
+  @media (min-width:700px){ .frame{ height:min(92dvh, 860px); width:calc(min(92dvh, 860px) * 9 / 16); border-radius:28px; box-shadow:0 30px 80px rgba(0,0,0,.55); } }
+
+  .top{ position:absolute; z-index:8; left:0; right:0; top:0; padding:12px 14px 0; display:flex; flex-direction:column; gap:10px; }
+  .bars{ display:flex; gap:4px; }
+  .bars i{ flex:1; height:3px; border-radius:3px; background:rgba(255,255,255,.28); overflow:hidden; }
+  .bars i b{ display:block; height:100%; width:0; background:currentColor; }
+  .who{ display:flex; align-items:center; justify-content:space-between; }
+  .who .chip{ background:#fff; border-radius:8px; padding:3px 6px; display:flex; } .who img{ height:20px; }
+  .who span{ font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; opacity:.85; }
+  .who button{ font-size:22px; line-height:1; padding:2px 6px; }
+  .tap{ position:absolute; z-index:6; top:0; bottom:0; } .tap.l{ left:0; width:28%; } .tap.r{ right:0; width:72%; }
+
+  .slide{ position:absolute; z-index:5; inset:0; padding:84px 24px 24px; display:flex; flex-direction:column; pointer-events:none; }
+  .slide .act{ pointer-events:auto; }
+  .in{ animation:rise .7s var(--ease) both; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(22px); } }
+  .k{ font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.8; }
+  .big{ font-family:var(--display); font-weight:800; font-size:40px; line-height:42px; letter-spacing:-.02em; }
+  .huge{ font-family:var(--display); font-weight:800; font-size:110px; line-height:.88; letter-spacing:-.05em; }
+  .p{ font-size:16px; line-height:23px; font-weight:600; opacity:.92; }
+  .p b{ font-weight:800; }
+  .push{ margin-top:auto; }
+  .gap{ display:flex; flex-direction:column; gap:12px; }
+  .sample{ display:inline-block; align-self:flex-start; font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 9px; border-radius:999px; border:1.5px solid currentColor; opacity:.75; }
+  .ticker{ position:absolute; left:0; right:0; overflow:hidden; white-space:nowrap; font-family:var(--display); font-weight:800; font-size:13px; letter-spacing:.1em; padding:6px 0; background:currentColor; }
+  .ticker span{ display:inline-block; color:var(--tk, #120E22); animation:tick 14s linear infinite; }
+  @keyframes tick{ to{ transform:translateX(-50%); } }
+  .btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:50px; padding:0 16px; border-radius:999px; font-weight:800; font-size:15px; text-decoration:none; text-align:center; transition:transform .15s; }
+  .btn:active{ transform:scale(.97); }
+  .btn.w{ background:#fff; color:var(--ink); } .btn.o{ border:2px solid currentColor; } .btn.wa{ background:#25D366; color:#0b3d1f; } .btn.lime{ background:var(--lime); color:var(--ink); }
+  .row{ display:flex; gap:10px; } .row > *{ flex:1; }
+  .switch{ display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; font-weight:700; padding:10px 14px; border-radius:14px; background:rgba(255,255,255,.12); }
+  .switch input{ width:44px; height:24px; accent-color:var(--gold); }
+  .fine{ font-size:11px; line-height:16px; opacity:.65; }
+
+  /* 0 · intro: kolam dots */
+  .kolam{ position:absolute; inset:0; display:grid; grid-template-columns:repeat(7,1fr); place-items:center; padding:120px 30px; }
+  .kolam i{ width:7px; height:7px; border-radius:50%; background:#fff; opacity:0; animation:dot .5s var(--pop) forwards; }
+  @keyframes dot{ from{ opacity:0; transform:scale(0); } to{ opacity:.85; transform:none; } }
+  .kline{ position:absolute; inset:0; width:100%; height:100%; }
+  .kline path{ stroke-dasharray:1; stroke-dashoffset:1; animation:draw 2.6s .8s var(--ease) forwards; }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  .title-name{ font-family:var(--display); font-weight:800; font-size:64px; line-height:.95; letter-spacing:-.04em; }
+  .title-name em{ font-style:normal; display:block; color:var(--lime); }
+
+  /* 2 · things as stacked blocks */
+  .blocks{ display:flex; align-items:flex-end; justify-content:center; gap:8px; height:320px; margin-top:16px; }
+  .block{ position:relative; width:76px; background:var(--pink); border:3px solid var(--ink); box-shadow:8px -8px 0 var(--ink); display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:10px; transform-origin:bottom; animation:grow .9s var(--pop) both; }
+  .block svg{ width:34px; height:34px; }
+  .block b{ font-family:var(--display); font-weight:800; font-size:26px; line-height:28px; color:var(--ink); }
+  .block span{ position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:800; color:var(--ink); white-space:nowrap; }
+  @keyframes grow{ from{ transform:scaleY(0); } }
+
+  /* 3 · map */
+  .map{ width:100%; margin-top:8px; }
+  .map .st{ fill:rgba(215,242,92,.08); stroke:rgba(215,242,92,.35); stroke-width:1.2; }
+  .map .arc{ fill:none; stroke:var(--lime); stroke-width:3; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:1; animation:draw 1.2s var(--ease) forwards; }
+  .map .pin{ animation:dot .5s var(--pop) both; transform-box:fill-box; transform-origin:center; }
+  /* 4 · year rings */
+  .rings{ width:100%; margin-top:6px; }
+  .rings circle.r{ fill:none; stroke:#fff; stroke-width:2; stroke-dasharray:1; stroke-dashoffset:1; animation:draw 1.4s var(--ease) forwards; }
+  /* 5 · boomerang */
+  .boom{ position:relative; height:260px; margin:10px 0; }
+  .coin{ position:absolute; width:74px; height:74px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #FFE79A, var(--gold) 55%, #C98A12); border:3px solid var(--ink); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:800; font-size:28px; color:var(--ink); left:calc(50% - 37px); top:90px; animation:boom 3.2s var(--ease) infinite; }
+  @keyframes boom{ 0%{ transform:translate(-110px, 40px) rotate(0); } 35%{ transform:translate(110px, -60px) rotate(360deg); } 55%{ transform:translate(110px, -60px) rotate(360deg); } 85%{ transform:translate(-110px, 40px) rotate(720deg); } 100%{ transform:translate(-110px, 40px) rotate(720deg); } }
+  .boom .lbl{ position:absolute; font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .eq{ display:flex; align-items:baseline; gap:12px; font-family:var(--display); font-weight:800; }
+  .eq b{ font-size:72px; line-height:1; letter-spacing:-.03em; } .eq span{ font-size:30px; opacity:.6; }
+  /* 6 · percentile */
+  .rank{ position:relative; height:46px; border-radius:23px; background:rgba(18,14,34,.18); border:3px solid var(--ink); margin:26px 0 8px; overflow:hidden; }
+  .rank i{ position:absolute; inset:0; width:0; background:var(--ink); animation:fill 1.6s .4s var(--ease) forwards; }
+  @keyframes fill{ to{ width:var(--w); } }
+  .rank b{ position:absolute; right:14px; top:50%; transform:translateY(-50%); font-family:var(--display); font-weight:800; color:var(--ink); }
+  /* 7 · faces */
+  .faces{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-top:18px; }
+  .faces svg{ width:100%; height:auto; animation:dot .5s var(--pop) both; }
+  /* 9 · rangoli stage */
+  .stage{ position:absolute; z-index:3; left:50%; top:50%; width:96%; aspect-ratio:1; transform:translate(-50%,-48%); pointer-events:none; }
+  .stage svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .stage .ln{ stroke-dasharray:1; stroke-dashoffset:1; }
+  .stage.drawing .ln{ animation:draw var(--d, 1.2s) var(--t, 0s) ease-out forwards; }
+  .stage .fl{ opacity:0; transform:scale(.6); transform-origin:0 0; }
+  .stage.drawing .fl{ animation:pour 1s var(--t, 0s) var(--ease) forwards; }
+  @keyframes pour{ to{ opacity:1; transform:none; } }
+  .stage .flame{ opacity:0; transform-box:fill-box; transform-origin:50% 100%; }
+  .stage.drawing .flame{ animation:light .6s var(--t, 6s) var(--pop) forwards, flicker 1.2s calc(var(--t, 6s) + .6s) ease-in-out infinite alternate; }
+  @keyframes light{ from{ opacity:0; transform:scale(0); } to{ opacity:1; transform:none; } }
+  @keyframes flicker{ to{ transform:scale(1.08, .94) rotate(3deg); } }
+  .stage.done .ln{ stroke-dashoffset:0; } .stage.done .fl{ opacity:1; transform:none; } .stage.done .flame{ opacity:1; transform:none; }
+  .legend{ display:flex; flex-direction:column; gap:6px; font-size:12px; font-weight:700; }
+  .legend span{ display:flex; align-items:center; gap:8px; }
+  .legend i{ width:12px; height:12px; border-radius:50%; flex:none; }
+  /* 10 · personality card */
+  .pcard{ align-self:center; width:86%; aspect-ratio:3/4.2; border-radius:20px; background:#000; border:2px solid rgba(255,255,255,.2); box-shadow:0 0 60px rgba(255,201,74,.35); padding:16px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px; position:relative; overflow:hidden; animation:rise .8s var(--pop) both; }
+  .pcard .art{ width:88%; aspect-ratio:1; }
+  .pcard h3{ font-family:var(--display); font-weight:800; font-size:28px; line-height:30px; }
+  /* 11 · real photos */
+  .collage{ position:relative; height:390px; margin-top:8px; }
+  .polaroid{ position:absolute; width:118px; padding:7px 7px 24px; background:#fff; color:var(--ink); border-radius:4px; box-shadow:0 10px 24px rgba(0,0,0,.35); animation:drop .7s var(--pop) both; }
+  .polaroid img{ width:100%; aspect-ratio:1; object-fit:cover; display:block; background:#ddd; }
+  .polaroid span{ position:absolute; left:8px; right:8px; bottom:4px; font-size:11px; font-weight:800; line-height:14px; }
+  @keyframes drop{ from{ opacity:0; transform:translateY(-40px) rotate(0deg) scale(1.2); } }
+  .card-prev{ border-radius:16px; overflow:hidden; box-shadow:0 12px 36px rgba(0,0,0,.45); height:50%; aspect-ratio:9/16; align-self:center; }
+  .card-prev img{ display:block; width:100%; height:100%; object-fit:cover; }
+
+  /* Landing */
+  .screen{ position:absolute; z-index:9; inset:0; padding:56px 22px 22px; display:flex; flex-direction:column; gap:14px; overflow:auto; background:var(--ink); }
+  .screen[hidden]{ display:none; }
+  .screen h1{ font-family:var(--display); font-weight:800; font-size:44px; line-height:45px; letter-spacing:-.03em; }
+  .screen h1 em{ font-style:normal; color:var(--lime); }
+  .preview{ width:100%; max-width:310px; aspect-ratio:1; align-self:center; }
+  .preview svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .pick{ display:flex; gap:8px; }
+  .pick button{ flex:1; padding:8px 6px; border-radius:14px; border:2px solid rgba(255,255,255,.3); text-align:center; font-size:12px; font-weight:700; line-height:15px; }
+  .pick button b{ display:block; font-family:var(--display); font-size:15px; }
+  .pick button[aria-pressed="true"]{ background:var(--lime); color:var(--ink); border-color:var(--lime); }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:.01s !important; animation-delay:0s !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="backdrop"></div>
+<div class="frame" id="frame">
+  <div class="top" id="top" hidden>
+    <div class="bars" id="bars"></div>
+    <div class="who"><span class="chip"><img src="logo.svg" alt="Rang De"></span><span id="whoName"></span><button id="close" aria-label="Close">×</button></div>
+  </div>
+  <div class="stage" id="stage" aria-hidden="true" hidden></div>
+  <div class="slide" id="slide" aria-live="polite"></div>
+  <button class="tap l" id="tapL" aria-label="Previous" hidden></button>
+  <button class="tap r" id="tapR" aria-label="Next" hidden></button>
+  <section class="screen" id="landing">
+    <p class="k">Rang De Wrap · 2026</p>
+    <h1>Your year,<br>drawn as a <em>rangoli.</em></h1>
+    <p class="p">The faces you backed, the things your money bought, and the years you’ve been at it, all in one rangoli that only you have.</p>
+    <div class="preview" id="landingRg"></div>
+    <p class="k">Three sample investors</p>
+    <div class="pick" id="pick"></div>
+    <button class="btn lime" id="play">Play the Wrap</button>
+    <p class="fine">Prototype. The real Wrap reads everything from the investor’s Rang De account; they never type a thing.</p>
+  </section>
+</div>
+
+<script src="india.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const fmt = n => Math.round(n).toLocaleString('en-IN');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const PAUSE = new URLSearchParams(location.search).has('pause');
+
+  /* ─────────── What the money bought (line art, 24×24) ─────────── */
+  const MOTIF = {
+    cow:    { cat: 'animal', one: 'cow', many: 'cows', d: 'M4 6.2c1.6 0 2.6.5 3.3 1.3M20 6.2c-1.6 0-2.6.5-3.3 1.3M7.3 7.5C7.7 5.5 9.6 4.5 12 4.5s4.3 1 4.7 3l-.7 5.5c0 2.8-1.8 5.5-4 5.5s-4-2.7-4-5.5zM9.5 15.4c0-1 1.1-1.7 2.5-1.7s2.5.7 2.5 1.7-1.1 1.7-2.5 1.7-2.5-.7-2.5-1.7zM10.6 15.4h.01M13.4 15.4h.01M10 10.2h.01M14 10.2h.01' },
+    goat:   { cat: 'animal', one: 'goat', many: 'goats', d: 'M8.5 6.3C6.6 5.4 5.6 3.7 6.2 2.5c1 1 2 1.9 3.4 2.9M15.5 6.3c1.9-.9 2.9-2.6 2.3-3.8-1 1-2 1.9-3.4 2.9M8.6 6.3h6.8l-.6 7.6c-.4 2-1.5 3.1-2.8 3.1s-2.4-1.1-2.8-3.1zM10.2 10.3h.01M13.8 10.3h.01M11 17l1 3.2 1-3.2M5.6 8.4l3 .6M18.4 8.4l-3 .6' },
+    hen:    { cat: 'animal', one: 'flock of hens', many: 'flocks of hens', d: 'M6 13.8c0-4 2.8-6.2 6-6.2.9 0 1.8.2 2.6.6L16 6l1.6 1-1 1.9c.9 1 1.4 2.3 1.4 3.7 0 4-2.9 6.4-6 6.4s-6-2-6-5.2zM14.6 4.6c.5-1.1 1.6-1.1 2.1 0M17.9 9.6l2.1.8-2.1.7M14.7 10.2h.01M9.3 11.5c1.4 1.4 3.2 1.7 4.7.8M10 19l-.6 2M13.6 19l.6 2' },
+    sewing: { cat: 'craft', one: 'sewing machine', many: 'sewing machines', d: 'M3.5 18.5h17M5 18.5v-2h14v2M6.5 16.5V8.2c0-1.2.9-2.2 2.1-2.2h8.1c1.3 0 2.3 1 2.3 2.3v4.2h-3V9.6h-5.5v1.9H8.6M8.6 11.5v3.2M7.4 14.7h2.4M16.8 8.1h.01' },
+    loom:   { cat: 'craft', one: 'handloom', many: 'handlooms', d: 'M5 4h14M5 20h14M6.5 4v16M17.5 4v16M6.5 8l11 2.4M6.5 12l11 2.4M6.5 16l11 2.4M10 4v16M14 4v16' },
+    seed:   { cat: 'farm', one: 'bag of seeds', many: 'bags of seeds', d: 'M12 20v-8M12 12c0-3.6-2.6-6.2-6.2-6.2 0 3.6 2.6 6.2 6.2 6.2zM12 14.2c0-3 2.3-5.2 5.6-5.2 0 3-2.3 5.2-5.6 5.2zM4.5 20h15' },
+    wheat:  { cat: 'farm', one: 'wheat harvest', many: 'wheat harvests', d: 'M12 21V6.5M12 9c-2-.5-3.1-2-3.1-4.1 2 .5 3.1 2 3.1 4.1zM12 9c2-.5 3.1-2 3.1-4.1-2 .5-3.1 2-3.1 4.1zM12 13.2c-2-.5-3.1-2-3.1-4.1 2 .5 3.1 2 3.1 4.1zM12 13.2c2-.5 3.1-2 3.1-4.1-2 .5-3.1 2-3.1 4.1zM12 17.4c-2-.5-3.1-2-3.1-4.1 2 .5 3.1 2 3.1 4.1zM12 17.4c2-.5 3.1-2 3.1-4.1-2 .5-3.1 2-3.1 4.1z' },
+    fish:   { cat: 'fish', one: 'fishing net', many: 'fishing nets', d: 'M2.8 12c3-4.6 9.2-5.6 13.2-1 .5.6.5 1.4 0 2-4 4.6-10.2 3.6-13.2-1zM16 11l5-3.1v8.2L16 13M7 11.3h.01M9.6 9.1c.6 1.9.6 3.9 0 5.8' },
+    boat:   { cat: 'fish', one: 'boat repair', many: 'boat repairs', d: 'M3 14.5h18l-2.6 4H5.6zM12 14.5V3.5l6.2 8.8H12M12 6l-5.2 6.3H12' },
+    shop:   { cat: 'shop', one: 'kirana restock', many: 'kirana restocks', d: 'M4 9.2L5.5 5h13L20 9.2M4 9.2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2M5 11.2V20h14v-8.8M10 20v-5h4v5' },
+  };
+  const CATS = {
+    animal: { color: '#F5A623', deep: '#D17F0A', label: 'Animals', persona: 'The Herd Hero', line: 'Cows, goats and hens. You keep village kitchens, and incomes, running.', quip: 'Mostly animals. Very wholesome.' },
+    farm:   { color: '#3DAA5C', deep: '#23803F', label: 'Farming', persona: 'The Seed Sower', line: 'You put seeds in the ground. Harvests followed.', quip: 'Mostly seeds. You think in seasons.' },
+    craft:  { color: '#E0357F', deep: '#A9195C', label: 'Craft', persona: 'The Loom Lover', line: 'You back the hands that weave, stitch and dye.', quip: 'Mostly looms and machines. Very well dressed, your portfolio.' },
+    fish:   { color: '#2196C4', deep: '#14709A', label: 'Fisheries', persona: 'The Tide Turner', line: 'You back the people who bring in the catch.', quip: 'Mostly nets. Catch of the year.' },
+    shop:   { color: '#F0532F', deep: '#C23A1A', label: 'Shops', persona: 'The Shutter Raiser', line: 'You keep shutters rolling up every morning in small-town India.', quip: 'Mostly shops. Shutters up!' },
+  };
+  const icon = (d, stroke = '#fff', sw = 1.6) => `<svg viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+
+  /* ─────────── Sample investors (in the real Wrap, all of this comes from their account) ─────────── */
+  const PLACES = { Pune: [18.52, 73.86], Dubai: [25.2, 55.27], Chennai: [13.08, 80.27], Udaipur: [24.58, 73.71], Dhar: [22.6, 75.3], Nashik: [20, 73.79], Dhubri: [26.02, 89.98], Imphal: [24.81, 93.94], Buldhana: [20.53, 76.18], Puri: [19.81, 85.83], Bhuj: [23.25, 69.67], Varanasi: [25.32, 82.97], Kolhapur: [16.7, 74.24], Barmer: [25.75, 71.39], Jorhat: [26.75, 94.2], Kalahandi: [19.91, 83.17], Bankura: [23.23, 87.07], Kanchipuram: [12.83, 79.7], Malda: [25, 88.14], Theni: [10.01, 77.48], Raichur: [16.2, 77.36] };
+  // [first name, place, what it bought, woman?, backer no., days to fill, ₹]
+  const INVESTORS = [
+    { name: 'Ananya', home: 'Pune', since: 2023, history: [9, 14, 16, 18], earlyPct: 82, repaid: 6840, relent: 4500, loans: [
+      ['Kamla', 'Udaipur', 'cow', 1, 3, 2, 1000], ['Sunita', 'Dhar', 'sewing', 1, 12, 6, 1000], ['Bhagwati', 'Barmer', 'goat', 1, 4, 3, 500], ['Rajesh', 'Nashik', 'seed', 0, 20, 9, 1000], ['Lakshmi', 'Kanchipuram', 'loom', 1, 7, 4, 1000], ['Geeta', 'Dhar', 'shop', 1, 2, 1, 500],
+      ['Anil', 'Puri', 'fish', 0, 15, 8, 1000], ['Parvati', 'Kolhapur', 'cow', 1, 9, 5, 500], ['Ramesh', 'Buldhana', 'wheat', 0, 30, 11, 1000], ['Meera', 'Varanasi', 'loom', 1, 5, 3, 1000], ['Saroj', 'Udaipur', 'hen', 1, 11, 4, 500], ['Rina', 'Dhubri', 'fish', 1, 25, 10, 1000],
+      ['Asha', 'Bankura', 'sewing', 1, 1, 2, 500], ['Pooja', 'Imphal', 'seed', 1, 8, 6, 1000], ['Mohan', 'Kalahandi', 'cow', 0, 14, 7, 500], ['Shanti', 'Bhuj', 'sewing', 1, 6, 3, 1000], ['Usha', 'Malda', 'shop', 1, 18, 9, 1000], ['Kiran', 'Jorhat', 'goat', 0, 10, 5, 500] ] },
+    { name: 'Rohan', home: 'Dubai', since: 2024, nri: true, history: [5, 12], earlyPct: 91, repaid: 7200, relent: 7200, loans: [
+      ['Fatima', 'Bhuj', 'sewing', 1, 2, 2, 2000], ['Jaya', 'Varanasi', 'loom', 1, 4, 3, 2000], ['Salma', 'Malda', 'sewing', 1, 6, 4, 1000], ['Dipali', 'Jorhat', 'loom', 1, 3, 5, 2000], ['Rafiq', 'Puri', 'boat', 0, 9, 6, 1000], ['Nirmala', 'Kanchipuram', 'loom', 1, 1, 1, 2000],
+      ['Babita', 'Bankura', 'sewing', 1, 5, 3, 1000], ['Hari', 'Dhubri', 'fish', 0, 12, 8, 1000], ['Leela', 'Udaipur', 'shop', 1, 7, 4, 1000], ['Mamta', 'Imphal', 'loom', 1, 2, 2, 2000], ['Gopal', 'Kalahandi', 'seed', 0, 16, 9, 1000], ['Sushila', 'Barmer', 'sewing', 1, 8, 5, 1000] ] },
+    { name: 'Meera', home: 'Chennai', since: 2021, history: [6, 10, 13, 17, 21, 24], earlyPct: 67, repaid: 9600, relent: 3000, loans: [
+      ['Selvi', 'Theni', 'seed', 1, 4, 3, 500], ['Murugan', 'Theni', 'wheat', 0, 22, 9, 500], ['Kavya', 'Raichur', 'seed', 1, 6, 4, 500], ['Basamma', 'Raichur', 'cow', 1, 3, 2, 500], ['Ravi', 'Buldhana', 'wheat', 0, 17, 8, 500], ['Sharada', 'Kolhapur', 'seed', 1, 9, 5, 500],
+      ['Durga', 'Dhar', 'hen', 1, 2, 2, 500], ['Lata', 'Nashik', 'seed', 1, 11, 6, 500], ['Gauri', 'Udaipur', 'cow', 1, 5, 3, 500], ['Prakash', 'Kalahandi', 'wheat', 0, 28, 12, 500], ['Anjali', 'Puri', 'fish', 1, 7, 4, 500], ['Sita', 'Varanasi', 'seed', 1, 13, 6, 500],
+      ['Rekha', 'Barmer', 'goat', 1, 1, 1, 500], ['Vinod', 'Raichur', 'shop', 0, 19, 9, 500], ['Kamala', 'Kanchipuram', 'loom', 1, 8, 4, 500], ['Neela', 'Theni', 'seed', 1, 3, 2, 500], ['Manju', 'Bankura', 'wheat', 1, 10, 5, 500], ['Lalita', 'Kolhapur', 'cow', 1, 6, 3, 500],
+      ['Shobha', 'Dhubri', 'seed', 1, 21, 10, 500], ['Yamuna', 'Imphal', 'seed', 1, 12, 7, 500], ['Kusum', 'Malda', 'hen', 1, 4, 3, 500], ['Raju', 'Jorhat', 'wheat', 0, 24, 11, 500], ['Indira', 'Bhuj', 'sewing', 1, 2, 2, 500], ['Padma', 'Theni', 'seed', 1, 5, 3, 500] ] },
+  ];
+  // Real entrepreneurs listed publicly on rangde.in in October 2026.
+  const REAL = [
+    ['Rekha', 'Udaipur', 'Rekha-42-img.jpg'], ['Durga', 'Dhar', 'durgamanawar01-img.jpg'], ['Pukan', 'Dhubri', '10020698-img.jpg'], ['Priyanka', 'Buldhana', '5035-img.jpg'],
+    ['Chunni', 'Udaipur', 'Chunni-Bai-8-img.jpg'], ['Aribam', 'Imphal East', 'MKF-09-RG-26-27-img.jpg'], ['Monika', 'Dhar', 'manawrmonika037-img.jpg'], ['Khandu', 'Nashik', '51603-017-633-01-5111-img.jpg'],
+  ].map(([n, p, f]) => ({ n, p, src: `https://rangde.imgix.net/bImg/${f}?auto=compress,format&w=240&h=240&fit=crop&crop=faces` }));
+  const COMMUNITY = { investors: 11854, loans: 31817, states: 29, women: 63 };
+
+  const km = (a, b) => { const [la1, lo1] = PLACES[a], [la2, lo2] = PLACES[b], r = Math.PI / 180, x = Math.sin((la2 - la1) * r / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin((lo2 - lo1) * r / 2) ** 2; return 6371 * 2 * Math.asin(Math.sqrt(x)); };
+  function insights(inv) {
+    const L = inv.loans.map(([who, place, motif, woman, backer, days, amt]) => ({ who, place, motif, woman: !!woman, backer, days, amt, cat: MOTIF[motif].cat, km: km(inv.home, place) }));
+    const invested = L.reduce((a, l) => a + l.amt, 0);
+    const things = {}; L.forEach(l => things[l.motif] = (things[l.motif] || 0) + 1);
+    const cats = {}; L.forEach(l => cats[l.cat] = (cats[l.cat] || 0) + 1);
+    const catList = Object.entries(cats).sort((a, b) => b[1] - a[1]), top = catList[0];
+    const persona = top[1] / L.length < .35 ? { persona: 'The Rangoli Maker', line: 'No single colour wins. Your backing spreads across every kind of work.', color: '#FFC94A', quip: 'A bit of everything. That’s a rangoli.' } : CATS[top[0]];
+    return { L, invested, things: Object.entries(things).sort((a, b) => b[1] - a[1]), cats: catList, far: L.reduce((a, l) => l.km > a.km ? l : a, L[0]), totalKm: L.reduce((a, l) => a + l.km, 0), early: L.filter(l => l.backer <= 5), fastest: L.reduce((a, l) => l.days < a.days ? l : a, L[0]), women: L.filter(l => l.woman).length, multiplier: (invested + inv.relent) / invested, persona };
+  }
+
+  /* ─────────── The rangoli ───────────
+     8-fold, mirrored, like a hand-drawn rangoli. Each ring means something:
+       centre  · diya and lotus
+       ring 1  · 16 faces: the people you backed (a bindi = a woman, in proportion)
+       ring 2  · what your money bought, mirrored in pairs; your top things take more of the 8 sections
+       ring 3  · leaves and swirls; one petal per year you’ve been backing, in every section
+       border  · scallops in your category colours, kolam dots
+     Lines draw first (like chalk), then colour pours in. */
+  function allocate(I, n) {
+    const tot = I.L.length, raw = I.things.map(([m, c]) => [m, c / tot * n]);
+    const a = raw.map(([m, v]) => [m, Math.floor(v), v % 1]); let left = n - a.reduce((s, x) => s + x[1], 0);
+    [...a].sort((x, y) => y[2] - x[2]).forEach(x => { if (left > 0) { x[1]++; left--; } });
+    const seq = []; a.forEach(([m, c]) => { for (let i = 0; i < c; i++) seq.push(m); });
+    // Spread repeats around the circle
+    const out = Array(n); seq.forEach((m, i) => out[(i * 3) % n] = m); return out.map((m, i) => m || seq[i % seq.length]);
+  }
+  function rangoli(inv, I, { anim = false, mini = false } = {}) {
+    const N = 8, segAng = 360 / N, years = inv.history.length;
+    const segMotif = allocate(I, N);
+    const womenFaces = Math.round(I.women / I.L.length * 16);
+    const P = (r, deg) => { const a = (deg - 90) * Math.PI / 180; return [Math.cos(a) * r, Math.sin(a) * r]; };
+    const T = (r, deg, rot = deg) => { const [x, y] = P(r, deg); return `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot.toFixed(1)})`; };
+    const sector = (r0, r1, a0, a1) => { const [x0, y0] = P(r0, a0), [x1, y1] = P(r1, a0), [x2, y2] = P(r1, a1), [x3, y3] = P(r0, a1), lg = a1 - a0 > 180 ? 1 : 0; return `M${x0.toFixed(1)} ${y0.toFixed(1)}L${x1.toFixed(1)} ${y1.toFixed(1)}A${r1} ${r1} 0 ${lg} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}L${x3.toFixed(1)} ${y3.toFixed(1)}A${r0} ${r0} 0 ${lg} 0 ${x0.toFixed(1)} ${y0.toFixed(1)}Z`; };
+    let fills = '', lines = '';
+    const L = (d, t, dur = 1.1, extra = '') => `<path class="ln" pathLength="1" d="${d}" style="--t:${t.toFixed(2)}s;--d:${dur}s" ${extra}/>`;
+    const C = (r, t, dur = 1.4) => `<circle class="ln" pathLength="1" r="${r}" style="--t:${t.toFixed(2)}s;--d:${dur}s"/>`;
+    const F = (d, fill, t, extra = '') => `<path class="fl" d="${d}" fill="${fill}" style="--t:${t.toFixed(2)}s" ${extra}/>`;
+    // Timeline: lines 0–3.4s by ring, colour 3.6–5.6s, flame at 6s
+    const pal = I.cats.map(([c]) => CATS[c]);
+    // Colour bands
+    fills += F('M0 -455A455 455 0 1 1 -.1 -455Z', '#2A1747', 3.4);
+    for (let s = 0; s < N; s++) {
+      const a0 = s * segAng, a1 = a0 + segAng, cat = CATS[MOTIF[segMotif[s]].cat];
+      fills += F(sector(205, 330, a0, a1), s % 2 ? cat.color : cat.deep, 3.7 + s * .08);
+      const c3 = pal[s % pal.length];
+      fills += F(sector(330, 455, a0, a0 + segAng / 2), c3.deep, 4.3 + s * .06, 'opacity=".55"');
+      fills += F(sector(330, 455, a0 + segAng / 2, a1), c3.color, 4.3 + s * .06, 'opacity=".55"');
+    }
+    fills += F('M0 -110A110 110 0 1 1 -.1 -110Z', '#FFC94A', 3.5);
+    // Scalloped border
+    for (let i = 0; i < 48; i++) { const [x, y] = P(470, i * 7.5); fills += `<circle class="fl" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="17" fill="${pal[i % pal.length].color}" style="--t:${(4.8 + i * .01).toFixed(2)}s"/>`; }
+    // Ring outlines and radial guides (drawn first, like the chalk outline)
+    lines += C(110, 0) + C(205, .2) + C(330, .4) + C(455, .6);
+    for (let s = 0; s < N; s++) { const [x0, y0] = P(110, s * segAng), [x1, y1] = P(455, s * segAng); lines += L(`M${x0.toFixed(1)} ${y0.toFixed(1)}L${x1.toFixed(1)} ${y1.toFixed(1)}`, .6 + s * .05, .7); }
+    // Centre: lotus + diya
+    for (let i = 0; i < 8; i++) lines += `<g transform="rotate(${i * 45})">${L('M0 -36C14 -58 14 -80 0 -96C-14 -80 -14 -58 0 -36Z', 1 + i * .04, .8)}</g>`;
+    lines += L('M-34 8C-34 30 -16 40 0 40S34 30 34 8Z M-34 8H34', 1.4, .9);
+    // Ring 1: faces (bindi + bun = woman)
+    for (let i = 0; i < 16; i++) {
+      const deg = i * 22.5 + 11.25, woman = i % 2 === 0 ? i / 2 < Math.ceil(womenFaces / 2) : (i - 1) / 2 < Math.floor(womenFaces / 2), t = 1.6 + i * .05;
+      const skin = ['#E8A56A', '#C98352', '#D9955E', '#B97342'][i % 4]; fills += `<g transform="${T(158, deg)}"><circle class="fl" r="24" fill="${skin}" style="--t:${(3.6 + i * .03).toFixed(2)}s"/>${woman ? `<path class="fl" d="M-22 -10C-18 -28 18 -28 22 -10C14 -18 -14 -18 -22 -10Z" fill="#2A1A12" style="--t:${(3.65 + i * .03).toFixed(2)}s"/>` : `<path class="fl" d="M-21 -12C-16 -26 16 -26 21 -12C12 -18 -12 -18 -21 -12Z" fill="#2A1A12" style="--t:${(3.65 + i * .03).toFixed(2)}s"/>`}</g>`;
+      lines += `<g transform="${T(158, deg)}">${L('M0 -24A24 24 0 1 1 -.1 -24Z', t, .7)}${L('M-9 -4h.1M9 -4h.1', t + .3, .3, 'stroke-width="5"')}${L('M-8 8C-4 13 4 13 8 8', t + .3, .4)}${woman ? L('M-22 -10C-18 -28 18 -28 22 -10M-26 -22A7 7 0 1 1 -25 -21', t + .2, .5) + `<circle class="fl" cy="-12" r="3.6" fill="#D7262E" style="--t:${(3.9 + i * .03).toFixed(2)}s"/>` : L('M-21 -12C-16 -26 16 -26 21 -12', t + .2, .5)}</g>`;
+    }
+    // Ring 2: what the money bought, mirrored pairs (scaled from the 24px motifs)
+    for (let s = 0; s < N; s++) {
+      const m = MOTIF[segMotif[s]], base = s * segAng;
+      [base + 12, base + segAng - 12].forEach((deg, j) => {
+        const t = 2.1 + s * .1 + j * .05;
+        lines += `<g transform="${T(268, deg)} scale(${j ? -3.2 : 3.2} 3.2) translate(-12 -12)" stroke-width=".9">${L(m.d, t, 1)}</g>`;
+      });
+      lines += `<g transform="${T(268, base + segAng / 2)}">${L('M0 -18C8 -8 8 8 0 18C-8 8 -8 -8 0 -18Z', 2.3 + s * .1, .6)}</g>`;
+    }
+    // Ring 3: leaves, swirls, teardrops, and one petal per year of backing
+    for (let s = 0; s < N; s++) {
+      const base = s * segAng, t = 2.8 + s * .07;
+      lines += `<g transform="${T(395, base + segAng / 2)}">${L('M0 40C-30 20 -30 -20 0 -40C30 -20 30 20 0 40Z M0 40V-40', t, .9)}${L('M-14 -10C-40 -10 -40 22 -18 20C-6 18 -10 2 -20 6', t + .2, .7)}${L('M14 -10C40 -10 40 22 18 20C6 18 10 2 20 6', t + .2, .7)}</g>`;
+      for (let y = 0; y < years; y++) { const deg = base + 5 + y * ((segAng - 10) / Math.max(1, years - 1 || 1)); lines += `<g transform="${T(440, years === 1 ? base + 8 : deg)}">${L('M0 8C-6 2 -6 -6 0 -12C6 -6 6 2 0 8Z', t + .3 + y * .03, .4)}</g>`; }
+      const [dx, dy] = P(352, base + 6); lines += `<circle class="fl" cx="${dx.toFixed(1)}" cy="${dy.toFixed(1)}" r="4" fill="#fff" style="--t:${(4.6 + s * .03).toFixed(2)}s"/>`;
+      const [ex, ey] = P(352, base + segAng - 6); lines += `<circle class="fl" cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="4" fill="#fff" style="--t:${(4.6 + s * .03).toFixed(2)}s"/>`;
+    }
+    // Kolam dots outside
+    let dots = ''; for (let i = 0; i < 96; i++) { const [x, y] = P(505, i * 3.75); dots += `<circle class="fl" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.4" fill="#FFC94A" style="--t:${(5 + i * .004).toFixed(2)}s"/>`; }
+    const flame = `<path class="flame" d="M0 -30C10 -16 12 -8 12 -2A12 12 0 0 1 -12 -2C-12 -8 -10 -16 0 -30Z" fill="#FF6A2B" stroke="#FFC94A" stroke-width="3" style="--t:5.8s"/><path class="flame" d="M0 -18C5 -11 6 -7 6 -4A6 6 0 0 1 -6 -4C-6 -7 -5 -11 0 -18Z" fill="#FFE79A" style="--t:5.9s"/>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-540 -540 1080 1080">
+      <defs><filter id="rough" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter>
+      <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="2"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 -.22"/></filter>
+      <clipPath id="disc"><circle r="490"/></clipPath></defs>
+      <g filter="url(#rough)">${fills}</g>
+      <rect x="-540" y="-540" width="1080" height="1080" filter="url(#grain)" clip-path="url(#disc)" opacity="${mini ? .5 : .35}" style="mix-blend-mode:overlay"/>
+      <g fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">${lines}</g>
+      ${dots}<g transform="translate(0 -6)">${flame}</g>
+    </svg>`;
+  }
+
+  /* ─────────── Slides: tease → reveal → share, in Wrapped’s rhythm ─────────── */
+  const frame = $('#frame'), slideEl = $('#slide'), stage = $('#stage');
+  let INV = INVESTORS[0], I = insights(INV), idx = 0, t0 = 0, dur = 0, paused = false, hideAmt = false, raf = 0;
+  const thingName = (m, c) => c > 1 ? MOTIF[m].many : MOTIF[m].one;
+  const ticker = (text, bg, fg) => `<div class="ticker" style="color:${bg};--tk:${fg}"><span>${(text + ' • ').repeat(16)}</span></div>`;
+
+  const SLIDES = [
+    // 0 · rewind: kolam dots, a line draws through them
+    { bg: '#120E22', d: 4200, html: () => `
+        <div class="kolam">${Array.from({ length: 49 }, (_, i) => `<i style="animation-delay:${(i % 7 + Math.floor(i / 7)) * .05}s"></i>`).join('')}</div>
+        <svg class="kline" viewBox="0 0 100 178" preserveAspectRatio="none"><path pathLength="1" d="M8 40C30 20 50 70 72 40S95 90 70 110 20 90 30 130 80 150 92 140" fill="none" stroke="#D7F25C" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <p class="p in push" style="text-align:center;font-size:18px;position:relative">Rewinding your year on Rang De…</p>` },
+    // 1 · title
+    { bg: '#D7F25C', fg: '#120E22', d: 4200, html: () => `
+        <p class="k in">Rang De Wrap · 2026</p>
+        <p class="title-name in" style="margin-top:18px;animation-delay:.15s">${esc(INV.name)}’s<em style="color:#FF4FA3">year in</em>rangoli.</p>
+        <p class="p in push" style="animation-delay:.4s">Every person you backed left a mark. Let’s draw it.</p>
+        <span class="sample in" style="margin-top:12px;animation-delay:.5s">Sample investor · ${esc(INV.home)}</span>` },
+    // 2 · things, as 3D blocks
+    { bg: '#FF4FA3', fg: '#120E22', d: 7200, html: () => { const top = I.things.slice(0, 4), max = top[0][1]; return `
+        <p class="k in">Your money turned into things</p>
+        <p class="big in" style="animation-delay:.1s">${top[0][1]} ${thingName(top[0][0], top[0][1])}.</p>
+        <div class="blocks">${top.map(([m, c], i) => `<div class="block" style="height:${60 + c / max * 200}px;background:${i ? '#fff' : '#D7F25C'};animation-delay:${.3 + i * .15}s">${icon(MOTIF[m].d, '#120E22', 1.9)}<b>${c}</b><span>${thingName(m, c)}</span></div>`).join('')}</div>
+        <p class="p in push" style="animation-delay:1s">${I.persona.quip || ''} Your share sat alongside other investors’ in every one.</p>`; } },
+    // 3 · the trip, on India
+    { bg: '#120E22', d: 7500, html: () => mapSlide() },
+    // 4 · quality time: year rings
+    { bg: '#1F7A6A', d: 6500, html: () => { const h = INV.history, y0 = INV.since; return `
+        <p class="k in">We’ve spent some quality time</p>
+        <p class="big in" style="animation-delay:.1s">Backing since ${y0}.</p>
+        <svg class="rings" viewBox="0 0 320 260">${h.map((n, i) => `<circle class="r" pathLength="1" cx="0" cy="260" r="${70 + i * (180 / h.length)}" style="animation-delay:${.3 + i * .25}s;stroke-opacity:${.35 + i / h.length * .65}"/>${(() => { const r = 70 + i * (180 / h.length), x = r * .72 + 4, y = 260 - r * .69; return `<g class="in" style="animation-delay:${.6 + i * .25}s"><circle cx="${x - 4}" cy="${y + 3}" r="4" fill="#D7F25C"/><text x="${x + 4}" y="${y}" fill="#fff" font-family="Inter" font-weight="800" font-size="13">${y0 + i}</text><text x="${x + 4}" y="${y + 14}" fill="#D7F25C" font-family="Inter" font-weight="700" font-size="10">${n} people</text></g>`; })()}`).join('')}<circle cx="0" cy="260" r="10" fill="#D7F25C"/></svg>
+        <p class="p in push" style="animation-delay:1.4s"><b>${h.length} year${h.length > 1 ? 's' : ''}</b>, ${h[h.length - 1]} people. Each ring is a year you kept showing up.</p>`; } },
+    // 5 · boomerang rupee
+    { bg: '#FF6A2B', fg: '#120E22', d: 7000, html: () => `
+        <p class="k in">Your rupee is a boomerang</p>
+        <div class="eq in" style="animation-delay:.1s"><b>₹1</b><span>→</span><b style="color:#fff">₹${I.multiplier.toFixed(1)}</b></div>
+        <div class="boom"><div class="coin">₹</div><span class="lbl" style="left:4%;bottom:6px">You</span><span class="lbl" style="right:4%;top:22px">Someone new</span></div>
+        <p class="p in" style="animation-delay:.6s">${hideAmt ? 'Part of what came back' : `<b>₹${fmt(INV.repaid)}</b> came back this year, and <b>₹${fmt(INV.relent)}</b> of it`} went straight out again. Every rupee did ${I.multiplier.toFixed(1)}× the work.</p>
+        <label class="switch act push"><span>Hide amounts when I share</span><input type="checkbox" id="hideAmt" ${hideAmt ? 'checked' : ''}></label>` },
+    // 6 · early
+    { bg: '#D7F25C', fg: '#120E22', d: 6500, html: () => `
+        <p class="k in">Early bird</p>
+        <p class="huge in" style="animation-delay:.1s">${INV.earlyPct}%</p>
+        <p class="big in" style="font-size:30px;line-height:34px;animation-delay:.25s">You backed people earlier than ${INV.earlyPct}% of investors.</p>
+        <div class="rank in" style="--w:${INV.earlyPct}%;animation-delay:.3s"><i></i><b>${INV.earlyPct}%</b></div>
+        <p class="p in push" style="animation-delay:.6s">Fastest of all: <b>${esc(I.fastest.who)}</b> in ${esc(I.fastest.place)} was funded in ${I.fastest.days} day${I.fastest.days > 1 ? 's' : ''}. You were backer no. ${I.fastest.backer}.</p>
+        <span class="sample in" style="margin-top:8px">Sample comparison</span>` },
+    // 7 · faces
+    { bg: '#FFF2DF', fg: '#120E22', d: 6500, html: () => `
+        <p class="k in">The faces in your rangoli</p>
+        <p class="big in" style="animation-delay:.1s"><span style="color:#E0357F">${I.women}</span> of your ${I.L.length} were women.</p>
+        <div class="faces">${I.L.map((l, i) => face(l.woman, i)).join('')}</div>
+        <p class="p in push" style="animation-delay:1s">Across Rang De, ${COMMUNITY.women}% of borrowers are women. Watch for the bindis in your rangoli.</p>` },
+    // 8 · drumroll
+    { bg: '#120E22', d: 2600, html: () => `
+        <svg class="kline" viewBox="0 0 100 178" preserveAspectRatio="none"><path pathLength="1" d="M50 30C80 30 92 60 80 90S30 120 22 92 40 50 60 64" fill="none" stroke="#FF4FA3" stroke-width="2" stroke-linecap="round" style="animation-delay:0s"/></svg>
+        <p class="big in" style="margin:auto 0;text-align:center;position:relative">Drumroll, please…</p>` },
+    // 9 · the rangoli draws itself
+    { bg: '#24123D', d: 10500, stage: true, html: () => `
+        <p class="k in">Your rangoli</p>
+        <p class="big in" style="font-size:28px;line-height:32px;animation-delay:.1s">No one else has this one.</p>
+        <div class="legend push in" style="animation-delay:6.4s">
+          <span><i style="background:#D9955E"></i>Faces: the ${I.L.length} people you backed (bindi = woman)</span>
+          <span><i style="background:${CATS[I.cats[0][0]].color}"></i>Objects: what your money bought</span>
+          <span><i style="background:#fff"></i>Petals: ${INV.history.length} year${INV.history.length > 1 ? 's' : ''} of backing</span>
+        </div>` },
+    // 10 · personality card
+    { bg: '#0B0A12', d: 7000, html: () => `
+        <div class="pcard"><p class="k" style="opacity:.7">Me in 2026:</p><div class="art">${rangoli(INV, I, { mini: true })}</div><h3 style="color:${I.persona.color}">${I.persona.persona}</h3><p class="p" style="font-size:13px;line-height:18px">${I.persona.line}</p></div>
+        <p class="fine push in" style="text-align:center;animation-delay:.6s">RANG DE WRAP · RANGDE.IN</p>` },
+    // 11 · real people (real photos)
+    { bg: '#1F3BA8', d: 8000, html: () => `
+        <p class="k in">Faces of Rang De, right now</p>
+        <p class="big in" style="font-size:30px;line-height:34px;animation-delay:.1s">These are real people, listed on Rang De this month.</p>
+        <div class="collage">${REAL.slice(0, 6).map((r, i) => `<div class="polaroid" style="left:${[2, 36, 64, 6, 38, 66][i]}%;top:${[2, 0, 8, 54, 50, 58][i]}%;transform:rotate(${[-6, 4, -3, 5, -4, 7][i]}deg);animation-delay:${.3 + i * .15}s"><img src="${r.src}" alt="" loading="lazy"><span>${esc(r.n)}, ${esc(r.p)}</span></div>`).join('')}</div>
+        <a class="btn w act push" href="https://rangde.in/invest/individuals?utm_source=wrap&utm_medium=story" target="_blank" rel="noopener">Meet who’s next ↗</a>` },
+    // 12 · share
+    { bg: '#120E22', d: 0, share: true, html: () => `
+        <p class="k">Your share card</p>
+        <div class="card-prev act" style="margin-top:10px"><img id="cardImg" alt="Your Rang De Wrap share card"></div>
+        <div class="gap push act">
+          <label class="switch"><span>Hide amounts</span><input type="checkbox" id="hideAmt2" ${hideAmt ? 'checked' : ''}></label>
+          <div class="row"><button class="btn w" id="dl">Save image</button><a class="btn wa" id="wa" target="_blank" rel="noopener">WhatsApp</a></div>
+          <div class="row"><button class="btn o" id="replay">Replay</button><button class="btn o" id="others">Other investors</button></div>
+        </div>` },
+  ];
+  function face(woman, i) {
+    return `<svg viewBox="-30 -30 60 60" style="animation-delay:${.3 + i * .05}s" fill="none" stroke="#120E22" stroke-width="2.6" stroke-linecap="round"><circle r="22" fill="${woman ? '#FFC94A' : '#fff'}"/><path d="M-8 -3h.1M8 -3h.1" stroke-width="5"/><path d="M-7 8C-3 12 3 12 7 8"/>${woman ? '<path d="M-20 -9C-16 -26 16 -26 20 -9"/><circle cx="-24" cy="-16" r="6"/><circle cy="-11" r="3" fill="#D7262E" stroke="none"/>' : '<path d="M-19 -11C-14 -24 14 -24 19 -11"/>'}</svg>`;
+  }
+  function mapSlide() {
+    const A = window.AFTER_DARK, K = Math.cos(22 * Math.PI / 180), SC = 1000 / ((97.5 - 68) * K);
+    const pj = ([la, lo]) => [(lo - 68) * K * SC, (37.6 - la) * SC];
+    const home = PLACES[INV.home], abroad = INV.nri;
+    const h = abroad ? [-160, 380] : pj(home);
+    const states = A ? A.states.map(s => `<path class="st" d="${s.path}"/>`).join('') : '';
+    const arcs = I.L.map((l, i) => { const [x, y] = pj(PLACES[l.place]), mx = (h[0] + x) / 2, my = Math.min(h[1], y) - 140; return `<path class="arc" pathLength="1" d="M${h[0].toFixed(0)} ${h[1].toFixed(0)}Q${mx.toFixed(0)} ${my.toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)}" style="animation-delay:${.4 + i * .08}s;stroke:${CATS[l.cat].color};opacity:.85"/><circle class="pin" cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="11" fill="${CATS[l.cat].color}" stroke="#120E22" stroke-width="4" style="animation-delay:${1 + i * .08}s"/>`; }).join('');
+    return `
+      <p class="k in">Your money took a trip</p>
+      <p class="huge in" style="font-size:66px;animation-delay:.1s">${fmt(I.totalKm)}<span style="font-size:24px"> km</span></p>
+      <svg class="map" viewBox="${abroad ? '-260 -40 1290 1220' : '-40 -40 1080 1220'}">${states}${arcs}<circle cx="${h[0]}" cy="${h[1]}" r="18" fill="#D7F25C" stroke="#120E22" stroke-width="5"/><text x="${h[0]}" y="${h[1] + 54}" fill="#D7F25C" font-family="Inter" font-weight="800" font-size="40" text-anchor="middle">${esc(INV.home)}</text></svg>
+      <p class="p push in" style="animation-delay:1.2s">From ${esc(INV.home)} to ${I.L.length} people. Furthest: <b>${esc(I.far.who)}</b> in ${esc(I.far.place)}, ${fmt(I.far.km)} km away.${abroad ? ' Home, from abroad.' : ''}</p>`;
+  }
+
+  const bars = $('#bars');
+  function startStory() {
+    I = insights(INV);
+    $('#whoName').textContent = `${INV.name}’s 2026`;
+    bars.innerHTML = SLIDES.map(() => '<i><b></b></i>').join('');
+    $('#landing').hidden = true;
+    ['#top', '#tapL', '#tapR'].forEach(s => $(s).hidden = false);
+    show(0);
+  }
+  function show(i) {
+    idx = Math.max(0, Math.min(SLIDES.length - 1, i));
+    const s = SLIDES[idx];
+    frame.style.background = s.bg; frame.style.color = s.fg || '#fff';
+    $('#top').style.color = s.fg || '#fff';
+    stage.hidden = !s.stage;
+    if (s.stage) { stage.innerHTML = rangoli(INV, I, { anim: true }); stage.classList.remove('drawing', 'done'); void stage.offsetWidth; stage.classList.add(reduce ? 'done' : 'drawing'); }
+    slideEl.innerHTML = s.html();
+    [...bars.children].forEach((b, j) => b.firstChild.style.width = j < idx ? '100%' : '0');
+    const h1 = $('#hideAmt'), h2 = $('#hideAmt2');
+    if (h1) h1.onchange = () => { hideAmt = h1.checked; show(idx); };
+    if (h2) h2.onchange = () => { hideAmt = h2.checked; drawCard(); };
+    if (s.share) setupShare();
+    dur = PAUSE ? 0 : s.d; t0 = performance.now(); paused = false;
+    cancelAnimationFrame(raf); if (dur) raf = requestAnimationFrame(tick);
+  }
+  let lastT = 0;
+  function tick(now) {
+    if (paused) t0 += now - lastT; lastT = now;
+    const p = Math.min(1, (now - t0) / dur);
+    bars.children[idx].firstChild.style.width = p * 100 + '%';
+    if (p >= 1) return show(idx + 1);
+    raf = requestAnimationFrame(tick);
+  }
+  $('#tapR').onclick = () => idx < SLIDES.length - 1 && show(idx + 1);
+  $('#tapL').onclick = () => show(idx - 1);
+  ['pointerdown', 'pointerup', 'pointercancel', 'pointerleave'].forEach(ev => frame.addEventListener(ev, e => { if (e.target.closest('.act, button, a, input, label, .screen')) return; paused = ev === 'pointerdown'; }));
+  addEventListener('keydown', e => { if ($('#landing').hidden) { if (e.key === 'ArrowRight') $('#tapR').click(); if (e.key === 'ArrowLeft') $('#tapL').click(); } });
+  $('#close').onclick = toLanding;
+
+  /* ─────────── Share card (1080×1920) ─────────── */
+  let cardBlob = null;
+  const svgImg = svg => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+  async function drawCard() {
+    await document.fonts.ready;
+    const c = document.createElement('canvas'); c.width = 1080; c.height = 1920; const g = c.getContext('2d');
+    g.fillStyle = '#120E22'; g.fillRect(0, 0, 1080, 1920);
+    g.fillStyle = '#D7F25C'; g.fillRect(0, 0, 1080, 300);
+    g.fillStyle = '#120E22'; g.textBaseline = 'top';
+    g.font = '800 30px Inter'; g.fillText('RANG DE WRAP · 2026', 80, 70);
+    g.font = '800 92px Parkinsans'; g.fillText(`${INV.name}’s year`, 80, 120);
+    g.fillStyle = '#FF4FA3'; g.font = '800 54px Parkinsans'; g.fillText('in rangoli', 80, 220);
+    // Render the finished rangoli (strip the animation classes so everything is visible)
+    const svg = rangoli(INV, I).replace(/class="ln"/g, '').replace(/class="fl"/g, '').replace(/class="flame"/g, '');
+    const im = await svgImg(svg); if (im) g.drawImage(im, 90, 330, 900, 900);
+    const top = I.things[0];
+    const cells = [[`${top[1]} ${thingName(top[0], top[1])}`, 'my money helped buy'], [`${fmt(I.totalKm)} km`, 'it travelled'], [`${I.women} of ${I.L.length}`, 'were women'], [hideAmt ? `${I.multiplier.toFixed(1)}×` : `₹1 → ₹${I.multiplier.toFixed(1)}`, 'my rupee’s work']];
+    cells.forEach(([v, l], i) => {
+      const x = 80 + (i % 2) * 470, y = 1280 + Math.floor(i / 2) * 175;
+      g.fillStyle = ['#FF4FA3', '#D7F25C', '#FFC94A', '#FF6A2B'][i]; g.beginPath(); g.roundRect(x, y, 450, 155, 24); g.fill();
+      g.fillStyle = '#120E22'; g.font = `800 ${v.length > 15 ? 38 : 50}px Parkinsans`; g.fillText(v, x + 28, y + 26, 400);
+      g.font = '700 26px Inter'; g.fillText(l, x + 28, y + 100);
+    });
+    g.fillStyle = I.persona.color; g.font = '800 50px Parkinsans'; g.fillText(`Me in 2026: ${I.persona.persona}`, 80, 1660, 920);
+    g.fillStyle = '#fff'; g.globalAlpha = .8; g.font = '700 28px Inter'; g.fillText('Back a rural entrepreneur from ₹500 · rangde.in', 80, 1760); g.globalAlpha = 1;
+    const url = c.toDataURL('image/png'), img = $('#cardImg'); if (img) img.src = url;
+    cardBlob = await new Promise(r => c.toBlob(r, 'image/png'));
+  }
+  function setupShare() {
+    drawCard();
+    const top = I.things[0];
+    const text = `My year on Rang De, drawn as a rangoli 🪔 My money helped buy ${top[1]} ${thingName(top[0], top[1])}, travelled ${fmt(I.totalKm)} km, and ${I.women} of the ${I.L.length} people I backed were women. Me in 2026: ${I.persona.persona}.\n\nWhat would yours look like? ${location.origin + location.pathname}?utm_source=wrap&utm_medium=share`;
+    $('#wa').href = 'https://wa.me/?text=' + encodeURIComponent(text);
+    $('#dl').onclick = async () => {
+      if (!cardBlob) await drawCard();
+      const file = new File([cardBlob], 'rang-de-wrap.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], text }); return; } catch {} }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(cardBlob); a.download = 'rang-de-wrap.png'; a.click();
+    };
+    $('#replay').onclick = () => show(0);
+    $('#others').onclick = toLanding;
+  }
+
+  /* ─────────── Landing ─────────── */
+  function renderLanding() {
+    const Ii = insights(INV);
+    $('#landingRg').innerHTML = rangoli(INV, Ii).replace(/class="ln"/g, '').replace(/class="fl"/g, '').replace(/class="flame"/g, '');
+    $('#pick').innerHTML = INVESTORS.map((v, i) => `<button data-i="${i}" aria-pressed="${v === INV}"><b>${v.name}</b>${v.home}${v.nri ? ' (NRI)' : ''}<br>${v.loans.length} people</button>`).join('');
+    $('#pick').querySelectorAll('button').forEach(b => b.onclick = () => { INV = INVESTORS[+b.dataset.i]; renderLanding(); });
+  }
+  function toLanding() {
+    cancelAnimationFrame(raf); stage.hidden = true;
+    ['#top', '#tapL', '#tapR'].forEach(s => $(s).hidden = true);
+    slideEl.innerHTML = ''; frame.style.background = ''; frame.style.color = '';
+    $('#landing').hidden = false; renderLanding();
+  }
+  $('#play').onclick = startStory;
+  if (PAUSE) window.__show = n => { if (!$('#landing').hidden) startStory(); show(n); };
+  renderLanding();
+})();
+</script>
+</body>
+</html>

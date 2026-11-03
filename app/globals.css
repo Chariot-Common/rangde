@@ -97,7 +97,7 @@ input[type="range"].rangde-slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 40px;
+  height: 64px;
   background: transparent;
   cursor: grab;
 }
@@ -109,8 +109,8 @@ input[type="range"].rangde-slider::-webkit-slider-runnable-track {
   border-radius: 9999px;
   background: linear-gradient(
     to right,
-    #00517a 0%,
-    #00517a var(--fill),
+    #3a6e0c 0%,
+    #3a6e0c var(--fill),
     rgba(41, 45, 54, 0.08) var(--fill),
     rgba(41, 45, 54, 0.08) 100%
   );
@@ -120,8 +120,8 @@ input[type="range"].rangde-slider::-moz-range-track {
   border-radius: 9999px;
   background: linear-gradient(
     to right,
-    #00517a 0%,
-    #00517a var(--fill),
+    #3a6e0c 0%,
+    #3a6e0c var(--fill),
     rgba(41, 45, 54, 0.08) var(--fill),
     rgba(41, 45, 54, 0.08) 100%
   );
@@ -129,27 +129,27 @@ input[type="range"].rangde-slider::-moz-range-track {
 input[type="range"].rangde-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 40px;
-  height: 40px;
-  margin-top: -12px;
+  width: 64px;
+  height: 64px;
+  margin-top: -24px;
   border-radius: 9999px;
-  background-image: url("/icons/slider-thumb.svg");
+  background-image: url("/icons/slider-thumb-green.svg");
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100%;
-  box-shadow: 0px 4px 8px 0px rgba(3, 21, 56, 0.24);
+  box-shadow: 0px 6px 12px 0px rgba(3, 21, 56, 0.24);
   transition: transform 0.1s ease;
 }
 input[type="range"].rangde-slider::-moz-range-thumb {
-  width: 40px;
-  height: 40px;
+  width: 64px;
+  height: 64px;
   border: none;
   border-radius: 9999px;
-  background-image: url("/icons/slider-thumb.svg");
+  background-image: url("/icons/slider-thumb-green.svg");
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100%;
-  box-shadow: 0px 4px 8px 0px rgba(3, 21, 56, 0.24);
+  box-shadow: 0px 6px 12px 0px rgba(3, 21, 56, 0.24);
 }
 input[type="range"].rangde-slider:active::-webkit-slider-thumb {
   transform: scale(1.05);
@@ -228,8 +228,60 @@ input[type="range"].rangde-slider:active::-webkit-slider-thumb {
   background-repeat: round no-repeat;
 }
 
+/* "See how it works" (Why Rang De): a band of light sweeps across the button every few seconds
+   and its glow breathes, so it reads as the one button worth pressing on this part of the page. */
+@keyframes shine-sweep {
+  0%, 62% { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(260%) skewX(-20deg); }
+}
+@keyframes shine-glow {
+  0%, 100% { box-shadow: 0 6px 16px rgba(13, 170, 222, 0.24), 0 0 0 0 rgba(13, 170, 222, 0.32); }
+  50% { box-shadow: 0 8px 22px rgba(13, 170, 222, 0.36), 0 0 0 6px rgba(13, 170, 222, 0); }
+}
+.shine-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  animation: shine-glow 2.8s ease-in-out infinite;
+}
+.shine-button::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 45%;
+  z-index: -1;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: shine-sweep 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .shine-button, .shine-button::after { animation: none; }
+  .shine-button::after { display: none; }
+}
+
 /* Carousel indicator: the active dot's fill runs for the auto-advance interval. */
 @keyframes dot-fill {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
+}
+
+@media (max-width: 639px) {
+  input[type="range"].rangde-slider {
+    height: 36px;
+  }
+  input[type="range"].rangde-slider::-webkit-slider-runnable-track {
+    height: 12px;
+  }
+  input[type="range"].rangde-slider::-moz-range-track {
+    height: 12px;
+  }
+  input[type="range"].rangde-slider::-webkit-slider-thumb {
+    width: 36px;
+    height: 36px;
+    margin-top: -12px;
+  }
+  input[type="range"].rangde-slider::-moz-range-thumb {
+    width: 36px;
+    height: 36px;
+  }
 }

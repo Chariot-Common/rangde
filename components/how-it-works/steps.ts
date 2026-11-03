@@ -36,7 +36,7 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
     description:
       "Every profile shares who they are, why they need the loan, and info on how they plan to repay it. Select from a pool of individuals, each of whom has specific needs and goals.",
     illustrationLabel:
-      "A feed of entrepreneur cards scrolls past and settles on Rekha Bai; her key details open — Rajasthan, credit rating good, up to 8.25% p.a., 12 months, monthly repayments — and she is selected.",
+      "A feed of entrepreneur cards scrolls past and settles on Rekha Bai; her key details open — Rajasthan, credit rating good, up to 8.25% p.a., 12 months, monthly repayments — and she is selected. An invest card then opens where the amount is chosen, ₹500, then ₹2,000, then ₹5,000, and Continue is pressed.",
   },
   {
     eyebrow: "Step 3",
@@ -44,7 +44,7 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
     description:
       "We collect on whichever of these dates comes next. Within 24 hours of collection, the money reaches the borrower’s bank account, as required by RBI regulations.",
     illustrationLabel:
-      "Three investments totalling ₹7,677 with fees are paid on 1 September; the payment splits three ways and reaches Rekha Bai, Vijay Muwel and Monika the next day.",
+      "A confirm card lists investments in Rekha Bai (₹5,000), Vijay Muwel (₹2,000) and Monika (₹500), ₹7,677 in total with fees, payable on 1 May. The three entrepreneurs’ avatars travel down a green line past the 01 May date into a Pay Now card, then down past 02 May and split along three branches, each reaching its entrepreneur with a Transfer successful message.",
   },
   {
     eyebrow: "Step 4",

@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 interface SwipeCarouselProps<T> {
   items: T[];
@@ -14,6 +20,8 @@ interface SwipeCarouselProps<T> {
   peek?: boolean;
   /** Moves to the next item after this many ms (looping), pausing while it's being touched. */
   autoAdvanceMs?: number;
+  /** Colour of the active pagination dot. */
+  accent?: "blue" | "green";
 }
 
 /**
@@ -22,7 +30,17 @@ interface SwipeCarouselProps<T> {
  * translation. By default each item fills the track's (padded) width and it sits still
  * until swiped; `peek` and `autoAdvanceMs` turn it into the centred, self-advancing version.
  */
-export function SwipeCarousel<T>({ items, renderItem, ariaLabel, peek = false, autoAdvanceMs }: SwipeCarouselProps<T>) {
+export function SwipeCarousel<T>({
+  items,
+  renderItem,
+  ariaLabel,
+  peek = false,
+  autoAdvanceMs,
+  accent = "blue",
+}: SwipeCarouselProps<T>) {
+  const dotTrack = accent === "green" ? "bg-green-dark/24" : "bg-primary/24";
+  const dotSolid = accent === "green" ? "bg-green-dark" : "bg-primary";
+  const dotFill = accent === "green" ? "bg-green-dark" : "bg-primary";
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [touching, setTouching] = useState(false);
@@ -57,7 +75,10 @@ export function SwipeCarousel<T>({ items, renderItem, ariaLabel, peek = false, a
     const track = trackRef.current;
     const item = track?.children[index] as HTMLElement | undefined;
     if (!track || !item) return;
-    track.scrollTo({ left: item.offsetLeft - (track.clientWidth - item.offsetWidth) / 2, behavior: "smooth" });
+    track.scrollTo({
+      left: item.offsetLeft - (track.clientWidth - item.offsetWidth) / 2,
+      behavior: "smooth",
+    });
   }, []);
 
   // Auto-advance: the timer restarts whenever the active item changes (a swipe counts too),
@@ -72,9 +93,19 @@ export function SwipeCarousel<T>({ items, renderItem, ariaLabel, peek = false, a
   }, []);
   useEffect(() => {
     if (!autoAdvanceMs || touching || items.length < 2 || reduced) return;
-    const id = setTimeout(() => scrollToIndex((activeIndex + 1) % items.length), autoAdvanceMs);
+    const id = setTimeout(
+      () => scrollToIndex((activeIndex + 1) % items.length),
+      autoAdvanceMs,
+    );
     return () => clearTimeout(id);
-  }, [autoAdvanceMs, touching, activeIndex, items.length, scrollToIndex, reduced]);
+  }, [
+    autoAdvanceMs,
+    touching,
+    activeIndex,
+    items.length,
+    scrollToIndex,
+    reduced,
+  ]);
 
   return (
     <div>
@@ -90,7 +121,10 @@ export function SwipeCarousel<T>({ items, renderItem, ariaLabel, peek = false, a
         }`}
       >
         {items.map((item, i) => (
-          <div key={i} className={`shrink-0 grow-0 ${peek ? "basis-[84%] snap-center" : "basis-[calc(100%-16px)] snap-start"}`}>
+          <div
+            key={i}
+            className={`shrink-0 grow-0 ${peek ? "basis-[84%] snap-center" : "basis-[calc(100%-16px)] snap-start"}`}
+          >
             {renderItem(item, i)}
           </div>
         ))}
@@ -116,15 +150,22 @@ export function SwipeCarousel<T>({ items, renderItem, ariaLabel, peek = false, a
                 aria-label={`Go to item ${i + 1}`}
                 onClick={() => scrollToIndex(i)}
                 className={`relative shrink-0 overflow-hidden rounded-full transition-all duration-200 ${
-                  active ? (timed ? "h-[6px] w-[28px] bg-primary/24" : "h-[5px] w-[16px] bg-primary") : "h-[6px] w-[6px] bg-ink/16"
+                  active
+                    ? timed
+                      ? `h-[6px] w-[28px] ${dotTrack}`
+                      : `h-[5px] w-[16px] ${dotSolid}`
+                    : "h-[6px] w-[6px] bg-ink/16"
                 }`}
               >
                 {timed && (
                   <span
                     // re-keyed when the slide changes or a touch ends, so the fill restarts with the timer
                     key={`${activeIndex}-${touching}`}
-                    className="absolute inset-0 origin-left rounded-full bg-primary"
-                    style={{ animation: `dot-fill ${autoAdvanceMs}ms linear forwards`, animationPlayState: touching ? "paused" : "running" }}
+                    className={`absolute inset-0 origin-left rounded-full ${dotFill}`}
+                    style={{
+                      animation: `dot-fill ${autoAdvanceMs}ms linear forwards`,
+                      animationPlayState: touching ? "paused" : "running",
+                    }}
                   />
                 )}
               </button>

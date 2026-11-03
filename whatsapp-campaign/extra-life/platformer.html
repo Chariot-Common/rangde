@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Extra Life · A borrowing game from Rang De</title>
+<meta name="description" content="Run, jump and collect what Meena needs for her order. Every lender gives you money, and every lender takes it back. Can you win without an extra life?">
+<meta property="og:title" content="Extra Life: ₹50,000 in 7 days. 4 lives.">
+<meta property="og:description" content="A 5-minute platform game about borrowing. Moneylender, bank, chit fund, family. Can you win?">
+<meta name="theme-color" content="#1E1B16">
+<link rel="icon" href="logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FFF4E0; --ink:#1E1B16; --ink-60:rgba(30,27,22,.62); --card:#fff;
+    --lender:#E5533D; --bank:#4F8EF7; --chit:#9B5DE5; --family:#2FB67C; --rangde:#0DAADE; --gold:#FFC93C; --heart:#E5334B;
+    --pixel:"Press Start 2P", monospace; --sans:Inter, system-ui, sans-serif; --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ background:var(--ink); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; height:100%; overscroll-behavior:none; }
+  body{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding:max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)); gap:10px; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; touch-action:manipulation; }
+  a{ color:inherit; }
+  button:focus-visible, a:focus-visible{ outline:3px solid var(--rangde); outline-offset:3px; }
+
+  .wrap{ position:relative; width:min(100%, 960px, calc((100dvh - 150px) * 400 / 224)); min-width:min(100%, 320px); }
+  /* HUD */
+  .hud{ display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--paper); border:3px solid #000; border-bottom:0; border-radius:10px 10px 0 0; font-family:var(--pixel); font-size:9px; line-height:12px; flex-wrap:wrap; }
+  .hearts{ display:flex; gap:3px; }
+  .hearts svg{ width:16px; height:15px; display:block; }
+  .hearts .gone{ opacity:.18; filter:grayscale(1); }
+  .hearts .break{ animation:break .7s steps(4) both; }
+  @keyframes break{ 25%{ transform:translateX(-3px) rotate(-12deg); } 50%{ transform:translateX(3px) rotate(12deg); } 100%{ transform:scale(.8); opacity:.18; } }
+  .hud .w{ color:var(--ink-60); }
+  .money{ font-family:var(--sans); font-weight:800; font-size:14px; font-variant-numeric:tabular-nums; }
+  .money.down{ color:var(--heart); animation:shake .3s; }
+  @keyframes shake{ 25%{ transform:translateX(-2px); } 75%{ transform:translateX(2px); } }
+  .owe{ font-family:var(--sans); font-weight:800; font-size:12px; color:var(--heart); }
+  .owe[hidden]{ display:none; }
+  .items{ display:flex; gap:4px; margin-left:auto; }
+  .items span{ display:flex; align-items:center; gap:3px; padding:3px 5px; border:2px solid var(--ink); border-radius:6px; font-family:var(--sans); font-size:11px; font-weight:800; opacity:.45; background:#fff; }
+  .items span.got{ opacity:1; background:#C9F2D7; }
+  .items span i{ font-style:normal; font-size:9px; color:var(--ink-60); font-weight:700; }
+  .day{ white-space:nowrap; }
+  canvas{ display:block; width:100%; aspect-ratio:400 / 224; image-rendering:pixelated; image-rendering:crisp-edges; border:3px solid #000; border-radius:0 0 10px 10px; background:#87CEEB; touch-action:none; }
+
+  /* Touch controls */
+  .pad{ width:min(100%, 960px); display:flex; justify-content:space-between; gap:10px; }
+  .pad .lr{ display:flex; gap:10px; }
+  .pad button{ width:72px; height:64px; border-radius:16px; background:#2E2A23; border:3px solid #000; box-shadow:0 4px 0 #000; color:#fff; font-family:var(--pixel); font-size:16px; }
+  .pad button.jump{ width:110px; background:var(--lender); }
+  .pad button.on{ transform:translateY(3px); box-shadow:0 1px 0 #000; }
+  .keys{ font-family:var(--sans); font-weight:700; letter-spacing:.08em; font-size:11px; color:rgba(255,255,255,.55); text-align:center; line-height:16px; }
+  @media (hover:hover) and (pointer:fine){ .pad{ display:none; } }
+  @media not ((hover:hover) and (pointer:fine)){ .keys{ display:none; } }
+
+  /* Overlay cards (story, haggle, results) */
+  .ov{ position:fixed; inset:0; z-index:5; display:flex; align-items:center; justify-content:center; padding:max(12px, env(safe-area-inset-top)) 12px 12px; background:rgba(20,18,14,.6); overflow:auto; }
+  .ov[hidden]{ display:none; }
+  .card{ width:min(100%, 460px); max-height:100%; overflow:auto; margin:auto; background:var(--card); border:3px solid var(--ink); box-shadow:6px 6px 0 #000; border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:12px; animation:in .35s var(--ease); }
+  @keyframes in{ from{ opacity:0; transform:translateY(10px) scale(.97); } }
+  .pix{ font-family:var(--pixel); line-height:1.45; }
+  .t1{ font-family:var(--pixel); font-size:26px; line-height:34px; }
+  .k{ font-family:var(--pixel); font-size:9px; color:var(--ink-60); }
+  .line{ font-size:16px; line-height:23px; font-weight:600; }
+  .soft{ font-size:14px; line-height:21px; font-weight:500; color:var(--ink-60); }
+  .say{ background:var(--paper); border:2px solid var(--ink); border-radius:12px; padding:10px 12px; font-size:15px; line-height:21px; font-weight:600; }
+  .say::before{ content:attr(data-who); display:block; font-family:var(--pixel); font-size:8px; color:var(--ink-60); margin-bottom:6px; }
+  .quick{ display:flex; gap:8px; flex-wrap:wrap; }
+  .quick button{ flex:1; min-width:100px; padding:12px; border:3px solid var(--ink); border-radius:999px; box-shadow:3px 3px 0 var(--ink); font-weight:800; font-size:14px; background:#fff; }
+  .quick button:active{ transform:translate(3px,3px); box-shadow:none; }
+  .btn{ display:flex; align-items:center; justify-content:center; width:100%; min-height:50px; padding:0 16px; border:3px solid var(--ink); border-radius:12px; box-shadow:4px 4px 0 var(--ink); font-family:var(--pixel); font-size:11px; text-decoration:none; text-align:center; line-height:16px; background:#fff; }
+  .btn:active{ transform:translate(4px,4px); box-shadow:none; }
+  .btn.go{ background:var(--gold); } .btn.blue{ background:var(--rangde); color:#fff; } .btn.wa{ background:#25D366; }
+  .lesson{ background:var(--paper); border:2px dashed var(--ink); border-radius:12px; padding:12px; font-size:14px; line-height:21px; font-weight:500; }
+  .lesson b{ font-weight:800; } .lesson small{ display:block; margin-top:6px; font-size:11px; color:var(--ink-60); }
+  .lost{ font-family:var(--pixel); font-size:18px; line-height:26px; color:var(--heart); }
+  .maths{ display:grid; grid-template-columns:1fr auto; gap:4px 12px; font-size:14px; font-weight:600; }
+  .maths b{ text-align:right; font-weight:800; font-variant-numeric:tabular-nums; }
+  .maths .tot{ border-top:2px solid var(--ink); padding-top:4px; font-weight:800; }
+  .contract{ background:#FFFBEF; border:2px solid var(--ink); border-radius:6px; padding:12px; font-family:"Courier New", monospace; font-size:14px; line-height:20px; transform:rotate(-1deg); }
+  .dark{ background:var(--ink); color:#fff; box-shadow:6px 6px 0 var(--heart); text-align:center; align-items:center; }
+  .dark .soft{ color:rgba(255,255,255,.7); }
+  .gameover{ font-family:var(--pixel); font-size:28px; line-height:38px; color:var(--heart); animation:blink 1s steps(2) 3; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .oneup{ font-family:var(--pixel); font-size:24px; color:var(--gold); animation:glow 1.2s ease-in-out infinite alternate; }
+  @keyframes glow{ to{ text-shadow:0 0 16px rgba(255,201,60,.9); } }
+  .portal{ width:96px; height:96px; border-radius:50%; background:conic-gradient(var(--rangde), var(--family), var(--gold), var(--lender), var(--chit), var(--rangde)); animation:spin 2.4s linear infinite; position:relative; }
+  .portal::after{ content:""; position:absolute; inset:14px; border-radius:50%; background:var(--ink); }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .people{ display:flex; flex-direction:column; gap:8px; }
+  .person{ display:flex; gap:10px; align-items:center; text-decoration:none; padding:8px; border:2px solid var(--ink); border-radius:12px; background:var(--paper); }
+  .person img{ width:52px; height:52px; border-radius:10px; object-fit:cover; flex:none; border:2px solid var(--ink); }
+  .person b{ display:block; font-size:14px; font-weight:800; } .person span{ display:block; font-size:12px; font-weight:600; color:var(--ink-60); } .person em{ display:block; font-style:normal; font-size:12px; line-height:16px; }
+  .fine{ font-size:11px; line-height:16px; color:var(--ink-60); }
+  .row{ display:flex; gap:8px; } .row > *{ flex:1; }
+  .need{ display:flex; gap:8px; }
+  .need span{ flex:1; border:2px solid var(--ink); border-radius:10px; padding:8px; text-align:center; font-size:12px; font-weight:700; background:var(--paper); }
+  .need b{ display:block; font-size:15px; }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud" id="hud">
+    <div class="hearts" id="hearts" aria-label="Lives"></div>
+    <span class="w" id="wname">EXTRA LIFE</span>
+    <span class="day" id="day"></span>
+    <span class="money" id="money">₹0</span>
+    <span class="owe" id="owe" hidden></span>
+    <div class="items" id="items"></div>
+  </div>
+  <canvas id="c" width="400" height="224" aria-label="Game screen"></canvas>
+  <div class="ov" id="ov"></div>
+</div>
+<div class="pad" id="pad">
+  <div class="lr"><button data-k="left" aria-label="Left">◀</button><button data-k="right" aria-label="Right">▶</button></div>
+  <button class="jump" data-k="jump" aria-label="Jump">JUMP</button>
+</div>
+<p class="keys">ARROW KEYS TO MOVE · SPACE TO JUMP</p>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const cv = $('#c'), ctx = cv.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  const VW = 400, VH = 224, T = 16, COLS = 140, ROWS = 14;
+  const fmt = n => '₹' + Math.max(0, Math.round(n)).toLocaleString('en-IN');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NABARD = 'NABARD Rural Economic Conditions & Sentiments Survey, July 2026';
+  const HERE = location.origin + location.pathname;
+  const utm = c => `utm_source=extra_life&utm_medium=game&utm_campaign=${c}`;
+  const LEVEL_SECONDS = 70, DAYS = 7;
+  // What Meena needs for the school order: ₹50,000 in all.
+  const NEEDS = { F: { name: 'Fabric', short: 'FABRIC', cost: 15000 }, T: { name: 'Thread & buttons', short: 'THREAD', cost: 5000 }, M: { name: 'Sewing machine', short: 'MACHINE', cost: 30000 } };
+  // Live on rangde.in on 20 Oct 2026. Refresh before sharing widely.
+  const WAITING = [
+    { key: 'priyanka-593', name: 'Priyanka', where: 'Buldhana, Maharashtra', need: 'Needs credit for dairy supplies and animal feed.', photo: 'https://rangde.imgix.net/bImg/5035-img.jpg' },
+    { key: 'pukan-888', name: 'Pukan', where: 'Dhubri, Assam', need: 'Needs printers and a micro ATM for his services shop.', photo: 'https://rangde.imgix.net/bImg/10020698-img.jpg' },
+    { key: 'aribam-286', name: 'Aribam', where: 'Imphal East, Manipur', need: 'Building a shed for mushroom cultivation.', photo: 'https://rangde.imgix.net/bImg/MKF-09-RG-26-27-img.jpg' },
+  ];
+
+  /* ───────── Pixel sprites ───────── */
+  const PAL = { k: '#1E1B16', s: '#C68642', r: '#E5334B', y: '#FFC93C', b: '#4F8EF7', w: '#FFFFFF', g: '#2FB67C', o: '#F28C28', p: '#9B5DE5', n: '#7A4B2A', e: '#3A3A3A', c: '#CFCFCF', m: '#B8B8B8', l: '#0DAADE', d: '#8B1E2E', t: '#F7D9A8' };
+  const sprite = rows => { const c = document.createElement('canvas'); c.width = rows[0].length; c.height = rows.length; const g = c.getContext('2d'); rows.forEach((r, y) => [...r].forEach((ch, x) => { if (PAL[ch]) { g.fillStyle = PAL[ch]; g.fillRect(x, y, 1, 1); } })); return c; };
+  const MEENA = [
+    ['....kkkk....', '...kkkkkk...', '...kssssk...', '...sksksk...', '....ssss....', '...yrrrrr...', '..syrrrrrs..', '..syrrrrrs..', '...yrrrrr...', '...rrrrryy..', '...rrrrrry..', '...rrrrrr...', '...rrrrrr...', '...rrrrrr...', '...ss..ss...', '...kk..kk...'],
+    ['....kkkk....', '...kkkkkk...', '...kssssk...', '...sksksk...', '....ssss....', '...yrrrrr...', '..syrrrrrs..', '..syrrrrrs..', '...yrrrrr...', '...rrrrryy..', '...rrrrrry..', '...rrrrrr...', '...rrrrrr...', '...rrrrrr...', '..ss....ss..', '..kk....kk..'],
+  ].map(sprite);
+  const LALAJI = sprite(['....kkkk....', '...kkkkkk...', '...ssssss...', '...sksksk...', '...kkkkkk...', '....ssss....', '..wwwwwwww..', '.swwwwwwwws.', '.swwwyywwws.', '..wwwyywww..', '..wwwwwwww..', '..wwwwwwww..', '...ww..ww...', '...ww..ww...', '...nn..nn...', '...kk..kk...']);
+  const BROTHER = sprite(['....kkkk....', '...kkkkkk...', '...kssssk...', '...sksksk...', '....ssss....', '...bbbbbb...', '..sbbbbbbs..', '..sbbbbbbs..', '...bbbbbb...', '...bbbbbb...', '...eeeeee...', '...ee..ee...', '...ee..ee...', '...ee..ee...', '...ss..ss...', '...kk..kk...']);
+  const PARTNER = sprite(['....kkkk....', '...kkkkkk...', '...kssssk...', '...sksksk...', '....ssss....', '...llllll...', '..sllwwlls..', '..sllwwlls..', '...llllll...', '...llllll...', '...kkkkkk...', '...kk..kk...', '...kk..kk...', '...kk..kk...', '...ss..ss...', '...kk..kk...']);
+  const AUNTY = [
+    sprite(['...kkkkkk...', '..kkkkkkkk..', '..kssssssk..', '..sksssks...', '...ssrsss...', '..pppppppp..', '.sppppppps..', '.sppyypppps.', '..pppppppp..', '..pppppppp..', '..pppppppp..', '..pppppppp..', '...ss..ss...', '...kk..kk...']),
+    sprite(['...kkkkkk...', '..kkkkkkkk..', '..kssssssk..', '..sksssks...', '...ssrsss...', '..pppppppp..', '.sppppppps..', '.sppyypppps.', '..pppppppp..', '..pppppppp..', '..pppppppp..', '..pppppppp..', '..ss....ss..', '..kk....kk..']),
+  ];
+  const BYAAJ = [
+    sprite(['....rrrr....', '..rrrrrrrr..', '.rrrrrrrrrr.', '.rrwwrrwwrr.', 'rrrwkrrwkrrr', 'rrrrrrrrrrrr', 'rrryyyyyyrrr', 'rrrrrrrrrrrr', '.rrrrrrrrrr.', '.dd.dd.dd.d.']),
+    sprite(['....rrrr....', '..rrrrrrrr..', '.rrrrrrrrrr.', '.rrwwrrwwrr.', 'rrrwkrrwkrrr', 'rrrrrrrrrrrr', 'rrryyyyyyrrr', 'rrrrrrrrrrrr', '.rrrrrrrrrr.', 'd.dd.dd.dd..']),
+  ];
+  const COIN = [sprite(['..yyyy..', '.yyyyyy.', 'yyoyyyyy', 'yyoyyyyy', 'yyoyyyyy', 'yyoyyyyy', '.yyyyyy.', '..yyyy..']), sprite(['...yy...', '..yyyy..', '..yoyy..', '..yoyy..', '..yoyy..', '..yoyy..', '..yyyy..', '...yy...'])];
+  const STAR = sprite(['...ll...', '...ll...', 'llllllll', '.llwwll.', '..llll..', '.ll..ll.', 'll....ll', '........']);
+  const ITEMS = {
+    F: sprite(['..............', '..rrrrrrrrrr..', '.rryyyyyyyyrr.', '.rrrrrrrrrrrr.', '.bbbbbbbbbbbb.', '.bbwwwwwwwwbb.', '.bbbbbbbbbbbb.', '.gggggggggggg.', '.ggyyyyyyyygg.', '.gggggggggggg.', '.pppppppppppp.', '.ppwwwwwwwwpp.', '.pppppppppppp.', '..............']),
+    T: sprite(['..............', '...nnnnnnnn...', '...nnnnnnnn...', '....rrrrrr....', '....rwrrrr....', '....rrrrrr....', '....rrrwrr....', '....rrrrrr....', '....rrrrrr....', '...nnnnnnnn...', '...nnnnnnnn...', '..ww....ww....', '..ww....ww....', '..............']),
+    M: sprite(['..............', '..kkkkkkkkkk..', '..kccccccckk..', '..kkkkkkkkkk..', '..k.......kk..', '..k......kkkk.', '..k......kmmk.', '..k......kkkk.', '.kkkkkkkkkkkk.', '.kyyyyyyyyyyk.', '.kkkkkkkkkkkk.', '..nn......nn..', '..nn......nn..', '..............']),
+  };
+
+  /* ───────── Input ───────── */
+  const keys = { left: false, right: false, jump: false };
+  let jumpPressed = false;
+  addEventListener('keydown', e => {
+    if (['ArrowLeft', 'a', 'A'].includes(e.key)) keys.left = true;
+    if (['ArrowRight', 'd', 'D'].includes(e.key)) keys.right = true;
+    if ([' ', 'ArrowUp', 'w', 'W'].includes(e.key)) { if (!keys.jump) jumpPressed = true; keys.jump = true; if (running) e.preventDefault(); }
+  });
+  addEventListener('keyup', e => {
+    if (['ArrowLeft', 'a', 'A'].includes(e.key)) keys.left = false;
+    if (['ArrowRight', 'd', 'D'].includes(e.key)) keys.right = false;
+    if ([' ', 'ArrowUp', 'w', 'W'].includes(e.key)) keys.jump = false;
+  });
+  document.querySelectorAll('.pad button').forEach(b => {
+    const k = b.dataset.k;
+    const on = e => { e.preventDefault(); if (k === 'jump' && !keys.jump) jumpPressed = true; keys[k] = true; b.classList.add('on'); };
+    const off = e => { e.preventDefault(); keys[k] = false; b.classList.remove('on'); };
+    b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
+  });
+
+  /* ───────── Game state ───────── */
+  let G; // the whole run
+  const newRun = () => ({ lives: 4, extra: false, world: 0, t0: Date.now(), rate: 3 });
+  let L = null; // the current level
+  let running = false, last = 0;
+
+  /* ───────── Level building ───────── */
+  // One shared course: same jumps in every world, so the difference is the lender.
+  const GAPS = [[23, 2], [47, 3], [79, 2], [97, 3]];
+  const PLATS = [[13, 9, 4], [26, 8, 3], [37, 9, 5], [51, 8, 4], [63, 9, 3], [84, 8, 5], [102, 9, 3], [114, 8, 4]];
+  const QS = [[15, 5], [39, 5], [86, 4]];
+  const COINS = [[8, 10], [9, 10], [14, 8], [16, 8], [27, 7], [38, 8], [40, 8], [53, 7], [64, 8], [85, 7], [87, 7], [103, 8]];
+  const ITEM_AT = { F: 33, T: 60, M: 110 };
+  const SCHOOL_X = 128;
+
+  function buildLevel(world) {
+    const tiles = Array.from({ length: ROWS }, () => Array(COLS).fill('.'));
+    for (let x = 0; x < COLS; x++) { tiles[12][x] = '#'; tiles[13][x] = '#'; }
+    GAPS.forEach(([x, n]) => { for (let i = 0; i < n; i++) { tiles[12][x + i] = '.'; tiles[13][x + i] = '.'; } });
+    PLATS.forEach(([x, y, n]) => { for (let i = 0; i < n; i++) tiles[y][x + i] = '='; });
+    QS.forEach(([x, y]) => tiles[y][x] = '?');
+    const lvl = {
+      world, tiles, t: 0, money: 0, owe: 0, got: { F: false, T: false, M: false },
+      coins: COINS.map(([x, y]) => ({ x: x * T + 4, y: y * T + 4, alive: true })),
+      items: Object.entries(ITEM_AT).map(([k, x]) => ({ k, x: x * T + 1, y: 11 * T + 2, bought: false, nope: 0 })),
+      enemies: [], npcs: [], floaters: [], particles: [], stars: [], flags: {},
+      p: { x: 2 * T, y: 10 * T, vx: 0, vy: 0, w: 10, h: 15, onGround: false, face: 1, inv: 0, safeX: 2 * T, anim: 0 },
+      cam: 0,
+    };
+    world.setup && world.setup(lvl);
+    return lvl;
+  }
+
+  /* ───────── Worlds: each lender gives money, and each takes it back ───────── */
+  const WORLDS = [
+    {
+      key: 'lender', name: 'LALAJI', sky: ['#FFB27A', '#FFE3B8'],
+      intro: () => `
+        <p class="k">WORLD 1 OF 4 · THE MONEYLENDER</p>
+        <p class="t1" style="font-size:20px;line-height:28px">LALAJI</p>
+        <p class="line">Lalaji keeps cash in a steel cupboard. No forms, no bus rides.</p>
+        <div class="say" data-who="LALAJI">₹50,000? Done, today itself. Five rupees per hundred.</div>
+        <p class="k">HAGGLE!</p>`,
+      haggle: true,
+      setup(l) {
+        l.npcs.push({ spr: LALAJI, x: 4 * T, y: 11 * T - 1, say: 'Byaaj every month!' });
+        l.flags.rate = G.rate;
+        l.money = 45000; l.owe = 50000; // ₹5,000 file charge cut on day one
+        l.flags.nextTick = 4; l.flags.nextSpawn = 6; l.flags.paid = 0;
+        burst(l, 6 * T, 9 * T, 40);
+        float(l, 5 * T, 8 * T, '+₹50,000 LOAN', '#2FB67C');
+        l.flags.feeAt = 0.9;
+      },
+      tick(l) {
+        if (l.flags.feeAt && l.t >= l.flags.feeAt) { l.flags.feeAt = 0; float(l, l.p.x, l.p.y - 22, '−₹5,000 FILE CHARGE', '#E5334B'); moneyDown(); }
+        // Every 4 seconds is a month. Interest comes off the top; what you can't pay is added to what you owe.
+        if (l.t >= l.flags.nextTick) {
+          l.flags.nextTick += 4;
+          const interest = Math.round(l.owe * l.flags.rate / 100);
+          const paid = Math.min(l.money, interest);
+          l.money -= paid; l.owe += interest - paid; l.flags.paid += paid;
+          float(l, l.p.x, l.p.y - 18, `BYAAJ −₹${interest.toLocaleString('en-IN')}`, '#E5334B'); moneyDown();
+        }
+        // Interest collectors keep coming. Stomp one and another arrives, sooner each time.
+        if (l.t >= l.flags.nextSpawn) {
+          l.flags.nextSpawn += Math.max(2.5, 6 - l.t / 15);
+          l.enemies.push({ type: 'byaaj', x: l.cam + VW + 10, y: 10 * T, vx: -45, vy: 0, w: 12, h: 10, alive: true, chase: true });
+        }
+      },
+      hit(l) { const take = Math.min(l.money, 2000); l.money -= take; l.flags.paid += take; float(l, l.p.x, l.p.y - 18, `COLLECTOR −₹${take.toLocaleString('en-IN')}`, '#E5334B'); moneyDown(); },
+      fail: l => ({
+        title: 'DEBT TRAP',
+        body: `<p class="line">Lalaji’s money came fast. The interest came faster.</p>
+          <div class="maths"><span>Loan</span><b>₹50,000</b><span>File charge, cut on day one</span><b>−₹5,000</b><span>Interest &amp; collectors took</span><b>−${fmt(l.flags.paid)}</b><span class="tot">Still owed to Lalaji</span><b class="tot">${fmt(l.owe)}</b></div>
+          <p class="soft">${l.flags.rate === 3 ? 'You haggled him down to 3. Per month.' : 'Five per hundred. Per month.'} Over a year, ${l.flags.rate}% a month on ₹50,000 plus the file charge is about <b>${Math.round((l.flags.rate * 12 * 500 + 5000) / 45000 * 100)}% a year</b> on the money you actually got. (In the game, every 4 seconds is a month.)</p>`,
+        lesson: `Lalaji is made up. The pattern isn’t: informal loans in rural India average <b>almost 18%</b> interest a year. That’s the average, before file charges and gold.<small>Source: ${NABARD}</small>`,
+      }),
+    },
+    {
+      key: 'bank', name: 'THE BANK', sky: ['#7DB7FF', '#D9ECFF'],
+      intro: () => `
+        <p class="k">WORLD 2 OF 4 · THE BANK</p>
+        <p class="t1" style="font-size:20px;line-height:28px">THE BANK</p>
+        <p class="line">Low interest. The money is right there in the vault.</p>
+        <p class="soft">To open the vault you need papers. Hit the ? blocks to find them.</p>`,
+      setup(l) { l.flags.docs = ['LAND PAPERS', 'CREDIT HISTORY', 'INCOME PROOF']; l.flags.vaultX = 68 * T; },
+      q(l, x, y) { const d = l.flags.docs.shift() || 'SALARY SLIP'; float(l, x * T - 10, y * T - 8, `✗ NO ${d}`, '#E5334B'); },
+      tick(l) {
+        const p = l.p, v = l.flags.vaultX;
+        if (p.x + p.w > v && p.x < v + 6 * T && (!l.flags.told || l.t - l.flags.told > 3)) { l.flags.told = l.t; float(l, p.x, p.y - 22, 'VAULT: COME BACK WITH PAPERS', '#4F8EF7'); }
+      },
+      fail: () => ({
+        title: 'LOAN DECLINED',
+        body: `<p class="line">The money was right there. The vault never opened.</p><p class="soft">Meena’s customers pay in cash. She has no land papers, no credit history, no salary slips. She did nothing wrong. She just doesn’t fit the form.</p>`,
+        lesson: `<b>99.92%</b> of India’s villages have a banking outlet within 5 km. Yet <b>nearly half</b> of rural households still borrow from moneylenders, friends and family. A bank nearby isn’t a loan.<small>Sources: Ministry of Finance, Aug 2026; ${NABARD}</small>`,
+      }),
+    },
+    {
+      key: 'chit', name: 'CHIT FUND', sky: ['#C9A8F5', '#F1E6FF'],
+      intro: () => `
+        <p class="k">WORLD 3 OF 4 · THE CHIT FUND</p>
+        <p class="t1" style="font-size:20px;line-height:28px">THE CHIT</p>
+        <p class="line">20 neighbours each put in ₹2,500 a month. One of them takes the ₹50,000 pot.</p>
+        <p class="soft">You start with ₹7,500 of savings. The pot floats ahead of you. Purple booths take your installment. Hit a ? block to bid for the pot early.</p>`,
+      setup(l) {
+        l.money = 7500;
+        l.flags.booths = [20, 56, 92].map(x => ({ x: x * T, paid: false }));
+        l.flags.pot = { x: 18 * T, y: 5 * T, won: false };
+      },
+      tick(l) {
+        const pot = l.flags.pot;
+        if (!pot.won) pot.x = Math.max(pot.x, l.p.x + 120); // always just out of reach
+        l.flags.booths.forEach(b => {
+          if (!b.paid && l.p.x + l.p.w > b.x && l.p.x < b.x + 12) {
+            b.paid = true; const take = Math.min(l.money, 2500); l.money -= take;
+            float(l, b.x - 20, 8 * T, `INSTALLMENT −₹${take.toLocaleString('en-IN')}`, '#9B5DE5'); moneyDown();
+          }
+        });
+        if (l.flags.oweAt && l.t >= l.flags.oweAt) { l.flags.oweAt = 0; float(l, l.p.x - 20, l.p.y - 30, 'STILL OWE ₹2,500 × 20 MONTHS', '#E5334B'); }
+      },
+      q(l, x, y) {
+        const pot = l.flags.pot;
+        if (pot.won) { l.money += 500; float(l, x * T, y * T - 8, '+₹500', '#2FB67C'); return; }
+        pot.won = true; l.flags.bid = true;
+        float(l, x * T - 40, y * T - 8, 'BID WON… AT 35% OFF: +₹32,500', '#9B5DE5');
+        l.money += 32500; burst(l, l.p.x, l.p.y - 20, 30);
+        l.flags.oweAt = l.t + 1.4;
+      },
+      fail: l => ({
+        title: l.flags.bid ? 'WON… SORT OF' : 'TOO SLOW',
+        body: l.flags.bid
+          ? `<p class="line">You won the pot, minus 35%: ₹32,500. Not enough for everything.</p><p class="soft">And you still owe ₹2,500 every month for 20 months: ₹50,000 in all, for ₹32,500.</p>`
+          : `<p class="line">The pot stayed just out of reach.</p><p class="soft">Your turn could come in month 3. Or month 20. The fabric seller needs cash this week.</p>`,
+        lesson: `Chit funds are legal when registered under the <b>Chit Funds Act, 1982</b>. Informal chits have no such protection: if the organiser disappears, so does the money. Either way, it comes when the group decides, not when you need it.`,
+      }),
+    },
+    {
+      key: 'family', name: 'FAMILY', sky: ['#9EE6B8', '#E8FFF0'],
+      intro: () => `
+        <p class="k">WORLD 4 OF 4 · FAMILY</p>
+        <p class="t1" style="font-size:20px;line-height:28px">FAMILY</p>
+        <p class="line">Your brother can help a little.</p>
+        <p class="soft">Say hello to him at the start. Watch out for the aunties: by Sunday, everyone will know.</p>`,
+      setup(l) {
+        l.npcs.push({ spr: BROTHER, x: 6 * T, y: 11 * T - 1, say: 'Didi, all I have is ₹10,000.', give: 10000 });
+        [30, 58, 90, 118].forEach(x => l.enemies.push({ type: 'aunty', x: x * T, y: 10 * T, vx: -25, vy: 0, w: 12, h: 14, alive: true }));
+        l.flags.gossip = 0;
+      },
+      hit(l) { l.flags.gossip++; float(l, l.p.x - 10, l.p.y - 18, ['EVERYONE KNOWS!', 'BORROWING AGAIN?', 'TSK TSK…', 'SHE ASKED HER BROTHER!'][l.flags.gossip % 4], '#9B5DE5'); },
+      fail: l => ({
+        title: 'NOT ENOUGH',
+        body: `<p class="line">₹10,000 helped. ₹40,000 is still missing.</p><p class="soft">${l.flags.gossip ? `You ran into ${l.flags.gossip} aunt${l.flags.gossip > 1 ? 'ies' : 'y'}. ` : ''}The loan comes up at every wedding now.</p>`,
+        lesson: `<b>23.6%</b> of rural households borrow only from informal sources like moneylenders, friends and family. Another <b>25.3%</b> use both.<small>Source: ${NABARD}</small>`,
+      }),
+    },
+  ];
+  const RANGDE = {
+    key: 'rangde', name: 'RANG DE', sky: ['#7FD6F2', '#E6F8FF'],
+    setup(l) {
+      l.npcs.push({ spr: PARTNER, x: 5 * T, y: 11 * T - 1, say: 'Your loan is live on Rang De!' });
+      l.flags.spawned = 0; l.flags.next = 0.3; l.flags.investors = 0;
+    },
+    tick(l) {
+      // 100 social investors, ₹500 each. Their coins come to you.
+      if (l.flags.spawned < 100 && l.t >= l.flags.next) {
+        l.flags.next += 0.035; l.flags.spawned++;
+        l.stars.push({ x: l.cam + Math.random() * VW, y: -10, vx: 0, vy: 30 + Math.random() * 30 });
+      }
+    },
+  };
+
+  /* ───────── Effects ───────── */
+  function float(l, x, y, text, color) { l.floaters.push({ x, y, text, color, t: 0 }); }
+  function burst(l, x, y, n) { for (let i = 0; i < n; i++) l.particles.push({ x, y, vx: (Math.random() - .5) * 200, vy: -Math.random() * 220 - 40, t: 0 }); }
+  function moneyDown() { const m = $('#money'); m.classList.remove('down'); void m.offsetWidth; m.classList.add('down'); }
+
+  /* ───────── Physics ───────── */
+  const solid = (l, tx, ty) => { if (tx < 0 || tx >= COLS) return true; if (ty < 0 || ty >= ROWS) return false; return '#=?B'.includes(l.tiles[ty][tx]); };
+  function collideX(l, b) {
+    const top = Math.floor(b.y / T), bot = Math.floor((b.y + b.h - 1) / T);
+    if (b.vx > 0) { const tx = Math.floor((b.x + b.w) / T); for (let ty = top; ty <= bot; ty++) if (solid(l, tx, ty)) { b.x = tx * T - b.w - .01; b.vx = 0; return true; } }
+    if (b.vx < 0) { const tx = Math.floor(b.x / T); for (let ty = top; ty <= bot; ty++) if (solid(l, tx, ty)) { b.x = (tx + 1) * T + .01; b.vx = 0; return true; } }
+    return false;
+  }
+  function collideY(l, b, isPlayer) {
+    const left = Math.floor(b.x / T), right = Math.floor((b.x + b.w - 1) / T);
+    b.onGround = false;
+    if (b.vy > 0) { const ty = Math.floor((b.y + b.h) / T); for (let tx = left; tx <= right; tx++) if (solid(l, tx, ty)) { b.y = ty * T - b.h; b.vy = 0; b.onGround = true; return; } }
+    if (b.vy < 0) { const ty = Math.floor(b.y / T); for (let tx = left; tx <= right; tx++) if (solid(l, tx, ty)) { b.y = (ty + 1) * T; b.vy = 0; if (isPlayer && l.tiles[ty][tx] === '?') hitQ(l, tx, ty); return; } }
+  }
+  function hitQ(l, tx, ty) {
+    l.tiles[ty][tx] = 'B';
+    if (l.world.q) l.world.q(l, tx, ty); else { l.money += 500; float(l, tx * T, ty * T - 8, '+₹500', '#2FB67C'); }
+  }
+  const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+  /* ───────── Update ───────── */
+  function update(dt) {
+    const l = L, p = l.p, w = l.world;
+    l.t += dt;
+    const acc = p.onGround ? 900 : 600, max = 115;
+    if (keys.left) { p.vx = Math.max(-max, p.vx - acc * dt); p.face = -1; }
+    else if (keys.right) { p.vx = Math.min(max, p.vx + acc * dt); p.face = 1; }
+    else p.vx *= p.onGround ? 0.8 : 0.95;
+    if (jumpPressed && p.onGround) { p.vy = -350; p.onGround = false; }
+    jumpPressed = false;
+    if (!keys.jump && p.vy < -120) p.vy = -120; // let go early for a short hop
+    p.vy = Math.min(p.vy + 950 * dt, 500);
+    p.x += p.vx * dt; collideX(l, p);
+    p.y += p.vy * dt; collideY(l, p, true);
+    if (p.onGround) p.safeX = p.x;
+    p.anim += Math.abs(p.vx) * dt;
+    if (p.inv > 0) p.inv -= dt;
+    // Fell in a gap: back to the last safe spot. Hearts are for lenders, not jumps.
+    if (p.y > ROWS * T + 20) { p.x = Math.max(T, p.safeX - 2 * T); p.y = 9 * T; p.vx = 0; p.vy = 0; p.inv = 1; float(l, p.x, p.y - 10, 'OOPS', '#1E1B16'); }
+
+    l.coins.forEach(c => { if (c.alive && overlap(p, { x: c.x, y: c.y, w: 8, h: 8 })) { c.alive = false; l.money += 500; float(l, c.x, c.y - 6, '+₹500', '#2FB67C'); } });
+    // Items cost money: touch one to buy it.
+    l.items.forEach(it => {
+      if (it.bought) return;
+      // Tall pickup zone, so hopping over an item still collects it.
+      if (overlap(p, { x: it.x, y: it.y - 40, w: 14, h: 54 })) {
+        const cost = NEEDS[it.k].cost;
+        if (l.money >= cost) { l.money -= cost; it.bought = true; l.got[it.k] = true; burst(l, it.x + 7, it.y, 16); float(l, it.x - 10, it.y - 12, `${NEEDS[it.k].short} ✓ −₹${cost.toLocaleString('en-IN')}`, '#2FB67C'); }
+        else if (it.nope <= 0) { it.nope = 1.5; float(l, it.x - 10, it.y - 12, `NEED ₹${cost.toLocaleString('en-IN')}`, '#E5334B'); }
+      }
+      if (it.nope > 0) it.nope -= dt;
+    });
+    l.npcs.forEach(n => {
+      const near = Math.abs(p.x - n.x) < 40;
+      n.show = near || l.t < 3;
+      if (n.give && near) { l.money += n.give; burst(l, n.x, n.y, 20); float(l, n.x, n.y - 24, `+₹${n.give.toLocaleString('en-IN')}`, '#2FB67C'); n.give = 0; }
+    });
+    l.enemies.forEach(e => {
+      if (!e.alive) return;
+      if (e.chase) e.vx = (p.x < e.x ? -1 : 1) * 48;
+      e.vy = Math.min(e.vy + 950 * dt, 500);
+      e.x += e.vx * dt; if (collideX(l, e) && !e.chase) e.vx = e.vx > 0 ? -25 : 25;
+      e.y += e.vy * dt; collideY(l, e, false);
+      if (!e.chase && e.onGround) { const ahead = Math.floor((e.x + (e.vx > 0 ? e.w + 1 : -1)) / T), below = Math.floor((e.y + e.h + 1) / T); if (!solid(l, ahead, below)) e.vx *= -1; }
+      if (e.y > ROWS * T + 30) e.alive = false;
+      if (overlap(p, e)) {
+        if (p.vy > 60 && p.y + p.h - e.y < 10) { e.alive = false; p.vy = -240; burst(l, e.x + 6, e.y, 10); float(l, e.x - 10, e.y - 10, e.type === 'byaaj' ? 'STOMP! MORE ARE COMING' : 'SORRY AUNTY!', '#1E1B16'); }
+        else if (p.inv <= 0) { p.inv = 1.2; p.vx = (p.x < e.x ? -1 : 1) * 160; p.vy = -180; w.hit && w.hit(l, e); }
+      }
+    });
+    l.stars.forEach(s => {
+      const dx = p.x + 5 - s.x, dy = p.y + 6 - s.y, d = Math.hypot(dx, dy) || 1;
+      s.vx += (dx / d) * 500 * dt; s.vy += (dy / d) * 500 * dt;
+      s.vx *= 0.96; s.vy *= 0.96; s.x += s.vx * dt; s.y += s.vy * dt;
+      if (d < 12) { s.done = true; l.money += 500; l.flags.investors++; }
+    });
+    l.stars = l.stars.filter(s => !s.done);
+    w.tick && w.tick(l, dt);
+    l.floaters.forEach(f => { f.t += dt; f.y -= 18 * dt; }); l.floaters = l.floaters.filter(f => f.t < 1.6);
+    l.particles.forEach(q => { q.t += dt; q.vy += 600 * dt; q.x += q.vx * dt; q.y += q.vy * dt; }); l.particles = l.particles.filter(q => q.t < 1.2);
+    l.cam = Math.max(0, Math.min(COLS * T - VW, p.x - 150));
+    if (p.x >= SCHOOL_X * T) finishLevel('school');
+    else if (l.t >= LEVEL_SECONDS) finishLevel('time');
+    hud();
+  }
+
+  /* ───────── Draw ───────── */
+  function draw() {
+    const l = L, w = l.world, cam = Math.round(l.cam);
+    const sky = ctx.createLinearGradient(0, 0, 0, VH); sky.addColorStop(0, w.sky[0]); sky.addColorStop(1, w.sky[1]);
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, VW, VH);
+    ctx.fillStyle = 'rgba(255,255,255,.75)';
+    for (let i = 0; i < 8; i++) { const x = ((i * 170 - cam * 0.2) % (VW + 200) + VW + 200) % (VW + 200) - 100; ctx.fillRect(x, 24 + (i % 3) * 14, 36, 8); ctx.fillRect(x + 8, 18 + (i % 3) * 14, 20, 6); }
+    ctx.fillStyle = 'rgba(30,27,22,.08)';
+    for (let i = 0; i < 10; i++) { const x = ((i * 120 - cam * 0.45) % (VW + 240) + VW + 240) % (VW + 240) - 120; ctx.beginPath(); ctx.arc(x, 196, 60 + (i % 3) * 18, Math.PI, 0); ctx.fill(); }
+    ctx.save(); ctx.translate(-cam, 0);
+    const c0 = Math.max(0, Math.floor(cam / T)), c1 = Math.min(COLS, c0 + VW / T + 2);
+    for (let y = 0; y < ROWS; y++) for (let x = c0; x < c1; x++) {
+      const ch = l.tiles[y][x], X = x * T, Y = y * T;
+      if (ch === '#') { ctx.fillStyle = '#B5733C'; ctx.fillRect(X, Y, T, T); ctx.fillStyle = '#8E5427'; ctx.fillRect(X + 3, Y + 6, 3, 3); ctx.fillRect(X + 10, Y + 11, 3, 3); if (y === 12) { ctx.fillStyle = '#4CAF50'; ctx.fillRect(X, Y, T, 4); ctx.fillStyle = '#2E8B3A'; ctx.fillRect(X, Y + 4, T, 1); } }
+      else if (ch === '=') { ctx.fillStyle = '#D9783E'; ctx.fillRect(X, Y, T, T); ctx.fillStyle = '#1E1B16'; ctx.fillRect(X, Y + 7, T, 1); ctx.fillRect(X + 7, Y, 1, 7); ctx.fillRect(X + 3, Y + 8, 1, 8); ctx.fillRect(X + 12, Y + 8, 1, 8); ctx.strokeStyle = '#1E1B16'; ctx.strokeRect(X + .5, Y + .5, T - 1, T - 1); }
+      else if (ch === '?' || ch === 'B') {
+        ctx.fillStyle = ch === '?' ? '#FFC93C' : '#B07A4A'; ctx.fillRect(X, Y, T, T); ctx.strokeStyle = '#1E1B16'; ctx.strokeRect(X + .5, Y + .5, T - 1, T - 1);
+        if (ch === '?') { ctx.fillStyle = '#1E1B16'; ctx.fillRect(X + 5, Y + 3, 6, 2); ctx.fillRect(X + 10, Y + 4, 2, 4); ctx.fillRect(X + 7, Y + 7, 3, 2); ctx.fillRect(X + 7, Y + 11, 2, 2); }
+      }
+    }
+    if (w.key === 'bank') drawVault(l);
+    if (w.key === 'chit') drawChit(l);
+    drawSchool();
+    const cf = Math.floor(l.t * 6) % 2;
+    l.coins.forEach(c => c.alive && ctx.drawImage(COIN[cf], c.x, c.y));
+    l.items.forEach(it => {
+      if (it.bought) return;
+      const bob = Math.round(Math.sin(l.t * 4 + it.x) * 2);
+      ctx.drawImage(ITEMS[it.k], it.x, it.y + bob);
+      ctx.fillStyle = '#1E1B16'; ctx.font = '800 7px Inter'; ctx.textAlign = 'center';
+      ctx.fillText(`₹${NEEDS[it.k].cost / 1000}K`, it.x + 7, it.y - 3 + bob);
+    });
+    l.npcs.forEach(n => { ctx.drawImage(n.spr, n.x, n.y - 1); if (n.show && n.say) bubble(n.x + 6, n.y - 4, n.say); });
+    const ef = Math.floor(l.t * 6) % 2;
+    l.enemies.forEach(e => {
+      if (!e.alive) return;
+      const s = e.type === 'byaaj' ? BYAAJ[ef] : AUNTY[ef];
+      ctx.save(); if (e.vx > 0) { ctx.translate(e.x + e.w, e.y); ctx.scale(-1, 1); ctx.drawImage(s, 0, 0); } else ctx.drawImage(s, e.x, e.y); ctx.restore();
+      if (e.type === 'byaaj') { ctx.fillStyle = '#fff'; ctx.font = '800 6px Inter'; ctx.textAlign = 'center'; ctx.fillText('₹%', e.x + 6, e.y - 2); }
+      if (e.type === 'aunty' && Math.floor(l.t * 1.5 + e.x / 50) % 3 === 0) { ctx.fillStyle = '#fff'; ctx.fillRect(e.x + 8, e.y - 10, 18, 8); ctx.fillStyle = '#1E1B16'; ctx.font = '700 6px Inter'; ctx.textAlign = 'left'; ctx.fillText('psst', e.x + 10, e.y - 4); }
+    });
+    l.stars.forEach(s => ctx.drawImage(STAR, Math.round(s.x - 4), Math.round(s.y - 4)));
+    const p = l.p;
+    if (!(p.inv > 0 && Math.floor(p.inv * 12) % 2)) {
+      const fr = p.onGround && Math.abs(p.vx) > 10 ? Math.floor(p.anim / 10) % 2 : 0;
+      const px = Math.round(p.x), py = Math.round(p.y);
+      ctx.save(); if (p.face < 0) { ctx.translate(px + p.w + 1, py - 1); ctx.scale(-1, 1); ctx.drawImage(MEENA[fr], 0, 0); } else ctx.drawImage(MEENA[fr], px - 1, py - 1); ctx.restore();
+    }
+    l.particles.forEach(q => { ctx.fillStyle = q.t < .6 ? '#FFC93C' : '#F28C28'; ctx.fillRect(q.x, q.y, 3, 3); });
+    ctx.textAlign = 'center';
+    l.floaters.forEach(f => { ctx.globalAlpha = Math.max(0, 1 - f.t / 1.6); ctx.font = '800 8px Inter'; ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.strokeText(f.text, f.x + 6, f.y); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x + 6, f.y); ctx.globalAlpha = 1; });
+    ctx.lineWidth = 1;
+    ctx.restore();
+    if (w.key === 'rangde') { ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.fillRect(8, 8, 156, 16); ctx.fillStyle = '#0DAADE'; ctx.font = '800 8px Inter'; ctx.textAlign = 'left'; ctx.fillText(`${l.flags.investors} SOCIAL INVESTORS × ₹500`, 13, 19); }
+  }
+  function bubble(x, y, text) {
+    ctx.font = '700 7px Inter'; const w = ctx.measureText(text).width + 10;
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#1E1B16'; ctx.lineWidth = 1;
+    ctx.fillRect(x - w / 2, y - 16, w, 13); ctx.strokeRect(x - w / 2 + .5, y - 15.5, w - 1, 12); ctx.fillRect(x - 2, y - 4, 4, 3);
+    ctx.fillStyle = '#1E1B16'; ctx.textAlign = 'center'; ctx.fillText(text, x, y - 7);
+  }
+  function drawVault(l) {
+    const x = l.flags.vaultX, y = 6 * T, W = 6 * T;
+    ctx.fillStyle = '#E8EEF7'; ctx.fillRect(x, y, W, 6 * T); ctx.strokeStyle = '#1E1B16'; ctx.lineWidth = 2; ctx.strokeRect(x, y, W, 6 * T);
+    ctx.fillStyle = '#4F8EF7'; ctx.fillRect(x - 4, y - 10, W + 8, 12); ctx.fillStyle = '#fff'; ctx.font = '800 8px Inter'; ctx.textAlign = 'center'; ctx.fillText('BANK', x + W / 2, y - 1);
+    ctx.fillStyle = '#FFC93C'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(x + 20 + i * 18, y + 72, 7, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#1E1B16'; ctx.font = '800 6px Inter'; ctx.fillText('₹', x + 20 + i * 18, y + 74); ctx.fillStyle = '#FFC93C'; }
+    ctx.fillStyle = '#1E1B16'; for (let i = 0; i < 9; i++) ctx.fillRect(x + 8 + i * 10, y + 44, 2, 46);
+    ctx.fillRect(x + 6, y + 44, W - 12, 2);
+    ctx.font = '700 7px Inter'; ctx.fillText('PAPERS REQUIRED', x + W / 2, y + 30);
+    ctx.lineWidth = 1;
+  }
+  function drawChit(l) {
+    l.flags.booths.forEach(b => { ctx.fillStyle = b.paid ? '#C9B3EE' : '#9B5DE5'; ctx.fillRect(b.x, 9 * T, 12, 3 * T); ctx.fillStyle = '#1E1B16'; ctx.font = '800 6px Inter'; ctx.textAlign = 'center'; ctx.fillText('₹2,500', b.x + 6, 9 * T - 3); });
+    const pot = l.flags.pot; if (pot.won) return;
+    const y = pot.y + Math.sin(l.t * 3) * 4;
+    ctx.fillStyle = '#9B5DE5'; ctx.beginPath(); ctx.arc(pot.x + 12, y + 12, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FFC93C'; ctx.fillRect(pot.x + 4, y - 2, 16, 6);
+    ctx.fillStyle = '#fff'; ctx.font = '800 7px Inter'; ctx.textAlign = 'center'; ctx.fillText('₹50K', pot.x + 12, y + 15);
+    ctx.fillStyle = '#1E1B16'; ctx.fillText('YOUR TURN: MONTH ?', pot.x + 12, y - 6);
+  }
+  function drawSchool() {
+    const x = SCHOOL_X * T, y = 6 * T;
+    ctx.fillStyle = '#F4E3C1'; ctx.fillRect(x, y + 10, 7 * T, 6 * T - 10); ctx.strokeStyle = '#1E1B16'; ctx.lineWidth = 2; ctx.strokeRect(x, y + 10, 7 * T, 6 * T - 10);
+    ctx.fillStyle = '#E5533D'; ctx.beginPath(); ctx.moveTo(x - 6, y + 12); ctx.lineTo(x + 3.5 * T, y - 14); ctx.lineTo(x + 7 * T + 6, y + 12); ctx.fill();
+    ctx.fillStyle = '#1E1B16'; ctx.font = '800 8px Inter'; ctx.textAlign = 'center'; ctx.fillText('SCHOOL', x + 3.5 * T, y + 26);
+    ctx.fillStyle = '#7A4B2A'; ctx.fillRect(x + 3 * T - 2, y + 4 * T, T + 4, 2 * T);
+    ctx.fillStyle = '#4F8EF7'; for (let i = 0; i < 2; i++) ctx.fillRect(x + 12 + i * 70, y + 36, 14, 12);
+    ctx.fillStyle = '#1E1B16'; ctx.fillRect(x - 20, y - 30, 2, 9 * T);
+    ctx.fillStyle = '#FF9933'; ctx.fillRect(x - 18, y - 30, 16, 4); ctx.fillStyle = '#fff'; ctx.fillRect(x - 18, y - 26, 16, 4); ctx.fillStyle = '#138808'; ctx.fillRect(x - 18, y - 22, 16, 4);
+    ctx.lineWidth = 1;
+  }
+
+  /* ───────── HUD ───────── */
+  const HEART = '<svg viewBox="0 0 11 10" shape-rendering="crispEdges"><path fill="#E5334B" d="M1 0h3v1h1v1h1V1h1V0h3v1h1v4h-1v1H9v1H8v1H7v1H6v1H5V9H4V8H3V7H2V6H1V5H0V1h1z"/><path fill="#fff" d="M2 1h1v1H2zM1 2h1v1H1z"/></svg>';
+  const GOLD = HEART.replace('#E5334B', '#FFC93C');
+  let lastHearts = '';
+  function hud(broke) {
+    const total = 4 + (G.extra ? 1 : 0);
+    const h = Array.from({ length: total }, (_, i) => { const ex = G.extra && i === 4; return `<span class="${ex || i < G.lives ? '' : 'gone'} ${broke === i ? 'break' : ''}">${ex ? GOLD : HEART}</span>`; }).join('');
+    if (h !== lastHearts) { $('#hearts').innerHTML = h; lastHearts = h; }
+    if (!L) { $('#wname').textContent = 'EXTRA LIFE'; $('#day').textContent = ''; $('#money').textContent = ''; $('#owe').hidden = true; $('#items').innerHTML = ''; return; }
+    $('#wname').textContent = L.world.name;
+    $('#day').textContent = `DAY ${Math.min(DAYS, 1 + Math.floor(L.t / (LEVEL_SECONDS / DAYS)))}/${DAYS}`;
+    $('#money').textContent = fmt(L.money);
+    const owe = $('#owe'); owe.hidden = !L.owe; owe.textContent = `OWE ${fmt(L.owe)}`;
+    const items = Object.entries(NEEDS).map(([k, n]) => `<span class="${L.got[k] ? 'got' : ''}">${L.got[k] ? '✓' : ''}${n.short}<i>${n.cost / 1000}K</i></span>`).join('');
+    if ($('#items').innerHTML !== items) $('#items').innerHTML = items;
+  }
+
+  /* ───────── Loop ───────── */
+  function loop(now) {
+    if (!running) return;
+    // rAF timestamps can be a touch earlier than performance.now(), so never step backwards.
+    const dt = Math.max(0, Math.min(0.033, (now - last) / 1000)); last = Math.max(last, now);
+    update(dt); draw();
+    requestAnimationFrame(loop);
+  }
+  function startLevel(world) {
+    L = buildLevel(world); hud(); draw();
+    ov.hidden = true; running = true; last = performance.now(); requestAnimationFrame(loop);
+  }
+
+  /* ───────── Overlays & flow ───────── */
+  const ov = $('#ov');
+  function show(html, cls = '') { running = false; ov.innerHTML = `<div class="card ${cls}">${html}</div>`; ov.hidden = false; ov.scrollTop = 0; }
+  const bind = (sel, fn) => { const el = ov.querySelector(sel); if (el) el.onclick = fn; };
+
+  function title() {
+    G = newRun();
+    // A still frame of world 1 behind the title card.
+    L = buildLevel(WORLDS[0]); L.npcs = []; L.particles = []; L.floaters = []; draw(); L = null; hud();
+    show(`
+      <p class="t1">EXTRA<br>LIFE</p>
+      <p class="line">Meena runs a tailoring shop. A school has ordered 200 uniforms. She needs:</p>
+      <div class="need">${Object.values(NEEDS).map(n => `<span>${n.name}<b>₹${n.cost.toLocaleString('en-IN')}</b></span>`).join('')}</div>
+      <p class="soft">Run, jump and collect all three before you reach the school. Every lender will give you money. Every lender will take it back. You have <b>4 lives</b>.</p>
+      <p class="fine">Meena and Lalaji are made up. The doors she knocks on are real.</p>
+      <button class="btn go" id="go">PRESS START</button>`);
+    bind('#go', () => worldIntro(0));
+  }
+
+  function worldIntro(i) {
+    G.world = i; const w = WORLDS[i];
+    if (w.haggle) {
+      show(`${w.intro()}<div class="quick"><button id="h2">“Two rupees.”</button><button id="h4">“Four, final.”</button><button id="h5">“Okay, five.”</button></div>`);
+      const reply = (t, rate) => {
+        G.rate = rate;
+        show(`<p class="k">WORLD 1 OF 4 · THE MONEYLENDER</p><div class="say" data-who="LALAJI">${t}</div>
+          ${rate === 3 ? '<p class="pix" style="font-size:12px;color:#2FB67C;text-align:center">YOU WON THE HAGGLE!</p>' : ''}
+          <div class="contract">Loan: ₹50,000<br>Interest: ₹${rate} per ₹100 <b>per month</b><br>File charge: ₹5,000, cut today<br>Security: gold bangles</div>
+          <p class="soft">Collect the fabric, thread and machine on the way to the school. Watch your money.</p>
+          <button class="btn go" id="go">TAKE THE MONEY &gt;</button>`);
+        bind('#go', () => startLevel(w));
+      };
+      bind('#h2', () => reply('Two? For two I’d lend to my own son! …Chalo, three. Only for you.', 3));
+      bind('#h4', () => reply('Four? You’re a hard woman, Meena. Three. Last offer.', 3));
+      bind('#h5', () => reply('Smart woman. No time wasted.', 5));
+      return;
+    }
+    show(`${w.intro()}<button class="btn go" id="go">START &gt;</button>`);
+    bind('#go', () => startLevel(w));
+  }
+
+  function finishLevel(why) {
+    if (!running) return; running = false;
+    const l = L, w = l.world, allGot = Object.values(l.got).every(Boolean);
+    if (w.key === 'rangde') {
+      if (allGot && why === 'school') return win();
+      show(`<p class="k">EXTRA LIFE</p><p class="line">${why === 'time' ? 'Out of days!' : 'Something’s missing.'} The money is there this time: collect all three, then head to the school.</p><button class="btn go" id="go">TRY AGAIN &gt;</button>`);
+      bind('#go', () => startLevel(RANGDE)); return;
+    }
+    const f = w.fail(l);
+    G.lives--; lastHearts = ''; hud(G.lives);
+    const missing = Object.entries(NEEDS).filter(([k]) => !l.got[k]).map(([, n]) => n.name.toLowerCase());
+    show(`
+      <p class="k">WORLD ${G.world + 1} OF 4 · ${w.name}</p>
+      <p class="lost">${why === 'time' ? "TIME'S UP" : f.title}</p>
+      <p class="pix" style="font-size:10px;color:#E5334B">-1 LIFE</p>
+      ${f.body}
+      ${missing.length ? `<p class="soft">Couldn’t afford: <b>${missing.join(', ')}</b>.</p>` : ''}
+      <div class="lesson">${f.lesson}</div>
+      <button class="btn go" id="go">${G.lives ? 'NEXT WORLD &gt;' : 'CONTINUE &gt;'}</button>`);
+    bind('#go', () => G.lives > 0 ? worldIntro(G.world + 1) : gameOver());
+  }
+
+  function gameOver() {
+    L = null; hud();
+    const secs = Math.round((Date.now() - G.t0) / 1000), m = Math.floor(secs / 60), s = String(secs % 60).padStart(2, '0');
+    show(`
+      <p class="gameover">GAME<br>OVER</p>
+      <p class="line">Every door closed. The order went to someone else.</p>
+      <p class="soft">You played for ${m}:${s}. Millions of Indians live this.</p>
+      <div id="portal" style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%"></div>`, 'dark');
+    setTimeout(() => {
+      const p = ov.querySelector('#portal'); if (!p) return;
+      p.innerHTML = `<div class="portal" aria-hidden="true"></div><p class="oneup">1UP</p><p class="line">An extra life appeared.</p><button class="btn go" id="cont">CONTINUE? &gt;</button>`;
+      bind('#cont', () => {
+        G.extra = true; lastHearts = ''; hud();
+        show(`
+          <p class="k">EXTRA LIFE · RANG DE</p>
+          <p class="line">A Rang De partner who works in Meena’s area visits her shop.</p>
+          <p class="soft">They don’t start with land papers. They look at the business itself: her customers, her sales, the school’s order. Then her loan goes up on Rang De, and people across India each invest a part of it, from ₹500.</p>
+          <p class="soft">The blue stars are social investors. Collect all three things, then run to the school.</p>
+          <button class="btn blue" id="go">PLAY THE EXTRA LIFE &gt;</button>`);
+        bind('#go', () => startLevel(RANGDE));
+      });
+    }, reduce ? 0 : 2000);
+  }
+
+  function win() {
+    show(`
+      <p class="t1" style="color:#2FB67C;font-size:22px">YOU WIN!</p>
+      <p class="line">Meena buys the fabric, the thread and the machine. 200 uniforms, delivered on time.</p>
+      <p class="soft">She repays every month. The people who backed her get their money back, with returns, and can back someone else.</p>
+      <div class="lesson">You couldn’t win without an extra life. <b>Neither can Meena.</b> 86% of India’s eligible population has no access to formal credit.<small>Source: rangde.in</small></div>
+      <button class="btn go" id="go">NOW BE SOMEONE'S EXTRA LIFE &gt;</button>`);
+    bind('#go', finale);
+  }
+
+  function finale() {
+    const share = `I lost all 4 lives trying to buy what Meena needed 💔 The moneylender's interest ate my coins, the bank vault never opened, the chit pot floated away.\n\nCan you do better? 🎮 ${HERE}?${utm('share')}`;
+    show(`
+      <p class="pix" style="font-size:13px;line-height:20px">BE SOMEONE'S<br>EXTRA LIFE</p>
+      <p class="soft">These people are real, and waiting on Rang De right now. Back one from ₹500 and get repaid every month.</p>
+      <div class="people">${WAITING.map(p => `<a class="person" href="https://rangde.in/i/${p.key}?${utm('finale')}" target="_blank" rel="noopener"><img src="${p.photo}?auto=compress,format&w=120&h=120&fit=crop&crop=faces" alt=""><span><b>${p.name}</b><span>${p.where}</span><em>${p.need}</em></span></a>`).join('')}</div>
+      <a class="btn blue" href="https://rangde.in/invest/individuals?${utm('finale_all')}" target="_blank" rel="noopener">SEE EVERYONE WAITING &gt;</a>
+      <div class="row"><a class="btn wa" href="https://wa.me/?text=${encodeURIComponent(share)}" target="_blank" rel="noopener">CHALLENGE A FRIEND</a><button class="btn" id="again">PLAY AGAIN</button></div>
+      <p class="fine">Listings as of 20 Oct 2026. Investments carry risk. Rang De is an RBI-registered NBFC-P2P; RBI does not guarantee repayment.</p>`);
+    bind('#again', title);
+  }
+
+  // Pause when the tab is hidden.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && running) {
+      show(`<p class="pix" style="font-size:16px">PAUSED</p><button class="btn go" id="go">RESUME &gt;</button>`);
+      bind('#go', () => { ov.hidden = true; running = true; last = performance.now(); requestAnimationFrame(loop); });
+    }
+  });
+
+  // ?debug exposes a stepper so levels can be checked without real-time frames.
+  if (new URLSearchParams(location.search).has('debug')) window.__extraLife = { keys, step: (dt, jump) => { if (jump) jumpPressed = true; if (running) update(dt); return { t: L && L.t, money: L && L.money, got: L && L.got, x: L && Math.round(L.p.x), y: L && Math.round(L.p.y), vx: L && Math.round(L.p.vx), vy: L && Math.round(L.p.vy), g: L && L.p.onGround, running, card: ov.hidden ? '' : ov.innerText.slice(0, 80) }; } };
+
+  // Test hook for the prototype: ?world=2 jumps straight to a world, ?world=rangde to the extra life.
+  const jump = new URLSearchParams(location.search).get('world');
+  document.fonts.ready.then(() => {
+    title();
+    if (jump === 'rangde') { G.lives = 0; G.extra = true; lastHearts = ''; startLevel(RANGDE); }
+    else if (jump && WORLDS[+jump - 1]) { G.world = +jump - 1; G.lives = 4 - G.world; lastHearts = ''; startLevel(WORLDS[G.world]); }
+  });
+})();
+</script>
+</body>
+</html>

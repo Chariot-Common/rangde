@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rang De Wrap · Your year as a rangoli</title>
+<meta name="description" content="Your year on Rang De as a rangoli: every tile is someone you backed, drawn as the thing your money helped buy.">
+<meta property="og:title" content="My year on Rang De, as a rangoli">
+<meta property="og:description" content="Cows, looms, sewing machines and seeds: every tile is someone I backed. What does yours look like?">
+<meta name="theme-color" content="#1F3BA8">
+<link rel="icon" href="logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Parkinsans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cobalt:#1F3BA8; --ink:#1B1530; --cream:#FFF4E2; --saffron:#F5A623; --magenta:#C2185B; --plum:#2A0F3D; --red:#D7262E; --leaf:#1E7A46; --teal:#0F6E80;
+    --display:Parkinsans, Inter, sans-serif; --sans:Inter, system-ui, sans-serif; --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; background:#0E0B1F; color:#fff; font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+  body{ display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  button{ font:inherit; color:inherit; border:0; background:none; cursor:pointer; }
+  a{ color:inherit; }
+  button:focus-visible, a:focus-visible, input:focus-visible{ outline:3px solid #FFD27A; outline-offset:2px; }
+  .backdrop{ position:fixed; inset:0; z-index:-1; background:radial-gradient(circle at 25% 20%, #2A3FA8, transparent 50%), radial-gradient(circle at 80% 90%, #7A1350, transparent 45%), #0E0B1F; }
+
+  /* Phone-shaped story frame */
+  .frame{ position:relative; width:min(100vw, calc(100dvh * 9 / 16)); height:min(100dvh, calc(100vw * 16 / 9)); overflow:hidden; background:var(--cobalt); transition:background .7s var(--ease), color .5s; }
+  @media (min-width:700px){ .frame{ height:min(92dvh, 860px); width:calc(min(92dvh, 860px) * 9 / 16); border-radius:28px; box-shadow:0 30px 80px rgba(0,0,0,.5); } }
+  /* Line-art motif wallpaper, like the reference posters */
+  .wall{ position:absolute; inset:-40px; opacity:.12; pointer-events:none; background-size:132px 132px; transition:opacity .6s; }
+  .frame.light .wall{ opacity:.14; filter:invert(1); }
+
+  .top{ position:absolute; z-index:6; left:0; right:0; top:0; padding:12px 14px 0; display:flex; flex-direction:column; gap:10px; }
+  .bars{ display:flex; gap:4px; }
+  .bars i{ flex:1; height:3px; border-radius:3px; background:rgba(255,255,255,.3); overflow:hidden; }
+  .bars i b{ display:block; height:100%; width:0; background:#fff; }
+  .frame.light .bars i{ background:rgba(27,21,48,.2); } .frame.light .bars i b{ background:var(--ink); }
+  .who{ display:flex; align-items:center; justify-content:space-between; }
+  .who .chip{ background:#fff; border-radius:8px; padding:3px 6px; display:flex; } .who img{ height:20px; }
+  .who span{ font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; opacity:.85; }
+  .who button{ font-size:22px; line-height:1; padding:2px 6px; }
+  .tap{ position:absolute; z-index:4; top:0; bottom:0; } .tap.l{ left:0; width:30%; } .tap.r{ right:0; width:70%; }
+
+  /* The rangoli: one element that moves between slides */
+  #rg{ position:absolute; z-index:2; left:50%; top:50%; width:88%; aspect-ratio:1; transform:translate(-50%,-50%); transition:all .9s var(--ease); pointer-events:none; }
+  #rg svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .frame[data-layout="hidden"] #rg{ opacity:0; transform:translate(-50%,-50%) scale(.5) rotate(-30deg); }
+  .frame[data-layout="seed"] #rg{ top:62%; width:40%; }
+  .frame[data-layout="center"] #rg{ top:48%; width:90%; }
+  .frame[data-layout="ghost"] #rg{ top:60%; width:130%; opacity:.14; }
+  .frame[data-layout="card"] #rg{ top:44%; width:74%; }
+  #rg .tile{ transform-box:fill-box; transform-origin:center; }
+  #rg.build .tile{ animation:tileIn .5s var(--ease) both; }
+  #rg.build .border{ animation:fadeIn .8s ease both; animation-delay:var(--bd, 2s); }
+  @keyframes tileIn{ from{ opacity:0; transform:scale(.3); } }
+  @keyframes fadeIn{ from{ opacity:0; } }
+  #rg .spin{ transform-origin:0 0; animation:spin 120s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  #rg.seedonly .tile, #rg.seedonly .border, #rg.seedonly .dots{ opacity:0; }
+
+  .slide{ position:absolute; z-index:5; inset:0; padding:86px 24px 26px; display:flex; flex-direction:column; pointer-events:none; }
+  .slide > *{ animation:rise .7s var(--ease) both; }
+  .slide > *:nth-child(2){ animation-delay:.15s; } .slide > *:nth-child(3){ animation-delay:.3s; } .slide > *:nth-child(4){ animation-delay:.45s; } .slide > *:nth-child(5){ animation-delay:.6s; } .slide > *:nth-child(6){ animation-delay:.75s; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(20px); } }
+  .slide .act{ pointer-events:auto; }
+  .k{ font-size:12px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; opacity:.8; }
+  .big{ font-family:var(--display); font-weight:800; font-size:42px; line-height:44px; letter-spacing:-.02em; }
+  .huge{ font-family:var(--display); font-weight:800; font-size:96px; line-height:.9; letter-spacing:-.04em; }
+  .p{ font-size:16px; line-height:23px; font-weight:600; opacity:.9; }
+  .p b{ font-weight:800; }
+  .push{ margin-top:auto; }
+  .gap{ display:flex; flex-direction:column; gap:12px; }
+  .sample{ display:inline-block; align-self:flex-start; font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; padding:4px 9px; border-radius:999px; border:1.5px solid currentColor; opacity:.75; }
+  .hl{ color:#FFD27A; } .frame.light .hl{ color:var(--magenta); }
+
+  /* Things slide */
+  .things{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:18px; }
+  .thing{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 6px 10px; border-radius:18px; background:rgba(27,21,48,.1); border:2px solid rgba(27,21,48,.85); animation:pop .6s var(--ease) both; }
+  .thing svg{ width:46px; height:46px; }
+  .thing b{ font-family:var(--display); font-weight:800; font-size:30px; line-height:30px; }
+  .thing span{ font-size:12px; line-height:15px; font-weight:700; text-align:center; }
+  @keyframes pop{ 0%{ opacity:0; transform:scale(.4); } 70%{ transform:scale(1.08); } }
+  /* Travel slide */
+  .route{ width:100%; margin:18px 0 0; }
+  .route path.trail{ stroke-dasharray:4 7; animation:dash 2.4s linear infinite; }
+  @keyframes dash{ to{ stroke-dashoffset:-44; } }
+  .route .draw{ stroke-dasharray:600; stroke-dashoffset:600; animation:draw 2s .4s var(--ease) forwards; }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  /* Dots slide */
+  .dotgrid{ display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; margin-top:18px; }
+  .dotgrid i{ aspect-ratio:1; border-radius:50%; border:2.5px solid #fff; animation:pop .5s var(--ease) both; }
+  .dotgrid i.on{ background:#fff; }
+  /* Equation */
+  .eq{ display:flex; align-items:center; gap:12px; margin:22px 0 6px; font-family:var(--display); font-weight:800; }
+  .eq b{ font-size:64px; line-height:1; letter-spacing:-.03em; }
+  .eq span{ font-size:34px; opacity:.7; }
+  .quote{ font-family:var(--display); font-weight:600; font-size:25px; line-height:32px; }
+  .legend{ display:flex; flex-wrap:wrap; gap:6px; }
+  .legend span{ display:flex; align-items:center; gap:6px; padding:5px 10px 5px 5px; border-radius:999px; background:rgba(255,255,255,.12); font-size:12px; font-weight:700; }
+  .legend i{ width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+  .legend i svg{ width:15px; height:15px; }
+  .stats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stats div{ border-radius:16px; padding:14px; background:rgba(255,255,255,.12); }
+  .stats b{ display:block; font-family:var(--display); font-weight:800; font-size:28px; line-height:30px; }
+  .stats span{ font-size:12px; font-weight:700; opacity:.85; }
+  .btn{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:50px; padding:0 16px; border-radius:999px; font-weight:800; font-size:15px; text-decoration:none; text-align:center; transition:transform .15s; }
+  .btn:active{ transform:scale(.97); }
+  .btn.w{ background:#fff; color:var(--ink); } .btn.o{ border:2px solid currentColor; } .btn.wa{ background:#25D366; color:#0b3d1f; }
+  .row{ display:flex; gap:10px; } .row > *{ flex:1; }
+  .switch{ display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; font-weight:700; padding:10px 14px; border-radius:14px; background:rgba(255,255,255,.12); }
+  .switch input{ width:44px; height:24px; accent-color:#FFD27A; }
+  .card-prev{ border-radius:16px; overflow:hidden; box-shadow:0 12px 36px rgba(0,0,0,.4); height:50%; aspect-ratio:9/16; align-self:center; }
+  .card-prev img{ display:block; width:100%; height:100%; object-fit:cover; }
+  .fine{ font-size:11px; line-height:16px; opacity:.65; }
+
+  /* Landing */
+  .screen{ position:absolute; z-index:7; inset:0; padding:64px 22px 22px; display:flex; flex-direction:column; gap:14px; overflow:auto; background:var(--cobalt); }
+  .screen[hidden]{ display:none; }
+  .screen h1{ font-family:var(--display); font-weight:800; font-size:44px; line-height:45px; letter-spacing:-.03em; }
+  .screen h1 em{ font-style:normal; color:#FFD27A; }
+  .preview{ width:100%; max-width:300px; aspect-ratio:1; align-self:center; position:relative; z-index:1; }
+  .preview svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .pick{ display:flex; gap:8px; }
+  .pick button{ flex:1; padding:8px 6px; border-radius:14px; border:2px solid rgba(255,255,255,.35); text-align:center; font-size:12px; font-weight:700; line-height:15px; }
+  .pick button b{ display:block; font-family:var(--display); font-size:15px; }
+  .pick button[aria-pressed="true"]{ background:#fff; color:var(--ink); border-color:#fff; }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="backdrop"></div>
+<div class="frame" id="frame" data-layout="hidden">
+  <div class="wall" id="wall"></div>
+  <div class="top" id="top" hidden>
+    <div class="bars" id="bars"></div>
+    <div class="who"><span class="chip"><img src="logo.svg" alt="Rang De"></span><span id="whoName"></span><button id="close" aria-label="Close">×</button></div>
+  </div>
+  <div id="rg" aria-hidden="true"></div>
+  <div class="slide" id="slide" aria-live="polite"></div>
+  <button class="tap l" id="tapL" aria-label="Previous" hidden></button>
+  <button class="tap r" id="tapR" aria-label="Next" hidden></button>
+
+  <section class="screen" id="landing">
+    <p class="k">Rang De Wrap · 2026</p>
+    <h1>Your year,<br>as a <em>rangoli.</em></h1>
+    <p class="p">Every tile is someone you backed, drawn as what your money helped buy: a cow, a loom, a sewing machine, a bag of seeds.</p>
+    <div class="preview" id="landingRg"></div>
+    <p class="k" style="margin-top:4px">See three sample investors</p>
+    <div class="pick" id="pick"></div>
+    <button class="btn w" id="play">Play the Wrap</button>
+    <p class="fine">Prototype with sample investors. In the real Wrap, everything comes from the investor’s Rang De account: they never type a thing.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const fmt = n => Math.round(n).toLocaleString('en-IN');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ─────────── What the money bought: line-art motifs (24×24, white stroke) ─────────── */
+  const MOTIF = {
+    cow:    { cat: 'animal', one: 'cow', many: 'cows', d: 'M4 6.2c1.6 0 2.6.5 3.3 1.3M20 6.2c-1.6 0-2.6.5-3.3 1.3M7.3 7.5C7.7 5.5 9.6 4.5 12 4.5s4.3 1 4.7 3l-.7 5.5c0 2.8-1.8 5.5-4 5.5s-4-2.7-4-5.5zM9.5 15.4c0-1 1.1-1.7 2.5-1.7s2.5.7 2.5 1.7-1.1 1.7-2.5 1.7-2.5-.7-2.5-1.7zM10.6 15.4h.01M13.4 15.4h.01M10 10.2h.01M14 10.2h.01' },
+    goat:   { cat: 'animal', one: 'goat', many: 'goats', d: 'M8.5 6.3C6.6 5.4 5.6 3.7 6.2 2.5c1 1 2 1.9 3.4 2.9M15.5 6.3c1.9-.9 2.9-2.6 2.3-3.8-1 1-2 1.9-3.4 2.9M8.6 6.3h6.8l-.6 7.6c-.4 2-1.5 3.1-2.8 3.1s-2.4-1.1-2.8-3.1zM10.2 10.3h.01M13.8 10.3h.01M11 17l1 3.2 1-3.2M5.6 8.4l3 .6M18.4 8.4l-3 .6' },
+    hen:    { cat: 'animal', one: 'flock of hens', many: 'flocks of hens', d: 'M6 13.8c0-4 2.8-6.2 6-6.2.9 0 1.8.2 2.6.6L16 6l1.6 1-1 1.9c.9 1 1.4 2.3 1.4 3.7 0 4-2.9 6.4-6 6.4s-6-2-6-5.2zM14.6 4.6c.5-1.1 1.6-1.1 2.1 0M17.9 9.6l2.1.8-2.1.7M14.7 10.2h.01M9.3 11.5c1.4 1.4 3.2 1.7 4.7.8M10 19l-.6 2M13.6 19l.6 2' },
+    sewing: { cat: 'craft', one: 'sewing machine', many: 'sewing machines', d: 'M3.5 18.5h17M5 18.5v-2h14v2M6.5 16.5V8.2c0-1.2.9-2.2 2.1-2.2h8.1c1.3 0 2.3 1 2.3 2.3v4.2h-3V9.6h-5.5v1.9H8.6M8.6 11.5v3.2M7.4 14.7h2.4M16.8 8.1h.01' },
+    loom:   { cat: 'craft', one: 'handloom', many: 'handlooms', d: 'M5 4h14M5 20h14M6.5 4v16M17.5 4v16M6.5 8l11 2.4M6.5 12l11 2.4M6.5 16l11 2.4M10 4v16M14 4v16' },
+    seed:   { cat: 'farm', one: 'bag of seeds', many: 'bags of seeds', d: 'M12 20v-8M12 12c0-3.6-2.6-6.2-6.2-6.2 0 3.6 2.6 6.2 6.2 6.2zM12 14.2c0-3 2.3-5.2 5.6-5.2 0 3-2.3 5.2-5.6 5.2zM4.5 20h15' },
+    wheat:  { cat: 'farm', one: 'wheat harvest', many: 'wheat harvests', d: 'M12 21V6.5M12 9c-2-.5-3.1-2-3.1-4.1 2 .5 3.1 2 3.1 4.1zM12 9c2-.5 3.1-2 3.1-4.1-2 .5-3.1 2-3.1 4.1zM12 13.2c-2-.5-3.1-2-3.1-4.1 2 .5 3.1 2 3.1 4.1zM12 13.2c2-.5 3.1-2 3.1-4.1-2 .5-3.1 2-3.1 4.1zM12 17.4c-2-.5-3.1-2-3.1-4.1 2 .5 3.1 2 3.1 4.1zM12 17.4c2-.5 3.1-2 3.1-4.1-2 .5-3.1 2-3.1 4.1z' },
+    fish:   { cat: 'fish', one: 'fishing net', many: 'fishing nets', d: 'M2.8 12c3-4.6 9.2-5.6 13.2-1 .5.6.5 1.4 0 2-4 4.6-10.2 3.6-13.2-1zM16 11l5-3.1v8.2L16 13M7 11.3h.01M9.6 9.1c.6 1.9.6 3.9 0 5.8' },
+    boat:   { cat: 'fish', one: 'boat repair', many: 'boat repairs', d: 'M3 14.5h18l-2.6 4H5.6zM12 14.5V3.5l6.2 8.8H12M12 6l-5.2 6.3H12' },
+    shop:   { cat: 'shop', one: 'kirana restock', many: 'kirana restocks', d: 'M4 9.2L5.5 5h13L20 9.2M4 9.2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2M5 11.2V20h14v-8.8M10 20v-5h4v5' },
+  };
+  const CATS = {
+    animal: { color: '#F5A623', deep: '#C97F06', label: 'Animals', persona: 'The Herd Hero', line: 'Cows, goats and hens. You keep village kitchens, and incomes, running.' },
+    farm:   { color: '#2FA350', deep: '#1E7A39', label: 'Farming', persona: 'The Seed Sower', line: 'You put seeds in the ground. Harvests followed.' },
+    craft:  { color: '#D02A78', deep: '#9C1556', label: 'Craft', persona: 'The Loom Lover', line: 'You back the hands that weave, stitch and dye.' },
+    fish:   { color: '#1C95BD', deep: '#11698A', label: 'Fisheries', persona: 'The Tide Turner', line: 'You back the people who bring in the catch.' },
+    shop:   { color: '#E8452C', deep: '#B02C17', label: 'Shops', persona: 'The Shutter Raiser', line: 'You keep shutters rolling up every morning in small-town India.' },
+  };
+  const DIYA = 'M4 13.2c0 3.5 3.6 5.6 8 5.6s8-2.1 8-5.6zM4 13.2h16M12 3.6c1.7 2.1 2.1 3.3 2.1 4.4a2.1 2.1 0 0 1-4.2 0c0-1.1.4-2.3 2.1-4.4z';
+  const icon = (d, stroke = '#fff', sw = 1.6) => `<svg viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+
+  // Wallpaper of motifs, like the reference posters.
+  const wallTile = (() => {
+    const keys = Object.keys(MOTIF); let s = '';
+    for (let i = 0; i < 9; i++) { const m = MOTIF[keys[i % keys.length]], x = (i % 3) * 44 + 10, y = Math.floor(i / 3) * 44 + 10, r = (i * 37) % 40 - 20; s += `<g transform="translate(${x} ${y}) rotate(${r} 12 12)"><path d="${m.d}"/></g>`; }
+    s += '<g fill="#fff" stroke="none"><circle cx="40" cy="40" r="1.5"/><circle cx="84" cy="84" r="1.5"/><circle cx="128" cy="40" r="1.5"/><circle cx="40" cy="128" r="1.5"/></g>';
+    return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="132" height="132" viewBox="0 0 132 132" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${s}</svg>`)}")`;
+  })();
+  $('#wall').style.backgroundImage = wallTile;
+
+  /* ─────────── Sample investors. In the real Wrap this comes from their Rang De account. ─────────── */
+  const PLACES = {
+    Pune: [18.52, 73.86], Dubai: [25.2, 55.27], Chennai: [13.08, 80.27],
+    Udaipur: [24.58, 73.71], Dhar: [22.6, 75.3], Nashik: [20, 73.79], Dhubri: [26.02, 89.98], Imphal: [24.81, 93.94], Buldhana: [20.53, 76.18], Puri: [19.81, 85.83], Bhuj: [23.25, 69.67], Varanasi: [25.32, 82.97], Kolhapur: [16.7, 74.24], Barmer: [25.75, 71.39], Jorhat: [26.75, 94.2], Kalahandi: [19.91, 83.17], Bankura: [23.23, 87.07], Kanchipuram: [12.83, 79.7], Malda: [25, 88.14], Theni: [10.01, 77.48], Raichur: [16.2, 77.36],
+  };
+  // [first name, place, what it bought, woman?, backer number, days to fill, ₹ invested]
+  const INVESTORS = [
+    { name: 'Ananya', home: 'Pune', since: 2023, repaid: 6840, relent: 4500, loans: [
+      ['Kamla', 'Udaipur', 'cow', 1, 3, 2, 1000], ['Sunita', 'Dhar', 'sewing', 1, 12, 6, 1000], ['Bhagwati', 'Barmer', 'goat', 1, 4, 3, 500], ['Rajesh', 'Nashik', 'seed', 0, 20, 9, 1000],
+      ['Lakshmi', 'Kanchipuram', 'loom', 1, 7, 4, 1000], ['Geeta', 'Dhar', 'shop', 1, 2, 1, 500], ['Anil', 'Puri', 'fish', 0, 15, 8, 1000], ['Parvati', 'Kolhapur', 'cow', 1, 9, 5, 500],
+      ['Ramesh', 'Buldhana', 'wheat', 0, 30, 11, 1000], ['Meera', 'Varanasi', 'loom', 1, 5, 3, 1000], ['Saroj', 'Udaipur', 'hen', 1, 11, 4, 500], ['Rina', 'Dhubri', 'fish', 1, 25, 10, 1000],
+      ['Asha', 'Bankura', 'sewing', 1, 1, 2, 500], ['Pooja', 'Imphal', 'seed', 1, 8, 6, 1000], ['Mohan', 'Kalahandi', 'cow', 0, 14, 7, 500], ['Shanti', 'Bhuj', 'sewing', 1, 6, 3, 1000],
+      ['Usha', 'Malda', 'shop', 1, 18, 9, 1000], ['Kiran', 'Jorhat', 'goat', 0, 10, 5, 500] ] },
+    { name: 'Rohan', home: 'Dubai', since: 2024, nri: true, repaid: 7200, relent: 7200, loans: [
+      ['Fatima', 'Bhuj', 'sewing', 1, 2, 2, 2000], ['Jaya', 'Varanasi', 'loom', 1, 4, 3, 2000], ['Salma', 'Malda', 'sewing', 1, 6, 4, 1000], ['Dipali', 'Jorhat', 'loom', 1, 3, 5, 2000],
+      ['Rafiq', 'Puri', 'boat', 0, 9, 6, 1000], ['Nirmala', 'Kanchipuram', 'loom', 1, 1, 1, 2000], ['Babita', 'Bankura', 'sewing', 1, 5, 3, 1000], ['Hari', 'Dhubri', 'fish', 0, 12, 8, 1000],
+      ['Leela', 'Udaipur', 'shop', 1, 7, 4, 1000], ['Mamta', 'Imphal', 'loom', 1, 2, 2, 2000], ['Gopal', 'Kalahandi', 'seed', 0, 16, 9, 1000], ['Sushila', 'Barmer', 'sewing', 1, 8, 5, 1000] ] },
+    { name: 'Meera', home: 'Chennai', since: 2021, repaid: 9600, relent: 3000, loans: [
+      ['Selvi', 'Theni', 'seed', 1, 4, 3, 500], ['Murugan', 'Theni', 'wheat', 0, 22, 9, 500], ['Kavya', 'Raichur', 'seed', 1, 6, 4, 500], ['Basamma', 'Raichur', 'cow', 1, 3, 2, 500],
+      ['Ravi', 'Buldhana', 'wheat', 0, 17, 8, 500], ['Sharada', 'Kolhapur', 'seed', 1, 9, 5, 500], ['Durga', 'Dhar', 'hen', 1, 2, 2, 500], ['Lata', 'Nashik', 'seed', 1, 11, 6, 500],
+      ['Gauri', 'Udaipur', 'cow', 1, 5, 3, 500], ['Prakash', 'Kalahandi', 'wheat', 0, 28, 12, 500], ['Anjali', 'Puri', 'fish', 1, 7, 4, 500], ['Sita', 'Varanasi', 'seed', 1, 13, 6, 500],
+      ['Rekha', 'Barmer', 'goat', 1, 1, 1, 500], ['Vinod', 'Raichur', 'shop', 0, 19, 9, 500], ['Kamala', 'Kanchipuram', 'loom', 1, 8, 4, 500], ['Neela', 'Theni', 'seed', 1, 3, 2, 500],
+      ['Manju', 'Bankura', 'wheat', 1, 10, 5, 500], ['Lalita', 'Kolhapur', 'cow', 1, 6, 3, 500], ['Shobha', 'Dhubri', 'seed', 1, 21, 10, 500], ['Yamuna', 'Imphal', 'seed', 1, 12, 7, 500],
+      ['Kusum', 'Malda', 'hen', 1, 4, 3, 500], ['Raju', 'Jorhat', 'wheat', 0, 24, 11, 500], ['Indira', 'Bhuj', 'sewing', 1, 2, 2, 500], ['Padma', 'Theni', 'seed', 1, 5, 3, 500] ] },
+  ];
+  // Real, from rangde.in/stats (20 Oct 2026).
+  const COMMUNITY = { investors: 11854, loans: 31817, states: 29, women: 63 };
+
+  const km = (a, b) => { const [la1, lo1] = PLACES[a], [la2, lo2] = PLACES[b], r = Math.PI / 180, x = Math.sin((la2 - la1) * r / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin((lo2 - lo1) * r / 2) ** 2; return 6371 * 2 * Math.asin(Math.sqrt(x)); };
+  function insights(inv) {
+    const L = inv.loans.map(([who, place, motif, woman, backer, days, amt]) => ({ who, place, motif, woman: !!woman, backer, days, amt, cat: MOTIF[motif].cat, km: km(inv.home, place) }));
+    const invested = L.reduce((a, l) => a + l.amt, 0);
+    const things = {}; L.forEach(l => things[l.motif] = (things[l.motif] || 0) + 1);
+    const cats = {}; L.forEach(l => cats[l.cat] = (cats[l.cat] || 0) + 1);
+    const catList = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+    const far = L.reduce((a, l) => l.km > a.km ? l : a, L[0]);
+    const early = L.filter(l => l.backer <= 5), fastest = L.reduce((a, l) => l.days < a.days ? l : a, L[0]);
+    const top = catList[0], persona = top[1] / L.length < .35 ? { persona: 'The Rangoli Maker', line: 'No single colour wins. Your backing spreads across every kind of work.', color: '#FFD27A' } : CATS[top[0]];
+    return { L, invested, things: Object.entries(things).sort((a, b) => b[1] - a[1]), cats: catList, far, totalKm: L.reduce((a, l) => a + l.km, 0), early, fastest, women: L.filter(l => l.woman).length, multiplier: (invested + inv.relent) / invested, persona };
+  }
+
+  /* ─────────── The rangoli: rings of tiles, one per person, drawn as what they bought ─────────── */
+  function rangoli(inv, I, { animate = false } = {}) {
+    const n = I.L.length;
+    let rings = 1; while (6 * rings * (rings + 1) / 2 < n) rings++;          // ring k holds 6k tiles
+    const R0 = 40, R1 = 158, rw = (R1 - R0) / rings;
+    const order = [...I.L].sort((a, b) => a.cat.localeCompare(b.cat));     // group colours, like a real rangoli
+    let tiles = '', dots = '', idx = 0, delay = 0;
+    for (let k = 1; k <= rings; k++) {
+      const count = 6 * k, ri = R0 + (k - 1) * rw + 3, ro = R0 + k * rw - 3, off = k % 2 ? 0 : Math.PI / count;
+      for (let j = 0; j < count; j++) {
+        const a0 = off + j / count * Math.PI * 2 + .02, a1 = off + (j + 1) / count * Math.PI * 2 - .02;
+        const P = (r, a) => `${(Math.cos(a) * r).toFixed(1)} ${(Math.sin(a) * r).toFixed(1)}`;
+        const path = `M${P(ri, a0)} L${P(ro, a0)} A${ro} ${ro} 0 0 1 ${P(ro, a1)} L${P(ri, a1)} A${ri} ${ri} 0 0 0 ${P(ri, a0)}Z`;
+        const l = order[idx++], am = (a0 + a1) / 2, rm = (ri + ro) / 2, size = Math.min(rw * .72, (a1 - a0) * rm * .78);
+        const cx = Math.cos(am) * rm, cy = Math.sin(am) * rm, rot = am * 180 / Math.PI + 90;
+        if (l) {
+          const c = CATS[l.cat], fill = idx % 2 ? c.color : c.deep;
+          tiles += `<g class="tile" style="animation-delay:${(delay += .09).toFixed(2)}s"><path d="${path}" fill="${fill}" stroke="#1B1530" stroke-width="2"/><g transform="translate(${cx.toFixed(1)} ${cy.toFixed(1)}) rotate(${rot.toFixed(1)}) scale(${(size / 24).toFixed(3)}) translate(-12 -12)" fill="none" stroke="#fff" stroke-width="${(1.7 * 24 / size * .9).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"><path d="${MOTIF[l.motif].d}"/></g></g>`;
+        } else {
+          // Empty spots get a small flower, so the pattern stays whole.
+          tiles += `<g class="tile" style="animation-delay:${(delay += .05).toFixed(2)}s"><path d="${path}" fill="#3A2456" stroke="#1B1530" stroke-width="2"/>${[0, 1, 2, 3, 4].map(p => `<circle cx="${(cx + Math.cos(p * 1.256) * size * .18).toFixed(1)}" cy="${(cy + Math.sin(p * 1.256) * size * .18).toFixed(1)}" r="${(size * .1).toFixed(1)}" fill="#FFD27A"/>`).join('')}</g>`;
+        }
+      }
+      // Kolam dots between rings
+      const rd = R0 + k * rw, nd = Math.round(rd * 2 * Math.PI / 9);
+      for (let d = 0; d < nd; d++) { const a = d / nd * Math.PI * 2; dots += `<circle cx="${(Math.cos(a) * rd).toFixed(1)}" cy="${(Math.sin(a) * rd).toFixed(1)}" r="1.6" fill="#fff"/>`; }
+    }
+    // Scalloped border in the investor's category colours
+    const pal = I.cats.map(([c]) => CATS[c].color); let border = '';
+    const ns = 36; for (let s = 0; s < ns; s++) { const a = (s + .5) / ns * Math.PI * 2; border += `<circle cx="${(Math.cos(a) * (R1 + 9)).toFixed(1)}" cy="${(Math.sin(a) * (R1 + 9)).toFixed(1)}" r="9" fill="${pal[s % pal.length]}" stroke="#1B1530" stroke-width="2"/>`; }
+    for (let s = 0; s < 72; s++) { const a = s / 72 * Math.PI * 2; border += `<circle cx="${(Math.cos(a) * (R1 + 24)).toFixed(1)}" cy="${(Math.sin(a) * (R1 + 24)).toFixed(1)}" r="1.8" fill="#FFD27A"/>`; }
+    const centre = `<circle r="${R0 - 2}" fill="#FFD27A" stroke="#1B1530" stroke-width="2.5"/><circle r="${R0 - 9}" fill="none" stroke="#1B1530" stroke-width="1.5" stroke-dasharray="2 4"/><g transform="scale(1.45) translate(-12 -12)" fill="none" stroke="#1B1530" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="${DIYA}"/></g><path d="M0 -16c2.5 3 3 5 3 6.5a3 3 0 0 1-6 0c0-1.5.5-3.5 3-6.5z" fill="#E8452C" transform="translate(0 -6) scale(.55)"/>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-200 -200 400 400"><g class="spin"><g class="border" style="--bd:${(delay + .2).toFixed(2)}s">${border}</g><g class="tiles">${tiles}</g><g class="dots">${dots}</g></g>${centre}</svg>`;
+  }
+
+  /* ─────────── The story ─────────── */
+  const frame = $('#frame'), rg = $('#rg'), slideEl = $('#slide');
+  let INV = INVESTORS[0], I = insights(INV), idx = 0, t0 = 0, dur = 0, paused = false, hideAmt = false, raf = 0;
+  const thingsLine = I_ => I_.things.slice(0, 3).map(([m, c]) => `${c} ${c > 1 ? MOTIF[m].many : MOTIF[m].one}`).join(', ');
+  const SLIDES = [
+    { bg: '#1F3BA8', layout: 'seed', seed: true, d: 4500, html: () => `
+        <p class="k">Rang De Wrap · 2026</p>
+        <p class="big" style="margin-top:12px">${esc(INV.name)}, this year your money turned into <span class="hl">things.</span></p>
+        <span class="sample" style="margin-top:14px">Sample investor · ${esc(INV.home)}</span>` },
+    { bg: '#F5A623', light: true, layout: 'hidden', d: 7500, html: () => `
+        <p class="k">Your money helped buy</p>
+        <div class="things">${I.things.slice(0, 6).map(([m, c], i) => `<div class="thing" style="animation-delay:${.25 + i * .18}s">${icon(MOTIF[m].d, '#1B1530', 1.8)}<b>${c}</b><span>${c > 1 ? MOTIF[m].many : MOTIF[m].one}</span></div>`).join('')}</div>
+        <p class="p push">Each was someone’s next step. Your share sat alongside other investors’ in every one.</p>` },
+    { bg: '#2A0F3D', layout: 'hidden', d: 7000, html: () => routeSlide() },
+    { bg: '#C2185B', layout: 'hidden', d: 6500, html: () => `
+        <p class="k">Your rupee worked twice</p>
+        <p class="big">Money came back, and you sent it out again.</p>
+        <div class="eq"><b>₹1</b><span>→</span><b class="hl">₹${I.multiplier.toFixed(1)}</b></div>
+        <p class="p">${hideAmt ? 'Part of what came back' : `<b>₹${fmt(INV.repaid)}</b> came back to you this year, and <b>₹${fmt(INV.relent)}</b> of it`} went straight to someone new. Every rupee you put in did ${I.multiplier.toFixed(1)}× the work.</p>
+        <label class="switch act push"><span>Hide amounts when I share</span><input type="checkbox" id="hideAmt" ${hideAmt ? 'checked' : ''}></label>` },
+    { bg: '#1E7A46', layout: 'hidden', d: 6500, html: () => `
+        <p class="k">You showed up early</p>
+        <p class="huge">${I.early.length}</p>
+        <p class="big" style="font-size:30px;line-height:34px">times you were one of someone’s <span class="hl">first five</span> backers.</p>
+        <p class="p push">Fastest of all: <b>${esc(I.fastest.who)}</b> in ${esc(I.fastest.place)} was fully funded in <b>${I.fastest.days} day${I.fastest.days > 1 ? 's' : ''}</b>. You were backer no. ${I.fastest.backer}.</p>` },
+    { bg: '#D7262E', layout: 'hidden', d: 6000, html: () => `
+        <p class="k">Who you backed</p>
+        <p class="big"><span class="hl">${I.women}</span> of your ${I.L.length} were women.</p>
+        <div class="dotgrid">${I.L.map((l, i) => `<i class="${l.woman ? 'on' : ''}" style="animation-delay:${.3 + i * .05}s" title="${esc(l.who)}"></i>`).join('')}</div>
+        <p class="p push">Across Rang De, ${COMMUNITY.women}% of borrowers are women.</p>` },
+    { bg: '#FFF4E2', light: true, layout: 'ghost', d: 6500, html: () => `
+        <p class="k">A note from someone you backed</p>
+        <p class="quote push">“${noteFor(I)}”</p>
+        <p class="p">${esc(I.L[0].who)}, ${esc(I.L[0].place)}</p>
+        <span class="sample">Example message</span>` },
+    { bg: '#1A0B2E', layout: 'center', build: true, d: 9000, html: () => `
+        <p class="k">Your rangoli</p>
+        <p class="big" style="font-size:30px;line-height:34px">Every tile is someone you backed.</p>
+        <div class="legend push">${I.cats.map(([c, n]) => `<span><i style="background:${CATS[c].color}">${icon(MOTIF[Object.keys(MOTIF).find(m => MOTIF[m].cat === c)].d)}</i>${CATS[c].label} · ${n}</span>`).join('')}</div>` },
+    { bg: '#1F3BA8', layout: 'ghost', d: 6500, html: () => `
+        <p class="k">Your impact personality</p>
+        <p class="big" style="color:${I.persona.color}">${I.persona.persona}</p>
+        <p class="p">${I.persona.line}</p>
+        <p class="p push">Your tiles: ${thingsLine(I)}.</p>` },
+    { bg: '#0F6E80', layout: 'ghost', d: 6500, html: () => `
+        <p class="k">You weren’t alone</p>
+        <p class="big">Together, Rang De investors have backed</p>
+        <div class="stats push">
+          <div><b>${fmt(COMMUNITY.loans)}</b><span>loans since 2019</span></div>
+          <div><b>${fmt(COMMUNITY.investors)}</b><span>social investors</span></div>
+          <div><b>${COMMUNITY.states}</b><span>states</span></div>
+          <div><b>${COMMUNITY.women}%</b><span>borrowers who are women</span></div>
+        </div>
+        <p class="fine">Live figures from rangde.in, 20 Oct 2026.</p>` },
+    { bg: '#1A0B2E', layout: 'hidden', d: 0, share: true, html: () => `
+        <p class="k">Your share card</p>
+        <div class="card-prev act" style="margin-top:10px"><img id="cardImg" alt="Your Rang De Wrap share card"></div>
+        <div class="gap push act">
+          <label class="switch"><span>Hide amounts</span><input type="checkbox" id="hideAmt2" ${hideAmt ? 'checked' : ''}></label>
+          <div class="row"><button class="btn w" id="dl">Save image</button><a class="btn wa" id="wa" target="_blank" rel="noopener">WhatsApp</a></div>
+          <div class="row"><button class="btn o" id="replay">Replay</button><button class="btn o" id="others">Other investors</button></div>
+        </div>` },
+  ];
+  function noteFor(I_) {
+    const m = I_.L[0].motif;
+    return { cow: 'The cow gives eight litres a day now. My son drinks milk before school.', sewing: 'The new machine came in time for the school order. My daughter helps me in the evenings now.', loom: 'I finished two saris this month instead of one. The trader came to my door.', seed: 'Good seeds this season. We will not need to borrow from the trader for food.', goat: 'Three goats now, and two kids on the way.', shop: 'The shelves are full again. Customers don’t go to the next village.', fish: 'New nets. The catch is bigger and the nets don’t tear.', hen: 'Eggs every morning, and some to sell at the weekly market.', wheat: 'The harvest was good. We paid the instalment on time.', boat: 'The boat is fixed. I go out every morning again.' }[m];
+  }
+  function routeSlide() {
+    const f = I.far, a = PLACES[INV.home], b = PLACES[f.place];
+    // Simple projection into the slide (lon → x, lat → y)
+    const X = lo => 20 + (lo - 52) / (97 - 52) * 300, Y = la => 190 - (la - 8) / (30 - 8) * 170;
+    const x1 = X(a[1]), y1 = Y(a[0]), x2 = X(b[1]), y2 = Y(b[0]), mx = (x1 + x2) / 2, my = Math.min(y1, y2) - 70;
+    const pts = I.L.map(l => { const p = PLACES[l.place]; return `<circle cx="${X(p[1]).toFixed(0)}" cy="${Y(p[0]).toFixed(0)}" r="4" fill="${CATS[l.cat].color}" stroke="#fff" stroke-width="1.5"/>`; }).join('');
+    return `
+      <p class="k">How far your money went</p>
+      <p class="huge" style="font-size:72px">${fmt(I.totalKm)}<span style="font-size:28px"> km</span></p>
+      <p class="p">added up, from ${esc(INV.home)} to every person you backed.</p>
+      <svg class="route" viewBox="0 0 340 210" fill="none">
+        <path class="draw" d="M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}" stroke="#FFD27A" stroke-width="2.5"/>
+        <path class="trail" d="M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}" stroke="#fff" stroke-opacity=".5" stroke-width="2"/>
+        ${pts}
+        <circle cx="${x1}" cy="${y1}" r="7" fill="#fff"/><text x="${x1}" y="${y1 + 22}" fill="#fff" font-family="Inter" font-weight="800" font-size="12" text-anchor="middle">${esc(INV.home)}</text>
+        <circle cx="${x2}" cy="${y2}" r="7" fill="#FFD27A"/><text x="${x2 - 6}" y="${y2 - 14}" fill="#FFD27A" font-family="Inter" font-weight="800" font-size="12" text-anchor="end">${esc(f.place)}</text>
+      </svg>
+      <p class="p push">Furthest: <b>${esc(f.who)}</b> in ${esc(f.place)}, <b>${fmt(f.km)} km</b> from ${esc(INV.home)}${INV.nri ? '. Home, from abroad.' : '.'}</p>`;
+  }
+
+  const bars = $('#bars');
+  function startStory() {
+    I = insights(INV);
+    rg.innerHTML = rangoli(INV, I);
+    $('#whoName').textContent = `${INV.name}’s 2026`;
+    bars.innerHTML = SLIDES.map(() => '<i><b></b></i>').join('');
+    $('#landing').hidden = true;
+    ['#top', '#tapL', '#tapR'].forEach(s => $(s).hidden = false);
+    show(0);
+  }
+  function show(i) {
+    idx = Math.max(0, Math.min(SLIDES.length - 1, i));
+    const s = SLIDES[idx];
+    frame.style.background = s.bg; frame.style.color = s.light ? 'var(--ink)' : '#fff';
+    frame.classList.toggle('light', !!s.light);
+    frame.dataset.layout = s.layout;
+    rg.classList.toggle('seedonly', !!s.seed);
+    rg.classList.remove('build'); if (s.build) { void rg.offsetWidth; rg.classList.add('build'); }
+    slideEl.innerHTML = s.html();
+    [...bars.children].forEach((b, j) => b.firstChild.style.width = j < idx ? '100%' : '0');
+    const h1 = $('#hideAmt'), h2 = $('#hideAmt2');
+    if (h1) h1.onchange = () => { hideAmt = h1.checked; show(idx); };
+    if (h2) h2.onchange = () => { hideAmt = h2.checked; drawCard(); };
+    if (s.share) setupShare();
+    // ?pause stops auto-advance (handy for reviewing slides).
+    dur = new URLSearchParams(location.search).has('pause') ? 0 : s.d; t0 = performance.now(); paused = false;
+    cancelAnimationFrame(raf); if (dur) raf = requestAnimationFrame(tick);
+  }
+  let lastT = 0;
+  function tick(now) {
+    if (paused) t0 += now - lastT; lastT = now;
+    const p = Math.min(1, (now - t0) / dur);
+    bars.children[idx].firstChild.style.width = p * 100 + '%';
+    if (p >= 1) return show(idx + 1);
+    raf = requestAnimationFrame(tick);
+  }
+  $('#tapR').onclick = () => idx < SLIDES.length - 1 && show(idx + 1);
+  $('#tapL').onclick = () => show(idx - 1);
+  ['pointerdown', 'pointerup', 'pointercancel', 'pointerleave'].forEach(ev => frame.addEventListener(ev, e => { if (e.target.closest('.act, button, a, input, label, .screen')) return; paused = ev === 'pointerdown'; }));
+  addEventListener('keydown', e => { if ($('#landing').hidden) { if (e.key === 'ArrowRight') $('#tapR').click(); if (e.key === 'ArrowLeft') $('#tapL').click(); } });
+  $('#close').onclick = toLanding;
+
+  /* ─────────── Share card (1080×1920) ─────────── */
+  let cardBlob = null;
+  const svgImg = svg => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.replace('class="spin"', '')); });
+  async function drawCard() {
+    await document.fonts.ready;
+    const c = document.createElement('canvas'); c.width = 1080; c.height = 1920; const g = c.getContext('2d');
+    g.fillStyle = '#1F3BA8'; g.fillRect(0, 0, 1080, 1920);
+    const wall = await svgImg(decodeURIComponent(wallTile.slice('url("data:image/svg+xml,'.length, -2))); g.globalAlpha = .12; for (let y = 0; y < 1920; y += 264) for (let x = 0; x < 1080; x += 264) g.drawImage(wall, x, y, 264, 264); g.globalAlpha = 1;
+    g.fillStyle = '#fff'; g.textBaseline = 'top';
+    g.font = '800 32px Inter'; g.globalAlpha = .8; g.fillText('RANG DE WRAP · 2026', 90, 100); g.globalAlpha = 1;
+    g.font = '800 74px Parkinsans'; g.fillText(`${INV.name}’s year,`, 90, 150); g.fillStyle = '#FFD27A'; g.fillText('as a rangoli', 90, 235);
+    const im = await svgImg(rangoli(INV, I)); g.drawImage(im, 90, 360, 900, 900);
+    const cells = [[I.things[0] ? `${I.things[0][1]} ${I.things[0][1] > 1 ? MOTIF[I.things[0][0]].many : MOTIF[I.things[0][0]].one}` : '', 'top thing I helped buy'], [`${fmt(I.totalKm)} km`, 'my money travelled'], [`${I.women} of ${I.L.length}`, 'were women'], [hideAmt ? `${I.multiplier.toFixed(1)}×` : `₹1 → ₹${I.multiplier.toFixed(1)}`, 'my rupee’s work']];
+    cells.forEach(([v, l], i) => {
+      const x = 90 + (i % 2) * 460, y = 1310 + Math.floor(i / 2) * 180;
+      g.fillStyle = 'rgba(255,255,255,.12)'; g.beginPath(); g.roundRect(x, y, 440, 160, 26); g.fill();
+      g.fillStyle = '#fff'; g.font = `800 ${v.length > 14 ? 40 : 52}px Parkinsans`; g.fillText(v, x + 30, y + 30, 390);
+      g.font = '700 28px Inter'; g.globalAlpha = .8; g.fillText(l, x + 30, y + 104); g.globalAlpha = 1;
+    });
+    g.fillStyle = I.persona.color; g.font = '800 48px Parkinsans'; g.fillText(I.persona.persona, 90, 1690);
+    g.fillStyle = '#fff'; g.globalAlpha = .85; g.font = '700 28px Inter'; g.fillText('Back a rural entrepreneur from ₹500 · rangde.in', 90, 1780); g.globalAlpha = 1;
+    const url = c.toDataURL('image/png'), img = $('#cardImg'); if (img) img.src = url;
+    cardBlob = await new Promise(r => c.toBlob(r, 'image/png'));
+  }
+  function setupShare() {
+    drawCard();
+    const text = `My year on Rang De, as a rangoli 🪔 My money helped buy ${thingsLine(I)}, ${fmt(I.totalKm)} km from home. I'm "${I.persona.persona}".\n\nWhat would yours look like? ${location.origin + location.pathname}?utm_source=wrap&utm_medium=share`;
+    $('#wa').href = 'https://wa.me/?text=' + encodeURIComponent(text);
+    $('#dl').onclick = async () => {
+      if (!cardBlob) await drawCard();
+      const file = new File([cardBlob], 'rang-de-wrap.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], text }); return; } catch {} }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(cardBlob); a.download = 'rang-de-wrap.png'; a.click();
+    };
+    $('#replay').onclick = () => show(0);
+    $('#others').onclick = toLanding;
+  }
+
+  /* ─────────── Landing: pick a sample investor ─────────── */
+  function renderLanding() {
+    const Ii = insights(INV);
+    $('#landingRg').innerHTML = rangoli(INV, Ii);
+    $('#pick').innerHTML = INVESTORS.map((v, i) => `<button data-i="${i}" aria-pressed="${v === INV}"><b>${v.name}</b>${v.home}${v.nri ? ' (NRI)' : ''}<br>${v.loans.length} people</button>`).join('');
+    $('#pick').querySelectorAll('button').forEach(b => b.onclick = () => { INV = INVESTORS[+b.dataset.i]; renderLanding(); });
+  }
+  function toLanding() {
+    cancelAnimationFrame(raf);
+    ['#top', '#tapL', '#tapR'].forEach(s => $(s).hidden = true);
+    slideEl.innerHTML = ''; frame.dataset.layout = 'hidden'; frame.style.background = ''; frame.style.color = ''; frame.classList.remove('light');
+    $('#landing').hidden = false; renderLanding();
+  }
+  $('#play').onclick = startStory;
+  if (new URLSearchParams(location.search).has('pause')) window.__show = n => { if (!$('#landing').hidden) startStory(); show(n); };
+  renderLanding();
+})();
+</script>
+</body>
+</html>

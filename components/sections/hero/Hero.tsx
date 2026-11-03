@@ -3,7 +3,7 @@ import { StoryCarousel } from "./StoryCarousel";
 
 export function Hero() {
   return (
-    <div id="hero" className="relative isolate flex w-full flex-col items-center gap-12 px-4 pt-[100px] sm:px-2 sm:gap-16 sm:pt-12 md:pt-16 lg:gap-[72px] lg:pt-[64px]">
+    <div id="hero" className="relative isolate flex w-full flex-col items-center gap-12 px-4 pt-[100px] sm:px-2 sm:pt-12 md:pt-16 lg:pt-[64px]">
       {/* Decorative background glow ("Ellipse 308" in Figma): a solid white shape with
           a soft golden drop-shadow (blur 250px, rgba(254,199,0,0.64)) behind it. Drawn
           as a box-shadow rather than filter: drop-shadow — identical on an opaque circle,
