@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
       // The second How it works take was tried at /v/idea-2 and is now Version B itself.
       { source: "/v/idea-2", destination: "/v/idea", permanent: false },
       ...(VERSIONS_SITE ? [{ source: "/", destination: "/v", permanent: false }] : []),
+      // version-2 branch only: its own link opens Version B (scroll-based How it works).
+      ...(VERSIONS_SITE ? [] : [{ source: "/", destination: "/v/idea", permanent: false }]),
     ];
   },
 };
