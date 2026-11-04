@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatedText } from "@/components/ui/AnimatedText";
 import { imgix, type IndividualOpportunity } from "@/lib/opportunities";
 
@@ -15,125 +15,166 @@ const FACES = ["Rekha-42-img.jpg", "Vijay-004-img.jpg", "manawrmonika037-img.jpg
   (f) => `https://rangde.imgix.net/bImg/${f}?auto=compress,format&w=96&h=96&fit=facearea&facepad=2.2`,
 );
 
-function Faces({ srcs, size = 36 }: { srcs: string[]; size?: number }) {
-  return (
-    <div className="flex">
-      {srcs.map((src, i) => (
-        <div key={src} className="relative rounded-full border-2 border-white shadow-[0_2px_4px_rgba(0,0,0,0.1)]" style={{ width: size, height: size, marginLeft: i ? -size / 3 : 0 }}>
-          <Image src={src} alt="" fill unoptimized sizes={`${size}px`} className="rounded-full object-cover" />
+// Gita Devi, from rangde.in's published success stories: 4 social investors, ₹20,000, 8% a year; she
+// bought fish feed, worked more ponds, and the season brought her ₹20,000 in profit. The repayment
+// schedule and the credit record below are illustrations, labelled as such on the card. The credit
+// line ("her repayments go on record") matches the copy used elsewhere on the approach pages; confirm
+// bureau reporting with Rang De before launch.
+const GITA = { name: "Gita Devi", trade: "Fish farmer", avatar: "/images/stories/story-3-avatar.webp", raised: 20000, investors: 4, rate: "8% p.a." };
+const STEP_MS = 6000;
+
+const STAGES: { key: string; label: string; title: string; text: string }[] = [
+  { key: "capital", label: "Capital", title: "People like you fund her loan", text: "Four social investors each put in a share. Once the ₹20,000 is raised, it goes straight to her bank account." },
+  { key: "business", label: "Business", title: "Her business grows", text: "She buys fish feed and works more ponds. That season brings her ₹20,000 in profit." },
+  { key: "repayment", label: "Repayment", title: "She repays, with interest", text: "Instalments follow a schedule agreed upfront, and each one goes back to her investors." },
+  { key: "credit", label: "Credit history", title: "She builds a credit record", text: "Her repayments go on record, so the next lender can say yes too." },
+  { key: "next", label: "The next person", title: "Your money goes round again", text: "What comes back to you can back someone new. One share can fund person after person." },
+];
+
+const tick = (
+  <svg viewBox="0 0 12 12" className="size-[9px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M2.5 6.2l2.3 2.3L9.5 3.8" />
+  </svg>
+);
+
+/** What the loan card shows at each step: one card that changes as the story moves on. */
+function StageVisual({ k, reduce }: { k: string; reduce: boolean }) {
+  const t = (delay = 0) => ({ duration: reduce ? 0 : 0.7, delay: reduce ? 0 : delay, ease: EASE });
+  if (k === "capital")
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between">
+          <p className="font-display text-h4 font-bold text-ink">₹20,000</p>
+          <p className="font-display text-p4 font-bold text-green-dark">raised · {GITA.rate}</p>
         </div>
-      ))}
+        <div className="h-[10px] overflow-hidden rounded-full bg-ink/8">
+          <motion.div className="h-full rounded-full bg-green-dark" initial={{ width: reduce ? "100%" : "0%" }} animate={{ width: "100%" }} transition={t(0.15)} />
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex" aria-hidden>
+            {Array.from({ length: GITA.investors }, (_, n) => (
+              <motion.span
+                key={n}
+                className="flex size-[30px] items-center justify-center rounded-full border-2 border-white bg-[#cbe0b8] text-green-dark"
+                style={{ marginLeft: n ? -9 : 0 }}
+                initial={reduce ? false : { opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={t(0.2 + n * 0.12)}
+              >
+                <svg viewBox="0 0 24 24" className="size-[16px]" fill="currentColor" aria-hidden><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8z" /></svg>
+              </motion.span>
+            ))}
+          </div>
+          <p className="font-display text-p4 font-medium text-ink/80">{GITA.investors} social investors</p>
+        </div>
+      </div>
+    );
+  if (k === "business")
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="font-eyebrow text-h6 font-semibold uppercase tracking-[1.2px] text-ink/56">This season</p>
+        <div className="flex items-end gap-2" aria-hidden>
+          {[0.35, 0.5, 0.7, 1].map((h, n) => (
+            <motion.div key={n} className="w-full rounded-t-[6px] bg-[#62af1d]" style={{ height: 72 * h, transformOrigin: "bottom" }} initial={reduce ? false : { scaleY: 0 }} animate={{ scaleY: 1 }} transition={t(0.1 + n * 0.12)} />
+          ))}
+        </div>
+        <p className="font-display text-h4 font-bold text-green-dark">+ ₹20,000 profit</p>
+        <p className="-mt-2 font-display text-p4 font-medium text-ink/72">More fish feed, more ponds worked</p>
+      </div>
+    );
+  if (k === "repayment")
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="font-eyebrow text-h6 font-semibold uppercase tracking-[1.2px] text-ink/56">Example schedule</p>
+        <div className="grid grid-cols-6 gap-1.5" aria-hidden>
+          {Array.from({ length: 12 }, (_, n) => (
+            <motion.div
+              key={n}
+              className="flex aspect-square items-center justify-center rounded-[8px] font-display text-[11px] font-bold"
+              initial={reduce ? false : { backgroundColor: "rgba(41,45,54,0.08)", color: "rgba(41,45,54,0.32)" }}
+              animate={{ backgroundColor: "#3a6e0c", color: "#fff" }}
+              transition={t(0.15 + n * 0.22)}
+            >
+              ₹
+            </motion.div>
+          ))}
+        </div>
+        <p className="font-display text-p4 font-medium text-ink/72">Each instalment goes back to her investors, with interest</p>
+      </div>
+    );
+  if (k === "credit")
+    return (
+      <div className="flex flex-col gap-2">
+        <p className="font-eyebrow text-h6 font-semibold uppercase tracking-[1.2px] text-ink/56">Example credit record</p>
+        {["First formal loan", "Repaid on schedule", "Eligible for a bigger loan"].map((line, n) => (
+          <motion.div
+            key={line}
+            className="flex items-center justify-between rounded-[8px] bg-bg-grey px-3 py-2.5 font-display text-p4 font-bold text-ink"
+            initial={reduce ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={t(0.15 + n * 0.35)}
+          >
+            {line}
+            <span className="flex size-[18px] items-center justify-center rounded-full bg-green-dark text-white">{tick}</span>
+          </motion.div>
+        ))}
+      </div>
+    );
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="font-eyebrow text-h6 font-semibold uppercase tracking-[1.2px] text-ink/56">Your share, lent again</p>
+      <div className="flex items-center gap-1.5 sm:gap-2" aria-hidden>
+        <div className="relative size-[32px] shrink-0 overflow-hidden rounded-full ring-2 ring-white sm:size-[40px]">
+          <Image src={GITA.avatar} alt="" fill sizes="40px" className="object-cover" />
+        </div>
+        {FACES.map((src, n) => (
+          <div key={src} className="flex items-center gap-1.5 sm:gap-2">
+            <motion.svg viewBox="0 0 24 24" className="size-[10px] text-ink/32 sm:size-[14px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={t(0.2 + n * 0.3)}>
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </motion.svg>
+            <motion.div className="relative size-[32px] shrink-0 overflow-hidden rounded-full ring-2 ring-white sm:size-[40px]" initial={reduce ? false : { opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={t(0.3 + n * 0.3)}>
+              <Image src={src} alt="" fill unoptimized sizes="40px" className="object-cover" />
+            </motion.div>
+          </div>
+        ))}
+      </div>
+      <p className="font-display text-p4 font-medium text-ink/72">Reinvested, the same money backs one entrepreneur after another</p>
     </div>
   );
 }
 
-const STAGES: { key: string; label: string; title: string; text: string; mock: ReactNode }[] = [
-  {
-    key: "capital",
-    label: "Capital",
-    title: "People like you fund the loan",
-    text: "Many social investors each put in from ₹500. Once the loan is fully funded, it goes straight to the entrepreneur’s bank account.",
-    mock: (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <p className="font-display text-p4 font-bold text-ink">Gita Devi · Fish farm</p>
-          <span className="rounded-full bg-green-dark px-2 py-0.5 font-display text-[11px] font-bold text-white">Funded</span>
-        </div>
-        <div className="h-[8px] overflow-hidden rounded-full bg-ink/8"><div className="h-full w-full rounded-full bg-green-dark" /></div>
-        <div className="flex items-center gap-3">
-          <div className="flex" aria-hidden>
-            {["#0daade", "#8ca21e", "#3a6e0c", "#3eaae0"].map((c, n) => (
-              <span key={c} className="size-[28px] rounded-full border-2 border-white" style={{ background: c, marginLeft: n ? -9 : 0 }} />
-            ))}
-          </div>
-          <p className="font-display text-[12px] font-medium text-ink/80">4 social investors · ₹20,000</p>
-        </div>
-      </div>
-    ),
-  },
-  {
-    key: "business",
-    label: "Business",
-    title: "The business grows",
-    text: "Gita Devi bought fish feed and worked more ponds, a season that brought her ₹20,000 in profit.",
-    mock: (
-      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[8px]">
-        <Image src="/images/stories/story-3-bg.webp" alt="" fill sizes="320px" className="object-cover" />
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/72 to-transparent p-3">
-          <p className="font-display text-p4 font-bold text-white">+ ₹20,000 profit in a season</p>
-        </div>
-      </div>
-    ),
-  },
-  {
-    key: "repayment",
-    label: "Repayment",
-    title: "She repays, with interest",
-    text: "Repayments follow a schedule agreed upfront, and come back to every investor as Rang De credit.",
-    mock: (
-      <div className="flex flex-col gap-3">
-        <p className="font-eyebrow text-h6 font-semibold uppercase tracking-[1.2px] text-ink/72">Example schedule</p>
-        <div className="grid grid-cols-6 gap-1.5">
-          {Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="flex aspect-square items-center justify-center rounded-full bg-green-dark font-display text-[11px] font-bold text-white">₹</div>
-          ))}
-        </div>
-        <p className="font-display text-[12px] font-medium text-ink/80">Each instalment goes back to her investors</p>
-      </div>
-    ),
-  },
-  {
-    key: "credit",
-    label: "Credit history",
-    title: "She builds a credit history",
-    text: "A repaid formal loan gives her a track record, so the next lender can say yes too.",
-    mock: (
-      <div className="flex flex-col gap-2">
-        <p className="font-eyebrow text-h6 font-semibold uppercase tracking-[1.2px] text-ink/72">Example credit record</p>
-        {["First formal loan", "Repaid on schedule", "Eligible for more"].map((t) => (
-          <div key={t} className="flex items-center justify-between rounded-[6px] bg-bg-grey px-3 py-2 font-display text-[12px] font-medium text-ink">
-            {t}
-            <span className="flex size-[16px] items-center justify-center rounded-full bg-green-dark text-white">
-              <svg viewBox="0 0 12 12" className="size-[9px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M2.5 6.2l2.3 2.3L9.5 3.8" /></svg>
-            </span>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
-    key: "next",
-    label: "The next person",
-    title: "Your money goes round again",
-    text: "Reinvest what comes back and it funds someone new. One ₹500 can back person after person.",
-    mock: (
-      <div className="flex flex-col items-start gap-3">
-        <p className="font-eyebrow text-h6 font-semibold uppercase tracking-[1.2px] text-ink/72">Example: one ₹500, reinvested</p>
-        <Faces srcs={FACES} size={40} />
-        <p className="font-display text-[12px] font-medium text-ink/80">Can go on to back four entrepreneurs, one after another</p>
-      </div>
-    ),
-  },
-];
-
-/** "One loan. More than one outcome." — the chain of outcomes, stepped through by tap or by itself. */
+/**
+ * "One loan. More than one outcome." — one real loan (Gita Devi's) followed through five outcomes.
+ * Left: who she is, then the five steps as a list; the open step shows its line and a bar for how long
+ * until the story moves on, and any step can be opened. Right: her loan card, which changes with the
+ * step so the story reads as one thing happening. It plays on its own and loops while on screen,
+ * holds for a moment after a step is chosen, and doesn't move with reduced motion.
+ */
 export function OutcomeChain() {
   const [i, setI] = useState(0);
-  const [auto, setAuto] = useState(true);
+  const [chosen, setChosen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount: 0.4 });
-  const reduce = useReducedMotion();
+  const reduce = !!useReducedMotion();
+  const playing = inView && !chosen && !reduce;
   const stage = STAGES[i];
 
   useEffect(() => {
-    if (!auto || !inView || reduce) return;
-    const id = setInterval(() => setI((n) => (n + 1) % STAGES.length), 3200);
-    return () => clearInterval(id);
-  }, [auto, inView, reduce]);
+    if (!playing) return;
+    const id = setTimeout(() => setI((n) => (n + 1) % STAGES.length), STEP_MS);
+    return () => clearTimeout(id);
+  }, [i, playing]);
+
+  // After a step is picked, let the reader take it in, then carry on.
+  useEffect(() => {
+    if (!chosen) return;
+    const id = setTimeout(() => setChosen(false), 8000);
+    return () => clearTimeout(id);
+  }, [chosen, i]);
 
   return (
-    <section className="relative mx-2 rounded-[16px] bg-[#F7F3ED] px-4 py-16 sm:px-8 md:py-24">
-      <div ref={ref} className="mx-auto flex w-full max-w-[1100px] flex-col items-center gap-10">
+    <section className="relative mx-2 rounded-[16px] bg-[#F7F3ED] px-4 py-14 sm:px-8 md:py-24">
+      <div ref={ref} className="mx-auto flex w-full max-w-[1100px] flex-col items-center gap-8 md:gap-12">
         <AnimatedText
           as="h2"
           segments={[
@@ -143,80 +184,117 @@ export function OutcomeChain() {
           className="text-center font-display text-[28px] font-bold leading-[32px] sm:text-h3 sm:leading-[48px]"
         />
 
-        <div role="group" aria-label="What one loan makes possible" className="flex max-w-full flex-wrap items-center justify-center gap-y-2">
-          {STAGES.map((s, n) => (
-            <div key={s.key} className="flex items-center">
-              <button
-                type="button"
-                aria-pressed={n === i}
-                aria-controls="outcome-panel"
-                onClick={() => {
-                  setAuto(false);
-                  setI(n);
-                }}
-                className={`min-h-[44px] rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-dark px-4 font-display text-p3 font-bold transition-colors ${
-                  n === i ? "bg-green-dark text-white shadow-[0_2px_8px_rgba(58,110,12,0.32)]" : n < i ? "bg-white text-green-dark" : "bg-white/60 text-ink/72 hover:bg-white"
-                }`}
-              >
-                {s.label}
-              </button>
-              {n < STAGES.length - 1 && (
-                <svg viewBox="0 0 24 24" className={`mx-1 size-[18px] ${n < i ? "text-green-dark" : "text-ink/24"}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              )}
+        <div
+          className="grid w-full grid-cols-1 gap-6 rounded-[16px] bg-white p-4 shadow-[0_1px_2px_rgba(41,45,54,0.06),0_12px_32px_rgba(41,45,54,0.06)] sm:p-8 md:grid-cols-[1fr_380px] md:gap-10 md:p-10"
+        >
+          {/* The steps. */}
+          <div className="order-2 flex flex-col md:order-1">
+            <div className="mb-5 flex items-center gap-3 border-b border-ink/8 pb-5">
+              <div className="relative size-[48px] shrink-0 overflow-hidden rounded-full">
+                <Image src={GITA.avatar} alt="" fill sizes="48px" className="object-cover" />
+              </div>
+              <div>
+                <p className="font-display text-p2 font-bold text-ink">Follow one loan: {GITA.name}&rsquo;s</p>
+                <p className="font-display text-p4 font-medium text-ink/64">
+                  {GITA.trade} · ₹{GITA.raised.toLocaleString("en-IN")} from {GITA.investors} social investors
+                </p>
+              </div>
             </div>
-          ))}
-        </div>
+            <ol aria-label="What one loan makes possible" className="relative flex flex-col">
+              {STAGES.map((s, n) => {
+                const on = n === i;
+                const done = n < i;
+                return (
+                  <li key={s.key} className="relative flex gap-4">
+                    {/* The thread between the numbers. */}
+                    {n < STAGES.length - 1 && (
+                      <span aria-hidden className="absolute left-[15px] top-[34px] bottom-0 w-[2px] bg-ink/8">
+                        <span className={`block w-full bg-green-dark transition-[height] duration-500 ease-out ${done ? "h-full" : "h-0"}`} />
+                      </span>
+                    )}
+                    <span
+                      aria-hidden
+                      className={`relative z-10 mt-1 flex size-[32px] shrink-0 items-center justify-center rounded-full font-display text-p4 font-bold transition-colors duration-300 ${
+                        on ? "bg-green-dark text-white" : done ? "bg-[#cbe0b8] text-green-dark" : "bg-white text-ink/56 ring-2 ring-ink/12"
+                      }`}
+                    >
+                      {done ? tick : n + 1}
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-col pb-4">
+                      <button
+                        type="button"
+                        aria-expanded={on}
+                        aria-controls="outcome-visual"
+                        onClick={() => {
+                          setI(n);
+                          setChosen(true);
+                        }}
+                        className={`min-h-[40px] text-left font-display text-p2 font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-dark ${
+                          on ? "text-ink" : "text-ink/56 hover:text-ink"
+                        }`}
+                      >
+                        {on ? s.title : s.label}
+                      </button>
+                      <AnimatePresence initial={false}>
+                        {on && (
+                          <motion.div
+                            key="body"
+                            initial={reduce ? false : { height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: reduce ? 0 : 0.35, ease: EASE }}
+                            className="overflow-hidden"
+                          >
+                            <p className="max-w-[460px] font-display text-p3 font-medium text-ink/80 sm:text-p2">{s.text}</p>
+                            {/* How long until the story moves on. */}
+                            <div className="mt-3 h-[3px] w-full max-w-[460px] overflow-hidden rounded-full bg-ink/8" aria-hidden>
+                              <motion.div
+                                key={`${i}-${playing}`}
+                                className="h-full rounded-full bg-green-dark"
+                                initial={{ width: playing ? "0%" : "100%" }}
+                                animate={{ width: "100%" }}
+                                transition={{ duration: playing ? STEP_MS / 1000 : 0, ease: "linear" }}
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
 
-        {!reduce && (
-          <button
-            type="button"
-            onClick={() => setAuto((a) => !a)}
-            className="-mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-dark px-4 font-display text-p4 font-bold text-ink/80 hover:bg-white/60"
-          >
-            {auto ? (
-              <svg viewBox="0 0 24 24" className="size-[14px]" fill="currentColor" aria-hidden><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
-            ) : (
-              <svg viewBox="0 0 24 24" className="size-[14px]" fill="currentColor" aria-hidden><path d="M8 5.5v13l11-6.5z" /></svg>
-            )}
-            {auto ? "Pause the story" : "Play the story"}
-          </button>
-        )}
-
-        <div id="outcome-panel" aria-live={auto ? "off" : "polite"} className="grid w-full grid-cols-1 items-center gap-8 rounded-[16px] bg-white p-6 shadow-[0_1px_2px_rgba(41,45,54,0.06),0_12px_32px_rgba(41,45,54,0.06)] sm:p-10 md:grid-cols-[1fr_340px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={stage.key}
-              initial={reduce ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduce ? undefined : { opacity: 0, y: -6 }}
-              transition={{ duration: reduce ? 0 : 0.3, ease: EASE }}
-              className="flex flex-col gap-3"
-            >
-              <p className="font-display text-p4 font-bold uppercase tracking-[0.88px] text-green-dark">
-                Step {i + 1} of {STAGES.length}
-              </p>
-              <h3 className="font-display text-h4 font-bold text-ink">{stage.title}</h3>
-              <p className="max-w-[520px] font-display text-p2 font-medium text-ink/80">{stage.text}</p>
-            </motion.div>
-          </AnimatePresence>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={stage.key}
-              initial={reduce ? false : { opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={reduce ? undefined : { opacity: 0, scale: 0.98 }}
-              transition={{ duration: reduce ? 0 : 0.3, ease: EASE }}
-              className="rounded-[12px] bg-white p-4 ring-1 ring-ink/8 shadow-[0_6px_16px_rgba(41,45,54,0.08)]"
-            >
-              {stage.mock}
-            </motion.div>
-          </AnimatePresence>
+          {/* Her loan card, changing with the step. */}
+          <div className="order-1 md:order-2 md:self-center">
+            <div id="outcome-visual" aria-live="polite" className="rounded-[16px] bg-[#F7F3ED] p-3 sm:p-4">
+              <div className="rounded-[12px] bg-white p-4 shadow-[0_6px_16px_rgba(41,45,54,0.08)] sm:p-5">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="relative size-[36px] shrink-0 overflow-hidden rounded-full">
+                    <Image src={GITA.avatar} alt="" fill sizes="36px" className="object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-display text-p3 font-bold text-ink">{GITA.name}</p>
+                    <p className="truncate font-display text-[12px] font-medium text-ink/56">{GITA.trade}</p>
+                  </div>
+                  <span className="shrink-0 whitespace-nowrap rounded-full bg-[#cbe0b8] px-2 py-1 font-display text-[10px] font-bold uppercase tracking-[0.5px] text-green-dark sm:px-2.5 sm:text-[11px] sm:tracking-[0.6px]">{stage.label}</span>
+                </div>
+                <div className="min-h-[176px]">
+                  {/* Swapped at once and faded in (no exit wait), so the card never lags the step. */}
+                  <motion.div
+                    key={stage.key}
+                    initial={reduce ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: reduce ? 0 : 0.35, ease: EASE }}
+                  >
+                    <StageVisual k={stage.key} reduce={reduce} />
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="max-w-[760px] text-center font-display text-p4 font-medium text-ink/72">
-          Gita Devi&rsquo;s story is from Rang De&rsquo;s published success stories. Credit-history reporting to be confirmed with Rang De before launch.
-        </p>
       </div>
     </section>
   );

@@ -30,17 +30,25 @@ Z("ac-btn","backgroundColor",[[0,"#62af1d"],[14.3,"#62af1d"],[14.6,"#4e8f16"],[1
 /* the amount in the field counts along with the option pill (one continuous number, never a cross-fade) */
 const pill=X("ac-sel"),amt=X("ac-amt"),amtAt=x=>x<=138?500+x/138*1500:2000+(x-138)/69*3000;
 const tick=()=>{if(!M.isConnected)return;const x=parseFloat(getComputedStyle(pill).translate)||0;amt.textContent=(Math.round(amtAt(Math.min(207,Math.max(0,x)))/10)*10).toLocaleString("en-IN");requestAnimationFrame(tick)};requestAnimationFrame(tick)},3:function(){const M=A("#mf3"),L=L=>A(L,M);N(3,L("#s3-pan"),"translate",[[0,S(0,333.75),[0,0,.706,.968]],[4.8,S(0,62.75),[.306,.194,.635,.794]],[20.99,S(0,-8.25),[.42,0,.19,.994]],[31.09,S(0,-247.25),[.848,-.006,.58,1]],[41.3,S(0,-442.25),[.31,.19,.64,.79]],[59.72,S(0,-542.25),[.42,0,.19,.99]],[68.26,S(0,-772.25),[.85,-.01,.58,1]],[81.81,S(0,-988.25)],[100,S(0,-988.25)]]);N(3,L("#s3-pan"),"opacity",[[0,1],[88.2,1,"cb"],[100,0]]);N(3,L("#s3-c0"),"strokeDasharray",[[0,"0.0005 1"],[24.1,"0.0005 1","cb"],[31.1,"1 1"],[100,"1 1"]]);N(3,L("#s3-c1"),"strokeDasharray",[[0,"0.0005 1"],[31.7,"0.0005 1","cb"],[37.5,"1 1"],[100,"1 1"]]);N(3,L("#s3-c2"),"strokeDasharray",[[0,"0.0005 1"],[61.8,"0.0005 1","cb"],[68.5,"1 1"],[100,"1 1"]]);C(3,L("#s3-pr-tint"),30.24,31.79);N(3,L("#s3-pr-tick"),"scale",[[0,"0"],[29.36,"0","cb"],[31.73,"1.23"],[100,"1.23"]]);N(3,L("#s3-pr-txt"),"translate",[[0,S(0,0)],[28.07,S(0,0)],[30.21,S(10.5,0)],[100,S(10.5,0)]]);C(3,L("#s3-dd-tint"),68.99,71.74);N(3,L("#s3-prewipe"),"clipPath",[[0,"inset(0 0 100% 0)"],[71.7,"inset(0 0 100% 0)","cb"],[75.5,"inset(0 0 0% 0)"],[100,"inset(0 0 0% 0)"]]);["vij","rek","mon"].forEach(M=>{N(3,L("[data-conn="+M+"] path"),"strokeDasharray",[[0,"0.0005 1"],[75.5,"0.0005 1","l"],[79.4,"1 1"],[100,"1 1"]])});j(".hring circle",M).forEach(M=>N(3,M,"strokeDasharray",[[0,"0 1"],[78.6,"0 1","cb"],[85.9,"1 0"],[100,"1 0"]]));N(3,L("#s3-tick"),"scale",[[0,"0"],[85.18,"0","o"],[87.3,"1"],[100,"1"]]);N(3,L("#s3-ts-txt"),"translate",[[0,S(0,0)],[83.99,S(0,0)],[86.22,S(12,0)],[100,S(12,0)]])},4:function(){const M=A("#mf4"),L=L=>A(L,M),j="rgba(13,170,222,0)",w="rgba(13,170,222,.16)";N(4,L("#s4-ov"),"opacity",[[0,1],[28.6,1,"ez"],[31.6,0],[100,0]]),N(4,L("#s4-ovm"),"translate",[[0,S(-490.2,0),"ez"],[14.017,S(38.8,0),[.598,.01,.59,.192]],[21.268,S(224,0)],[100,S(224,0)]]),N(4,L("#s4-invbtn"),"backgroundColor",[[0,j],[24.29,j,"cb"],[26.63,w],[100,w]]),N(4,L("#s4-invbtn"),"scale",[[0,"1"],[24.249,"1","cb"],[26.621,"1.06","i"],[27.889,"1"],[100,"1"]]),N(4,L("#s4-inv"),"opacity",[[0,0],[28.6,0,"ez"],[31.6,1],[65,1,"ez"],[68,0],[100,0]]),N(4,L("#s4-item1"),"scale",[[0,"1"],[36.094,"1","cb"],[38.392,"1.06","cb"],[39.447,"1"],[100,"1"]]),N(4,L("#s4-sheet"),"translate",[[0,S(0,264)],[39.736,S(0,264),"ez"],[43.311,S(0,0),"o"],[55.422,S(0,-43.086),"ez"],[58.46,S(0,264)],[100,S(0,264)]]),N(4,L("#s4-dim"),"opacity",[[0,0],[39.736,0,"ez"],[43.311,1],[55.422,1,"ez"],[58.46,0],[100,0]]),N(4,L("#s4-closebtn"),"scale",[[0,"1"],[52.264,"1","cb"],[54.281,"1.2","cb"],[55.217,"1"],[100,"1"]]),N(4,L("#s4-closebg"),"backgroundColor",[[0,"rgba(0,0,0,.08)"],[52.264,"rgba(0,0,0,.08)","cb"],[54.281,"rgba(0,0,0,.16)","cb"],[55.217,"rgba(0,0,0,.08)"],[100,"rgba(0,0,0,.08)"]]),N(4,L("#s4-repbtn"),"backgroundColor",[[0,j],[62.843,j,"cb"],[63.725,w],[100,w]]),N(4,L("#s4-repbtn"),"scale",[[0,"1"],[62.826,"1","cb"],[64.826,"1.06","i"],[65.767,"1"],[100,"1"]]),N(4,L("#s4-rep1"),"opacity",[[0,0],[65,0,"ez"],[68,1],[79.4,1,"ez"],[82,0],[100,0]]),N(4,L("#s4-rep1 .tbl"),"opacity",[[0,1],[79.6,1,"ez"],[81.2,0],[100,0]]),N(4,L("#s4-exptab"),"backgroundColor",[[0,j],[75.473,j,"cb"],[77.873,w],[100,w]]),N(4,L("#s4-exptab"),"scale",[[0,"1"],[75.461,"1","cb"],[77.873,"1.06","i"],[79.101,"1"],[100,"1"]]),N(4,L("#s4-rep2"),"opacity",[[0,0],[79.4,0,"ez"],[82,1],[100,1]]),N(4,L("#s4-rep2 .tbl"),"opacity",[[0,0],[81.2,0,"ez"],[83.4,1],[100,1]]),N(4,L("#s4-rep2"),"translate",[[0,S(0,0)],[88.69,S(0,0),[.84,.014,1,1]],[95.461,S(357,0)],[100,S(357,0)]])}};
-/** Mount step n (0-based) into root and start its looping timeline. */
-export function mountFigmaStep(root, n, reduced) {
+/** Mount step n (0-based) into root and start its looping timeline. `segment` ([from, to], as
+ * fractions of the loop) plays and loops just that part — the approach pages split step 4 into
+ * "Follow" (the investment and its repayment timeline) and "Earn" (the Repayments tab). */
+export function mountFigmaStep(root, n, reduced, segment) {
   const k = n + 1;
   if (k === 3) return mountStep3(root, reduced);
   root.innerHTML = MARKUP[n];
   D[k] = [];
   BUILD[k]();
   const anims = D[k], t0 = document.timeline.currentTime;
-  anims.forEach(x => { x.startTime = t0; });
-  if (reduced) anims.forEach(x => { x.pause(); x.currentTime = w[k] * STILL[k]; });
-  return () => { anims.forEach(x => x.cancel()); root.innerHTML = ''; };
+  let loop;
+  if (segment && !reduced) {
+    const [a, b] = segment;
+    const play = () => { const t = document.timeline.currentTime; anims.forEach(x => { x.startTime = t - w[k] * a; }); };
+    play();
+    loop = setInterval(play, w[k] * (b - a));
+  } else anims.forEach(x => { x.startTime = t0; });
+  if (reduced) anims.forEach(x => { x.pause(); x.currentTime = w[k] * (segment ? (segment[0] + segment[1]) / 2 : STILL[k]); });
+  return () => { clearInterval(loop); anims.forEach(x => x.cancel()); root.innerHTML = ''; };
 }
 // A representative frame for each step when motion is reduced.
 const STILL = { 1: .8, 2: .78, 3: .9, 4: .45 };

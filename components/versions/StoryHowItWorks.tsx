@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { STATS_SNAPSHOT as LIVE, roundedPlus } from "@/lib/stats";
-import { AVATARS, BUBBLES, COIN_FLY, GIFT_MACHINE, OFFICER, OFFICER_WALK, REKHA, REKHA_FACE, REKHA_WALK, Sprite, StatTip, type Info, type Spr } from "./CharacterHowItWorks";
+import { AVATARS, COIN_FLY, GIFT_MACHINE, OFFICER, OFFICER_WALK, REKHA, REKHA_FACE, REKHA_WALK, Sprite, StatTip, type Info, type Spr } from "./CharacterHowItWorks";
 
 /**
  * Version B's "How it works", second take (Figma 2548:14750, "Laptop 2 · Meet"), after the review
@@ -25,7 +25,7 @@ export type Side = "R" | "A" | "B";
 // Each step: an id, who it's about, its line (and any subtext under it), which of the four parts of the
 // story it belongs to, and how much scrolling (in screens) it takes. Arjun is met right after Rekha, then
 // steps back until he finds her loan.
-type StepId = "meet" | "arjun" | "need" | "credit" | "rangde" | "choose" | "invest" | "money" | "repay" | "outcome";
+type StepId = "meet" | "arjun" | "need" | "credit" | "options" | "rangde" | "choose" | "invest" | "money" | "repay" | "outcome";
 export const STEPS: { id: StepId; side: Side; part: number; text: string; sub?: string; w: number }[] = [
   { id: "meet", side: "R", part: 0, text: "Meet Rekha. She runs a tailoring business from home, in a village in Rajasthan.", w: 0.9 },
   { id: "arjun", side: "A", part: 0, text: "Arjun is an Indian citizen, just like you. Eager to make a change and help a fellow Indian in need.", w: 0.9 },
@@ -35,9 +35,11 @@ export const STEPS: { id: StepId; side: Side; part: number; text: string; sub?: 
     side: "R",
     part: 1,
     text: "Like 86% of India's eligible population, Rekha has no access to formal credit.",
-    sub: "With no land to pledge and no credit record, a bank rarely says yes to a first-time borrower. The other options cost more, or don't go far enough.",
-    w: 2.4,
+    sub: "With no land to pledge and no credit record, a bank rarely says yes to a first-time borrower.",
+    w: 1.1,
   },
+  // Split out of "credit" so neither screen carries too much: the line first, then why the other ways fall short.
+  { id: "options", side: "R", part: 1, text: "The other ways to borrow cost her more, or don't go far enough.", w: 1.7 },
   {
     id: "rangde",
     side: "R",
@@ -357,18 +359,15 @@ function Feed({ f }: { f: number }) {
   );
 }
 
-/** One of the round portraits, fitted to its box. */
-function BubbleFace({ s, size }: { s: Spr; size: number }) {
-  const [, , , w, h] = s;
-  return (
-    <div className="absolute inset-0 overflow-hidden">
-      <Sprite s={s} k={size / Math.max(w, h)} style={{ left: "50%", top: "50%", transform: "translate(-50%, -50%)" }} />
-    </div>
-  );
-}
-
-// The portraits beside OPTIONS, in its order: the bank, then BUBBLES' moneylender, group and family.
-const OPTION_FACES: (Spr | "bank")[] = ["bank", BUBBLES[0], BUBBLES[2], BUBBLES[1]];
+// A line icon beside each of OPTIONS, in its order: bank, moneylender's interest, group, family. Drawn
+// on a tinted tile (red for the costly options, grey for the ones that fall short) so the list scans as
+// four reasons rather than four faces.
+const OPTION_ICONS: { tint: string; ink: string; path: ReactNode }[] = [
+  { tint: "#FDE7E4", ink: "#C8372D", path: <path d="M3 10h18M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18M12 3l9 5H3l9-5z" /> },
+  { tint: "#FDE7E4", ink: "#C8372D", path: <><path d="M19 5L5 19" /><circle cx="7" cy="7" r="2.5" /><circle cx="17" cy="17" r="2.5" /></> },
+  { tint: "#EEF0F3", ink: "#292D36", path: <><circle cx="9" cy="8" r="3" /><circle cx="17" cy="9" r="2.5" /><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.2c.6-.1 1.3-.2 2-.2 2.8 0 5 2.2 5 5" /></> },
+  { tint: "#EEF0F3", ink: "#292D36", path: <><path d="M3 11l9-7 9 7" /><path d="M5 10v10h14V10" /><path d="M12 17.5s-3-1.8-3-3.6c0-1 .8-1.7 1.7-1.7.6 0 1 .3 1.3.7.3-.4.7-.7 1.3-.7.9 0 1.7.7 1.7 1.7 0 1.8-3 3.6-3 3.6z" /></> },
+];
 // On phones there's no room for the subtext and the card together: the card takes the subtext's place
 // from here on in the credit and Rang De steps.
 const CARD_AT = 0.22;
@@ -384,15 +383,17 @@ function Options({ f, one }: { f: number; one?: boolean }) {
         {OPTIONS.map((o, i) => {
           if (one && i !== at) return null;
           const shown = one ? 1 : clamp01((f - 0.1 - i * 0.12) / 0.1);
-          const face = OPTION_FACES[i];
+          const icon = OPTION_ICONS[i];
           return (
             <li
               key={o.label}
               className={`flex gap-2.5 border-ink/10 sm:gap-3 ${i && !one ? "border-t pt-2 sm:pt-4" : ""} ${i < OPTIONS.length - 1 && !one ? "pb-2 sm:pb-4" : ""}`}
               style={{ opacity: shown, transform: `translateY(${(1 - shown) * 6}px)` }}
             >
-              <div className="relative size-[18px] shrink-0 overflow-hidden rounded-full bg-bg-grey sm:size-[22px]">
-                {face === "bank" ? <div className="absolute inset-0 bg-[url(/hiw-story/bank-open.webp)] bg-cover bg-center" /> : <BubbleFace s={face} size={22} />}
+              <div className="flex size-[24px] shrink-0 items-center justify-center rounded-[6px] sm:size-[28px] sm:rounded-[8px]" style={{ backgroundColor: icon.tint }}>
+                <svg viewBox="0 0 24 24" className="size-[14px] sm:size-[16px]" fill="none" stroke={icon.ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  {icon.path}
+                </svg>
               </div>
               <div className="min-w-0">
                 <p className="font-display text-[13px] font-bold leading-[18px] text-ink sm:text-[15px] sm:leading-[22px]">{o.label}</p>
@@ -477,7 +478,7 @@ function Stat({ step, first }: { step: number; first?: boolean }) {
 /** The card under the line, if the step has one. `f` is how far through the step the reader is. */
 function StepCard({ step, f, mobile }: { step: number; f: number; mobile: boolean }) {
   const look = useContext(LookContext);
-  if (step === I.credit) return mobile ? f < CARD_AT ? null : <Options f={(f - CARD_AT) / (1 - CARD_AT)} one /> : <Options f={f} />;
+  if (step === I.options) return <Options f={f} one={mobile} />;
   if (step === I.rangde) return mobile && f < CARD_AT ? null : <Verify f={mobile ? (f - CARD_AT) / (1 - CARD_AT) : f} mobile={mobile} />;
   if (step === I.choose) return <Feed f={f} />;
   if (step === I.invest) {
@@ -635,7 +636,7 @@ export function Cast({
   const partnerU = usePlay(step === I.rangde ? step : null, WALK_MS);
   const walking = walkU < 1;
   const frame = (u: number) => Math.floor((u * WALK_MS) / FRAME_MS) % 6;
-  const rekhaPose: Spr = walking ? REKHA_WALK[frame(walkU)] : step === I.credit ? REKHA.sad : step === I.rangde ? REKHA.proud : REKHA.sew;
+  const rekhaPose: Spr = walking ? REKHA_WALK[frame(walkU)] : step === I.credit || step === I.options ? REKHA.sad : step === I.rangde ? REKHA.proud : REKHA.sew;
   // Once the new machine has arrived she leans on it, and from then on she has two.
   const withMachine = step === I.money && !walking ? WITH_MACHINE.lean : step > I.money ? WITH_MACHINE.two : null;
   const wk = (0.95 * H) / WITH_MACHINE_REF;
@@ -670,7 +671,7 @@ export function Cast({
             {step === I.money && walking && <Fig key="new" s={GIFT_MACHINE} k={mk} x={propX + arrive(walkU)} />}
             {orders && step === I.money && <Fig key="orders" s={ORDERS} k={(0.3 * H) / 353} x={(mobile ? 1.18 : -0.5) * H} />}
             {/* On laptops the bank stands behind her, out of the way of the list in the middle. */}
-            {step === I.credit && <Bank key="bank" w={0.75 * H} x={mobile ? propX * 1.05 + arrive(walkU) : -0.45 * H} />}
+            {(step === I.credit || step === I.options) && <Bank key="bank" w={0.75 * H} x={mobile ? propX * 1.05 + arrive(walkU) : -0.45 * H} />}
             {step === I.rangde && (
               <Fig
                 key={partnerU < 1 ? "partner-walk" : f > 0.78 ? "partner-thumbs" : "partner"}
@@ -790,7 +791,7 @@ export function StoryHowItWorks({ look = "color" }: { look?: Look }) {
                   {s.text}
                   {s.sub && ` ${s.sub}`}
                   {INFO[i] && ` ${INFO[i].stat} ${INFO[i].source}`}
-                  {i === I.credit && ` ${OPTIONS.map((o) => `${o.label}: ${o.fact} (${o.source})`).join(" ")}`}
+                  {i === I.options && ` ${OPTIONS.map((o) => `${o.label}: ${o.fact} (${o.source})`).join(" ")}`}
                   {i === I.rangde && ` ${VERIFY.map((v) => `${v.title}, ${v.time}: ${v.line}`).join(" ")}`}
                 </li>
               ))}
@@ -831,14 +832,14 @@ export function StoryHowItWorks({ look = "color" }: { look?: Look }) {
               {/* The new line and card replace the old ones at once and fade in. (Waiting for the old ones to
                   fade out first could leave a stale line on screen when the reader scrolls quickly.) */}
               <motion.div key={`line-${step}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="pointer-events-auto">
-                <Line step={step} hideSub={mobile && (step === I.credit || step === I.rangde) && f >= CARD_AT} />
+                <Line step={step} hideSub={mobile && step === I.rangde && f >= CARD_AT} />
               </motion.div>
               <motion.div
                 key={`card-${step}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
-                className={`w-full ${step === I.credit ? "max-w-[400px]" : "max-w-[320px]"}`}
+                className={`w-full ${step === I.options ? "max-w-[400px]" : "max-w-[320px]"}`}
               >
                 <StepCard step={step} f={f} mobile={mobile} />
               </motion.div>

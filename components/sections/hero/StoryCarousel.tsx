@@ -159,7 +159,7 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
   const desktopGrid = (
     <div className="hidden lg:grid lg:grid-cols-4 lg:gap-[8px]">
       {stories.map((story, i) => (
-        <StoryCard layout={layout} key={i} story={story} variant="grid" loading={wideLoading} />
+        <StoryCard layout={layout} stretch={layout === "recent"} key={i} story={story} variant="grid" loading={wideLoading} />
       ))}
     </div>
   );
@@ -179,7 +179,7 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
         // rest switch to eager once hydrated on a phone, well before anyone can swipe
         // to them (and never on md+, where this swiper is display:none).
         renderItem={(story, i) => (
-          <StoryCard layout={layout} key={i} story={story} variant="grid" loading={i === 0 || isMobile ? "eager" : "lazy"} />
+          <StoryCard layout={layout} stretch={layout === "recent"} key={i} story={story} variant="grid" loading={i === 0 || isMobile ? "eager" : "lazy"} />
         )}
       />
     </div>
@@ -191,7 +191,7 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
         {mobileSwiper}
         <div className="hidden md:flex md:w-full md:snap-x md:snap-mandatory md:gap-[8px] md:overflow-x-auto md:scroll-smooth md:px-[80px] md:[scrollbar-width:none] lg:hidden md:[&::-webkit-scrollbar]:hidden">
           {stories.map((story, i) => (
-            <StoryCard layout={layout} key={i} story={story} loading={wideLoading} />
+            <StoryCard layout={layout} stretch={layout === "recent"} key={i} story={story} loading={wideLoading} />
           ))}
         </div>
         {desktopGrid}
@@ -223,12 +223,12 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
       >
         <div ref={trackRef} className="flex w-max gap-[8px]">
           {stories.map((story, i) => (
-            <StoryCard layout={layout} key={`a-${i}`} story={story} loading={wideLoading} />
+            <StoryCard layout={layout} stretch={layout === "recent"} key={`a-${i}`} story={story} loading={wideLoading} />
           ))}
           {/* Repeats: the loop shifts by half the track (xPercent -50), so half must stay wider
               than the screen — seven extra sets keep very wide / zoomed-out screens (~25%) filled. */}
           {[1, 2, 3, 4, 5, 6, 7].flatMap((n) =>
-            stories.map((story, i) => <StoryCard layout={layout} key={`r${n}-${i}`} story={story} hiddenFromAT loading={wideLoading} />),
+            stories.map((story, i) => <StoryCard layout={layout} stretch={layout === "recent"} key={`r${n}-${i}`} story={story} hiddenFromAT loading={wideLoading} />),
           )}
         </div>
       </div>

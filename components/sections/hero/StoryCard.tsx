@@ -7,6 +7,8 @@ export type StoryCardLayout = "default" | "recent";
 interface StoryCardProps {
   /** "recent" (Figma 2689:37640): name + purpose, when it was funded, then Funded / investors / Interest. */
   layout?: StoryCardLayout;
+  /** Fill the parent's height (a row of mixed cards), with the figures pinned to the bottom. */
+  stretch?: boolean;
   story: Story;
   /** Hides the card from assistive tech — used for the duplicated set in the auto-scroll loop. */
   hiddenFromAT?: boolean;
@@ -35,12 +37,12 @@ const IMAGE_HEIGHT_CLASSES = {
   grid: "aspect-[16/9]",
 };
 
-export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading = "eager", layout = "default" }: StoryCardProps) {
+export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading = "eager", layout = "default", stretch = false }: StoryCardProps) {
   const recent = layout === "recent" && !!story.name;
   return (
     <div
       aria-hidden={hiddenFromAT || undefined}
-      className={`flex flex-col items-center overflow-hidden rounded-[8px] bg-[#084a2f] p-[4px] transition-transform duration-300 ease-out hover:scale-[1.015] ${CARD_WIDTH_CLASSES[variant]}`}
+      className={`flex flex-col items-center overflow-hidden rounded-[8px] bg-[#084a2f] p-[4px] transition-transform duration-300 ease-out hover:scale-[1.015] ${CARD_WIDTH_CLASSES[variant]} ${stretch ? "self-stretch" : ""}`}
     >
       <div className={`relative mb-[-48px] w-full shrink-0 rounded-[4px] ${IMAGE_HEIGHT_CLASSES[variant]}`}>
         {/*
@@ -51,7 +53,7 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
         <Image src={story.image} alt="" fill sizes="440px" loading={loading} className="rounded-[4px] object-cover" />
       </div>
 
-      <div className="flex w-full flex-col items-center gap-[24px] px-[28px] pb-[28px]">
+      <div className={`flex w-full flex-col items-center gap-[24px] px-[28px] pb-[28px] ${stretch ? "flex-1" : ""}`}>
         <Avatar
           src={story.avatar}
           alt=""
@@ -77,7 +79,7 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
           </p>
         )}
 
-        <div className="h-px w-full bg-white/16" />
+        <div className={`h-px w-full shrink-0 bg-white/16 ${stretch ? "mt-auto" : ""}`} />
 
         {recent ? (
           <div className="flex w-full items-center gap-3 sm:gap-sp5">

@@ -27,11 +27,19 @@ const VERSIONS = [
     measure: "Calculator use, sign-ups",
   },
   {
+    key: "4",
+    name: "Lend to a person",
+    href: "/v/v4",
+    audience: "Everyone",
+    idea: "Ram’s Claude Design draft in his order, in the site’s design: one loan’s outcomes, small money, live borrowers, how it works, live figures, why returns aren’t higher.",
+    measure: "Sign-ups, ‘Meet the people’ clicks",
+  },
+  {
     key: "3",
     name: "Less said",
     href: "/v/v3",
     audience: "Everyone (rangde-v2)",
-    idea: "One line, proof and press, the founders came back from Oxford, the scroll story of how it works, stories from both sides, questions as cards.",
+    idea: "One line, the people and the press, the scroll story of how it works, stories from both sides, why returns aren’t higher, questions as cards.",
     measure: "Scroll depth, sign-ups",
   },
   {

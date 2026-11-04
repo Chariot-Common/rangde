@@ -270,3 +270,9 @@
 .hfm .s2ac-btn{margin-top:12px;height:40px;border-radius:8px;background:#62af1d;color:#fff;display:flex;align-items:center;justify-content:center;font:700 14px/20px var(--font-inter),sans-serif;transform-origin:50% 50%}
 .hfm .s2ac-done{display:none;position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;opacity:0}
 .hfm .s2ac-done svg{display:block;width:100%;height:100%}
+
+/* Wide window (HowItWorksStage `wide`): the 374px frame moves to the centre of the wider stage and stops
+   clipping, so the mock UI that the frame normally crops (the dashboard's sidebar, the next cards in
+   the feed) shows either side; the stage itself clips at its own edge. */
+.hfm.hfm-wide{background:#fff;overflow:hidden}
+.hfm.hfm-wide>*{margin-left:var(--hfm-off);overflow:visible!important;contain:none!important}
