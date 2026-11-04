@@ -1000,7 +1000,7 @@ export function SmallMoney() {
         </Reveal>
         <div className="flex flex-col gap-3">
           {SMALL_LOANS.map((l, i) => (
-            <Reveal key={l.name} delay={0.1 + i * 0.12}>
+            <Reveal key={l.amount} delay={0.1 + i * 0.12}>
               <div className="flex items-center gap-4 rounded-[16px] bg-[#F7F3ED] p-4 sm:gap-5 sm:p-5">
                 <div className="relative flex size-[56px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#cbe0b8] text-green-dark ring-2 ring-white">
                   {l.avatar ? (
