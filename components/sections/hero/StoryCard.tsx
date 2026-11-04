@@ -2,7 +2,11 @@ import Image from "next/image";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Story } from "@/lib/content";
 
+export type StoryCardLayout = "default" | "recent";
+
 interface StoryCardProps {
+  /** "recent" (Figma 2689:37640): name + purpose, when it was funded, then Funded / investors / Interest. */
+  layout?: StoryCardLayout;
   story: Story;
   /** Hides the card from assistive tech — used for the duplicated set in the auto-scroll loop. */
   hiddenFromAT?: boolean;
@@ -31,7 +35,8 @@ const IMAGE_HEIGHT_CLASSES = {
   grid: "aspect-[16/9]",
 };
 
-export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading = "eager" }: StoryCardProps) {
+export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading = "eager", layout = "default" }: StoryCardProps) {
+  const recent = layout === "recent" && !!story.name;
   return (
     <div
       aria-hidden={hiddenFromAT || undefined}
@@ -57,24 +62,52 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
           eager={loading === "eager"}
         />
 
-        <p className="w-full text-center text-p2 leading-[24px] text-white/64">
-          <span className="font-display font-bold text-white">{story.highlight}</span>
-          <span className="font-display font-normal">{story.rest}</span>
-        </p>
+        {recent ? (
+          <div className="flex w-full flex-col items-center gap-3 text-center">
+            <p className="font-display text-p2 leading-[24px]">
+              <span className="block font-bold text-white">{story.name}</span>
+              <span className="block font-normal text-white/80">{story.purpose}</span>
+            </p>
+            <p className="font-display text-h5 font-bold uppercase tracking-[0.88px] text-[#62af1d]">{story.when}</p>
+          </div>
+        ) : (
+          <p className="w-full text-center text-p2 leading-[24px] text-white/64">
+            <span className="font-display font-bold text-white">{story.highlight}</span>
+            <span className="font-display font-normal">{story.rest}</span>
+          </p>
+        )}
 
         <div className="h-px w-full bg-white/16" />
 
-        <div className="flex w-full items-center gap-3 sm:gap-sp5">
-          <div className="flex flex-1 flex-col items-center gap-[4px]">
-            <p className="w-full text-center font-display text-p2 font-bold text-white">{story.totalFunded}</p>
-            <p className="w-full whitespace-nowrap text-center font-display text-p4 font-medium text-white/64">Total Funded</p>
+        {recent ? (
+          <div className="flex w-full items-center gap-3 sm:gap-sp5">
+            {[
+              [story.totalFunded, "Funded"],
+              [String(story.investors), "investors"],
+              [story.returns, "Interest"],
+            ].map(([value, label], k) => (
+              <div key={label} className="contents">
+                {k > 0 && <div className="h-[48px] w-px shrink-0 bg-white/16" />}
+                <div className="flex flex-1 flex-col items-center gap-[4px]">
+                  <p className="w-full whitespace-nowrap text-center font-display text-p2 font-bold text-white">{value}</p>
+                  <p className="w-full whitespace-nowrap text-center font-display text-h5 font-bold uppercase tracking-[0.88px] text-white/64">{label}</p>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="h-[48px] w-px shrink-0 bg-white/16" />
-          <div className="flex flex-1 flex-col items-center gap-[4px]">
-            <p className="w-full text-center font-display text-p2 font-bold text-white">{story.returns}</p>
-            <p className="w-full whitespace-nowrap text-center font-display text-p4 font-medium text-white/64">Returns Provided</p>
+        ) : (
+          <div className="flex w-full items-center gap-3 sm:gap-sp5">
+            <div className="flex flex-1 flex-col items-center gap-[4px]">
+              <p className="w-full text-center font-display text-p2 font-bold text-white">{story.totalFunded}</p>
+              <p className="w-full whitespace-nowrap text-center font-display text-p4 font-medium text-white/64">Total Funded</p>
+            </div>
+            <div className="h-[48px] w-px shrink-0 bg-white/16" />
+            <div className="flex flex-1 flex-col items-center gap-[4px]">
+              <p className="w-full text-center font-display text-p2 font-bold text-white">{story.returns}</p>
+              <p className="w-full whitespace-nowrap text-center font-display text-p4 font-medium text-white/64">Returns Provided</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -11,6 +11,30 @@ export const metadata: Metadata = {
 
 const VERSIONS = [
   {
+    key: "1.1",
+    name: "The other Startup India",
+    href: "/v/v1",
+    audience: "Everyone (rangde-v1)",
+    idea: "Why it matters first: the problem, what Rang De built point for point, reels, How it works with the calculator, investors, the top questions as cards.",
+    measure: "Sign-ups vs. the current homepage",
+  },
+  {
+    key: "1.2",
+    name: "The other Startup India, reshuffled",
+    href: "/v/v1-2",
+    audience: "Everyone (rangde-v1-2)",
+    idea: "The calculator inside the Rang De card, “not just a loan” with the credit chain, How it works with the infrastructure behind it, five question cards.",
+    measure: "Calculator use, sign-ups",
+  },
+  {
+    key: "3",
+    name: "Less said",
+    href: "/v/v3",
+    audience: "Everyone (rangde-v2)",
+    idea: "One line, proof and press, the founders came back from Oxford, the scroll story of how it works, stories from both sides, questions as cards.",
+    measure: "Scroll depth, sign-ups",
+  },
+  {
     key: "A",
     name: "Current",
     // On the versions-only site "/" redirects here, so link to where the current homepage lives.
@@ -49,7 +73,7 @@ export default function VersionsIndex() {
   return (
     <div className="mx-2 my-2 flex flex-col gap-10 rounded-[16px] bg-[#F7F3ED] px-4 py-12 sm:px-8 lg:px-[80px] lg:py-[80px]">
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-10">
-        <PrototypeHeader eyebrow="Homepage tests" title="Four versions of the homepage" lead="Same design system, different first impressions. Each one is built for a different audience and traffic source." />
+        <PrototypeHeader eyebrow="Homepage tests" title="Versions of the homepage" lead="Same design system, different first impressions. Each one is built for a different audience and traffic source." />
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
           {VERSIONS.map((v) => (
             <Link key={v.key} href={v.href} className="flex flex-col gap-4 rounded-[8px] bg-white p-6 transition-shadow hover:shadow-[0_4px_16px_rgba(41,45,54,0.08)] lg:p-8">

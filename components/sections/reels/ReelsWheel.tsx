@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import type React from "react";
 import { reelCover, reelUrl, reelVideo, reels, type Reel } from "@/data/reels";
 
 // The ten reels, twice over, so the strip always overfills even a very wide screen.
@@ -131,7 +132,8 @@ export function ReelDialog({ reel, onClose }: { reel: Reel | null; onClose: () =
  * can be dragged (with a little momentum), and holds still while a reel is hovered (that
  * reel plays) or open in the dialog. One screen tall less the nav bar (on phones, just as tall as the strip).
  */
-export function ReelsWheel() {
+/** `heading`: the approach versions (app/v/v1*) swap in their own line; `null` drops the heading. */
+export function ReelsWheel({ heading }: { heading?: React.ReactNode | null } = {}) {
   const [open, setOpen] = useState<Reel | null>(null);
   const openRef = useRef(false);
   useEffect(() => {
@@ -218,11 +220,17 @@ export function ReelsWheel() {
 
   return (
     <section className="mx-2 flex flex-col items-center overflow-hidden rounded-[16px] bg-white pb-6 pt-10 sm:h-[calc(100svh-var(--navbar-bottom))] sm:min-h-[600px] sm:pb-0 sm:pt-14 lg:h-[896px] lg:pt-20">
-      <h2 className="px-4 text-center font-display text-h3 font-bold text-ink">
-        Real people, real businesses,
-        <br />
-        in their own words
-      </h2>
+      {heading !== null && (
+        <h2 className="px-4 text-center font-display text-h3 font-bold text-ink">
+          {heading ?? (
+            <>
+              Real people, real businesses,
+              <br />
+              in their own words
+            </>
+          )}
+        </h2>
+      )}
 
       <div
         ref={wrapRef}

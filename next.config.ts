@@ -14,13 +14,12 @@ const nextConfig: NextConfig = {
       // The second How it works take was tried at /v/idea-2 and is now Version B itself.
       { source: "/v/idea-2", destination: "/v/idea", permanent: false },
       ...(VERSIONS_SITE ? [{ source: "/", destination: "/v", permanent: false }] : []),
-      // rangde-v2.vercel.app opens Version B (scroll-based How it works); rangde-v1 is the homepage.
-      {
-        source: "/",
-        has: [{ type: "host", value: "rangde-v2.vercel.app" }],
-        destination: "/v/idea",
-        permanent: false,
-      },
+      // The approach versions (Figma 2743:14706): rangde-v1 opens Version 1.1, rangde-v2 now opens
+      // Version 3 (it used to open Version B, still at /v/idea), and rangde-v1-2 opens Version 1.2
+      // once that domain is added to the Vercel project.
+      { source: "/", has: [{ type: "host", value: "rangde-v1.vercel.app" }], destination: "/v/v1", permanent: false },
+      { source: "/", has: [{ type: "host", value: "rangde-v1-2.vercel.app" }], destination: "/v/v1-2", permanent: false },
+      { source: "/", has: [{ type: "host", value: "rangde-v2.vercel.app" }], destination: "/v/v3", permanent: false },
     ];
   },
 };

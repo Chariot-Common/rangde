@@ -45,6 +45,11 @@ export interface Story {
   rest: string;
   totalFunded: string;
   returns: string;
+  /** "Recent" card layout (approach versions): who and where, what the loan was for, when. */
+  name?: string;
+  purpose?: string;
+  when?: string;
+  investors?: number;
 }
 
 // The four success stories from rangde.in's "Some of our success stories" (Oct 2026):
@@ -224,4 +229,16 @@ export const footerLegalLinks = [
   "Grievance Redressal Policy",
   "Fair Practices Code",
   "Annual Returns",
+];
+
+// Recent stories for the approach versions (app/v/v1, v1-2, v3; Figma 2743:14706): the card puts
+// the borrower and what the loan was for first, when they were funded, and the investor count as
+// its own figure instead of inside the sentence. Names, amounts, investor counts and rates are the
+// four rangde.in success stories above; `when` is a PLACEHOLDER until these come from the live
+// "recently funded" feed (the point of the card is that the stories are recent).
+export const recentStories: Story[] = [
+  { ...stories[2], name: "Gita Devi", purpose: "Funded for fish feed, so she could work on multiple ponds.", when: "2 weeks ago", investors: 4 },
+  { ...stories[3], name: "Sitara Devi", purpose: "Funded to open her own cosmetics store.", when: "3 weeks ago", investors: 13 },
+  { ...stories[0], name: "Neilhoupe u Koza", purpose: "Funded to run and grow her apparel business.", when: "1 month ago", investors: 57 },
+  { ...stories[1], name: "Sivakumar", purpose: "Funded for working capital for his Lantana-weed elephant sculptures.", when: "1 month ago", investors: 240 },
 ];
