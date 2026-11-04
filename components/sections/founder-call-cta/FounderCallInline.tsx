@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion, useInView, useMotionValue, useReducedMotion, useSpring } from "motion/react";
-import { Button } from "@/components/ui/Button";
+import { LegacyButton as Button } from "@/components/ui/LegacyButton";
 import { VideoCallMock } from "./VideoCallMock";
 
 const ROTATE_START = -5;

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { LegacyButton as Button } from "@/components/ui/LegacyButton";
 import { formatInr } from "@/lib/investment-calculator";
 import { imgix, type IndividualOpportunity } from "@/lib/opportunities";
 import { AMOUNT_OPTIONS, Chip, EntrepreneurPicker, INPUT_CLASS, Notice, StepCard } from "./shared";

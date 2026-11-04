@@ -8,7 +8,7 @@ import {
   useSpring,
   useReducedMotion,
 } from "motion/react";
-import { Button } from "@/components/ui/Button";
+import { LegacyButton as Button } from "@/components/ui/LegacyButton";
 import { VideoCallMock } from "./VideoCallMock";
 
 const ROTATE_START = -5;

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
-import { Button } from "@/components/ui/Button";
+import { LegacyButton as Button } from "@/components/ui/LegacyButton";
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 

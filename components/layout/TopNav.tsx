@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { LegacyButton as Button } from "@/components/ui/LegacyButton";
 import { IconButton } from "@/components/ui/IconButton";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { MobileMenu } from "@/components/MobileMenu";
