@@ -503,11 +503,11 @@ export function CreditChain() {
 // Earn it loops back to Choose. `ms`: one pass of the pop-up UI's loop for that step (figma-motion.js
 // w[k], or the part of it in `segment`); `sceneMs`: one pass of the journey scene plus a short hold.
 const HIW_TABS: { title: string; text: string; stage: number; segment?: [number, number]; ms: number; scene: JourneyScene; sceneMs: number; sceneLabel: string }[] = [
-  { title: "Choose", text: "Explore entrepreneurs looking for a loan.", stage: 0, ms: 12000, scene: "choose", sceneMs: 5500, sceneLabel: "A feed of real entrepreneur listings scrolls past and slows; Durga Chouhan's card is picked and opens into her profile." },
-  { title: "Understand", text: "See exactly what they need the money for.", stage: 1, ms: 16800, scene: "understand", sceneMs: 5000, sceneLabel: "Durga's story card, a tab at a time: she runs a grocery shop in Dhar, Madhya Pradesh; she wants to add a tent and decoration rental business; she is raising ₹1,00,000 at up to 8.25% a year over 18 months." },
-  { title: "Lend", text: "Decide whom you want to support.", stage: 2, ms: 8900, scene: "lend", sceneMs: 6600, sceneLabel: "You commit ₹2,000 to Durga; it is collected on 15 October and reaches her on 16 October, as other investors fill her goal." },
-  { title: "Follow", text: "Track the progress of your loans.", stage: 3, segment: [0, 0.585], ms: 6900, scene: "follow", sceneMs: 5200, sceneLabel: "A log of Durga's repayments: each month arrives as a new row, on time, and a ring fills towards 18 of 18." },
-  { title: "Earn", text: "Get repaid with returns as the loan is repaid.", stage: 3, segment: [0.6, 1], ms: 4800, scene: "earn", sceneMs: 4800, sceneLabel: "Repaid in full: ₹2,133 back, ₹2,000 of it your money and ₹133 returns. Reinvest is tapped." },
+  { title: "Choose", text: "Explore entrepreneurs looking for a loan.", stage: 0, ms: 12000, scene: "choose", sceneMs: 8600, sceneLabel: "Real listing cards from rangde.in scroll past; the Women filter is tapped and the list narrows; Durga Chouhan's card is picked and opens into her page." },
+  { title: "Understand", text: "See exactly what they need the money for.", stage: 1, ms: 16800, scene: "understand", sceneMs: 9800, sceneLabel: "Durga's page on rangde.in scrolls: photos of her, her grocery shop in Dhar and her family; her plan to add a tent and decoration rental business; her first formal loan; and the key facts, ₹1,00,000 at 8.25% repaid monthly, verified by Transform Rural India Foundation." },
+  { title: "Lend", text: "Decide whom you want to support.", stage: 2, ms: 8900, scene: "lend", sceneMs: 9200, sceneLabel: "₹2,000 is picked and lent to Durga; other investors join until 31 of them fill her ₹1,00,000 goal; the money is collected on 15 October and reaches her shop on 16 October." },
+  { title: "Follow", text: "Track the progress of your loans.", stage: 3, segment: [0, 0.585], ms: 6900, scene: "follow", sceneMs: 6600, sceneLabel: "A notification says Durga has repaid ₹119; then a log of her repayments, each month arriving as a new row, on time, as a ring fills towards 18 of 18." },
+  { title: "Earn", text: "Get repaid with returns as the loan is repaid.", stage: 3, segment: [0.6, 1], ms: 4800, scene: "earn", sceneMs: 6600, sceneLabel: "Repaid in full: ₹2,133 back, ₹2,000 of it your money and ₹133 returns. Reinvest is tapped and the next entrepreneur, Rekha Bai, comes up." },
 ];
 
 
@@ -541,9 +541,9 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui" }: { ch
       </Reveal>
 
       <div className="flex w-full max-w-[1200px] flex-col" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-        <div className={`w-full overflow-hidden rounded-[8px] bg-white lg:h-[480px] ${visual === "journey" ? "h-[440px] sm:h-[460px]" : "h-[340px] sm:h-[420px]"}`}>
+        <div className={`w-full overflow-hidden rounded-[8px] bg-white ${visual === "journey" ? "h-[560px] sm:h-[600px] lg:h-[520px]" : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
           {visual === "journey" ? (
-            <JourneyStage scene={tab.scene} label={tab.sceneLabel} />
+            <JourneyStage scene={tab.scene} label={tab.sceneLabel} loopMs={tab.sceneMs} />
           ) : (
             <HowItWorksStage wide stepIndex={tab.stage} segment={tab.segment} label={HOW_IT_WORKS_STEPS[tab.stage].illustrationLabel} />
           )}
