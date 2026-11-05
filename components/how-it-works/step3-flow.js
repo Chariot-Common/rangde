@@ -94,6 +94,9 @@ export function mountStep3(root, reduced) {
     ref[el.dataset.r] = el;
   });
   const world = root.querySelector(".s3f-world");
+  // Version 1.1: past 02 May there are no light paths drawn ahead of the avatars, only the trail each draws.
+  const noPathsAhead = !!root.closest("[data-v11]");
+  if (noPathsAhead) ref.l2d.setAttribute("d", "M334 1085V1250");
 
   // branch connectors: light base line + dark line that draws as the avatar travels it
   const branch = {};
@@ -287,7 +290,7 @@ export function mountStep3(root, reduced) {
       const s = av.find((a) => a.p.key === k).s;
       const drawn = s.u2 > 0 ? clamp(s.dist - s.split, 0, b.lineLen) : 0;
       b.p.style.strokeDashoffset = b.lineLen - drawn;
-      b.base.style.opacity = seg(t, 6.95, 7.45, E.o);
+      b.base.style.opacity = noPathsAhead ? 0 : seg(t, 6.95, 7.45, E.o);
     }
 
     // the shared avatars

@@ -16,8 +16,10 @@ const allTestimonials = [...testimonialsRow1, ...testimonialsRow2];
  * `withStories` (Version B): the investors' words on the top strip, ticking left, and the
  * borrowers' success stories on the bottom strip, ticking right.
  */
-/** `typed`: the heading types itself out as it is scrolled into view (Version 1.1). */
-export function Testimonials({ withStories = false, typed = false }: { withStories?: boolean; typed?: boolean }) {
+/** `typed`: the heading types itself out as it is scrolled into view (Version 5).
+ * `refined` (Version 1.1): an H3 "Trusted by … across the world" heading, both rows (on phones too) stop on
+ * hover and can be dragged left or right, and no "Explore more investors" button. */
+export function Testimonials({ withStories = false, typed = false, refined = false }: { withStories?: boolean; typed?: boolean; refined?: boolean }) {
   const { investors } = useRangDeStats();
   return (
     <section className="mx-2 flex flex-col items-center gap-8 overflow-hidden rounded-[16px] bg-white px-4 py-12 sm:gap-sp9 sm:px-8 sm:py-16 lg:py-sp12">
@@ -27,7 +29,11 @@ export function Testimonials({ withStories = false, typed = false }: { withStori
             <FlagBadge key={c} flag={c} className="h-[24px] w-[32px] ring-0 shadow-[0_0_0_1px_rgba(41,45,54,0.08)]" />
           ))}
         </div>
-        {typed ? (
+        {refined ? (
+          <h2 className="font-display text-h3 font-bold text-ink">
+            Trusted by {investors.toLocaleString("en-IN")} social investors across the world.
+          </h2>
+        ) : typed ? (
           <ScrollType text={`${investors.toLocaleString("en-IN")} social investors and counting`} className="font-display text-h2 font-bold text-ink" />
         ) : (
           <h2 className="font-display text-h2 font-bold text-ink">
@@ -39,7 +45,7 @@ export function Testimonials({ withStories = false, typed = false }: { withStori
       {/* Mobile (<768px): edge to edge (-mx-4 undoes the section padding), the current card
           centred with its neighbours peeking in, moving on every 3 seconds — same as the
           hero's story cards. */}
-      <div className="-mx-4 flex w-[calc(100%+2rem)] flex-col gap-4 pb-sp6 md:hidden">
+      <div className={`-mx-4 w-[calc(100%+2rem)] flex-col gap-4 pb-sp6 md:hidden ${refined ? "hidden" : "flex"}`}>
         <SwipeCarousel
           items={allTestimonials}
           peek
@@ -61,7 +67,7 @@ export function Testimonials({ withStories = false, typed = false }: { withStori
       </div>
 
       {/* Bleeds past the section padding (-mx-8 = sm:px-8) so the rows run edge to edge. */}
-      <div className="hidden w-[calc(100%+4rem)] flex-col gap-sp3 pb-sp6 md:-mx-8 md:flex">
+      <div className={`w-[calc(100%+2rem)] flex-col gap-sp3 pb-sp6 -mx-4 sm:-mx-8 sm:w-[calc(100%+4rem)] md:flex ${refined ? "flex" : "hidden"}`}>
         {withStories ? (
           <>
             <TestimonialMarquee items={allTestimonials} align="left" direction="forward" />
@@ -77,18 +83,20 @@ export function Testimonials({ withStories = false, typed = false }: { withStori
           </>
         ) : (
           <>
-            <TestimonialMarquee items={testimonialsRow1} align="left" direction="forward" />
-            <TestimonialMarquee items={testimonialsRow2} align="left" direction="reverse" />
+            <TestimonialMarquee items={testimonialsRow1} align="left" direction="forward" draggable={refined} />
+            <TestimonialMarquee items={testimonialsRow2} align="left" direction="reverse" draggable={refined} />
           </>
         )}
       </div>
 
+      {!refined && (
       <Link
         href="/investors"
         className="inline-flex h-[42px] items-center justify-center gap-2 rounded-[4px] bg-primary/16 px-[16px] font-display text-p3 font-bold text-primary transition-[filter,background-color] duration-150 hover:bg-primary/24"
       >
         Explore more investors
       </Link>
+      )}
     </section>
   );
 }

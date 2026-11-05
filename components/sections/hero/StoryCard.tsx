@@ -2,7 +2,9 @@ import Image from "next/image";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Story } from "@/lib/content";
 
-export type StoryCardLayout = "default" | "recent";
+/** "recent11" (Version 1.1): "recent", with the name and purpose at 18/24 (no letter spacing) and the
+ * photo's 2px white stroke drawn inside its edge. */
+export type StoryCardLayout = "default" | "recent" | "recent11";
 
 interface StoryCardProps {
   /** "recent" (Figma 2689:37640): name + purpose, when it was funded, then Funded / investors / Interest. */
@@ -38,7 +40,8 @@ const IMAGE_HEIGHT_CLASSES = {
 };
 
 export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading = "eager", layout = "default", stretch = false }: StoryCardProps) {
-  const recent = layout === "recent" && !!story.name;
+  const recent = (layout === "recent" || layout === "recent11") && !!story.name;
+  const v11 = layout === "recent11";
   return (
     <div
       aria-hidden={hiddenFromAT || undefined}
@@ -59,14 +62,18 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
           alt=""
           size={80}
           radius={8}
-          borderClassName="border-2 border-white"
+          borderClassName={
+            v11
+              ? "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:border-2 after:border-white after:content-['']"
+              : "border-2 border-white"
+          }
           className="z-10"
           eager={loading === "eager"}
         />
 
         {recent ? (
           <div className="flex w-full flex-col items-center gap-3 text-center">
-            <p className="font-display text-p2 leading-[24px]">
+            <p className={`font-display ${v11 ? "text-p1 tracking-normal md:text-p2" : "text-p2 leading-[24px]"}`}>
               <span className="block font-bold text-white">{story.name}</span>
               <span className="block font-normal text-white/80">{story.purpose}</span>
             </p>

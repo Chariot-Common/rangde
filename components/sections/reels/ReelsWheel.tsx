@@ -134,7 +134,7 @@ export function ReelDialog({ reel, onClose }: { reel: Reel | null; onClose: () =
  */
 /** `heading`: the approach versions (app/v/v1*) swap in their own line; `null` drops the heading.
  * `tight` (Version 1.1): the section sizes to the reels instead of the screen, with the reels exactly
- * 64px below the heading. */
+ * 64px below the heading, runs the full width of the screen and has 120px top and bottom on desktop. */
 export function ReelsWheel({ heading, tight = false }: { heading?: React.ReactNode | null; tight?: boolean } = {}) {
   const [open, setOpen] = useState<Reel | null>(null);
   const openRef = useRef(false);
@@ -226,8 +226,12 @@ export function ReelsWheel({ heading, tight = false }: { heading?: React.ReactNo
 
   return (
     <section
-      className={`mx-2 flex flex-col items-center overflow-hidden rounded-[16px] bg-white pb-6 pt-10 sm:pt-14 lg:pt-20 ${
-        tight ? "sm:pb-14 lg:pb-20" : "sm:h-[calc(100svh-var(--navbar-bottom))] sm:min-h-[600px] sm:pb-0 lg:h-[896px]"
+      // tight: edge to edge (no side margin cutting the reels off), 120px above the heading and below the
+      // reels on desktop (the strip's own 20px under the reels makes up the rest of the bottom).
+      className={`flex flex-col items-center overflow-hidden bg-white pb-6 pt-10 sm:pt-14 ${
+        tight
+          ? "sm:pb-14 lg:pb-[100px] lg:pt-[120px]"
+          : "mx-2 rounded-[16px] sm:h-[calc(100svh-var(--navbar-bottom))] sm:min-h-[600px] sm:pb-0 lg:h-[896px] lg:pt-20"
       }`}
     >
       {heading !== null && (

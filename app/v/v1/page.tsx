@@ -31,16 +31,16 @@ export default function V1() {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
       {/* The same borrower cards (photos and copy) as Version 5. */}
-      <ApproachHero title="Invest in the other Startup India" lead={LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent" />} />
+      <ApproachHero title="Invest in the other Startup India" lead={LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent11" />} />
       <StackedSections
-        first={<PointsSection heading={"The financial system wasn’t built for the businesses of rural India"} points={V5_PROBLEM_POINTS} />}
-        second={<PointsSection tone="green" eyebrow="India’s first direct social investment platform" heading="So we built one for them at Rang De" points={V5_SOLUTION_POINTS} />}
+        first={<PointsSection refined heading={"The financial system wasn’t built\nfor the businesses of rural India"} points={V5_PROBLEM_POINTS} />}
+        second={<PointsSection refined tone="green" eyebrow="India’s first direct social investment platform" heading="So we built one for them at Rang De" points={V5_SOLUTION_POINTS} />}
       />
       <ReelsWheel tight heading="The money may be small. What it makes possible isn’t." />
       <HowItWorksTabs refined>
         <InvestmentSlider refined />
       </HowItWorksTabs>
-      <Testimonials />
+      <Testimonials refined />
       <FoundersSection photos="v3" talkFirst />
       <QuestionCards count={4} />
     </div>

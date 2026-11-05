@@ -15,7 +15,10 @@ let preloaded = false;
 /** `wide`: widen the frame's window to the box's shape (keeping the frame centred), so a wide box shows
  * the whole mock UI instead of the frame's 374px crop with empty space either side (approach v1). */
 /** `segment`: play only that part of the step's loop ([from, to] as fractions; see mountFigmaStep). */
-export function HowItWorksStage({ stepIndex, label, wide = false, segment }: { stepIndex: number; label: string; wide?: boolean; segment?: [number, number] }) {
+/** `v11`: Version 1.1's tweaks to the motion (marked with data-v11, which figma-motion.js and
+ * step3-flow.js read): Choose re-centres while the cards are open, Lend draws no paths ahead past 02 May,
+ * the Follow sheet spans the screen behind it and Earn starts from the dashboard. */
+export function HowItWorksStage({ stepIndex, label, wide = false, segment, v11 = false }: { stepIndex: number; label: string; wide?: boolean; segment?: [number, number]; v11?: boolean }) {
   const segFrom = segment?.[0];
   const segTo = segment?.[1];
   const boxRef = useRef<HTMLDivElement>(null);
@@ -74,7 +77,7 @@ export function HowItWorksStage({ stepIndex, label, wide = false, segment }: { s
   }, [stepIndex, segFrom, segTo]);
 
   return (
-    <div ref={boxRef} role="img" aria-label={label} className="relative size-full overflow-hidden bg-white">
+    <div ref={boxRef} role="img" aria-label={label} data-v11={v11 || undefined} className="relative size-full overflow-hidden bg-white">
       <div
         ref={stageRef}
         aria-hidden="true"

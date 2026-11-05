@@ -276,3 +276,11 @@
    the feed) shows either side; the stage itself clips at its own edge. */
 .hfm.hfm-wide{background:#fff;overflow:hidden}
 .hfm.hfm-wide>*{margin-left:var(--hfm-off);overflow:visible!important;contain:none!important}
+
+/* Version 1.1: the Follow sheet's timeline runs to the sheet's right edge (its dividers no longer stop short,
+   leaving a strip of the sheet showing); the text keeps its inset. */
+[data-v11] .hfm .rcol{width:242.7px}
+[data-v11] .hfm .tlr{padding-right:11.912px}
+/* Version 1.1: the Repayments screens sit at the same height (no jump between Received and Expected) and
+   their grey panel runs past the bottom of the frame, like the Investments screen. */
+[data-v11] .hfm .repm,[data-v11] .hfm .repm.exp{top:21.42px;transform:translateX(-50%);height:340px}

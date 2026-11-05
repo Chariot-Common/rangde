@@ -33,8 +33,8 @@ const AVATAR_SOURCES = AVATAR_PHOTOS.slice(0, MAX_AVATARS).map(
 const TWEEN_MS = 220;
 const GLIDE_MS = 2600;
 
-/** `refined` (Version 1.1): a bigger amount (H1), a line under it on typical investment sizes, and a
- * smaller slider knob (about 70%). */
+/** `refined` (Version 1.1): the amount at H3 under a P2 lead-in, a line under it on typical investment
+ * sizes, a smaller slider knob (about 70%), each result's label above its figure, and a stronger divider. */
 export function InvestmentSlider({ refined = false }: { refined?: boolean } = {}) {
   // Starts at the minimum and glides up to the default the first time the section scrolls into
   // view, so the numbers visibly come alive. Touching the slider hands control to the visitor.
@@ -88,10 +88,10 @@ export function InvestmentSlider({ refined = false }: { refined?: boolean } = {}
   return (
     <div ref={wrapRef} className="flex w-full flex-col items-center gap-8 px-4 sm:gap-sp9">
       <div className="flex w-full max-w-[370px] flex-col items-center gap-[4px] text-center">
-        <p className="w-full font-display text-p1 font-medium text-ink/80">For example, if you invest</p>
+        <p className={`w-full font-display font-medium text-ink/80 ${refined ? "text-p2" : "text-p1"}`}>For example, if you invest</p>
         <p
           className={`w-full font-display font-bold text-green-dark ${
-            refined ? "text-h2 md:text-h1" : "text-[28px] leading-[32px] md:text-h3 md:leading-[48px]"
+            refined ? "text-h3" :"text-[28px] leading-[32px] md:text-h3 md:leading-[48px]"
           }`}
         >
           {formatInr(animatedAmount)}
@@ -151,18 +151,18 @@ export function InvestmentSlider({ refined = false }: { refined?: boolean } = {}
               </motion.div>
             </AnimatePresence>
           </div>
-          <div className="flex flex-col items-center gap-[8px] text-center">
+          <div className={`flex items-center gap-[8px] text-center ${refined ? "flex-col-reverse" : "flex-col"}`}>
             <p className="w-full font-display text-[24px] font-bold leading-[30px] text-ink sm:text-h3 sm:leading-[48px]">
               {formatInr(animatedTotalMin)}
             </p>
-            <p className="w-full font-display text-p2 font-medium text-ink/80 md:text-p1">
-              Repaid to you, @ upto 8.5% p.a.
+            <p className={`w-full font-display text-p2 font-medium text-ink/80 ${refined ? "" : "md:text-p1"}`}>
+              {refined ? "You’ll be repaid (at 8.5% p.a.)" : "Repaid to you, @ upto 8.5% p.a."}
             </p>
           </div>
         </div>
 
-        <Divider orientation="horizontal" className="bg-ink/16 sm:hidden" />
-        <Divider orientation="vertical" className="hidden bg-ink/16 sm:block" />
+        <Divider orientation="horizontal" className={`sm:hidden ${refined ? "bg-ink/32" : "bg-ink/16"}`} />
+        <Divider orientation="vertical" className={`hidden sm:block ${refined ? "bg-ink/32" : "bg-ink/16"}`} />
 
         <div className="flex w-full flex-col items-center gap-[16px] sm:w-[470px]">
           <div className="flex h-[64px] items-center sm:h-[80px]">
@@ -182,11 +182,13 @@ export function InvestmentSlider({ refined = false }: { refined?: boolean } = {}
               ))}
             </AnimatePresence>
           </div>
-          <div className="flex flex-col items-center gap-[8px] text-center">
+          <div className={`flex items-center gap-[8px] text-center ${refined ? "flex-col-reverse" : "flex-col"}`}>
             <p className="w-full font-display text-[24px] font-bold leading-[30px] text-ink sm:text-h3 sm:leading-[48px]">
               {Math.round(animatedJobsMin)} - {Math.round(animatedJobsMax)}
             </p>
-            <p className="w-full font-display text-p2 font-medium text-ink/80 md:text-p1">Rural entrepreneurs you&apos;d fund</p>
+            <p className={`w-full font-display text-p2 font-medium text-ink/80 ${refined ? "" : "md:text-p1"}`}>
+              {refined ? "No. of entrepreneurs you’ll fund" : "Rural entrepreneurs you’d fund"}
+            </p>
           </div>
         </div>
       </div>

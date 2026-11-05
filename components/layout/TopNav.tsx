@@ -8,6 +8,8 @@ import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { MobileMenu } from "@/components/MobileMenu";
 import { useCtaLabel } from "@/lib/use-cta-label";
 import { useNavHidden, useNavIntro, useRefreshedNav } from "@/lib/nav-intro";
+import { usePathname } from "next/navigation";
+import { usePageReady } from "@/lib/use-page-ready";
 import { NavShine } from "./NavShine";
 
 const SCROLL_THRESHOLD = 24;
@@ -19,6 +21,18 @@ export function TopNav() {
   const hidden = useNavHidden();
   // v5 / v6 have the refreshed nav; every other page keeps the original look.
   const refreshed = useRefreshedNav();
+  // The shine sweeps Get started once: on v5 as its nav fades back in ("reveal"), on v6 as the logo lands
+  // in the nav ("landing"), and on Version 1.1 as the page loader goes. Latched, so it isn't cut short
+  // when the intro moves on to "shown".
+  const pathname = usePathname();
+  const pageReady = usePageReady();
+  const [shine, setShine] = useState(false);
+  const shineNow = intro === "reveal" || intro === "landing" || (pathname === "/v/v1" && pageReady);
+  useEffect(() => {
+    if (!shineNow) return;
+    const id = setTimeout(() => setShine(true), 0);
+    return () => clearTimeout(id);
+  }, [shineNow]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -139,7 +153,7 @@ export function TopNav() {
             onClick={() => window.location.assign("https://rangde.in/account/signup")}
           >
             {ctaLabel}
-            <NavShine play={intro === "reveal"} />
+            <NavShine play={shine} />
           </Button>
           <Button variant="secondary" size="sm" className={`!px-[16px] ${refreshed ? "!bg-nav-sky !text-nav-navy" : ""}`}>
             {refreshed ? "Login" : "Sign up / Login"}

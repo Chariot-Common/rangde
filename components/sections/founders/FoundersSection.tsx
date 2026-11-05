@@ -32,8 +32,9 @@ const FOUNDERS_V3: Founder[] = [
  * One photo each rather than one shared photo, so it lands that there are two people behind it.
  */
 /** `typed`: the quote and the heading type themselves out as they are scrolled into view (Version 1.1). */
-/** `talkFirst` (Version 1.1): the call card leads with "Talk to our founders" (in place of "Interested
- * but unsure?"), the day and time beside it in the Register button's blue. */
+/** `talkFirst` (Version 1.1): the call card reads as one line, "Meet our founders · Every Saturday, 11 AM IST"
+ * (in place of "Interested but unsure?"), the day and time in the Register button's blue, and on desktop
+ * the card is a little wider (3/8 of the row instead of 1/4). */
 export function FoundersSection({ photos = "v1", typed = false, talkFirst = false }: { photos?: "v1" | "v2" | "v3"; typed?: boolean; talkFirst?: boolean } = {}) {
   const founders = photos === "v3" ? FOUNDERS_V3 : photos === "v2" ? FOUNDERS_V2 : FOUNDERS;
   const reduce = useReducedMotion();
@@ -46,11 +47,11 @@ export function FoundersSection({ photos = "v1", typed = false, talkFirst = fals
 
   return (
     <section id="founders" className="mx-2 rounded-[16px] bg-[#F7F3ED] px-2 py-2 sm:px-2">
-      <div className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className={`grid w-full grid-cols-2 gap-2 ${talkFirst ? "lg:grid-cols-8" : "lg:grid-cols-4"}`}>
         {founders.map((f, i) => (
           <motion.figure
             key={f.name}
-            className="relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-[8px] bg-ink/8 lg:aspect-auto lg:min-h-[360px]"
+            className={`relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-[8px] bg-ink/8 lg:aspect-auto lg:min-h-[360px] ${talkFirst ? "lg:col-span-2" : ""}`}
             {...rise(i * 0.08)}
           >
             <Image
@@ -68,7 +69,7 @@ export function FoundersSection({ photos = "v1", typed = false, talkFirst = fals
         ))}
 
         <motion.figure
-          className="order-last col-span-2 flex flex-col justify-between gap-6 rounded-[8px] bg-white p-6 sm:p-8 lg:order-none lg:col-span-2 lg:p-12"
+          className={`order-last col-span-2 flex flex-col justify-between gap-6 rounded-[8px] bg-white p-6 sm:p-8 lg:order-none lg:p-12 ${talkFirst ? "lg:col-span-4" : "lg:col-span-2"}`}
           {...rise(0.16)}
         >
           <span aria-hidden className="h-[48px] font-display text-[112px] font-bold leading-[96px] text-green/40">
@@ -85,10 +86,10 @@ export function FoundersSection({ photos = "v1", typed = false, talkFirst = fals
         </motion.figure>
 
         <motion.div
-          className="col-span-2 flex flex-col gap-4 rounded-[8px] bg-white p-6 sm:p-8 lg:col-span-3 lg:p-12"
+          className={`col-span-2 flex flex-col gap-4 rounded-[8px] bg-white p-6 sm:p-8 lg:p-12 ${talkFirst ? "lg:col-span-5" : "lg:col-span-3"}`}
           {...rise(0.08)}
         >
-          <p className="font-display text-p4 font-bold uppercase tracking-[1.2px] text-green-dark">
+          <p className={`font-display font-bold uppercase text-green-dark ${talkFirst ? "text-h5 tracking-[0.88px]" : "text-p4 tracking-[1.2px]"}`}>
             The reason Rang De exists
           </p>
           {typed ? (
@@ -107,15 +108,14 @@ export function FoundersSection({ photos = "v1", typed = false, talkFirst = fals
         </motion.div>
 
         <motion.div
-          className="order-last col-span-2 flex flex-col items-start justify-between gap-6 rounded-[8px] bg-[#cbe8f6] p-6 sm:p-8 lg:order-none lg:col-span-1"
+          className={`order-last col-span-2 flex flex-col items-start justify-between gap-6 rounded-[8px] bg-[#cbe8f6] p-6 sm:p-8 lg:order-none ${talkFirst ? "lg:col-span-3" : "lg:col-span-1"}`}
           {...rise(0.16)}
         >
           {talkFirst ? (
+            // One sentence in one text block; only the day and time change colour.
             <h3 className="font-display text-h4 font-bold text-ink">
-              Talk to our founders{" "}
-              <span className="whitespace-nowrap text-p2 font-medium" style={{ color: "var(--color-blue-highlight)" }}>
-                · Every Saturday, 11 AM IST
-              </span>
+              Meet our founders{" "}
+              <span style={{ color: "var(--color-blue-highlight)" }}>· Every Saturday, 11 AM IST</span>
             </h3>
           ) : (
             <div className="flex flex-col gap-1">

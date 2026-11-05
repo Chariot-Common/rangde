@@ -25,8 +25,8 @@ const LINE_1 = "Invest directly in rural entrepreneurs.";
 const LINE_2 = "Help them build credit, while you earn returns.";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-// The whole entrance runs 4x faster than first drafted: each duration and pause below is scaled by PACE.
-const PACE = 1 / 4;
+// The whole entrance runs 2.8x faster than first drafted: each duration and pause below is scaled by PACE.
+const PACE = 1 / 2.8;
 const COINS = 6;
 const COIN_GAP = 0.16 * PACE; // seconds between coins
 const COIN_FLIGHT = 1.5 * PACE; // seconds for one coin to cross the screen
@@ -194,19 +194,20 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
       // The strip rises and fades in, gently pushing the copy up to its resting place.
       setPhase("settle");
       // The logo rides up with the copy so it stays just above it.
-      animate(logoY, logoY.get() - groupY.get(), { duration: 1.1 * PACE, ease: EASE });
-      animate(groupY, 0, { duration: 1.1 * PACE, ease: EASE });
-      animate(stripOpacity, 1, { duration: 0.9 * PACE, ease: "easeOut" });
-      await animate(stripY, 0, { duration: 1.1 * PACE, ease: EASE });
+      // The gallery rising and (below) the logo moving into the nav keep their normal pace (not PACE).
+      animate(logoY, logoY.get() - groupY.get(), { duration: 1.1, ease: EASE });
+      animate(groupY, 0, { duration: 1.1, ease: EASE });
+      animate(stripOpacity, 1, { duration: 0.9, ease: "easeOut" });
+      await animate(stripY, 0, { duration: 1.1, ease: EASE });
       if (cancelled) return;
       // Then the logo flies to the nav, and the nav fades in as it gets there.
       const navLogo = visibleNavLogo();
       if (navLogo) {
         const s = navLogo.width / logoSize.current.w;
-        animate(logoScale, s, { duration: 0.8 * PACE, ease: EASE });
+        animate(logoScale, s, { duration: 0.8, ease: EASE });
         const to = logoTo(navLogo.left, navLogo.top);
-        animate(logoX, to.x, { duration: 0.8 * PACE, ease: EASE });
-        await animate(logoY, to.y, { duration: 0.8 * PACE, ease: EASE });
+        animate(logoX, to.x, { duration: 0.8, ease: EASE });
+        await animate(logoY, to.y, { duration: 0.8, ease: EASE });
       }
       if (cancelled) return;
       // The nav fades in around the landed logo, its own logo kept invisible underneath as a spacer;

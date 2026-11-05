@@ -236,20 +236,24 @@ export interface Point {
   icon?: string;
 }
 
-function PointText({ parts }: { parts: Part[] }) {
+function PointText({ parts, plain = false }: { parts: Part[]; plain?: boolean }) {
   return (
     <>
       {parts.map((p, i) =>
         typeof p === "string" ? (
           <Fragment key={i}>{p}</Fragment>
         ) : "tip" in p ? (
-          <SourceTip key={i} source={p.source}>
+          <SourceTip key={i} source={p.source} plain={plain}>
             {p.tip}
           </SourceTip>
         ) : (
-          <strong key={i} className="font-bold text-ink">
-            {p.bold}
-          </strong>
+          plain ? (
+            <Fragment key={i}>{p.bold}</Fragment>
+          ) : (
+            <strong key={i} className="font-bold text-ink">
+              {p.bold}
+            </strong>
+          )
         ),
       )}
     </>
@@ -386,14 +390,16 @@ export const INFRA_POINTS: Point[] = [
 const BADGE_MASKS = ["circle", "flower", "wavy"].map((n) => `url(/images/approaches/shape-${n}.svg) center / contain no-repeat`);
 const ICON_GREEN = "#109173";
 
-export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 0 }: { points: Point[]; size?: "lg" | "sm"; badge?: string; shapeOffset?: number }) {
+/** `refined` (Version 1.1): 160px badges from md up (the icon scaled with them), each point 368px wide, and
+ * the body text faded with no bold, the sourced phrases marked only by their underline. */
+export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 0, refined = false }: { points: Point[]; size?: "lg" | "sm"; badge?: string; shapeOffset?: number; refined?: boolean }) {
   const lg = size === "lg";
   const reduce = useReducedMotion();
   return (
-    <div className={`grid w-full max-w-[1200px] grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-10 ${points.length === 4 ? "lg:grid-cols-4" : "md:grid-cols-3"} md:gap-12`}>
+    <div className={`grid w-full max-w-[1200px] grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-10 ${points.length === 4 ? "lg:grid-cols-4" : refined ? "md:grid-cols-[repeat(3,minmax(0,368px))] md:justify-center" : "md:grid-cols-3"} md:gap-12`}>
       {points.map((p, i) => (
         <Reveal key={p.title} delay={i * 0.08} className={`flex flex-row items-start gap-4 text-left sm:flex-col sm:items-center sm:text-center ${lg ? "sm:gap-6" : "sm:gap-4"}`}>
-          <div className={`relative flex shrink-0 items-center justify-center ${lg ? "size-[64px] sm:size-[104px] md:size-[120px]" : "size-[64px] sm:size-[88px]"}`}>
+          <div className={`relative flex shrink-0 items-center justify-center ${lg ? `size-[64px] sm:size-[104px] ${refined ? "md:size-[160px]" : "md:size-[120px]"}` : "size-[64px] sm:size-[88px]"}`}>
             {/* Each point gets its own shape — the blobs from the live Why Rang De cards and the
                 scalloped badge from Figma's lock icon (2719:47009) — tinted per section, turning
                 once every 20s like the live badges. */}
@@ -414,7 +420,7 @@ export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 
               >
                 {/* The animated icon used as a mask, so every icon reads in the same green. */}
                 <span
-                  className={`block ${lg ? "size-[30px] sm:size-[44px] md:size-[52px]" : "size-[28px] sm:size-[36px]"}`}
+                  className={`block ${lg ? `size-[30px] sm:size-[44px] ${refined ? "md:size-[70px]" : "md:size-[52px]"}` : "size-[28px] sm:size-[36px]"}`}
                   style={{ backgroundColor: ICON_GREEN, WebkitMask: `url(${p.icon}) center / contain no-repeat`, mask: `url(${p.icon}) center / contain no-repeat` }}
                 />
               </motion.span>
@@ -422,8 +428,8 @@ export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 
           </div>
           <div className="flex min-w-0 flex-col gap-1">
             <h3 className={`font-display font-bold text-ink ${lg ? "text-p2 sm:text-p1" : "text-p2"}`}>{p.title}</h3>
-            <p className="font-display text-p3 font-medium leading-[22px] text-ink/80 sm:text-p2 sm:leading-[24px]">
-              <PointText parts={p.text} />
+            <p className={`font-display text-p3 font-medium leading-[22px] sm:text-p2 sm:leading-[24px] ${refined ? "text-ink/64" : "text-ink/80"}`}>
+              <PointText parts={p.text} plain={refined} />
             </p>
           </div>
         </Reveal>
@@ -434,7 +440,7 @@ export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 
 
 /** A full section: heading (optional eyebrow) over a PointsGrid. tone "green" is the Figma green/light card. */
 /** `typed`: the heading types itself out as it is scrolled into view (Version 1.1). */
-export function PointsSection({ eyebrow, heading, points, tone = "plain", badge, typed = false, children }: { eyebrow?: string; heading: string; points: Point[]; tone?: "plain" | "green" | "cream" | "white"; badge?: string; typed?: boolean; children?: ReactNode }) {
+export function PointsSection({ eyebrow, heading, points, tone = "plain", badge, typed = false, refined = false, children }: { eyebrow?: string; heading: string; points: Point[]; tone?: "plain" | "green" | "cream" | "white"; badge?: string; typed?: boolean; refined?: boolean; children?: ReactNode }) {
   const bg = tone === "green" ? "bg-[#cbe0b8]" : tone === "cream" ? "bg-[#F7F3ED]" : tone === "white" ? "bg-white" : "bg-[#f1f2f5]";
   const badgeColor = badge ?? (tone === "green" ? "rgba(255,255,255,0.72)" : tone === "white" ? "#F1F2F5" : "#fff");
   return (
@@ -447,7 +453,7 @@ export function PointsSection({ eyebrow, heading, points, tone = "plain", badge,
           <AnimatedText as="h2" text={heading} className="max-w-[780px] font-display text-h3 font-bold text-ink" />
         )}
       </Reveal>
-      <PointsGrid points={points} badge={badgeColor} shapeOffset={tone === "green" ? 2 : tone === "plain" ? 0 : 1} />
+      <PointsGrid points={points} badge={badgeColor} shapeOffset={tone === "green" ? 2 : tone === "plain" ? 0 : 1} refined={refined} />
       {children}
     </section>
   );
@@ -577,12 +583,19 @@ const HIW_TABS: { title: string; text: string; stage: number; segment?: [number,
 ];
 
 
+// Version 1.1 plays Follow and Earn on their own, slower 28.8s clock (figma-motion.js, step 4's data-v11 branch).
+const V11_STEP4: Record<string, { segment: [number, number]; ms: number }> = {
+  Follow: { segment: [0, 13.8 / 28.8], ms: 13800 },
+  Earn: { segment: [13.82 / 28.8, 1], ms: 14980 },
+};
+
 /** `visual`: "ui" — the homepage pop-up's animated product UI (v1); "journey" — Durga's journey from the
  * How it works v3 prototype, real listings in light mock UI (v1.2). */
 /** `typed`: the heading types itself out as it is scrolled into view (Version 5).
- * `refined` (Version 1.1): the animation frame gets a 1.6px ink-24% border and square bottom corners,
- * the black step indicator glides along the grey line to the chosen step, and the divider above the
- * calculator is stronger (ink 24%) with 80px either side. */
+ * `refined` (Version 1.1): the animation frame is rounded (8px) with a 4px ink-16% stroke inside its left,
+ * top and right edges; the grey step line is its bottom edge, clipped by the same corners, with the black
+ * indicator gliding along it to the chosen step. The divider above the calculator is stronger (ink 24%)
+ * with 80px either side. */
 export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -590,7 +603,7 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
   const inView = useInView(ref, { amount: 0.4 });
   const reduce = useReducedMotion();
   const running = inView && !paused && !reduce;
-  const tabMs = useCallback((i: number) => (visual === "journey" ? HIW_TABS[i].sceneMs : HIW_TABS[i].ms), [visual]);
+  const tabMs = useCallback((i: number) => (visual === "journey" ? HIW_TABS[i].sceneMs : (refined && V11_STEP4[HIW_TABS[i].title]?.ms) || HIW_TABS[i].ms), [visual, refined]);
 
   useEffect(() => {
     if (!running) return;
@@ -615,25 +628,28 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
       </Reveal>
 
       <div className="flex w-full max-w-[1200px] flex-col" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-        <div className={`w-full overflow-hidden bg-white ${refined ? "rounded-t-[8px] border-[1.6px] border-ink/24" : "rounded-[8px]"} ${visual === "journey" ? "h-[560px] sm:h-[600px] lg:h-[520px]" : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
+        <div className={refined ? "w-full overflow-hidden rounded-[8px]" : "contents"}>
+        <div className={`w-full overflow-hidden bg-white ${refined ? "border-x-4 border-t-4 border-ink/16" : "rounded-[8px]"} ${visual === "journey" ? "h-[560px] sm:h-[600px] lg:h-[520px]" : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
           {visual === "journey" ? (
             <JourneyStage scene={tab.scene} label={tab.sceneLabel} loopMs={tab.sceneMs} />
           ) : (
-            <HowItWorksStage wide stepIndex={tab.stage} segment={tab.segment} label={HOW_IT_WORKS_STEPS[tab.stage].illustrationLabel} />
+            <HowItWorksStage wide v11={refined} stepIndex={tab.stage} segment={(refined && V11_STEP4[tab.title]?.segment) || tab.segment} label={HOW_IT_WORKS_STEPS[tab.stage].illustrationLabel} />
           )}
         </div>
-        <div role="tablist" aria-label="How it works steps" className="relative grid grid-cols-5">
-          {refined && (
-            // One black indicator for the whole row, gliding along the grey line to the chosen step.
+        {refined && (
+          // The grey step line as the frame's bottom edge, with one black indicator gliding along it.
+          <div aria-hidden className="relative h-[4px] w-full bg-ink/16 sm:h-[8px]">
             <motion.span
-              aria-hidden
-              className="pointer-events-none absolute top-0 z-10 h-[4px] bg-ink sm:h-[8px]"
+              className="pointer-events-none absolute inset-y-0 bg-ink"
               initial={false}
               animate={{ left: `${(active * 100) / HIW_TABS.length}%` }}
               transition={{ duration: reduce ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
               style={{ width: `${100 / HIW_TABS.length}%` }}
             />
-          )}
+          </div>
+        )}
+        </div>
+        <div role="tablist" aria-label="How it works steps" className="relative grid grid-cols-5">
           {HIW_TABS.map((t, i) => (
             <button
               key={t.title}
@@ -643,8 +659,9 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
               onClick={() => setActive(i)}
               className="group relative flex flex-col items-center gap-1 px-1 pt-4 text-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:px-4 sm:pt-6"
             >
+              {!refined && (
               <span className="absolute inset-x-0 top-0 h-[4px] bg-ink/16 sm:h-[8px]">
-                {!refined && i === active && (
+                {i === active && (
                   <motion.span
                     key={`${active}-${running}`}
                     className="absolute inset-y-0 left-0 bg-ink"
@@ -654,6 +671,7 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
                   />
                 )}
               </span>
+              )}
               <span className={`hidden font-display font-bold sm:block sm:text-p1 ${i === active ? "text-ink" : "text-ink/56 group-hover:text-ink"}`}>{t.title}</span>
               <span className="sr-only sm:hidden">{t.title}</span>
               <span className="hidden font-display text-p3 font-medium text-ink/80 sm:block sm:text-p2">{t.text}</span>
