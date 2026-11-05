@@ -103,7 +103,9 @@ export function TypedHero({ lead }: { lead: string }) {
     setNavIntro("hidden");
     groupY.set(centreTarget());
     const strip = stripRef.current;
-    if (strip) stripY.set(window.innerHeight - strip.getBoundingClientRect().top + 40);
+    // Measured from the cards' resting place (less any offset already applied), so running twice (as React's
+    // development mode does) doesn't leave them on screen.
+    if (strip) stripY.set(window.innerHeight - (strip.getBoundingClientRect().top - stripY.get()) + 40);
     return () => {
       setNavIntro("shown");
     };

@@ -6,13 +6,12 @@ import { FoundersSection } from "@/components/sections/founders/FoundersSection"
 import { TypedHero } from "@/components/versions/TypedHero";
 import { CursorRangoli } from "@/components/versions/CursorRangoli";
 import { ScrollType } from "@/components/versions/ScrollType";
+import { ScrollPoints, type ScrollPointItem } from "@/components/versions/ScrollPoints";
 import {
   HowItWorksTabs,
-  PointsSection,
   V5_PROBLEM_POINTS,
   QuestionCards,
   V5_SOLUTION_POINTS,
-  StackedSections,
 } from "@/components/versions/approaches";
 
 export const metadata: Metadata = {
@@ -22,8 +21,17 @@ export const metadata: Metadata = {
 };
 
 const E = (n: string) => `/images/v5-emoji/${n}.webp`;
-const PROBLEM_EMOJIS = [E("bank"), E("money-bag"), E("bar-chart")];
-const SOLUTION_EMOJIS = [E("investor"), E("handshake"), E("doc-verified")];
+// Each point's emoji, and how many words of its title come before it (where it sits before it lifts out).
+const PROBLEM: ScrollPointItem[] = [
+  { emoji: E("bank"), after: 1 }, // Banks · won’t lend to them
+  { emoji: E("money-bag"), after: 2 }, // Informal loans · cost more
+  { emoji: E("bar-chart"), after: 3 }, // No credit score · built
+];
+const SOLUTION: ScrollPointItem[] = [
+  { emoji: E("investor"), after: 1 }, // Investors · lend to them
+  { emoji: E("handshake"), after: 1 }, // Interest · stays fair
+  { emoji: E("doc-verified"), after: 1 }, // Repaying · builds credit
+];
 
 const LEAD =
   "Lend to rural entrepreneurs building businesses across India. Your money helps them access credit and build a formal credit history, while you earn returns.";
@@ -38,10 +46,9 @@ export default function V5() {
     <div className="flex w-full flex-col gap-2 pb-2">
       <CursorRangoli />
       <TypedHero lead={LEAD} />
-      <StackedSections
-        first={<PointsSection typed refined heading={"The financial system wasn’t built\nfor the businesses of rural India"} points={V5_PROBLEM_POINTS} emojis={PROBLEM_EMOJIS} />}
-        second={<PointsSection typed refined tone="green" eyebrow="India’s first direct social investment platform" heading="So we built one for them at Rang De" points={V5_SOLUTION_POINTS} emojis={SOLUTION_EMOJIS} />}
-      />
+      {/* Two ordinary sections (no longer stacked), their points played by scroll. */}
+      <ScrollPoints heading={"The financial system wasn’t built\nfor the businesses of rural India"} points={V5_PROBLEM_POINTS} items={PROBLEM} />
+      <ScrollPoints tone="green" eyebrow="India’s first direct social investment platform" heading="So we built one for them at Rang De" points={V5_SOLUTION_POINTS} items={SOLUTION} />
       <ReelsWheel tight heading={<ScrollType as="span" text="The money may be small. What it makes possible isn’t." />} />
       <HowItWorksTabs typed refined>
         <InvestmentSlider refined />
