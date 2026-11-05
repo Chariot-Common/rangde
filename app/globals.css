@@ -275,6 +275,29 @@ input[type="range"].rangde-slider:active::-webkit-slider-thumb {
   to { transform: scaleX(1); }
 }
 
+/* Version 1.1's smaller knob (about 70% of the standard 64px / 36px). */
+input[type="range"].rangde-slider.rangde-slider--compact::-webkit-slider-thumb {
+  width: 44px;
+  height: 44px;
+  margin-top: -14px;
+}
+input[type="range"].rangde-slider.rangde-slider--compact::-moz-range-thumb {
+  width: 44px;
+  height: 44px;
+}
+
+@media (max-width: 639px) {
+  input[type="range"].rangde-slider.rangde-slider--compact::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+    margin-top: -7px;
+  }
+  input[type="range"].rangde-slider.rangde-slider--compact::-moz-range-thumb {
+    width: 26px;
+    height: 26px;
+  }
+}
+
 @media (max-width: 639px) {
   input[type="range"].rangde-slider {
     height: 36px;

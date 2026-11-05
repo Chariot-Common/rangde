@@ -132,8 +132,10 @@ export function ReelDialog({ reel, onClose }: { reel: Reel | null; onClose: () =
  * can be dragged (with a little momentum), and holds still while a reel is hovered (that
  * reel plays) or open in the dialog. One screen tall less the nav bar (on phones, just as tall as the strip).
  */
-/** `heading`: the approach versions (app/v/v1*) swap in their own line; `null` drops the heading. */
-export function ReelsWheel({ heading }: { heading?: React.ReactNode | null } = {}) {
+/** `heading`: the approach versions (app/v/v1*) swap in their own line; `null` drops the heading.
+ * `tight` (Version 1.1): the section sizes to the reels instead of the screen, with the reels exactly
+ * 64px below the heading. */
+export function ReelsWheel({ heading, tight = false }: { heading?: React.ReactNode | null; tight?: boolean } = {}) {
   const [open, setOpen] = useState<Reel | null>(null);
   const openRef = useRef(false);
   useEffect(() => {
@@ -152,7 +154,11 @@ export function ReelsWheel({ heading }: { heading?: React.ReactNode | null } = {
     let W = 0;
     const size = () => {
       W = wrap.clientWidth;
-      st.current.cw = cardWidth(W, wrap.clientHeight);
+      if (tight) {
+        // Size the strip to the reels (20px clear above and below them, for their shadow).
+        st.current.cw = cardWidth(W, Infinity);
+        wrap.style.height = `${(st.current.cw * 16) / 9 + 40}px`;
+      } else st.current.cw = cardWidth(W, wrap.clientHeight);
       cardRefs.current.forEach((c) => c && (c.style.width = `${st.current.cw}px`));
     };
     size();
@@ -188,7 +194,7 @@ export function ReelsWheel({ heading }: { heading?: React.ReactNode | null } = {
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, []);
+  }, [tight]);
 
   // Drag to scroll. The pointer is only captured once it has really moved, so a plain click
   // still reaches the card underneath (and opens the reel).
@@ -219,7 +225,11 @@ export function ReelsWheel({ heading }: { heading?: React.ReactNode | null } = {
   };
 
   return (
-    <section className="mx-2 flex flex-col items-center overflow-hidden rounded-[16px] bg-white pb-6 pt-10 sm:h-[calc(100svh-var(--navbar-bottom))] sm:min-h-[600px] sm:pb-0 sm:pt-14 lg:h-[896px] lg:pt-20">
+    <section
+      className={`mx-2 flex flex-col items-center overflow-hidden rounded-[16px] bg-white pb-6 pt-10 sm:pt-14 lg:pt-20 ${
+        tight ? "sm:pb-14 lg:pb-20" : "sm:h-[calc(100svh-var(--navbar-bottom))] sm:min-h-[600px] sm:pb-0 lg:h-[896px]"
+      }`}
+    >
       {heading !== null && (
         <h2 className="px-4 text-center font-display text-h3 font-bold text-ink">
           {heading ?? (
@@ -238,7 +248,10 @@ export function ReelsWheel({ heading }: { heading?: React.ReactNode | null } = {
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
-        className="relative mt-2 h-[320px] min-h-0 w-full cursor-grab touch-pan-y select-none overflow-hidden active:cursor-grabbing sm:mt-6 sm:h-auto sm:flex-1"
+        // tight: 44px + the strip's own 20px above the reels = 64px from the heading.
+        className={`relative min-h-0 w-full cursor-grab touch-pan-y select-none overflow-hidden active:cursor-grabbing ${
+          tight ? "mt-[44px]" : "mt-2 h-[320px] sm:mt-6 sm:h-auto sm:flex-1"
+        }`}
       >
         <div className="absolute inset-0">
         {STRIP.map((reel, i) => (

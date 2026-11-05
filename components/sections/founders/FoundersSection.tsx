@@ -18,6 +18,11 @@ const FOUNDERS_V2: Founder[] = [
   { name: "Ram", src: "/images/founders/ram-v2.jpg", position: "38% 22%" },
   { name: "Smita", src: "/images/founders/smita-v2.jpg", position: "50% 18%" },
 ];
+// Version 1.1: sharper photos of the two of them speaking (2000px).
+const FOUNDERS_V3: Founder[] = [
+  { name: "Ram", src: "/images/founders/ram-v3.webp", position: "40% 20%" },
+  { name: "Smita", src: "/images/founders/smita-v3.webp", position: "50% 22%" },
+];
 
 /**
  * "The reason Rang De exists": who founded Rang De and why, just before the FAQs (Figma
@@ -27,8 +32,8 @@ const FOUNDERS_V2: Founder[] = [
  * One photo each rather than one shared photo, so it lands that there are two people behind it.
  */
 /** `typed`: the quote and the heading type themselves out as they are scrolled into view (Version 1.1). */
-export function FoundersSection({ photos = "v1", typed = false }: { photos?: "v1" | "v2"; typed?: boolean } = {}) {
-  const founders = photos === "v2" ? FOUNDERS_V2 : FOUNDERS;
+export function FoundersSection({ photos = "v1", typed = false }: { photos?: "v1" | "v2" | "v3"; typed?: boolean } = {}) {
+  const founders = photos === "v3" ? FOUNDERS_V3 : photos === "v2" ? FOUNDERS_V2 : FOUNDERS;
   const reduce = useReducedMotion();
   const rise = (delay = 0) => ({
     initial: reduce ? (false as const) : { opacity: 0, y: 16 },

@@ -129,6 +129,7 @@ export const testimonialsRow1: Testimonial[] = [
     role: "Chairman, STARS Forum",
     since: "Social Investor since Sep 2019",
     avatar: "/images/testimonials/chaitanya-nadkarny.webp",
+    flag: IN, // confirmed India
   },
   {
     quote: [
@@ -151,6 +152,7 @@ export const testimonialsRow1: Testimonial[] = [
     name: "Ritika Ojha",
     role: "Senior Business Project Manager",
     avatar: "/images/testimonials/ritika-ojha.webp",
+    flag: IN, // confirmed India
   },
   {
     quote: [
@@ -174,6 +176,7 @@ export const testimonialsRow2: Testimonial[] = [
     name: "Ajay Jain",
     role: "Social Investor",
     avatar: "/images/testimonials/ajay-jain.webp",
+    flag: IN, // confirmed India
   },
   {
     quote: [
@@ -207,6 +210,7 @@ export const testimonialsRow2: Testimonial[] = [
     name: "Shiri Baghar",
     role: "Founder & Director, Proteus Technologies",
     avatar: "/images/testimonials/shiri-baghar.webp",
+    flag: IN, // confirmed India
   },
 ];
 

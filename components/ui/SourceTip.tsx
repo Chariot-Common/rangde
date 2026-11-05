@@ -33,20 +33,26 @@ export function SourceTip({
   return (
     <span
       ref={ref}
-      className="relative inline-block"
+      // Inline (not inline-block), so a long phrase wraps with the sentence and the text after it carries
+      // on from the same line.
+      className="relative inline"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <button
-        type="button"
+      {/* A focusable span rather than a <button>: a button can't break across lines, so a long phrase
+          would sit as one block and push the rest of the sentence onto the next line. */}
+      <span
+        role="button"
+        tabIndex={0}
         aria-describedby={id}
         onClick={() => setOpen(true)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        className="cursor-help font-semibold text-ink underline decoration-ink/40 decoration-dotted decoration-2 underline-offset-[4px]"
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setOpen(true)}
+        className="cursor-help font-semibold text-ink underline decoration-ink/40 decoration-dotted decoration-2 underline-offset-[4px] outline-none focus-visible:rounded-[2px] focus-visible:ring-2 focus-visible:ring-ink/40"
       >
         {children}
-      </button>
+      </span>
       <span
         id={id}
         role="tooltip"

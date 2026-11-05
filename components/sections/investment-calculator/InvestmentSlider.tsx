@@ -33,7 +33,9 @@ const AVATAR_SOURCES = AVATAR_PHOTOS.slice(0, MAX_AVATARS).map(
 const TWEEN_MS = 220;
 const GLIDE_MS = 2600;
 
-export function InvestmentSlider() {
+/** `refined` (Version 1.1): a bigger amount (H1), a line under it on typical investment sizes, and a
+ * smaller slider knob (about 70%). */
+export function InvestmentSlider({ refined = false }: { refined?: boolean } = {}) {
   // Starts at the minimum and glides up to the default the first time the section scrolls into
   // view, so the numbers visibly come alive. Touching the slider hands control to the visitor.
   const [amount, setAmount] = useState(SLIDER_MIN);
@@ -87,15 +89,24 @@ export function InvestmentSlider() {
     <div ref={wrapRef} className="flex w-full flex-col items-center gap-8 px-4 sm:gap-sp9">
       <div className="flex w-full max-w-[370px] flex-col items-center gap-[4px] text-center">
         <p className="w-full font-display text-p1 font-medium text-ink/80">For example, if you invest</p>
-        <p className="w-full font-display text-[28px] font-bold leading-[32px] text-green-dark md:text-h3 md:leading-[48px]">
+        <p
+          className={`w-full font-display font-bold text-green-dark ${
+            refined ? "text-h2 md:text-h1" : "text-[28px] leading-[32px] md:text-h3 md:leading-[48px]"
+          }`}
+        >
           {formatInr(animatedAmount)}
         </p>
+        {refined && (
+          <p className="mt-2 w-full font-display text-h5 font-medium uppercase tracking-[0.88px] text-ink/64">
+            Typical investments range from ₹15,000 to ₹40,000
+          </p>
+        )}
       </div>
 
       <div className="-mb-[31px] -mt-6 w-full max-w-[970px] max-sm:mb-0 max-sm:mt-0">
         <input
           type="range"
-          className="rangde-slider"
+          className={`rangde-slider ${refined ? "rangde-slider--compact" : ""}`}
           min={SLIDER_MIN}
           max={SLIDER_MAX}
           step={SLIDER_STEP}

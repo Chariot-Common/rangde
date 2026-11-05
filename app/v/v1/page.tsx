@@ -3,13 +3,15 @@ import { InvestmentSlider } from "@/components/sections/investment-calculator/In
 import { ReelsWheel } from "@/components/sections/reels/ReelsWheel";
 import { Testimonials } from "@/components/sections/testimonials/Testimonials";
 import { FoundersSection } from "@/components/sections/founders/FoundersSection";
+import { StoryCarousel } from "@/components/sections/hero/StoryCarousel";
+import { heroIntroStories } from "@/lib/content";
 import {
   ApproachHero,
   HowItWorksTabs,
   PointsSection,
-  PROBLEM_POINTS,
+  V5_PROBLEM_POINTS,
   QuestionCards,
-  SOLUTION_POINTS,
+  V5_SOLUTION_POINTS,
   StackedSections,
 } from "@/components/versions/approaches";
 
@@ -28,17 +30,18 @@ const LEAD =
 export default function V1() {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
-      <ApproachHero title="Invest in the other Startup India" lead={LEAD} />
+      {/* The same borrower cards (photos and copy) as Version 5. */}
+      <ApproachHero title="Invest in the other Startup India" lead={LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent" />} />
       <StackedSections
-        first={<PointsSection heading={"The financial system wasn’t built for the businesses of rural India"} points={PROBLEM_POINTS} />}
-        second={<PointsSection tone="green" eyebrow="India’s first direct social investment platform" heading="So we built one for them at Rang De" points={SOLUTION_POINTS} />}
+        first={<PointsSection heading={"The financial system wasn’t built for the businesses of rural India"} points={V5_PROBLEM_POINTS} />}
+        second={<PointsSection tone="green" eyebrow="India’s first direct social investment platform" heading="So we built one for them at Rang De" points={V5_SOLUTION_POINTS} />}
       />
-      <ReelsWheel heading="The money may be small. What it makes possible isn’t." />
-      <HowItWorksTabs>
-        <InvestmentSlider />
+      <ReelsWheel tight heading="The money may be small. What it makes possible isn’t." />
+      <HowItWorksTabs refined>
+        <InvestmentSlider refined />
       </HowItWorksTabs>
       <Testimonials />
-      <FoundersSection />
+      <FoundersSection photos="v3" />
       <QuestionCards count={4} />
     </div>
   );

@@ -315,13 +315,16 @@ export const SOLUTION_POINTS: Point[] = [
   },
 ];
 
-/** Version 5's copy of the points (shorter, to fit four lines at P2). */
+const MFI_RATE_SOURCE = "Source to be confirmed.";
+
+/** Version 5's copy of the points (shorter, to fit four lines at P2), also used by Version 1.1. */
 export const V5_PROBLEM_POINTS: Point[] = [
   {
     title: "Banks won’t lend to them",
     icon: "/images/why-rangde-v2/icon-bank.webp",
     text: [
-      { bold: "Fewer than 15% of Indians have access to formal credit." },
+      // Findex 2021 puts formal borrowing at about 12% of Indian adults, so "fewer than 15%" holds.
+      { tip: "Fewer than 15% of Indians have access to formal credit.", source: FINDEX_SOURCE },
       " Without a credit history or land as collateral, a business loan is out of reach, even if the business is sound.",
     ],
   },
@@ -330,7 +333,8 @@ export const V5_PROBLEM_POINTS: Point[] = [
     icon: "/images/why-rangde-v2/icon-banknotes.webp",
     text: [
       "What’s left is moneylenders and MFIs that lend at ",
-      { bold: "20–30% interest rates" },
+      // TODO: the source for 20–30% (NABARD's 17.77% average doesn't support it); placeholder until confirmed.
+      { tip: "20–30% interest rates", source: MFI_RATE_SOURCE },
       ". These high rates eat the very income the loan was actually meant to help grow.",
     ],
   },
@@ -575,8 +579,11 @@ const HIW_TABS: { title: string; text: string; stage: number; segment?: [number,
 
 /** `visual`: "ui" — the homepage pop-up's animated product UI (v1); "journey" — Durga's journey from the
  * How it works v3 prototype, real listings in light mock UI (v1.2). */
-/** `typed`: the heading types itself out as it is scrolled into view (Version 1.1). */
-export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean }) {
+/** `typed`: the heading types itself out as it is scrolled into view (Version 5).
+ * `refined` (Version 1.1): the animation frame gets a 1.6px ink-24% border and square bottom corners,
+ * the black step indicator glides along the grey line to the chosen step, and the divider above the
+ * calculator is stronger (ink 24%) with 80px either side. */
+export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const ref = useRef<HTMLElement>(null);
@@ -608,14 +615,25 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
       </Reveal>
 
       <div className="flex w-full max-w-[1200px] flex-col" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-        <div className={`w-full overflow-hidden rounded-[8px] bg-white ${visual === "journey" ? "h-[560px] sm:h-[600px] lg:h-[520px]" : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
+        <div className={`w-full overflow-hidden bg-white ${refined ? "rounded-t-[8px] border-[1.6px] border-ink/24" : "rounded-[8px]"} ${visual === "journey" ? "h-[560px] sm:h-[600px] lg:h-[520px]" : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
           {visual === "journey" ? (
             <JourneyStage scene={tab.scene} label={tab.sceneLabel} loopMs={tab.sceneMs} />
           ) : (
             <HowItWorksStage wide stepIndex={tab.stage} segment={tab.segment} label={HOW_IT_WORKS_STEPS[tab.stage].illustrationLabel} />
           )}
         </div>
-        <div role="tablist" aria-label="How it works steps" className="grid grid-cols-5">
+        <div role="tablist" aria-label="How it works steps" className="relative grid grid-cols-5">
+          {refined && (
+            // One black indicator for the whole row, gliding along the grey line to the chosen step.
+            <motion.span
+              aria-hidden
+              className="pointer-events-none absolute top-0 z-10 h-[4px] bg-ink sm:h-[8px]"
+              initial={false}
+              animate={{ left: `${(active * 100) / HIW_TABS.length}%` }}
+              transition={{ duration: reduce ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
+              style={{ width: `${100 / HIW_TABS.length}%` }}
+            />
+          )}
           {HIW_TABS.map((t, i) => (
             <button
               key={t.title}
@@ -626,7 +644,7 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
               className="group relative flex flex-col items-center gap-1 px-1 pt-4 text-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink sm:px-4 sm:pt-6"
             >
               <span className="absolute inset-x-0 top-0 h-[4px] bg-ink/16 sm:h-[8px]">
-                {i === active && (
+                {!refined && i === active && (
                   <motion.span
                     key={`${active}-${running}`}
                     className="absolute inset-y-0 left-0 bg-ink"
@@ -653,7 +671,7 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
 
       {children && (
         <>
-          <div className="h-px w-full max-w-[1200px] bg-ink/8" />
+          <div className={`h-px w-full max-w-[1200px] ${refined ? "my-12 bg-ink/24 sm:my-8" : "bg-ink/8"}`} />
           {children}
         </>
       )}
