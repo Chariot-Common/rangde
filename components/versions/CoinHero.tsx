@@ -10,8 +10,8 @@ import { usePageReady } from "@/lib/use-page-ready";
 import { COIN_FLY, Sprite } from "./CharacterHowItWorks";
 
 /*
- * Version 3's hero entrance. The Rang De logo starts alone in the middle of the screen (1.5x the nav
- * logo, no company line) and moves up. Six coins (the How it works coin) fly left to right across
+ * Version 6's hero entrance. The Rang De logo (1.5x the nav logo, no company line) sits just above
+ * the headline from the start, the whole block centred on the screen. Six coins (the How it works coin) fly left to right across
  * the headline, each revealing its own random handful of letters; the second line then comes in word
  * by word. The coins come back right to left along the stats row, revealing the numbers and labels;
  * once the last has gone the RBI seal scales up and its label drops in. The coins are 3x in the white
@@ -25,14 +25,15 @@ const LINE_1 = "Invest directly in rural entrepreneurs.";
 const LINE_2 = "Help them build credit, while you earn returns.";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+// The whole entrance runs 4x faster than first drafted: each duration and pause below is scaled by PACE.
+const PACE = 1 / 4;
 const COINS = 6;
-const COIN_GAP = 0.16; // seconds between coins
-const COIN_FLIGHT = 1.5; // seconds for one coin to cross the screen
+const COIN_GAP = 0.16 * PACE; // seconds between coins
+const COIN_FLIGHT = 1.5 * PACE; // seconds for one coin to cross the screen
 const COIN_SIZE = 44; // px, the coin at 1x over the text
 const COIN_BIG = 3; // scale in the white space either side
-const LINE_2_STAGGER = 0.08;
-const LINE_2_DURATION = 0.6;
-const LOADER = 2.6; // seconds the centred logo dips once (fade down, fade back up) as the page's loading state
+const LINE_2_STAGGER = 0.08 * PACE;
+const LINE_2_DURATION = 0.6 * PACE;
 
 type Phase = "logo" | "line1" | "line2" | "stats" | "rbi" | "settle" | "done";
 
@@ -54,24 +55,27 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
   const logoX = useMotionValue(0);
   const logoY = useMotionValue(0);
   const logoScale = useMotionValue(1);
-  // The big logo sits centred by CSS from the very first paint (it is the page's loader); logoX/Y
-  // move it from there. Its size is read once it is on screen.
+  // The big logo is positioned above the headline before it is shown; logoX/Y move it from its CSS
+  // spot (centred). Its size is read once it is on the page.
+  const logoOpacity = useMotionValue(0);
   const logoRef = useRef<HTMLDivElement>(null);
   const logoSize = useRef({ w: 90, h: 72 });
-  const mountedAt = useRef(0);
 
   // One motion value per coin; the flight sets x, the path (y, band) is set per pass.
   const coinX = [useMotionValue(-999), useMotionValue(-999), useMotionValue(-999), useMotionValue(-999), useMotionValue(-999), useMotionValue(-999)];
   const [path, setPath] = useState<CoinPath | null>(null);
 
-  // Centre the whole block (headline to stats), park the strip below the screen and put the big logo
-  // in the middle. Done before first paint and again as the intro starts (the first can be lost).
+  // Centre the whole block (headline to stats) with the big logo just above it, and park the strip
+  // below the screen. Done before first paint and again as the intro starts (the first can be lost).
   const place = () => {
     const group = groupRef.current;
+    let groupTop: number | null = null;
     if (group) {
       const r = group.getBoundingClientRect();
       const shift = groupY.get(); // measure the resting layout, not the lifted one
-      groupY.set(window.innerHeight / 2 - (r.top - shift + r.bottom - shift) / 2);
+      const y = window.innerHeight / 2 - (r.top - shift + r.bottom - shift) / 2;
+      groupY.set(y);
+      groupTop = r.top - shift + y;
     }
     const strip = stripRef.current;
     if (strip) {
@@ -82,6 +86,8 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
     if (logo) {
       const r = logo.getBoundingClientRect();
       logoSize.current = { w: r.width / logoScale.get(), h: r.height / logoScale.get() };
+      if (groupTop !== null) logoY.set(logoTo(0, Math.max(16, groupTop - logoSize.current.h - 40)).y);
+      logoOpacity.set(1);
     }
   };
   // Offsets that put the logo's top-left corner at (left, top) on screen, measured from where it is
@@ -97,7 +103,6 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
       stripOpacity.set(1);
       return;
     }
-    mountedAt.current = performance.now();
     setNavIntro("hidden");
     place();
     return () => setNavIntro("shown");
@@ -145,8 +150,8 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
         const unsub = x.on("change", (v) => {
           for (const c of hands[i]) if (dir === 1 ? v >= c.x : v <= c.x) c.el.style.opacity = "1";
         });
-        const delay = phone ? Math.random() * 0.7 : i * COIN_GAP;
-        const duration = phone ? 1 + Math.random() * 0.7 : COIN_FLIGHT;
+        const delay = phone ? Math.random() * 0.7 * PACE : i * COIN_GAP;
+        const duration = phone ? (1 + Math.random() * 0.7) * PACE : COIN_FLIGHT;
         return animate(x, to, { duration, delay, ease: [0.4, 0, 0.6, 1] }).then(() => {
           unsub();
           hands[i].forEach((c) => (c.el.style.opacity = "1"));
@@ -170,23 +175,13 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
 
     (async () => {
       place();
-      // The centred logo is the loading state: it pulses for the first couple of seconds.
-      await wait(Math.max(0.3, LOADER - (performance.now() - mountedAt.current) / 1000));
-      if (cancelled) return;
-      // The logo moves up, just above the (centred) block.
-      const group = groupRef.current;
-      if (group) {
-        const top = group.getBoundingClientRect().top;
-        await animate(logoY, logoTo(0, Math.max(16, top - logoSize.current.h - 40)).y, { duration: 0.7, ease: EASE });
-      }
-      if (cancelled) return;
       setPhase("line1");
       const line1 = line1Ref.current;
       if (line1) await fly([...line1.querySelectorAll<HTMLElement>("[data-ch]")], line1, 1);
       if (cancelled) return;
       setPath(null);
       setPhase("line2");
-      await wait(wordRevealLength(LINE_2, LINE_2_STAGGER, LINE_2_DURATION) + 0.3);
+      await wait(wordRevealLength(LINE_2, LINE_2_STAGGER, LINE_2_DURATION) + 0.3 * PACE);
       if (cancelled) return;
       setPhase("stats");
       const row = statsRef.current;
@@ -194,30 +189,30 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
       if (cancelled) return;
       setPath(null);
       setPhase("rbi");
-      await wait(0.9);
+      await wait(0.9 * PACE);
       if (cancelled) return;
       // The strip rises and fades in, gently pushing the copy up to its resting place.
       setPhase("settle");
       // The logo rides up with the copy so it stays just above it.
-      animate(logoY, logoY.get() - groupY.get(), { duration: 1.1, ease: EASE });
-      animate(groupY, 0, { duration: 1.1, ease: EASE });
-      animate(stripOpacity, 1, { duration: 0.9, ease: "easeOut" });
-      await animate(stripY, 0, { duration: 1.1, ease: EASE });
+      animate(logoY, logoY.get() - groupY.get(), { duration: 1.1 * PACE, ease: EASE });
+      animate(groupY, 0, { duration: 1.1 * PACE, ease: EASE });
+      animate(stripOpacity, 1, { duration: 0.9 * PACE, ease: "easeOut" });
+      await animate(stripY, 0, { duration: 1.1 * PACE, ease: EASE });
       if (cancelled) return;
       // Then the logo flies to the nav, and the nav fades in as it gets there.
       const navLogo = visibleNavLogo();
       if (navLogo) {
         const s = navLogo.width / logoSize.current.w;
-        animate(logoScale, s, { duration: 0.8, ease: EASE });
+        animate(logoScale, s, { duration: 0.8 * PACE, ease: EASE });
         const to = logoTo(navLogo.left, navLogo.top);
-        animate(logoX, to.x, { duration: 0.8, ease: EASE });
-        await animate(logoY, to.y, { duration: 0.8, ease: EASE });
+        animate(logoX, to.x, { duration: 0.8 * PACE, ease: EASE });
+        await animate(logoY, to.y, { duration: 0.8 * PACE, ease: EASE });
       }
       if (cancelled) return;
       // The nav fades in around the landed logo, its own logo kept invisible underneath as a spacer;
       // then the flying logo hands over to it in the same spot.
       setNavIntro("landing");
-      await wait(0.35);
+      await wait(0.35 * PACE);
       finish();
     })();
 
@@ -264,14 +259,11 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
       {/* The intro's own layer: the big logo and the coins, above the page, below the page loader. */}
       {!done && (
         <div aria-hidden className="pointer-events-none fixed inset-0 z-[150]">
-          {/* 1.5x the nav logo (46x36 on phones, 60x48 from md), centred by CSS so it is right from the first paint. */}
+          {/* 1.5x the nav logo (46x36 on phones, 60x48 from md); hidden until it is placed above the headline. */}
           <motion.div
             ref={logoRef}
             className="absolute left-[calc(50%-34.5px)] top-[calc(50%-27px)] h-[54px] w-[69px] origin-top-left md:left-[calc(50%-45px)] md:top-[calc(50%-36px)] md:h-[72px] md:w-[90px]"
-            style={{ x: logoX, y: logoY, scale: logoScale }}
-            initial={{ opacity: 1 }}
-            animate={{ opacity: [1, 0.3, 1] }}
-            transition={{ duration: LOADER, ease: "easeInOut" }}
+            style={{ x: logoX, y: logoY, scale: logoScale, opacity: logoOpacity }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- the nav's own logo file, sized by the intro */}
             <img src="/icons/rangde-logo-mark.svg" alt="" className="size-full object-contain" />
@@ -353,7 +345,7 @@ function CoinStats({ stats, shown, rbiOn }: { stats: ReturnType<typeof heroStats
                 className="relative h-[48px] w-[48px] sm:h-[64px] sm:w-[64px]"
                 initial={false}
                 animate={{ scale: rbiOn ? 1 : 0 }}
-                transition={{ duration: 0.45, ease: EASE }}
+                transition={{ duration: 0.45 * PACE, ease: EASE }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- small static seal */}
                 <img src={stat.icon} alt="" className="size-full object-cover" />
@@ -364,7 +356,7 @@ function CoinStats({ stats, shown, rbiOn }: { stats: ReturnType<typeof heroStats
                 className="whitespace-nowrap font-display text-[10px] font-semibold uppercase tracking-[1.2px] text-ink/80 sm:font-bold sm:text-h5 sm:tracking-[0.88px]"
                 initial={false}
                 animate={rbiOn ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
-                transition={{ duration: 0.4, delay: rbiOn && !shown ? 0.35 : 0, ease: EASE }}
+                transition={{ duration: 0.4 * PACE, delay: rbiOn && !shown ? 0.35 * PACE : 0, ease: EASE }}
               >
                 {stat.label}
               </motion.p>
