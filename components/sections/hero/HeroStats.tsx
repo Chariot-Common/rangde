@@ -47,7 +47,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** TypedHero's entrance for the row: the four numbers come in first, closed up around the middle;
  * then the RBI seal pops into the gap, its label drops in, and the numbers either side slide apart. */
-export type HeroStatsIntro = { numbers: boolean; rbi: boolean; /** Scales every timing (1 = normal, 0.25 = 4x faster). */ pace?: number };
+export type HeroStatsIntro = { numbers: boolean; rbi: boolean; /** Scales every timing (1 = normal, 0.25 = 4x faster). */ pace?: number; /** The RBI seal's own pace (defaults to `pace`). */ rbiPace?: number };
 
 /** Lets a hero that runs its own entrance (VersionHero) hold the count until its turn, without
  * the page having to wire a prop through. */
@@ -58,6 +58,7 @@ export const HeroStatsStart = createContext<boolean | undefined>(undefined);
  * on screen. */
 export function HeroStats({ start: startProp, intro }: { start?: boolean; intro?: HeroStatsIntro } = {}) {
   const pace = intro?.pace ?? 1;
+  const rbiPace = intro?.rbiPace ?? pace;
   const startFromHero = useContext(HeroStatsStart);
   const start = intro ? intro.numbers : (startProp ?? startFromHero);
   const ref = useRef<HTMLDivElement>(null);
@@ -79,7 +80,7 @@ export function HeroStats({ start: startProp, intro }: { start?: boolean; intro?
             key={stat.label}
             // The RBI column starts with no width and grows into the middle, so the numbers either
             // side slide apart smoothly (a plain CSS flex-grow transition).
-            style={intro && isRbi ? { flexGrow: intro.rbi ? 1 : 0, transition: `flex-grow ${0.7 * pace}s cubic-bezier(0.22, 1, 0.36, 1)` } : undefined}
+            style={intro && isRbi ? { flexGrow: intro.rbi ? 1 : 0, transition: `flex-grow ${0.7 * rbiPace}s cubic-bezier(0.22, 1, 0.36, 1)` } : undefined}
             initial={intro && !isRbi ? { opacity: 0, y: 12 } : false}
             animate={intro && !isRbi ? (intro.numbers ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }) : undefined}
             transition={{ duration: 0.5 * pace, delay: index * 0.08 * pace, ease: EASE }}
@@ -94,7 +95,7 @@ export function HeroStats({ start: startProp, intro }: { start?: boolean; intro?
                 className="relative h-[48px] w-[48px] sm:h-[64px] sm:w-[64px]"
                 initial={intro ? { scale: 0 } : false}
                 animate={intro ? { scale: intro.rbi ? 1 : 0 } : undefined}
-                transition={{ duration: 0.4 * pace, ease: EASE }}
+                transition={{ duration: 0.4 * rbiPace, ease: EASE }}
               >
                 <Image src={stat.icon} alt="" fill sizes="64px" className="object-cover" />
               </motion.div>
@@ -103,7 +104,7 @@ export function HeroStats({ start: startProp, intro }: { start?: boolean; intro?
               className="whitespace-nowrap font-display text-[10px] font-semibold uppercase tracking-[1.2px] text-ink/80 sm:font-bold sm:text-h5 sm:tracking-[0.88px]"
               initial={intro && isRbi ? { opacity: 0, y: -10 } : false}
               animate={intro && isRbi ? (intro.rbi ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }) : undefined}
-              transition={{ duration: 0.5 * pace, delay: 0.15 * pace, ease: EASE }}
+              transition={{ duration: 0.5 * rbiPace, delay: 0.15 * rbiPace, ease: EASE }}
             >
               {stat.label}
             </motion.p>

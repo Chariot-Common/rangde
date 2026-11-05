@@ -29,7 +29,9 @@ export function Testimonials({ withStories = false, typed = false, refined = fal
             <FlagBadge key={c} flag={c} className="h-[24px] w-[32px] ring-0 shadow-[0_0_0_1px_rgba(41,45,54,0.08)]" />
           ))}
         </div>
-        {refined ? (
+        {refined && typed ? (
+          <ScrollType text={`Trusted by ${investors.toLocaleString("en-IN")} social investors across the world.`} className="font-display text-h3 font-bold text-ink" />
+        ) : refined ? (
           <h2 className="font-display text-h3 font-bold text-ink">
             Trusted by {investors.toLocaleString("en-IN")} social investors across the world.
           </h2>

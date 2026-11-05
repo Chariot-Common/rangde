@@ -21,28 +21,33 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+const E = (n: string) => `/images/v5-emoji/${n}.webp`;
+const PROBLEM_EMOJIS = [E("bank"), E("money-bag"), E("bar-chart")];
+const SOLUTION_EMOJIS = [E("investor"), E("handshake"), E("doc-verified")];
+
 const LEAD =
   "Lend to rural entrepreneurs building businesses across India. Your money helps them access credit and build a formal credit history, while you earn returns.";
 
 // Version 5: Version 1.1 (Figma "Home - v1.1", node 2687:14442) reworked with the typed hero intro
 // (TypedHero), the cursor rangoli and scroll-typed headings. The other Startup India headline, recent
 // stories → the problem, with what Rang De built sliding up over it → reels → How it works with the
-// calculator under it → investors → the founders → the top questions as cards.
+// calculator under it → investors → the founders → the top questions as cards. From the problem section
+// down to the founders it uses Version 1.1's refined sections, keeping its own letter-by-letter headings.
 export default function V5() {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
       <CursorRangoli />
       <TypedHero lead={LEAD} />
       <StackedSections
-        first={<PointsSection typed heading={"The financial system wasn’t built for the businesses of rural India"} points={V5_PROBLEM_POINTS} />}
-        second={<PointsSection typed tone="green" eyebrow="India’s first direct social investment platform" heading="So we built one for them at Rang De" points={V5_SOLUTION_POINTS} />}
+        first={<PointsSection typed refined heading={"The financial system wasn’t built\nfor the businesses of rural India"} points={V5_PROBLEM_POINTS} emojis={PROBLEM_EMOJIS} />}
+        second={<PointsSection typed refined tone="green" eyebrow="India’s first direct social investment platform" heading="So we built one for them at Rang De" points={V5_SOLUTION_POINTS} emojis={SOLUTION_EMOJIS} />}
       />
-      <ReelsWheel heading={<ScrollType as="span" text="The money may be small. What it makes possible isn’t." />} />
-      <HowItWorksTabs typed>
-        <InvestmentSlider />
+      <ReelsWheel tight heading={<ScrollType as="span" text="The money may be small. What it makes possible isn’t." />} />
+      <HowItWorksTabs typed refined>
+        <InvestmentSlider refined />
       </HowItWorksTabs>
-      <Testimonials typed />
-      <FoundersSection typed />
+      <Testimonials typed refined />
+      <FoundersSection typed photos="v3" talkFirst />
       <QuestionCards count={4} />
     </div>
   );

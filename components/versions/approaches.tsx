@@ -392,17 +392,20 @@ const ICON_GREEN = "#109173";
 
 /** `refined` (Version 1.1): 160px badges from md up (the icon scaled with them), each point 368px wide, and
  * the body text faded with no bold, the sourced phrases marked only by their underline. */
-export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 0, refined = false }: { points: Point[]; size?: "lg" | "sm"; badge?: string; shapeOffset?: number; refined?: boolean }) {
+/** `emojis` (Version 5): one emoji image per point, in order, in place of the badge and icon, each scaled to
+ * 92px tall (width in proportion). */
+export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 0, refined = false, emojis }: { points: Point[]; size?: "lg" | "sm"; badge?: string; shapeOffset?: number; refined?: boolean; emojis?: string[] }) {
   const lg = size === "lg";
   const reduce = useReducedMotion();
   return (
     <div className={`grid w-full max-w-[1200px] grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-10 ${points.length === 4 ? "lg:grid-cols-4" : refined ? "md:grid-cols-[repeat(3,minmax(0,368px))] md:justify-center" : "md:grid-cols-3"} md:gap-12`}>
       {points.map((p, i) => (
         <Reveal key={p.title} delay={i * 0.08} className={`flex flex-row items-start gap-4 text-left sm:flex-col sm:items-center sm:text-center ${lg ? "sm:gap-6" : "sm:gap-4"}`}>
-          <div className={`relative flex shrink-0 items-center justify-center ${lg ? `size-[64px] sm:size-[104px] ${refined ? "md:size-[160px]" : "md:size-[120px]"}` : "size-[64px] sm:size-[88px]"}`}>
+          <div className={`relative flex shrink-0 items-center justify-center ${emojis?.[i] ? "h-[92px]" : lg ? `size-[64px] sm:size-[104px] ${refined ? "md:size-[160px]" : "md:size-[120px]"}` : "size-[64px] sm:size-[88px]"}`}>
             {/* Each point gets its own shape — the blobs from the live Why Rang De cards and the
                 scalloped badge from Figma's lock icon (2719:47009) — tinted per section, turning
                 once every 20s like the live badges. */}
+            {!emojis?.[i] && (
             <motion.span
               aria-hidden
               className="absolute inset-0"
@@ -410,7 +413,18 @@ export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 
               animate={reduce ? undefined : { rotate: 360 }}
               transition={{ duration: 20, ease: "linear", repeat: Infinity }}
             />
-            {p.icon && (
+            )}
+            {emojis?.[i] ? (
+              <motion.span
+                className="h-full"
+                initial={reduce ? false : { scale: 0.6, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                viewport={{ once: true, amount: 0.6 }}
+                transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.15 + i * 0.08 }}
+              >
+                <Image src={emojis[i]} alt="" width={300} height={300} sizes="184px" className="h-full w-auto" />
+              </motion.span>
+            ) : p.icon && (
               <motion.span
                 className="relative"
                 initial={reduce ? false : { scale: 0.6, opacity: 0 }}
@@ -440,7 +454,7 @@ export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 
 
 /** A full section: heading (optional eyebrow) over a PointsGrid. tone "green" is the Figma green/light card. */
 /** `typed`: the heading types itself out as it is scrolled into view (Version 1.1). */
-export function PointsSection({ eyebrow, heading, points, tone = "plain", badge, typed = false, refined = false, children }: { eyebrow?: string; heading: string; points: Point[]; tone?: "plain" | "green" | "cream" | "white"; badge?: string; typed?: boolean; refined?: boolean; children?: ReactNode }) {
+export function PointsSection({ eyebrow, heading, points, tone = "plain", badge, typed = false, refined = false, emojis, children }: { eyebrow?: string; heading: string; points: Point[]; tone?: "plain" | "green" | "cream" | "white"; badge?: string; typed?: boolean; refined?: boolean; emojis?: string[]; children?: ReactNode }) {
   const bg = tone === "green" ? "bg-[#cbe0b8]" : tone === "cream" ? "bg-[#F7F3ED]" : tone === "white" ? "bg-white" : "bg-[#f1f2f5]";
   const badgeColor = badge ?? (tone === "green" ? "rgba(255,255,255,0.72)" : tone === "white" ? "#F1F2F5" : "#fff");
   return (
@@ -453,7 +467,7 @@ export function PointsSection({ eyebrow, heading, points, tone = "plain", badge,
           <AnimatedText as="h2" text={heading} className="max-w-[780px] font-display text-h3 font-bold text-ink" />
         )}
       </Reveal>
-      <PointsGrid points={points} badge={badgeColor} shapeOffset={tone === "green" ? 2 : tone === "plain" ? 0 : 1} refined={refined} />
+      <PointsGrid points={points} badge={badgeColor} shapeOffset={tone === "green" ? 2 : tone === "plain" ? 0 : 1} refined={refined} emojis={emojis} />
       {children}
     </section>
   );

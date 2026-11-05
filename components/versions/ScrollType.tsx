@@ -41,14 +41,18 @@ export function ScrollType({
     });
   });
 
+  const label = text.replace(/\n/g, " ");
   let index = 0;
   const register = (el: HTMLSpanElement | null) => {
     if (el) chars.current[Number(el.dataset.i)] = el;
   };
   const letters = (
     <span aria-hidden>
-      {text.split(" ").map((word, wi) => (
-        <Fragment key={wi}>
+      {/* "\n" forces a line break; the words of each line wrap as usual. */}
+      {text.split("\n").flatMap((line, li) => [
+        li > 0 ? <br key={`br${li}`} /> : null,
+        ...line.split(" ").map((word, wi) => (
+        <Fragment key={`${li}-${wi}`}>
           {wi > 0 && " "}
           {/* Words stay whole when the line wraps. */}
           <span className="whitespace-nowrap">
@@ -62,12 +66,13 @@ export function ScrollType({
             })}
           </span>
         </Fragment>
-      ))}
+        )),
+      ])}
     </span>
   );
 
-  if (as === "p") return <p ref={ref} className={className} aria-label={text}>{letters}</p>;
-  if (as === "span") return <span ref={ref} className={className} aria-label={text}>{letters}</span>;
-  if (as === "blockquote") return <blockquote ref={ref} className={className} aria-label={text}>{letters}</blockquote>;
-  return <h2 ref={ref} className={className} aria-label={text}>{letters}</h2>;
+  if (as === "p") return <p ref={ref} className={className} aria-label={label}>{letters}</p>;
+  if (as === "span") return <span ref={ref} className={className} aria-label={label}>{letters}</span>;
+  if (as === "blockquote") return <blockquote ref={ref} className={className} aria-label={label}>{letters}</blockquote>;
+  return <h2 ref={ref} className={className} aria-label={label}>{letters}</h2>;
 }

@@ -9,6 +9,7 @@ import { WordReveal, wordRevealLength } from "@/components/ui/WordReveal";
 // stats start.
 // Everything after the emojis have shrunk away (body copy, stats, settling, nav) runs 4x faster.
 const LATE = 1 / 4;
+const RBI_PACE = 1 / 2;
 const LEAD_STAGGER = 0.08 * LATE;
 const LEAD_DURATION = 0.6 * LATE;
 import { heroIntroStories } from "@/lib/content";
@@ -208,7 +209,8 @@ export function TypedHero({ lead }: { lead: string }) {
       set({ numbers: true });
       await wait(2100 * LATE);
       set({ rbi: true });
-      await wait(800 * LATE);
+      // The RBI seal grows in at 2x (not the 4x of the rest), so it reads as intended rather than a glitch.
+      await wait(800 * RBI_PACE);
       set({ settled: true });
       await wait(1000 * LATE);
       if (cancelled) return;
@@ -264,7 +266,7 @@ export function TypedHero({ lead }: { lead: string }) {
           />
         </div>
         <div className="w-full max-w-[1200px]">
-          <HeroStats intro={{ numbers: step.numbers, rbi: step.rbi, pace: LATE }} />
+          <HeroStats intro={{ numbers: step.numbers, rbi: step.rbi, pace: LATE, rbiPace: RBI_PACE }} />
         </div>
       </motion.div>
       <motion.div ref={stripRef} style={{ y: stripY }} className="relative -mx-4 w-[calc(100%+32px)] sm:-mx-2 sm:w-[calc(100%+16px)]">
