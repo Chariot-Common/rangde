@@ -13,10 +13,10 @@ const STAGGER_MS = 100;
 // or "₹ 0.00 Cr" before the animation starts (or for anyone who scrolls past quickly).
 const COUNT_FROM = 0.8;
 
-function StatNumber({ target, format, index, inView }: { target: number; format: (n: number) => string; index: number; inView: boolean }) {
+function StatNumber({ target, format, index, inView, pace = 1 }: { target: number; format: (n: number) => string; index: number; inView: boolean; pace?: number }) {
   const value = useAnimatedNumber(inView ? target : target * COUNT_FROM, {
-    duration: COUNT_UP_DURATION,
-    delay: index * STAGGER_MS,
+    duration: COUNT_UP_DURATION * pace,
+    delay: index * STAGGER_MS * pace,
     enabled: inView,
   });
 
@@ -47,7 +47,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** TypedHero's entrance for the row: the four numbers come in first, closed up around the middle;
  * then the RBI seal pops into the gap, its label drops in, and the numbers either side slide apart. */
-export type HeroStatsIntro = { numbers: boolean; rbi: boolean };
+export type HeroStatsIntro = { numbers: boolean; rbi: boolean; /** Scales every timing (1 = normal, 0.25 = 4x faster). */ pace?: number };
 
 /** Lets a hero that runs its own entrance (VersionHero) hold the count until its turn, without
  * the page having to wire a prop through. */
@@ -57,6 +57,7 @@ export const HeroStatsStart = createContext<boolean | undefined>(undefined);
  * turns it on right after its body copy has come in. Either way they only count once the row is
  * on screen. */
 export function HeroStats({ start: startProp, intro }: { start?: boolean; intro?: HeroStatsIntro } = {}) {
+  const pace = intro?.pace ?? 1;
   const startFromHero = useContext(HeroStatsStart);
   const start = intro ? intro.numbers : (startProp ?? startFromHero);
   const ref = useRef<HTMLDivElement>(null);
@@ -78,22 +79,22 @@ export function HeroStats({ start: startProp, intro }: { start?: boolean; intro?
             key={stat.label}
             // The RBI column starts with no width and grows into the middle, so the numbers either
             // side slide apart smoothly (a plain CSS flex-grow transition).
-            style={intro && isRbi ? { flexGrow: intro.rbi ? 1 : 0, transition: "flex-grow 0.7s cubic-bezier(0.22, 1, 0.36, 1)" } : undefined}
+            style={intro && isRbi ? { flexGrow: intro.rbi ? 1 : 0, transition: `flex-grow ${0.7 * pace}s cubic-bezier(0.22, 1, 0.36, 1)` } : undefined}
             initial={intro && !isRbi ? { opacity: 0, y: 12 } : false}
             animate={intro && !isRbi ? (intro.numbers ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }) : undefined}
-            transition={{ duration: 0.5, delay: index * 0.08, ease: EASE }}
+            transition={{ duration: 0.5 * pace, delay: index * 0.08 * pace, ease: EASE }}
             className={`flex flex-col items-center ${isRbi ? "gap-[8px]" : "gap-[4px]"} sm:order-none sm:flex-1 ${MOBILE_ORDER_CLASS[index]} ${
               isRbi ? `col-span-2 justify-self-center ${intro ? "sm:min-w-0" : ""}` : ""
             }`}
           >
             {stat.kind === "number" ? (
-              <StatNumber target={stat.target} format={stat.format} index={index} inView={inView} />
+              <StatNumber target={stat.target} format={stat.format} index={index} inView={inView} pace={pace} />
             ) : (
               <motion.div
                 className="relative h-[48px] w-[48px] sm:h-[64px] sm:w-[64px]"
                 initial={intro ? { scale: 0 } : false}
                 animate={intro ? { scale: intro.rbi ? 1 : 0 } : undefined}
-                transition={{ duration: 0.4, ease: EASE }}
+                transition={{ duration: 0.4 * pace, ease: EASE }}
               >
                 <Image src={stat.icon} alt="" fill sizes="64px" className="object-cover" />
               </motion.div>
@@ -102,7 +103,7 @@ export function HeroStats({ start: startProp, intro }: { start?: boolean; intro?
               className="whitespace-nowrap font-display text-[10px] font-semibold uppercase tracking-[1.2px] text-ink/80 sm:font-bold sm:text-h5 sm:tracking-[0.88px]"
               initial={intro && isRbi ? { opacity: 0, y: -10 } : false}
               animate={intro && isRbi ? (intro.rbi ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }) : undefined}
-              transition={{ duration: 0.5, delay: 0.15, ease: EASE }}
+              transition={{ duration: 0.5 * pace, delay: 0.15 * pace, ease: EASE }}
             >
               {stat.label}
             </motion.p>

@@ -7,8 +7,10 @@ import { StoryCarousel } from "@/components/sections/hero/StoryCarousel";
 import { WordReveal, wordRevealLength } from "@/components/ui/WordReveal";
 // The body copy reveals at a quarter of the shared hero pace (4x slower) so it can be read before the
 // stats start.
-const LEAD_STAGGER = 0.08;
-const LEAD_DURATION = 0.6;
+// Everything after the emojis have shrunk away (body copy, stats, settling, nav) runs 4x faster.
+const LATE = 1 / 4;
+const LEAD_STAGGER = 0.08 * LATE;
+const LEAD_DURATION = 0.6 * LATE;
 import { heroIntroStories } from "@/lib/content";
 import { setNavIntro } from "@/lib/nav-intro";
 import { usePageReady } from "@/lib/use-page-ready";
@@ -130,7 +132,7 @@ export function TypedHero({ lead }: { lead: string }) {
   // The headline moves up quickly to make room for the body copy.
   useEffect(() => {
     if (!step.lead || step.settled) return;
-    animate(groupY, centreTarget(), { duration: 0.55, ease: EASE });
+    animate(groupY, centreTarget(), { duration: 0.55 * LATE, ease: EASE });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step.lead]);
 
@@ -138,6 +140,7 @@ export function TypedHero({ lead }: { lead: string }) {
   useEffect(() => {
     if (!step.settled) return;
     const quick = step.instant;
+    // The cards rising and pushing the copy up keep their original, unhurried ease-out.
     animate(groupY, 0, { duration: quick ? 0.4 : 0.9 * SPEED, ease: EASE });
     animate(stripY, 0, { duration: quick ? 0.4 : SPEED, delay: quick ? 0 : 0.1 * SPEED, ease: EASE });
   }, [step.settled, step.instant, groupY, stripY]);
@@ -203,11 +206,11 @@ export function TypedHero({ lead }: { lead: string }) {
       // with no pause after it (the pause belongs to the headline only).
       await wait(((wordRevealLength(lead, LEAD_STAGGER, LEAD_DURATION) - LEAD_DURATION / 2) * 1000) / SPEED);
       set({ numbers: true });
-      await wait(2100);
+      await wait(2100 * LATE);
       set({ rbi: true });
-      await wait(800);
+      await wait(800 * LATE);
       set({ settled: true });
-      await wait(1000);
+      await wait(1000 * LATE);
       if (cancelled) return;
       // The finishing touches: the nav fades in and Get started shines straight away; the circle then
       // comes in behind the hero at its own slow pace (nothing the reader does cuts it short).
@@ -261,7 +264,7 @@ export function TypedHero({ lead }: { lead: string }) {
           />
         </div>
         <div className="w-full max-w-[1200px]">
-          <HeroStats intro={{ numbers: step.numbers, rbi: step.rbi }} />
+          <HeroStats intro={{ numbers: step.numbers, rbi: step.rbi, pace: LATE }} />
         </div>
       </motion.div>
       <motion.div ref={stripRef} style={{ y: stripY }} className="relative -mx-4 w-[calc(100%+32px)] sm:-mx-2 sm:w-[calc(100%+16px)]">
