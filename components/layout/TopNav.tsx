@@ -2,16 +2,23 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { LegacyButton as Button } from "@/components/ui/LegacyButton";
 import { IconButton } from "@/components/ui/IconButton";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { MobileMenu } from "@/components/MobileMenu";
 import { useCtaLabel } from "@/lib/use-cta-label";
+import { useNavHidden, useNavIntro, useRefreshedNav } from "@/lib/nav-intro";
+import { NavShine } from "./NavShine";
 
 const SCROLL_THRESHOLD = 24;
 
 export function TopNav() {
   const ctaLabel = useCtaLabel();
+  // A hero intro (TypedHero) can hide the nav until it has settled, then bring it back with a shine.
+  const intro = useNavIntro();
+  const hidden = useNavHidden();
+  // v5 / v6 have the refreshed nav; every other page keeps the original look.
+  const refreshed = useRefreshedNav();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -72,17 +79,22 @@ export function TopNav() {
       aria-expanded={menuOpen}
       aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
       onClick={() => setMenuOpen((open) => !open)}
+      className={refreshed ? "!border-nav-line" : ""}
     >
-      <MenuToggleIcon open={menuOpen} />
+      <MenuToggleIcon open={menuOpen} {...(refreshed ? { color: "var(--color-nav-navy)" } : {})} />
     </IconButton>
   );
 
   return (
     <div
       ref={navRef}
-      className={`relative w-full px-4 py-[16px] transition-[background-color,backdrop-filter,box-shadow] duration-300 ease-out sm:px-6 md:px-10 lg:px-[135px] ${
+      className={`relative w-full px-4 py-[16px] transition-[background-color,backdrop-filter,box-shadow,opacity] duration-300 ease-out sm:px-6 ${
+        refreshed ? "border-b border-nav-stroke" : "md:px-10 lg:px-[135px]"
+      } ${
+        hidden ? "pointer-events-none opacity-0" : "opacity-100"
+      } ${
         isScrolled
-          ? "bg-white/82 shadow-[0_1px_0_rgba(3,21,56,0.06)] backdrop-blur-[16px]"
+          ? `bg-white/82 backdrop-blur-[16px] ${refreshed ? "" : "shadow-[0_1px_0_rgba(3,21,56,0.06)]"}`
           : "bg-transparent"
       }`}
     >
@@ -90,7 +102,7 @@ export function TopNav() {
           the right. Desktop keeps its original single-row layout, with Get started first. */}
       <div className="flex items-center justify-between gap-2 md:hidden">
         <div className="flex shrink-0 flex-col items-start">
-          <div className="relative h-[36px] w-[46px]">
+          <div className={`relative h-[36px] w-[46px] ${intro === "landing" ? "opacity-0" : ""}`}>
             <Image src="/icons/rangde-logo-mark.svg" alt="Rang De" fill className="object-contain" priority />
           </div>
           {/* Same as the live rangde.in mobile header (4px / 8px, 0.32px tracking). */}
@@ -101,8 +113,8 @@ export function TopNav() {
         <div className="flex shrink-0 items-center gap-[6px]">
           {/* No Invest button on phones: a "Get started" button floats at the bottom once the
               hero has scrolled away (FloatingGetStarted). */}
-          <Button variant="secondary" size="sm" className="!px-[12px] whitespace-nowrap">
-            Sign up / Login
+          <Button variant="secondary" size="sm" className={`!px-[12px] whitespace-nowrap ${refreshed ? "!bg-nav-sky !text-nav-navy" : ""}`}>
+            {refreshed ? "Login" : "Sign up / Login"}
           </Button>
           {toggleButton}
         </div>
@@ -110,7 +122,7 @@ export function TopNav() {
 
       <div className="hidden w-full items-center justify-between gap-4 md:flex">
         <div className="flex w-[220px] shrink-0 flex-col items-start lg:w-[232px]">
-          <div className="relative h-[48px] w-[60px]">
+          <div className={`relative h-[48px] w-[60px] ${intro === "landing" ? "opacity-0" : ""}`}>
             <Image src="/icons/rangde-logo-mark.svg" alt="Rang De" fill className="object-contain" priority />
           </div>
           {/* Same size as the live rangde.in header (6px / 8px, 0.48px tracking). */}
@@ -123,13 +135,14 @@ export function TopNav() {
           <Button
             variant="primary"
             size="sm"
-            className="!px-[16px]"
+            className={`relative !px-[16px] ${refreshed ? "!bg-nav-navy !text-white" : ""}`}
             onClick={() => window.location.assign("https://rangde.in/account/signup")}
           >
             {ctaLabel}
+            <NavShine play={intro === "reveal"} />
           </Button>
-          <Button variant="secondary" size="sm" className="!px-[16px]">
-            Sign up / Login
+          <Button variant="secondary" size="sm" className={`!px-[16px] ${refreshed ? "!bg-nav-sky !text-nav-navy" : ""}`}>
+            {refreshed ? "Login" : "Sign up / Login"}
           </Button>
           {toggleButton}
         </div>

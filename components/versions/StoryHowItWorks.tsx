@@ -715,7 +715,9 @@ export function Cast({
   );
 }
 
-export function StoryHowItWorks({ look = "color" }: { look?: Look }) {
+/** `heading`: v3 opens it with "Here’s how that works." (filling in as it is read), carrying on from
+ * the founders' paragraph. */
+export function StoryHowItWorks({ look = "color", heading = "How Rang De works" }: { look?: Look; heading?: ReactNode }) {
   const line = look === "line";
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -780,7 +782,7 @@ export function StoryHowItWorks({ look = "color" }: { look?: Look }) {
     <LookContext.Provider value={look}>
       <div id="how-it-works" className={`relative mx-2 overflow-clip rounded-[16px] ${line ? "bg-[#FAFAFA]" : "bg-gradient-to-b from-white to-bg-grey"}`}>
         <div className="flex flex-col items-center gap-2 px-4 pb-2 pt-12 text-center sm:px-8 sm:pt-16 lg:pt-[80px]">
-          <h2 className="font-display text-h3 font-bold text-ink [text-wrap:balance]">How Rang De works</h2>
+          <h2 className="font-display text-h3 font-bold text-ink [text-wrap:balance]">{heading}</h2>
         </div>
         <section ref={sectionRef} aria-label="How Rang De works, told as a story" className="relative" style={{ height: `calc(${TRAVEL * PACE + 1} * (100svh - var(--navbar-bottom, 0px)))` }}>
           {/* The stage only shows one line at a time, so the story is also here, in order. */}

@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { INTRO_LOADER_ROUTES } from "@/lib/nav-intro";
 import { PAGE_READY_EVENT } from "@/lib/use-page-ready";
 
 /**
@@ -19,6 +21,9 @@ export function PageLoader() {
   // runs post-hydration, so the one-time "already loaded" check is safe there.
   const [hidden, setHidden] = useState(false);
   const [mounted, setMounted] = useState(true);
+  // Pages whose hero intro is the loading screen (v3's pulsing logo) skip the splash; it still
+  // signals "ready" on load so their intro starts on time.
+  const bare = INTRO_LOADER_ROUTES.includes(usePathname());
 
   useEffect(() => {
     const onLoad = () => setHidden(true);
@@ -48,11 +53,11 @@ export function PageLoader() {
   }, [hidden]);
 
   useEffect(() => {
-    document.body.style.overflow = hidden ? "" : "hidden";
+    document.body.style.overflow = hidden || bare ? "" : "hidden";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [hidden]);
+  }, [hidden, bare]);
 
   // Unmount only after the fade-out transition finishes, matching duration-300 below.
   useEffect(() => {
@@ -61,7 +66,7 @@ export function PageLoader() {
     return () => clearTimeout(timeout);
   }, [hidden]);
 
-  if (!mounted) return null;
+  if (!mounted || bare) return null;
 
   return (
     <div
