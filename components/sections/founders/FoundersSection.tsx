@@ -32,7 +32,9 @@ const FOUNDERS_V3: Founder[] = [
  * One photo each rather than one shared photo, so it lands that there are two people behind it.
  */
 /** `typed`: the quote and the heading type themselves out as they are scrolled into view (Version 1.1). */
-export function FoundersSection({ photos = "v1", typed = false }: { photos?: "v1" | "v2" | "v3"; typed?: boolean } = {}) {
+/** `talkFirst` (Version 1.1): the call card leads with "Talk to our founders" (in place of "Interested
+ * but unsure?"), the day and time beside it in the Register button's blue. */
+export function FoundersSection({ photos = "v1", typed = false, talkFirst = false }: { photos?: "v1" | "v2" | "v3"; typed?: boolean; talkFirst?: boolean } = {}) {
   const founders = photos === "v3" ? FOUNDERS_V3 : photos === "v2" ? FOUNDERS_V2 : FOUNDERS;
   const reduce = useReducedMotion();
   const rise = (delay = 0) => ({
@@ -108,12 +110,21 @@ export function FoundersSection({ photos = "v1", typed = false }: { photos?: "v1
           className="order-last col-span-2 flex flex-col items-start justify-between gap-6 rounded-[8px] bg-[#cbe8f6] p-6 sm:p-8 lg:order-none lg:col-span-1"
           {...rise(0.16)}
         >
-          <div className="flex flex-col gap-1">
-            <h3 className="font-display text-h4 font-bold text-ink">Interested but unsure?</h3>
-            <p className="font-display text-p2 font-medium text-ink/80">
-              Talk to our founders · Every Saturday, 11 AM IST
-            </p>
-          </div>
+          {talkFirst ? (
+            <h3 className="font-display text-h4 font-bold text-ink">
+              Talk to our founders{" "}
+              <span className="whitespace-nowrap text-p2 font-medium" style={{ color: "var(--color-blue-highlight)" }}>
+                · Every Saturday, 11 AM IST
+              </span>
+            </h3>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <h3 className="font-display text-h4 font-bold text-ink">Interested but unsure?</h3>
+              <p className="font-display text-p2 font-medium text-ink/80">
+                Talk to our founders · Every Saturday, 11 AM IST
+              </p>
+            </div>
+          )}
           <Button variant="primary" size="lg" className="w-full px-6" style={{ backgroundColor: "var(--color-blue-highlight)" }}>
             Register
           </Button>

@@ -41,7 +41,7 @@ export default function V1() {
         <InvestmentSlider refined />
       </HowItWorksTabs>
       <Testimonials />
-      <FoundersSection photos="v3" />
+      <FoundersSection photos="v3" talkFirst />
       <QuestionCards count={4} />
     </div>
   );
