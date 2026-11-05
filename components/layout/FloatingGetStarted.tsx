@@ -2,6 +2,7 @@
 
 import { usePageReady } from "@/lib/use-page-ready";
 import { useCtaLabel } from "@/lib/use-cta-label";
+import { useNavHidden } from "@/lib/nav-intro";
 
 const SIGNUP_URL = "https://rangde.in/account/signup";
 
@@ -11,7 +12,10 @@ const SIGNUP_URL = "https://rangde.in/account/signup";
  * clears, so the action is always within thumb's reach.
  */
 export function FloatingGetStarted() {
-  const show = usePageReady();
+  // Held back, like the nav, while a hero intro (TypedHero) is playing.
+  const ready = usePageReady();
+  const hidden = useNavHidden();
+  const show = ready && !hidden;
   const label = useCtaLabel();
 
   return (

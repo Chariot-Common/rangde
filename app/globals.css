@@ -10,6 +10,14 @@
   --color-green-dark: #3a6e0c;
   --color-ink: #292d36;
   --color-bg-grey: #f1f2f5;
+  /* Top navigation buttons (from the nav design screenshot). */
+  --color-nav-navy: #00517a;
+  --color-nav-sky: #cbe8f6;
+  --color-nav-line: #dddddf;
+  --color-nav-stroke: #e5e8eb;
+  /* Hero intro amount pills (₹5,000 ↗ / ₹5,425 ↙). */
+  --color-pill-debit: #d0dcc5;
+  --color-pill-credit: #61af1d;
 
   /* Font families */
   --font-display: var(--font-inter);

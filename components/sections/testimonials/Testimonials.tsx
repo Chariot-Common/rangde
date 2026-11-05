@@ -8,6 +8,7 @@ import { TestimonialCard } from "./TestimonialCard";
 import { SwipeCarousel } from "@/components/ui/SwipeCarousel";
 import { FlagBadge } from "@/components/ui/FlagBadge";
 import { useRangDeStats } from "@/components/providers/StatsProvider";
+import { ScrollType } from "@/components/versions/ScrollType";
 
 const allTestimonials = [...testimonialsRow1, ...testimonialsRow2];
 
@@ -15,7 +16,8 @@ const allTestimonials = [...testimonialsRow1, ...testimonialsRow2];
  * `withStories` (Version B): the investors' words on the top strip, ticking left, and the
  * borrowers' success stories on the bottom strip, ticking right.
  */
-export function Testimonials({ withStories = false }: { withStories?: boolean }) {
+/** `typed`: the heading types itself out as it is scrolled into view (Version 1.1). */
+export function Testimonials({ withStories = false, typed = false }: { withStories?: boolean; typed?: boolean }) {
   const { investors } = useRangDeStats();
   return (
     <section className="mx-2 flex flex-col items-center gap-8 overflow-hidden rounded-[16px] bg-white px-4 py-12 sm:gap-sp9 sm:px-8 sm:py-16 lg:py-sp12">
@@ -25,9 +27,13 @@ export function Testimonials({ withStories = false }: { withStories?: boolean })
             <FlagBadge key={c} flag={c} className="h-[24px] w-[32px] ring-0 shadow-[0_0_0_1px_rgba(41,45,54,0.08)]" />
           ))}
         </div>
-        <h2 className="font-display text-h2 font-bold text-ink">
-          {investors.toLocaleString("en-IN")} social investors and counting
-        </h2>
+        {typed ? (
+          <ScrollType text={`${investors.toLocaleString("en-IN")} social investors and counting`} className="font-display text-h2 font-bold text-ink" />
+        ) : (
+          <h2 className="font-display text-h2 font-bold text-ink">
+            {investors.toLocaleString("en-IN")} social investors and counting
+          </h2>
+        )}
       </div>
 
       {/* Mobile (<768px): edge to edge (-mx-4 undoes the section padding), the current card

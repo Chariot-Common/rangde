@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
 import { LegacyButton as Button } from "@/components/ui/LegacyButton";
+import { ScrollType } from "@/components/versions/ScrollType";
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
@@ -25,7 +26,8 @@ const FOUNDERS_V2: Founder[] = [
  * become two strips: the founders and their quote on top, the story and the CTA below.
  * One photo each rather than one shared photo, so it lands that there are two people behind it.
  */
-export function FoundersSection({ photos = "v1" }: { photos?: "v1" | "v2" } = {}) {
+/** `typed`: the quote and the heading type themselves out as they are scrolled into view (Version 1.1). */
+export function FoundersSection({ photos = "v1", typed = false }: { photos?: "v1" | "v2"; typed?: boolean } = {}) {
   const founders = photos === "v2" ? FOUNDERS_V2 : FOUNDERS;
   const reduce = useReducedMotion();
   const rise = (delay = 0) => ({
@@ -65,9 +67,13 @@ export function FoundersSection({ photos = "v1" }: { photos?: "v1" | "v2" } = {}
           <span aria-hidden className="h-[48px] font-display text-[112px] font-bold leading-[96px] text-green/40">
             “
           </span>
-          <blockquote className="font-display text-h4 font-bold text-ink [text-wrap:pretty]">
-            We felt a peer-to-peer model would be very powerful and relevant for a country like India.
-          </blockquote>
+          {typed ? (
+            <ScrollType as="blockquote" text="We felt a peer-to-peer model would be very powerful and relevant for a country like India." className="font-display text-h4 font-bold text-ink [text-wrap:pretty]" />
+          ) : (
+            <blockquote className="font-display text-h4 font-bold text-ink [text-wrap:pretty]">
+              We felt a peer-to-peer model would be very powerful and relevant for a country like India.
+            </blockquote>
+          )}
           <figcaption className="font-display text-p3 font-bold text-ink/56">Ram &amp; Smita, founders</figcaption>
         </motion.figure>
 
@@ -78,9 +84,13 @@ export function FoundersSection({ photos = "v1" }: { photos?: "v1" | "v2" } = {}
           <p className="font-display text-p4 font-bold uppercase tracking-[1.2px] text-green-dark">
             The reason Rang De exists
           </p>
-          <h2 className="font-display text-h3 font-bold text-ink [text-wrap:balance]">
-            Rang De was born when two people left Oxford for India.
-          </h2>
+          {typed ? (
+            <ScrollType text="Rang De was born when two people left Oxford for India." className="font-display text-h3 font-bold text-ink [text-wrap:balance]" />
+          ) : (
+            <h2 className="font-display text-h3 font-bold text-ink [text-wrap:balance]">
+              Rang De was born when two people left Oxford for India.
+            </h2>
+          )}
           <p className="max-w-[720px] font-display text-p2 font-medium text-ink/72">
             At Oxford, Ram and Smita began working on an idea: an alternative financial system,
             built for the people of rural India that formal finance wasn&apos;t designed for. Millions

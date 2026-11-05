@@ -242,3 +242,41 @@ export const recentStories: Story[] = [
   { ...stories[0], name: "Neilhoupe u Koza", purpose: "Funded to run and grow her apparel business.", when: "1 month ago", investors: 57 },
   { ...stories[1], name: "Sivakumar", purpose: "Funded for working capital for his Lantana-weed elephant sculptures.", when: "1 month ago", investors: 240 },
 ];
+
+// Version 1.1's hero cards (TypedHero): MOCKUP borrowers for the design only. The people, places
+// and loans are illustrative, not real Rang De borrowers; the cover photos, amounts and rates are
+// borrowed from the four success stories above.
+export const heroIntroStories: Story[] = [
+  {
+    ...stories[2],
+    avatar: "/images/hero-intro/borrowers/borrower-1.png",
+    name: "Mousumi Das from Assam",
+    purpose: "Funded to buy two handlooms, so she can weave and sell her own mekhela chadors.",
+    when: "2 weeks ago",
+    investors: 18,
+  },
+  {
+    ...stories[3],
+    avatar: "/images/hero-intro/borrowers/borrower-2.png",
+    name: "Ratan Bora from Assam",
+    purpose: "Funded to restock his village grocery shop and add a fridge for cold drinks.",
+    when: "3 weeks ago",
+    investors: 26,
+  },
+  {
+    ...stories[0],
+    avatar: "/images/hero-intro/borrowers/borrower-3.png",
+    name: "Rina Kumari from Jharkhand",
+    purpose: "Funded to grow her poultry farm and sell fresh eggs to shops in nearby villages.",
+    when: "1 month ago",
+    investors: 41,
+  },
+  {
+    ...stories[1],
+    avatar: "/images/hero-intro/borrowers/borrower-4.webp",
+    name: "Sitara Devi from Bihar",
+    purpose: "Funded to open her own cosmetics store, stocking essentials for women nearby.",
+    when: "1 month ago",
+    investors: 57,
+  },
+];

@@ -20,6 +20,8 @@ import { FAQS_URL } from "@/data/faqs";
 import { STATS_SNAPSHOT as LIVE, type RangDeStats } from "@/lib/stats";
 import { useAnimatedNumber } from "@/lib/use-animated-number";
 import { recentStories, testimonialsRow1, testimonialsRow2, type Story, type Testimonial } from "@/lib/content";
+import { ScrollInk } from "./ScrollInk";
+import { ScrollType } from "./ScrollType";
 import { Eyebrow } from "./ui";
 
 // Sections for the three homepage approaches in Figma "Rang De Master Design III", node 2743:14706:
@@ -54,7 +56,7 @@ function Reveal({ children, className, delay = 0 }: { children: ReactNode; class
  * stats count up and the stories slide in. v1.x lead with "Invest in the other Startup India" in
  * green; v3 is one larger ink line with no sub-copy.
  */
-export function ApproachHero({ title, lead = "", tone = "green", eyebrow, actions, strip, below }: { title: string; lead?: string; tone?: "green" | "ink"; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode }) {
+export function ApproachHero({ title, lead = "", tone = "green", wide = false, glow = true, eyebrow, actions, strip, below }: { title: string; lead?: string; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode }) {
   const ready = usePageReady();
   const reduce = useReducedMotion();
   const seq = heroSequence(title, lead);
@@ -72,11 +74,13 @@ export function ApproachHero({ title, lead = "", tone = "green", eyebrow, action
 
   return (
     <div className="relative isolate flex w-full flex-col items-center gap-12 overflow-hidden px-4 pt-[100px] sm:px-2 sm:pt-12 md:pt-16 lg:gap-16 lg:pt-[64px]">
+      {glow && (
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-[33px] -z-10 h-[1040px] w-[1040px] -translate-x-1/2 rounded-full bg-white shadow-[0_0_250px_rgba(254,199,0,0.64)] sm:top-[-95px] sm:h-[650px] sm:w-[650px] md:top-[-125px] md:h-[850px] md:w-[850px] lg:top-[-174px] lg:h-[1250px] lg:w-[1250px]"
       />
-      <div className="flex w-full max-w-[920px] flex-col items-center gap-2 text-center">
+      )}
+      <div className={`flex w-full flex-col items-center gap-2 text-center ${wide ? "max-w-[930px]" : "max-w-[920px]"}`}>
         {eyebrow && <Eyebrow className="mb-2 text-green-dark">{eyebrow}</Eyebrow>}
         <WordReveal
           as="h1"
@@ -98,7 +102,7 @@ export function ApproachHero({ title, lead = "", tone = "green", eyebrow, action
             duration={BODY_DURATION}
             delay={seq.body}
             play={ready}
-            className="max-w-[320px] font-display text-p1 font-medium text-ink/80 [text-wrap:balance] sm:max-w-[820px]"
+            className={`w-full max-w-[320px] font-display text-p1 font-medium text-ink/80 [text-wrap:balance] ${wide ? "sm:max-w-[930px]" : "sm:max-w-[820px]"}`}
           />
         )}
       </div>
@@ -311,6 +315,59 @@ export const SOLUTION_POINTS: Point[] = [
   },
 ];
 
+/** Version 5's copy of the points (shorter, to fit four lines at P2). */
+export const V5_PROBLEM_POINTS: Point[] = [
+  {
+    title: "Banks won’t lend to them",
+    icon: "/images/why-rangde-v2/icon-bank.webp",
+    text: [
+      { bold: "Fewer than 15% of Indians have access to formal credit." },
+      " Without a credit history or land as collateral, a business loan is out of reach, even if the business is sound.",
+    ],
+  },
+  {
+    title: "Informal loans cost more",
+    icon: "/images/why-rangde-v2/icon-banknotes.webp",
+    text: [
+      "What’s left is moneylenders and MFIs that lend at ",
+      { bold: "20–30% interest rates" },
+      ". These high rates eat the very income the loan was actually meant to help grow.",
+    ],
+  },
+  {
+    title: "No credit score built",
+    icon: "/images/why-rangde-v2/icon-warning-circle.webp",
+    text: ["Informal loans leave no record. Repay every rupee and the next loan still starts from zero — while unpaid debt compounds into a trap."],
+  },
+];
+
+// One-to-one answers to the three problems above.
+export const V5_SOLUTION_POINTS: Point[] = [
+  {
+    title: "Investors lend to them",
+    icon: "/images/why-rangde-v2/icon-hand-check.webp",
+    text: [
+      "No land collateral needed — our social investors fund them directly. All borrowers are ",
+      {
+        tip: "strictly vetted",
+        source:
+          "A local impact partner meets every entrepreneur in person: community identification, business assessment, credit evaluation, identity verification and a profile review, before a loan is listed.",
+      },
+      " with our local Partners, who also provides financial training.",
+    ],
+  },
+  {
+    title: "Interest stays fair",
+    icon: "/images/why-rangde-v2/icon-shield-check.webp",
+    text: ["All borrowers pay up to 8.5% p.a. interest, with no hidden charges, and fair repayment schedules that follow the business’s real cash flow."],
+  },
+  {
+    title: "Repaying builds credit",
+    icon: "/images/why-rangde-v2/icon-bar-chart.webp",
+    text: ["Every repayment is reported to the credit bureaus. So borrowers who may never have had a credit file start building one, access to the formal financial system."],
+  },
+];
+
 export const INFRA_POINTS: Point[] = [
   { title: "Regulated", icon: "/images/why-rangde-v2/icon-shield-check.webp", text: ["Built within India’s RBI-regulated P2P lending framework."] },
   { title: "Curated", icon: "/images/why-rangde-v2/icon-target-center.webp", text: ["Borrowers are screened and authenticated diligently."] },
@@ -372,14 +429,19 @@ export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 
 }
 
 /** A full section: heading (optional eyebrow) over a PointsGrid. tone "green" is the Figma green/light card. */
-export function PointsSection({ eyebrow, heading, points, tone = "plain", badge, children }: { eyebrow?: string; heading: string; points: Point[]; tone?: "plain" | "green" | "cream" | "white"; badge?: string; children?: ReactNode }) {
+/** `typed`: the heading types itself out as it is scrolled into view (Version 1.1). */
+export function PointsSection({ eyebrow, heading, points, tone = "plain", badge, typed = false, children }: { eyebrow?: string; heading: string; points: Point[]; tone?: "plain" | "green" | "cream" | "white"; badge?: string; typed?: boolean; children?: ReactNode }) {
   const bg = tone === "green" ? "bg-[#cbe0b8]" : tone === "cream" ? "bg-[#F7F3ED]" : tone === "white" ? "bg-white" : "bg-[#f1f2f5]";
   const badgeColor = badge ?? (tone === "green" ? "rgba(255,255,255,0.72)" : tone === "white" ? "#F1F2F5" : "#fff");
   return (
     <section className={`mx-2 flex flex-col items-center gap-8 rounded-[16px] px-5 py-14 sm:gap-12 sm:px-8 sm:py-20 md:gap-16 md:py-24 lg:py-[120px] ${bg}`}>
       <Reveal className="flex max-w-[1200px] flex-col items-center gap-2 text-center">
         {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-        <AnimatedText as="h2" text={heading} className="max-w-[780px] font-display text-h3 font-bold text-ink" />
+        {typed ? (
+          <ScrollType text={heading} className="max-w-[780px] font-display text-h3 font-bold text-ink" />
+        ) : (
+          <AnimatedText as="h2" text={heading} className="max-w-[780px] font-display text-h3 font-bold text-ink" />
+        )}
       </Reveal>
       <PointsGrid points={points} badge={badgeColor} shapeOffset={tone === "green" ? 2 : tone === "plain" ? 0 : 1} />
       {children}
@@ -513,7 +575,8 @@ const HIW_TABS: { title: string; text: string; stage: number; segment?: [number,
 
 /** `visual`: "ui" — the homepage pop-up's animated product UI (v1); "journey" — Durga's journey from the
  * How it works v3 prototype, real listings in light mock UI (v1.2). */
-export function HowItWorksTabs({ children, tone = "cream", visual = "ui" }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey" }) {
+/** `typed`: the heading types itself out as it is scrolled into view (Version 1.1). */
+export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const ref = useRef<HTMLElement>(null);
@@ -537,7 +600,11 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui" }: { ch
     >
       <Reveal className="flex max-w-[1200px] flex-col items-center gap-2 text-center">
         <Eyebrow>How it works</Eyebrow>
-        <AnimatedText as="h2" text="Investment to repayment – you’re in control at every step" className="font-display text-h3 font-bold text-ink" />
+        {typed ? (
+          <ScrollType text="Investment to repayment – you’re in control at every step" className="font-display text-h3 font-bold text-ink" />
+        ) : (
+          <AnimatedText as="h2" text="Investment to repayment – you’re in control at every step" className="font-display text-h3 font-bold text-ink" />
+        )}
       </Reveal>
 
       <div className="flex w-full max-w-[1200px] flex-col" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
@@ -970,6 +1037,198 @@ export function StoriesBothSides() {
         {/* The second copy starts here; the loop wraps back by exactly this offset. */}
         <div ref={loopRef} className="w-0 shrink-0" aria-hidden />
         {items.map((it, i) => card(it, `b${i}`, true))}
+      </div>
+    </section>
+  );
+}
+
+function InvestorStoryCardV6({ t }: { t: Testimonial }) {
+  return (
+    <div className="flex h-full w-[calc(100vw-32px)] shrink-0 flex-col justify-between gap-8 rounded-[8px] bg-[#084a2f] p-7 transition-transform duration-300 ease-out hover:scale-[1.015] sm:w-[340px] lg:w-[440px]">
+      <div className="flex flex-col gap-4">
+        <Eyebrow className="text-[#62af1d]">Investor</Eyebrow>
+        <p className="font-display text-p2 leading-[26px] text-white/72">
+          {t.quote.map((s, i) => (
+            <span key={i} className={s.emphasized ? "font-bold text-white" : undefined}>
+              {s.text}
+            </span>
+          ))}
+        </p>
+      </div>
+      <div className="flex items-center gap-3 border-t border-white/16 pt-5">
+        <Image src={t.avatar} alt="" width={48} height={48} className="size-[48px] rounded-[8px] border-2 border-white object-cover" />
+        <div className="flex flex-col">
+          <p className="font-display text-p2 font-bold text-white">{t.name}</p>
+          {(t.since || t.role) && <p className="font-display text-p4 font-medium text-white/64">{t.since ?? t.role}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Figma 2730:10: "Real stories about Rang De, from both sides" — borrower and investor cards kept
+ * separate (they are not pairs), alternating: a borrower's story, then an investor's.
+ */
+// This section's borrower photos (portraits against a wall, in place of the story avatars).
+const BOTH_SIDES_AVATARS: Record<string, string> = {
+  "Sitara Devi": "/images/stories/avatars/sitara-devi.webp",
+  "Neilhoupe u Koza": "/images/stories/avatars/neilhoupe-u-koza.webp",
+  Sivakumar: "/images/stories/avatars/sivakumar.webp",
+  "Gita Devi": "/images/stories/avatars/gita-devi.webp",
+};
+const ENTER_STAGGER = 0.12; // s between cards rising in, left to right
+const ENTER_DURATION = 0.7;
+
+/** Version 6's take: new borrower photos, rise-in entrance, grab-to-pause ticker, typed heading. */
+export function StoriesBothSidesV6() {
+  const investors = [...testimonialsRow1, ...testimonialsRow2];
+  const items: ({ kind: "b"; s: Story } | { kind: "i"; t: Testimonial })[] = [];
+  recentStories.forEach((s, i) => {
+    items.push({ kind: "b", s: { ...s, avatar: BOTH_SIDES_AVATARS[s.name ?? ""] ?? s.avatar } });
+    items.push({ kind: "i", t: investors[i] });
+  });
+  const rowRef = useRef<HTMLDivElement>(null);
+  const loopRef = useRef<HTMLDivElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const grabbed = useRef(false);
+  const reduce = useReducedMotion();
+  // The heading fills in as it comes up the screen, finishing as it reaches three quarters of the way
+  // up; at that moment the cards rise into place one after another, left to right, and only then
+  // does the row start drifting. Never again after that.
+  const headingRef = useRef<HTMLDivElement>(null);
+  const entered = useInView(headingRef, { once: true, margin: "0px 0px -25% 0px" });
+  const drifting = useRef(false);
+  useEffect(() => {
+    if (!entered) return;
+    const id = setTimeout(() => (drifting.current = true), reduce ? 0 : (4 * ENTER_STAGGER + ENTER_DURATION) * 1000);
+    return () => clearTimeout(id);
+  }, [entered, reduce]);
+
+  // The row drifts on its own (a seamless loop over two copies of the cards), and stays a normal
+  // scroller: trackpad, swipe, or drag with the mouse. It keeps drifting under the mouse; it holds
+  // still only while the cards are grabbed (mouse held down, or a finger on them), and while off
+  // screen. With reduced motion it doesn't drift at all.
+  useEffect(() => {
+    const row = rowRef.current;
+    const loop = loopRef.current;
+    if (!row || !loop) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const SPEED = 36; // px per second
+    let raf = 0;
+    let last = 0;
+    let pos = row.scrollLeft;
+    let hold = false;
+    let resumeAt = 0;
+    let wasGrabbed = false;
+    let visible = false;
+    const half = () => (loop.nextElementSibling as HTMLElement).offsetLeft - (row.firstElementChild as HTMLElement).offsetLeft;
+    const tick = (t: number) => {
+      const dt = last ? Math.min(64, t - last) : 0;
+      last = t;
+      // Let go of a grab: pick up again a moment later.
+      if (wasGrabbed && !grabbed.current) resumeAt = t + 1200;
+      wasGrabbed = grabbed.current;
+      if (visible && drifting.current && !hold && !grabbed.current && t > resumeAt) {
+        // Pick up wherever a manual scroll left it.
+        if (Math.abs(row.scrollLeft - pos) > 2) pos = row.scrollLeft;
+        pos += (SPEED * dt) / 1000;
+        const h = half();
+        if (h > 0 && pos >= h) pos -= h;
+        row.scrollLeft = pos;
+      } else {
+        pos = row.scrollLeft;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting), { threshold: 0.1 });
+    io.observe(row);
+    const stop = () => (hold = true);
+    const go = () => {
+      hold = false;
+      resumeAt = performance.now() + 1200;
+    };
+    const onScroll = () => {
+      // Wrap manual scrolling too, so it never runs out at either end.
+      const h = half();
+      if (h <= 0) return;
+      if (row.scrollLeft >= h * 1.5) row.scrollLeft -= h;
+      else if (row.scrollLeft <= 1 && hold) row.scrollLeft += h;
+    };
+    row.addEventListener("touchstart", stop, { passive: true });
+    row.addEventListener("touchend", go);
+    row.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+      row.removeEventListener("touchstart", stop);
+      row.removeEventListener("touchend", go);
+      row.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  // Drag to scroll with a mouse (touch and trackpads scroll natively).
+  const drag = useRef<{ x: number; left: number; moved: boolean } | null>(null);
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "mouse" || e.button !== 0 || !rowRef.current) return;
+    drag.current = { x: e.clientX, left: rowRef.current.scrollLeft, moved: false };
+    grabbed.current = true;
+    setDragging(true);
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d || !rowRef.current) return;
+    const dx = e.clientX - d.x;
+    if (Math.abs(dx) > 3) d.moved = true;
+    rowRef.current.scrollLeft = d.left - dx;
+  };
+  const endDrag = () => {
+    drag.current = null;
+    grabbed.current = false;
+    setDragging(false);
+  };
+
+  const card = (it: (typeof items)[number], key: string, index: number, hidden?: boolean) => (
+    <motion.div
+      key={key}
+      className="flex shrink-0"
+      aria-hidden={hidden || undefined}
+      initial={reduce ? false : { y: 80, opacity: 0 }}
+      animate={entered || reduce ? { y: 0, opacity: 1 } : undefined}
+      // Left to right; the copy that follows off screen just comes in with the last ones.
+      transition={{ duration: ENTER_DURATION, delay: Math.min(index, 5) * ENTER_STAGGER, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {it.kind === "b" ? <StoryCard story={it.s} layout="recent" loading="lazy" stretch hiddenFromAT={hidden} /> : <InvestorStoryCardV6 t={it.t} />}
+    </motion.div>
+  );
+
+  return (
+    <section className="mx-2 flex flex-col items-center gap-10 overflow-hidden rounded-[16px] bg-[#F7F3ED] py-14 sm:py-20 md:gap-14 md:py-24 lg:py-[120px]">
+      <div ref={headingRef} className="px-4 text-center">
+        {/* Fills in letter by letter, from entering the screen to three quarters of the way up. */}
+        <ScrollInk as="h2" text="Real stories about Rang De, from both sides" offset={["start 1", "start 0.75"]} className="font-display text-h3 font-bold" />
+      </div>
+      <div
+        ref={rowRef}
+        role="region"
+        aria-label="Stories from borrowers and investors"
+        tabIndex={0}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerLeave={endDrag}
+        onClickCapture={(e) => drag.current?.moved && e.preventDefault()}
+        // Room above and below (taken back with negative margins) so a card growing on hover isn't
+        // clipped by the scroller's edges.
+        className={`-my-4 flex w-full select-none items-stretch gap-2 overflow-x-auto px-4 py-4 [scrollbar-width:none] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink sm:px-8 [&::-webkit-scrollbar]:hidden [&_img]:pointer-events-none ${
+          dragging ? "cursor-grabbing" : "cursor-grab"
+        }`}
+      >
+        {items.map((it, i) => card(it, `a${i}`, i))}
+        {/* The second copy starts here; the loop wraps back by exactly this offset. */}
+        <div ref={loopRef} className="w-0 shrink-0" aria-hidden />
+        {items.map((it, i) => card(it, `b${i}`, items.length + i, true))}
       </div>
     </section>
   );
