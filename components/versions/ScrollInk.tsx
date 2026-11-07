@@ -1,6 +1,6 @@
 "use client";
 
-import { useMotionValueEvent, useReducedMotion, useScroll, useSpring } from "motion/react";
+import { useMotionValueEvent, useReducedMotion, useScroll, useSpring, type MotionValue } from "motion/react";
 import { Fragment, useRef } from "react";
 
 /*
@@ -36,32 +36,70 @@ function colourAt(d: number): RGB {
   return INK;
 }
 
-const CHAR_CLASS = { ink: "text-ink", pale: "text-ink/32" } as const;
 const EDGE_CLASS = "bg-clip-text";
 
+/**
+ * `rgb` (default): pale ink filling to ink behind the red-green-blue edge.
+ * `plain` (Version 1.1): the same fill with no coloured edge: each letter simply darkens from pale ink to ink,
+ *   softly over about a letter and a half.
+ * `blue` (Version 1.1's "Every Saturday, 11 am IST"): the plain fill, from primary blue 64 to primary blue 100.
+ */
+type Tone = "rgb" | "plain" | "blue";
+const TONES: Record<Tone, { ink: string; pale: string; inkColour: string; paleColour: string }> = {
+  rgb: { ink: "text-ink", pale: "text-ink/32", inkColour: "var(--color-ink)", paleColour: "color-mix(in srgb, var(--color-ink) 32%, transparent)" },
+  plain: { ink: "text-ink", pale: "text-ink/32", inkColour: "var(--color-ink)", paleColour: "color-mix(in srgb, var(--color-ink) 32%, transparent)" },
+  blue: { ink: "text-primary-100", pale: "text-primary-64", inkColour: "var(--color-primary-100)", paleColour: "var(--color-primary-64)" },
+};
+const SOFT = 1.5; // plain/blue: how many letters the darkening takes
+
 /** `offset`: when the fill starts and ends, as motion's useScroll offset for the text (default: its
- * top three quarters down the screen, then a quarter down). */
+ * top three quarters down the screen, then a quarter down; for the plain and blue tones, Version 1.1's, from
+ * its top just entering at the bottom of the screen until it is a little above the three-quarter line). */
 export function ScrollInk({
   text,
   as = "p",
   className = "",
-  offset = ["start 0.75", "start 0.25"],
+  offset,
+  drive,
+  tone = "rgb",
 }: {
   text: string;
-  as?: "p" | "h2" | "span";
+  as?: "p" | "h2" | "h3" | "span";
   className?: string;
   offset?: [`start ${number}`, `start ${number}`];
+  /** A 0–1 motion value to fill from instead of the scroll (the Version 6 hero runs it on a timer). */
+  drive?: MotionValue<number>;
+  tone?: Tone;
 }) {
+  const CHAR_CLASS = TONES[tone];
+  const plain = tone !== "rgb";
   const reduce = useReducedMotion();
   const ref = useRef<HTMLParagraphElement & HTMLHeadingElement & HTMLSpanElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset });
-  const smooth = useSpring(scrollYProgress, { stiffness: 70, damping: 22, restDelta: 0.0005 });
+  const { scrollYProgress } = useScroll({ target: ref, offset: offset ?? (tone === "rgb" ? ["start 0.75", "start 0.25"] : ["start 1", "start 0.7"]) });
+  const spring = useSpring(scrollYProgress, { stiffness: 70, damping: 22, restDelta: 0.0005 });
+  const smooth = drive ?? spring;
   const chars = useRef<HTMLSpanElement[]>([]);
   const painted = useRef(new Set<number>());
 
   useMotionValueEvent(smooth, "change", (v) => {
     const list = chars.current;
     const n = list.length;
+    if (plain) {
+      // No coloured edge: the letters just behind the front are part-way from pale to ink.
+      const front = Math.min(1, Math.max(0, v)) * (n + SOFT);
+      list.forEach((el, i) => {
+        const t = Math.min(1, Math.max(0, (front - i) / SOFT));
+        if (t > 0 && t < 1) {
+          el.style.color = `color-mix(in srgb, ${CHAR_CLASS.inkColour} ${Math.round(t * 100)}%, ${CHAR_CLASS.paleColour})`;
+          if (el.className !== "") el.className = "";
+        } else {
+          if (el.style.color) el.style.color = "";
+          const want = t >= 1 ? CHAR_CLASS.ink : CHAR_CLASS.pale;
+          if (el.className !== want) el.className = want;
+        }
+      });
+      return;
+    }
     // The front of the fill, in letters; it runs past the end so the last letters finish as ink.
     const front = Math.min(1, Math.max(0, v)) * (n + BAND + BLEED);
     const from = Math.max(0, Math.floor(front - BAND - BLEED));
@@ -116,6 +154,7 @@ export function ScrollInk({
     </span>
   );
   if (as === "h2") return <h2 ref={ref} className={className} aria-label={text}>{letters}</h2>;
+  if (as === "h3") return <h3 ref={ref} className={className} aria-label={text}>{letters}</h3>;
   if (as === "span") return <span ref={ref} className={className} aria-label={text}>{letters}</span>;
   return <p ref={ref} className={className} aria-label={text}>{letters}</p>;
 }

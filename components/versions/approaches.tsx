@@ -126,8 +126,8 @@ export function ApproachHero({ title, lead = "", tone = "green", wide = false, g
 }
 
 // Press, awards and backers from rangde.in/media-awards (Nov 2026). rangde.in lists them as text, so
-// the logos are the publications' own, from Wikimedia Commons (public/images/press). YourStory and
-// Ashoka have no logo there yet: they're set as wordmarks until their files are added.
+// the logos are the publications' own, from Wikimedia Commons (public/images/press). YourStory
+// has no logo there yet: it's set as a wordmark until its file is added.
 const PRESS: { name: string; logo?: string; h?: number; note?: string }[] = [
   { name: "India Today", logo: "/images/press/india-today.png", h: 30 },
   { name: "Forbes", logo: "/images/press/forbes.svg", h: 24 },
@@ -136,7 +136,7 @@ const PRESS: { name: string; logo?: string; h?: number; note?: string }[] = [
   { name: "CNBC-TV18", logo: "/images/press/cnbc-tv18.svg", h: 26 },
   { name: "YourStory" },
   { name: "The Better India", logo: "/images/press/the-better-india.svg", h: 42 },
-  { name: "Ashoka", note: "Fellow" },
+  { name: "Ashoka", logo: "/images/press/ashoka.svg", h: 44 },
   { name: "World Bank · Development Marketplace Award", logo: "/images/press/world-bank.svg", h: 30 },
   { name: "Google for Startups Accelerator", logo: "/images/press/google-for-startups.svg", h: 26 },
 ];
@@ -236,7 +236,7 @@ export interface Point {
   icon?: string;
 }
 
-function PointText({ parts, plain = false }: { parts: Part[]; plain?: boolean }) {
+export function PointText({ parts, plain = false }: { parts: Part[]; plain?: boolean }) {
   return (
     <>
       {parts.map((p, i) =>
@@ -610,7 +610,7 @@ const V11_STEP4: Record<string, { segment: [number, number]; ms: number }> = {
  * top and right edges; the grey step line is its bottom edge, clipped by the same corners, with the black
  * indicator gliding along it to the chosen step. The divider above the calculator is stronger (ink 24%)
  * with 80px either side. */
-export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean }) {
+export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false, inked = false }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean; inked?: boolean }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const ref = useRef<HTMLElement>(null);
@@ -634,7 +634,10 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
     >
       <Reveal className="flex max-w-[1200px] flex-col items-center gap-2 text-center">
         <Eyebrow>How it works</Eyebrow>
-        {typed ? (
+        {inked ? (
+          // Version 1.1: fills in as it is read, plain (no coloured edge).
+          <ScrollInk as="h2" tone="plain" text="Investment to repayment – you’re in control at every step" className="font-display text-h3 font-bold" />
+        ) : typed ? (
           <ScrollType text="Investment to repayment – you’re in control at every step" className="font-display text-h3 font-bold text-ink" />
         ) : (
           <AnimatedText as="h2" text="Investment to repayment – you’re in control at every step" className="font-display text-h3 font-bold text-ink" />
@@ -775,7 +778,7 @@ export const QUESTION_CARDS: QuestionCard[] = [
   },
 ];
 
-function FactChip({ text, tone = "ok" }: { text: string; tone?: "ok" | "no" }) {
+export function FactChip({ text, tone = "ok" }: { text: string; tone?: "ok" | "no" }) {
   return (
     <li className="flex items-center gap-2 rounded-[10px] bg-white px-3 py-2 font-display text-p3 font-bold text-ink shadow-[0_1px_2px_rgba(41,45,54,0.08)]">
       <span className={`flex size-[18px] shrink-0 items-center justify-center rounded-full text-white ${tone === "ok" ? "bg-green-dark" : "bg-[#C8372D]"}`}>

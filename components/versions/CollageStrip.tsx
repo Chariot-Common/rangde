@@ -1,62 +1,41 @@
 "use client";
 
-import { animate, useReducedMotion } from "motion/react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 /*
- * Version 3's hero gallery: a collage of photos filling the screen below the stats, 8px apart with
- * 8px corners and 8px from either edge of the screen, laid out like the reference: columns that are
- * either one photo or two rows, where a row is one photo or two side by side (never more than two
- * rows). The columns always fit the screen exactly. When the reader scrolls (at most once every 4
- * seconds, so steady scrolling doesn't churn it) the leftmost column closes up,
- * its right edge wiping across to the left, while a new column opens up at the right edge, its left
- * edge wiping in; the columns between them ease over and share the space. That is the only
- * movement. A closing or opening column takes the 8px gap beside it only once it is narrower than
- * that itself, so no gap anywhere ever changes size.
+ * Version 6's hero gallery: a collage of photos filling the screen below the stats, 8px apart with 8px
+ * corners and 8px from either edge of the screen, laid out like the reference: columns that are either one
+ * photo or two rows, where a row is one photo or two side by side (never more than two rows). The columns
+ * always fit the screen exactly.
+ *
+ * The frames never move. Every 4 seconds one photo, working left to right, fades out into another that is
+ * already waiting behind it, so the change is a smooth dissolve inside a still frame.
  */
 
 const GAP = 8; // px between photos, and from the edges of the screen
-const COOLDOWN = 4000; // ms after a move starts before scrolling can start the next
-const MOVE = 1.8; // s for a column to close up / open up
-const EASE = [0.22, 1, 0.36, 1] as const;
+const INTERVAL = 4000; // ms between one photo changing and the next
+const FADE = 1.2; // s for a photo to dissolve into the next
 
-// The gallery photos (public/images/collage), used in turn as columns come in.
-const POOL = Array.from({ length: 15 }, (_, i) => `/images/collage/collage-${String(i + 1).padStart(2, "0")}.webp`);
+// The gallery photos (public/images/collage), used in turn.
+const POOL = Array.from({ length: 18 }, (_, i) => `/images/collage/collage-${String(i + 1).padStart(2, "0")}.webp`);
 
-/** A row: one photo, or two side by side (`split` = the left photo's share of the width). */
-type Row = { srcs: string[]; split: number };
-type Phase = "idle" | "leaving" | "entering";
+/** A row: the number of photos side by side, and the left photo's share of the width. */
+type Row = { cells: number; split: number };
 /** A column: its natural width as a multiple of the strip's height, and one or two rows (`split` = the top row's share). */
-type Column = { id: number; w: number; rows: Row[]; split: number; phase: Phase };
-type Shape = { w: number; rows: number[]; split: number; rowSplits: number[] };
+type Shape = { w: number; rows: Row[]; split: number };
 
 // The column shapes in the reference, in order: a wide single photo; two photos stacked; two rows of
 // two side by side (a tall pair over a short strip); another wide single; a narrow portrait; a pair
 // over a single.
 const SHAPES: Shape[] = [
-  { w: 1.32, rows: [1], split: 1, rowSplits: [1] },
-  { w: 0.54, rows: [1, 1], split: 0.36, rowSplits: [1, 1] },
-  { w: 1.66, rows: [2, 2], split: 0.66, rowSplits: [0.36, 0.84] },
-  { w: 1.25, rows: [1], split: 1, rowSplits: [1] },
-  { w: 0.42, rows: [1], split: 1, rowSplits: [1] },
-  { w: 0.95, rows: [2, 1], split: 0.42, rowSplits: [0.5, 1] },
+  { w: 1.32, rows: [{ cells: 1, split: 1 }], split: 1 },
+  { w: 0.54, rows: [{ cells: 1, split: 1 }, { cells: 1, split: 1 }], split: 0.36 },
+  { w: 1.66, rows: [{ cells: 2, split: 0.36 }, { cells: 2, split: 0.84 }], split: 0.66 },
+  { w: 1.25, rows: [{ cells: 1, split: 1 }], split: 1 },
+  { w: 0.42, rows: [{ cells: 1, split: 1 }], split: 1 },
+  { w: 0.95, rows: [{ cells: 2, split: 0.5 }, { cells: 1, split: 1 }], split: 0.42 },
 ];
-
-let nextId = 0;
-let nextShape = 0;
-let nextPhoto = 0;
-const photo = () => POOL[nextPhoto++ % POOL.length];
-
-function makeColumn(phase: Phase = "idle"): Column {
-  const s = SHAPES[nextShape++ % SHAPES.length];
-  return {
-    id: nextId++,
-    w: s.w,
-    split: s.split,
-    rows: s.rows.map((cells, i) => ({ srcs: Array.from({ length: cells }, photo), split: s.rowSplits[i] })),
-    phase,
-  };
-}
 
 /** How many columns (from the start of the sequence) best fill `width` at strip height `h`. */
 function columnsFor(width: number, h: number) {
@@ -70,60 +49,12 @@ function columnsFor(width: number, h: number) {
   return 12;
 }
 
-// The same starting collage on the server and in the browser (sized properly once measured).
-function startColumns(count: number) {
-  nextId = 0;
-  nextShape = 0;
-  nextPhoto = 0;
-  return Array.from({ length: count }, () => makeColumn());
-}
-
 export function CollageStrip() {
   const reduce = useReducedMotion();
-  const [columns, setColumns] = useState<Column[]>(() => startColumns(5));
   const stripRef = useRef<HTMLDivElement>(null);
-  const els = useRef(new Map<number, HTMLDivElement>());
-  const moving = useRef(false);
+  const [count, setCount] = useState(5);
 
-  /** Lay the columns out at `t` (0→1) of a move: widths and gaps in px, filling the strip exactly. */
-  const layout = useCallback((cols: Column[], t: number, leaving0 = 0) => {
-    const strip = stripRef.current;
-    if (!strip) return;
-    const room = strip.clientWidth - 2 * GAP;
-    const h = strip.clientHeight;
-    const settled = cols.filter((c) => c.phase !== "leaving");
-    const natural = (c: Column) => c.w * h;
-    // Where everything ends up: the columns that stay share the room by their natural widths.
-    const finalRoom = room - GAP * (settled.length - 1);
-    const finalTotal = settled.reduce((s, c) => s + natural(c), 0);
-    const enter = cols.find((c) => c.phase === "entering");
-    const enterW = enter ? (natural(enter) / finalTotal) * finalRoom * t : 0;
-    const leaveW = leaving0 * (1 - t);
-    // The gaps beside a closing/opening column shrink with it once it is narrower than 8px.
-    const fixedGaps = GAP * (cols.length - 1 - (enter ? 1 : 0) - (cols.some((c) => c.phase === "leaving") ? 1 : 0));
-    const edgeGaps = (enter ? Math.min(GAP, enterW) : 0) + (cols.some((c) => c.phase === "leaving") ? Math.min(GAP, leaveW) : 0);
-    const middle = cols.filter((c) => c.phase === "idle");
-    const middleRoom = room - leaveW - enterW - fixedGaps - edgeGaps;
-    const middleTotal = middle.reduce((s, c) => s + natural(c), 0);
-    cols.forEach((c, i) => {
-      const el = els.current.get(c.id);
-      if (!el) return;
-      const w = c.phase === "leaving" ? leaveW : c.phase === "entering" ? enterW : (natural(c) / middleTotal) * middleRoom;
-      el.style.flex = "0 0 auto";
-      el.style.width = `${w}px`;
-      // While closing or opening, the photos keep their full width, pinned to the edge that isn't
-      // moving, so the column wipes shut or open rather than squashing them.
-      const photos = el.firstElementChild as HTMLElement | null;
-      if (photos) {
-        const full = c.phase === "leaving" ? leaving0 : c.phase === "entering" && enter ? (natural(enter) / finalTotal) * finalRoom : null;
-        photos.style.flex = full === null ? "" : `0 0 ${full}px`;
-        photos.style.width = full === null ? "100%" : `${full}px`;
-      }
-      el.style.marginLeft = i === 0 ? "0px" : c.phase === "entering" ? `${Math.min(GAP, w)}px` : cols[i - 1].phase === "leaving" ? `${Math.min(GAP, leaveW)}px` : `${GAP}px`;
-    });
-  }, []);
-
-  // Size the strip to fill the screen down to the bottom, pick how many columns fit, and lay them out.
+  // Size the strip to fill the screen down to the bottom and pick how many columns fit.
   useLayoutEffect(() => {
     const strip = stripRef.current;
     if (!strip) return;
@@ -132,9 +63,7 @@ export function CollageStrip() {
       for (let el: HTMLElement | null = strip; el; el = el.offsetParent as HTMLElement | null) top += el.offsetTop;
       const h = Math.min(560, Math.max(220, window.innerHeight - top - GAP));
       strip.style.setProperty("--h", `${h}px`);
-      if (moving.current) return;
-      const count = columnsFor(strip.clientWidth - 2 * GAP, h);
-      setColumns((cols) => (cols.length === count ? cols : startColumns(count)));
+      setCount(columnsFor(strip.clientWidth - 2 * GAP, h));
     };
     const raf = requestAnimationFrame(fit);
     window.addEventListener("resize", fit);
@@ -144,90 +73,74 @@ export function CollageStrip() {
     };
   }, []);
 
-  // Whenever the columns change while nothing is moving, lay them out at rest.
-  useLayoutEffect(() => {
-    if (!columns.some((c) => c.phase !== "idle")) layout(columns, 1);
-  }, [columns, layout]);
+  const columns = useMemo(() => Array.from({ length: count }, (_, i) => SHAPES[i % SHAPES.length]), [count]);
+  const total = columns.reduce((n, c) => n + c.rows.reduce((m, r) => m + r.cells, 0), 0);
+
+  // What each frame shows, in reading order. The pool is dealt out in turn, skipping any photo already on screen.
+  const [photos, setPhotos] = useState<string[]>(() => Array.from({ length: 40 }, (_, i) => POOL[i % POOL.length]));
+  const photosRef = useRef(photos);
+  const tick = useRef(0);
+  const dealt = useRef(40);
+
   useEffect(() => {
-    const onResize = () => !moving.current && layout(columns, 1);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [columns, layout]);
+    if (reduce || total === 0) return;
+    const id = setInterval(() => {
+      const cell = tick.current++ % total;
+      const shown = new Set(photosRef.current.slice(0, total));
+      let src = POOL[dealt.current++ % POOL.length];
+      for (let guard = 0; shown.has(src) && guard < POOL.length; guard++) src = POOL[dealt.current++ % POOL.length];
+      const next = photosRef.current.slice();
+      next[cell] = src;
+      photosRef.current = next;
+      setPhotos(next);
+    }, INTERVAL);
+    return () => clearInterval(id);
+  }, [reduce, total]);
 
-  // When the reader scrolls (or turns the wheel), the leftmost column closes while a new one opens
-  // at the right; then nothing more for 4 seconds, however much they keep scrolling.
-  useEffect(() => {
-    if (reduce) return;
-    let last = -Infinity;
-    const onScroll = () => {
-      const now = performance.now();
-      if (moving.current || now - last < COOLDOWN) return;
-      last = now;
-      moving.current = true;
-      setColumns((cols) => [...cols.map((c, i) => (i === 0 ? { ...c, phase: "leaving" as Phase } : c)), makeColumn("entering")]);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("wheel", onScroll, { passive: true });
-    window.addEventListener("touchmove", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("wheel", onScroll);
-      window.removeEventListener("touchmove", onScroll);
-    };
-  }, [reduce]);
-
-  // Run a move once its columns are on the page.
-  useLayoutEffect(() => {
-    const leaving = columns.find((c) => c.phase === "leaving");
-    if (!leaving) return;
-    const leaving0 = els.current.get(leaving.id)?.offsetWidth ?? 0;
-    layout(columns, 0, leaving0);
-    const anim = animate(0, 1, {
-      duration: MOVE,
-      ease: EASE,
-      onUpdate: (t) => layout(columns, t, leaving0),
-      onComplete: () => {
-        moving.current = false;
-        setColumns((cols) => cols.filter((c) => c.phase !== "leaving").map((c) => (c.phase === "entering" ? { ...c, phase: "idle" } : c)));
-      },
-    });
-    return () => anim.stop();
-  }, [columns, layout]);
-
+  let cellIndex = 0;
   return (
-    <div ref={stripRef} className="flex w-full overflow-hidden px-2 [--h:280px]" style={{ height: "var(--h)" }}>
-      {columns.map((c) => (
-        <div
-          key={c.id}
-          ref={(el) => {
-            if (el) els.current.set(c.id, el);
-            else els.current.delete(c.id);
-          }}
-          // Before the first measure, share the room by natural width.
-          className={`flex h-full shrink-0 overflow-hidden ${c.phase === "entering" ? "justify-end" : "justify-start"}`}
-          style={{ flex: `${c.w} 1 0px` }}
-        >
-          <ColumnPhotos column={c} />
+    <div ref={stripRef} className="flex w-full overflow-hidden px-2 [--h:280px]" style={{ height: "var(--h)", gap: GAP }}>
+      {columns.map((c, ci) => (
+        <div key={ci} className="flex h-full min-w-0 flex-col" style={{ flex: `${c.w} 1 0px`, gap: GAP }}>
+          {c.rows.map((row, ri) => (
+            <div key={ri} className="flex min-h-0" style={{ flex: `${c.rows.length === 1 ? 1 : ri === 0 ? c.split : 1 - c.split} 1 0px`, gap: GAP }}>
+              {Array.from({ length: row.cells }, (_, k) => {
+                const src = photos[cellIndex++ % photos.length];
+                return (
+                  <div key={k} className="relative min-w-0 overflow-hidden rounded-[8px] bg-ink/8" style={{ flex: `${row.cells === 1 ? 1 : k === 0 ? row.split : 1 - row.split} 1 0px` }}>
+                    <Slot src={src} />
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </div>
       ))}
     </div>
   );
 }
 
-/** A column's photos: one or two rows, each one photo or two side by side. */
-function ColumnPhotos({ column }: { column: Column }) {
+/** One frame: the photo that was here stays underneath while the new one fades in over it. */
+function Slot({ src }: { src: string }) {
+  const [layers, setLayers] = useState<string[]>([src]);
+  useEffect(() => {
+    setLayers((l) => (l[l.length - 1] === src ? l : [...l, src].slice(-2)));
+  }, [src]);
   return (
-    <div className="flex h-full w-full flex-col" style={{ gap: GAP }}>
-      {column.rows.map((row, ri) => (
-        <div key={ri} className="flex min-h-0" style={{ flex: `${column.rows.length === 1 ? 1 : ri === 0 ? column.split : 1 - column.split} 1 0px`, gap: GAP }}>
-          {row.srcs.map((src, ci) => (
-            <div key={ci} className="relative min-w-0 overflow-hidden rounded-[8px] bg-ink/8" style={{ flex: `${row.srcs.length === 1 ? 1 : ci === 0 ? row.split : 1 - row.split} 1 0px` }}>
-              {/* eslint-disable-next-line @next/next/no-img-element -- cropped to its cell by object-cover */}
-              <img src={src} alt="" loading="eager" className="absolute inset-0 size-full object-cover" />
-            </div>
-          ))}
-        </div>
+    <>
+      {layers.map((s, i) => (
+        <motion.img
+          key={s}
+          src={s}
+          alt=""
+          loading="eager"
+          className="absolute inset-0 size-full object-cover"
+          initial={{ opacity: layers.length > 1 && i === layers.length - 1 ? 0 : 1 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: FADE, ease: "easeInOut" }}
+          onAnimationComplete={() => setLayers((l) => (l.length > 1 && l[l.length - 1] === s ? [s] : l))}
+        />
       ))}
-    </div>
+    </>
   );
 }

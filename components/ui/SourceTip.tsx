@@ -52,7 +52,7 @@ export function SourceTip({
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setOpen(true)}
-        className={`cursor-help underline ${plain ? "" : "font-semibold text-ink"} decoration-ink/40 decoration-dotted decoration-2 underline-offset-[4px] outline-none focus-visible:rounded-[2px] focus-visible:ring-2 focus-visible:ring-ink/40`}
+        className={`dot-underline cursor-help ${plain ? "" : "font-semibold text-ink"} outline-none focus-visible:rounded-[2px] focus-visible:ring-2 focus-visible:ring-ink/40`}
       >
         {children}
       </span>

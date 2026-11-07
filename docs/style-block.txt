@@ -1,0 +1,11 @@
+Flat 2D vector illustration with light cel shading, minimal infographic style. Clean solid colour fills, no gradients, no textures, no outlines, no 3D rendering, no realism.
+
+SHADING (important): light comes from the upper left. Depth comes ONLY from shading drawn INSIDE each shape's own silhouette: one subtle darker shade shape (the base colour about 10% darker, never heavy) along the right side or underside of the form, and at most one small lighter highlight on the upper left of larger forms such as the head, the cart or the building. Keep clothing shading very restrained: a single soft darker shape at the side or hem, no multiple folds. Absolutely NO shadows outside the silhouette: no ground shadow, no contact shadow, no cast shadow, no drop shadow, no offset shadow copy, no floor line. Every character and object floats alone on the plain background, cleanly cut-out.
+
+FACES: simple but expressive. Round dark eyes, each with one tiny white highlight dot; short curved eyebrows that change with the emotion; soft blush cheeks in a light warm tone; a mouth drawn as a clean curve (small smile, frown, open happy mouth). NO nose, no nose mark or shadow. Hands are simple rounded mitts with a visible thumb. Hair is one solid shape with one highlight shape. Friendly, ordinary, never exaggerated.
+
+DETAIL: keep detail to the minimum that still reads. Clothing is one or two shapes plus a simple neckline or hem edge. Props are simple, geometric, softly rounded.
+
+COLOUR: palette only: ink #292D36, blue #0DAADE, green #8CA21E, red #E32642, yellow #FFCA3E, light grey #F1F2F5, mid grey #BBBCBF, white, a warm neutral skin tone, and a warm brown for hair and wood. Not decorative or too pretty; it must stay quiet so the animation reads first.
+
+LAYOUT: no text, letters, numbers or logos anywhere. Plain pure white background. Items laid out on an even grid with generous space between them (no item touching or overlapping another), all at the same scale, same baseline, each one fully inside its own cell.

@@ -476,7 +476,7 @@ function Stat({ step, first }: { step: number; first?: boolean }) {
 }
 
 /** The card under the line, if the step has one. `f` is how far through the step the reader is. */
-function StepCard({ step, f, mobile }: { step: number; f: number; mobile: boolean }) {
+function StepCard({ step, f, mobile, navyCta }: { step: number; f: number; mobile: boolean; navyCta?: boolean }) {
   const look = useContext(LookContext);
   if (step === I.options) return <Options f={f} one={mobile} />;
   if (step === I.rangde) return mobile && f < CARD_AT ? null : <Verify f={mobile ? (f - CARD_AT) / (1 - CARD_AT) : f} mobile={mobile} />;
@@ -551,7 +551,7 @@ function StepCard({ step, f, mobile }: { step: number; f: number; mobile: boolea
       <div className="flex flex-col items-center gap-4">
         <a
           href="#opportunities"
-          className="pointer-events-auto inline-flex items-center justify-center rounded-[4px] bg-primary px-8 py-3.5 font-display text-p2 font-bold text-white transition-[filter] hover:brightness-95"
+          className={`pointer-events-auto inline-flex items-center justify-center rounded-[4px] ${navyCta ? "bg-nav-navy" : "bg-primary"} px-8 py-3.5 font-display text-p2 font-bold text-white transition-[filter] hover:brightness-95`}
         >
           Meet businesses in need
         </a>
@@ -717,7 +717,7 @@ export function Cast({
 
 /** `heading`: v3 opens it with "Here’s how that works." (filling in as it is read), carrying on from
  * the founders' paragraph. */
-export function StoryHowItWorks({ look = "color", heading = "How Rang De works" }: { look?: Look; heading?: ReactNode }) {
+export function StoryHowItWorks({ look = "color", heading = "How Rang De works", navyCta = false }: { look?: Look; heading?: ReactNode; navyCta?: boolean }) {
   const line = look === "line";
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -843,7 +843,7 @@ export function StoryHowItWorks({ look = "color", heading = "How Rang De works" 
                 transition={{ duration: 0.25 }}
                 className={`w-full ${step === I.options ? "max-w-[400px]" : "max-w-[320px]"}`}
               >
-                <StepCard step={step} f={f} mobile={mobile} />
+                <StepCard step={step} f={f} mobile={mobile} navyCta={navyCta} />
               </motion.div>
             </div>
 

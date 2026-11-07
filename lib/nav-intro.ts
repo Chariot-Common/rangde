@@ -14,7 +14,11 @@ export type NavIntro = "idle" | "shown" | "hidden" | "reveal" | "landing";
 
 /** Pages whose hero intro is itself the loading screen: no page loader, and the nav starts hidden
  * from the server-rendered first paint rather than only once the hero has hydrated. */
-export const INTRO_LOADER_ROUTES = ["/v/v6"];
+export const INTRO_LOADER_ROUTES = ["/v/v5"];
+
+/** Of those, the pages whose intro starts at once rather than waiting for the window "load" event
+ * (v5 opens straight on its typed headline; nothing on screen depends on the images having loaded). */
+export const INSTANT_INTRO_ROUTES = ["/v/v5"];
 
 /** Versions with the refreshed nav (navy Get started, "Login", a hairline under it, 24px sides) and no
  * announcement bar above it. Every other page keeps the original nav. */

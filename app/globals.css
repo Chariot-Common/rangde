@@ -238,6 +238,21 @@ input[type="range"].rangde-slider:active::-webkit-slider-thumb {
   background-repeat: round no-repeat;
 }
 
+/* Dotted underline for the source-tooltip phrases. The browser's own `text-decoration: dotted`
+   draws square dots that stretch and bunch unevenly, so the dots are drawn here instead: true
+   2px circles, a fixed tile so every gap matches, `space` so no dot is cut off at a line's end,
+   and `clone` so each wrapped line of a phrase gets its own full row of dots. */
+.dot-underline {
+  text-decoration: none;
+  padding-bottom: 3px;
+  background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--color-ink) 40%, transparent) 1px, transparent 1.25px);
+  background-size: 6px 2px;
+  background-position: 0 100%;
+  background-repeat: space no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 /* "See how it works" (Why Rang De): a band of light sweeps across the button every few seconds
    and its glow breathes, so it reads as the one button worth pressing on this part of the page. */
 @keyframes shine-sweep {

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { INTRO_LOADER_ROUTES } from "@/lib/nav-intro";
+import { INSTANT_INTRO_ROUTES, INTRO_LOADER_ROUTES } from "@/lib/nav-intro";
 import { PAGE_READY_EVENT } from "@/lib/use-page-ready";
 
 /**
@@ -23,11 +23,13 @@ export function PageLoader() {
   const [mounted, setMounted] = useState(true);
   // Pages whose hero intro is the loading screen (v3's pulsing logo) skip the splash; it still
   // signals "ready" on load so their intro starts on time.
-  const bare = INTRO_LOADER_ROUTES.includes(usePathname());
+  const pathname = usePathname();
+  const bare = INTRO_LOADER_ROUTES.includes(pathname);
+  const instant = INSTANT_INTRO_ROUTES.includes(pathname);
 
   useEffect(() => {
     const onLoad = () => setHidden(true);
-    if (document.readyState === "complete") {
+    if (instant || document.readyState === "complete") {
       // Deferred a tick rather than calling setState synchronously in the effect body —
       // still effectively immediate, just async enough to satisfy the "no setState
       // directly in an effect" lint rule.
@@ -42,7 +44,7 @@ export function PageLoader() {
       clearTimeout(maxWait);
       window.removeEventListener("load", onLoad);
     };
-  }, []);
+  }, [instant]);
 
   // Tells the page the splash is going away, so entrance animations (the hero) start as it
   // fades rather than playing unseen underneath it. See lib/use-page-ready.ts.

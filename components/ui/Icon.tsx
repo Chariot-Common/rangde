@@ -11,7 +11,13 @@ export type IconName =
   | "money-rupee-circle"
   | "cart-arrow"
   | "menu"
-  | "chevron-right-small";
+  | "chevron-right-small"
+  // FAQ card coins (Figma "FAQ assets", Rang De Master Design III, node 2917:86)
+  | "faq-returns"
+  | "faq-secure"
+  | "faq-nri"
+  | "faq-warning"
+  | "faq-plus";
 
 /** Native size of each exported SVG, in px. [width, height] for non-square SVGs. */
 const NATIVE_SIZE: Record<IconName, number | [number, number]> = {
@@ -25,6 +31,11 @@ const NATIVE_SIZE: Record<IconName, number | [number, number]> = {
   "cart-arrow": 20,
   menu: [16, 12],
   "chevron-right-small": [4, 6],
+  "faq-returns": 33.7529,
+  "faq-secure": 33.7529,
+  "faq-nri": 33.7529,
+  "faq-warning": 33.7529,
+  "faq-plus": 33.7529,
 };
 
 type IconProps = {

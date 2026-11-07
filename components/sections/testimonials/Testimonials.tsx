@@ -9,6 +9,7 @@ import { SwipeCarousel } from "@/components/ui/SwipeCarousel";
 import { FlagBadge } from "@/components/ui/FlagBadge";
 import { useRangDeStats } from "@/components/providers/StatsProvider";
 import { ScrollType } from "@/components/versions/ScrollType";
+import { ScrollInk } from "@/components/versions/ScrollInk";
 
 const allTestimonials = [...testimonialsRow1, ...testimonialsRow2];
 
@@ -18,8 +19,9 @@ const allTestimonials = [...testimonialsRow1, ...testimonialsRow2];
  */
 /** `typed`: the heading types itself out as it is scrolled into view (Version 5).
  * `refined` (Version 1.1): an H3 "Trusted by … across the world" heading, both rows (on phones too) stop on
- * hover and can be dragged left or right, and no "Explore more investors" button. */
-export function Testimonials({ withStories = false, typed = false, refined = false }: { withStories?: boolean; typed?: boolean; refined?: boolean }) {
+ * hover and can be dragged left or right, and no "Explore more investors" button.
+ * `inked` (with `refined`, Version 1.1): the heading fills in as it is read (plain, no coloured edge). */
+export function Testimonials({ withStories = false, typed = false, refined = false, inked = false }: { withStories?: boolean; typed?: boolean; refined?: boolean; inked?: boolean }) {
   const { investors } = useRangDeStats();
   return (
     <section className="mx-2 flex flex-col items-center gap-8 overflow-hidden rounded-[16px] bg-white px-4 py-12 sm:gap-sp9 sm:px-8 sm:py-16 lg:py-sp12">
@@ -29,7 +31,16 @@ export function Testimonials({ withStories = false, typed = false, refined = fal
             <FlagBadge key={c} flag={c} className="h-[24px] w-[32px] ring-0 shadow-[0_0_0_1px_rgba(41,45,54,0.08)]" />
           ))}
         </div>
-        {refined && typed ? (
+        {refined && inked ? (
+          // Keyed on the text so it starts afresh if the live investor count arrives after it has rendered.
+          <ScrollInk
+            key={investors}
+            as="h2"
+            tone="plain"
+            text={`Trusted by ${investors.toLocaleString("en-IN")} social investors across the world.`}
+            className="font-display text-h3 font-bold"
+          />
+        ) : refined && typed ? (
           <ScrollType text={`Trusted by ${investors.toLocaleString("en-IN")} social investors across the world.`} className="font-display text-h3 font-bold text-ink" />
         ) : refined ? (
           <h2 className="font-display text-h3 font-bold text-ink">

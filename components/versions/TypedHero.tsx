@@ -32,8 +32,12 @@ const AFTER_INVEST = TITLE.indexOf(" in"); // 📈 goes here
 const AFTER_STARTUP = TITLE.indexOf(" India"); // 🧑🏽‍🌾 goes here
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-// The whole intro runs at 1.7x its first pace: every wait and duration is scaled by SPEED.
-const SPEED = 1 / 1.7;
+// The typed headline runs at 3.4x its first pace (2x the earlier 1.7x): every wait and duration in it
+// is scaled by SPEED, and its own little animations (letters fading in, emojis popping) by HEADLINE.
+const SPEED = 1 / 3.4;
+const HEADLINE = 1 / 2;
+// The cards rising at the end keep the earlier 1.7x pace.
+const SETTLE = 1 / 1.7;
 // Typed a word at a time: the letters of a word come in a quick burst, with a short pause
 // before the next word, varied a little so it reads as a person typing.
 const keyGap = (next: string) => (next === " " ? 260 : 45) * (0.75 + Math.random() * 0.5);
@@ -44,7 +48,7 @@ const DISC_DURATION = 3.5; // s for the disc to grow from 96%
 const GLOW_DURATION = 4.5; // s for its glow to swell out from 70%
 const GLOW_DELAY = 0.4; // s after the disc starts
 const GLOW_EASE = [0.33, 1, 0.68, 1] as const; // ease-out cubic: even and unhurried, no early rush
-const HOLD_MS = 2500; // how long the finished line, emojis and all, stays before they shrink away
+const HOLD_MS = 2500 * HEADLINE; // how long the finished line, emojis and all, stays before they shrink away
 
 type Step = {
   typed: number;
@@ -144,8 +148,8 @@ export function TypedHero({ lead }: { lead: string }) {
     if (!step.settled) return;
     const quick = step.instant;
     // The cards rising and pushing the copy up keep their original, unhurried ease-out.
-    animate(groupY, 0, { duration: quick ? 0.4 : 0.9 * SPEED, ease: EASE });
-    animate(stripY, 0, { duration: quick ? 0.4 : SPEED, delay: quick ? 0 : 0.1 * SPEED, ease: EASE });
+    animate(groupY, 0, { duration: quick ? 0.4 : 0.9 * SETTLE, ease: EASE });
+    animate(stripY, 0, { duration: quick ? 0.4 : SETTLE, delay: quick ? 0 : 0.1 * SETTLE, ease: EASE });
   }, [step.settled, step.instant, groupY, stripY]);
 
   // The script.
@@ -200,21 +204,22 @@ export function TypedHero({ lead }: { lead: string }) {
       set({ farmer: true, creditFor: untilCollapse(400, AFTER_STARTUP) });
       await wait(400);
       await typeTo(TITLE.length);
-      // Hold the finished line, emojis and all, for 2.5s so it can be read (not sped up).
+      // Hold the finished line, emojis and all, for 1.25s so it can be read (not scaled by SPEED).
       await wait(HOLD_MS / SPEED);
       set({ collapsed: true });
-      await wait(COLLAPSE * 1000);
+      await wait((COLLAPSE * 1000) / HEADLINE); // half the earlier pause (COLLAPSE already carries SPEED once)
       set({ lead: true });
       // Real time (not sped up): the stats follow straight on as the body copy's last words land,
       // with no pause after it (the pause belongs to the headline only).
       await wait(((wordRevealLength(lead, LEAD_STAGGER, LEAD_DURATION) - LEAD_DURATION / 2) * 1000) / SPEED);
+      // The waits from here on are divided by HEADLINE so the stats and RBI seal keep their earlier timing.
       set({ numbers: true });
-      await wait(2100 * LATE);
+      await wait((2100 * LATE) / HEADLINE);
       set({ rbi: true });
       // The RBI seal grows in at 2x (not the 4x of the rest), so it reads as intended rather than a glitch.
-      await wait(800 * RBI_PACE);
+      await wait((800 * RBI_PACE) / HEADLINE);
       set({ settled: true });
-      await wait(1000 * LATE);
+      await wait((1000 * LATE) / HEADLINE);
       if (cancelled) return;
       // The finishing touches: the nav fades in and Get started shines straight away; the circle then
       // comes in behind the hero at its own slow pace (nothing the reader does cuts it short).
@@ -247,7 +252,7 @@ export function TypedHero({ lead }: { lead: string }) {
           <h1 ref={titleRef} aria-label={TITLE} className="min-h-[1lh] font-display text-h1 font-bold leading-[38px] text-green-dark md:leading-[64px] lg:whitespace-nowrap">
             {/* The line glides to its new centre as each letter lands (layout animation) instead of
                 jumping half a letter, and each letter fades in. */}
-            <motion.span aria-hidden layout={instant ? false : "position"} transition={{ layout: { duration: 0.22, ease: EASE } }} className="inline-block">
+            <motion.span aria-hidden layout={instant ? false : "position"} transition={{ layout: { duration: 0.22 * HEADLINE, ease: EASE } }} className="inline-block">
               <Letters from={0} to={Math.min(typed, AFTER_INVEST)} instant={instant} />
               {showEmojis && step.growth && (
                 <EmojiSlot src="/images/hero-intro/growth.png" entrance="pop" collapsed={step.collapsed} pill={<AmountPill label="₹5,000" arrow="up" tone="debit" stay={step.debitFor} gone={step.collapsed} />} />
@@ -289,7 +294,7 @@ function EmojiSlot({ src, entrance, collapsed, pill }: { src: string; entrance: 
       className="relative inline-block h-[1em] align-[-0.14em]"
       initial={{ width: "0em", marginLeft: "0em" }}
       animate={collapsed ? { width: "0em", marginLeft: "0em" } : { width: "1em", marginLeft: "0.25em" }}
-      transition={{ duration: collapsed ? COLLAPSE : 0.3, ease: EASE }}
+      transition={{ duration: collapsed ? COLLAPSE : 0.3 * HEADLINE, ease: EASE }}
     >
       <span className="absolute inset-0" style={entrance === "rise" ? { clipPath: "inset(-100% -100% 0 -100%)" } : undefined}>
         <motion.span
@@ -300,8 +305,8 @@ function EmojiSlot({ src, entrance, collapsed, pill }: { src: string; entrance: 
             collapsed
               ? { duration: COLLAPSE, ease: EASE }
               : entrance === "pop"
-                ? { duration: 0.35, ease: EASE }
-                : { duration: 0.4, ease: EASE }
+                ? { duration: 0.35 * HEADLINE, ease: EASE }
+                : { duration: 0.4 * HEADLINE, ease: EASE }
           }
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- small decorative image sized in em to match the headline */}
@@ -344,7 +349,7 @@ function Letters({ from, to, instant }: { from: number; to: number; instant: boo
   const text = TITLE.slice(from, to);
   if (instant) return text;
   return text.split("").map((ch, i) => (
-    <motion.span key={from + i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18, ease: "easeOut" }}>
+    <motion.span key={from + i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.18 * HEADLINE, ease: "easeOut" }}>
       {ch}
     </motion.span>
   ));
