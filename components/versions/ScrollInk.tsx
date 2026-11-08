@@ -1,7 +1,7 @@
 "use client";
 
 import { useMotionValueEvent, useReducedMotion, useScroll, useSpring, type MotionValue } from "motion/react";
-import { Fragment, useRef } from "react";
+import { Fragment, useRef, useSyncExternalStore } from "react";
 
 /*
  * Scroll-linked letter fill (v3: the founders' paragraph and section headings). The text starts
@@ -52,6 +52,15 @@ const TONES: Record<Tone, { ink: string; pale: string; inkColour: string; paleCo
 };
 const SOFT = 1.5; // plain/blue: how many letters the darkening takes
 
+// Phones (<768px) have their own timing for the plain and blue fills: it starts as the text's top comes in at the
+// bottom of the screen and is complete a little above the screen's vertical centre.
+const PHONE = "(max-width: 767px)";
+const subscribePhone = (cb: () => void) => {
+  const m = window.matchMedia(PHONE);
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
+
 /** `offset`: when the fill starts and ends, as motion's useScroll offset for the text (default: its
  * top three quarters down the screen, then a quarter down; for the plain and blue tones, Version 1.1's, from
  * its top just entering at the bottom of the screen until it is a little above the three-quarter line). */
@@ -74,8 +83,9 @@ export function ScrollInk({
   const CHAR_CLASS = TONES[tone];
   const plain = tone !== "rgb";
   const reduce = useReducedMotion();
+  const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const ref = useRef<HTMLParagraphElement & HTMLHeadingElement & HTMLSpanElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: offset ?? (tone === "rgb" ? ["start 0.75", "start 0.25"] : ["start 1", "start 0.7"]) });
+  const { scrollYProgress } = useScroll({ target: ref, offset: offset ?? (tone === "rgb" ? ["start 0.75", "start 0.25"] : phone ? ["start 1", "start 0.45"] : ["start 1", "start 0.7"]) });
   const spring = useSpring(scrollYProgress, { stiffness: 70, damping: 22, restDelta: 0.0005 });
   const smooth = drive ?? spring;
   const chars = useRef<HTMLSpanElement[]>([]);

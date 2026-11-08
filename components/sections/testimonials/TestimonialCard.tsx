@@ -20,11 +20,11 @@ export function TestimonialCard({ testimonial, align, variant = "marquee" }: Tes
 
   return (
     <div
-      className={`flex flex-col items-center justify-between gap-6 rounded-[8px] bg-bg-grey p-6 sm:gap-sp7 sm:p-sp7 ${WIDTH_CLASSES[variant]}`}
+      className={`font-display flex flex-col items-center justify-between gap-6 rounded-[8px] bg-bg-grey p-6 sm:gap-sp7 sm:p-sp7 ${WIDTH_CLASSES[variant]}`}
     >
-      <p className={`w-full text-p2 leading-[24px] text-ink/64 ${isRight ? "text-right" : "text-left"}`}>
+      <p className={`w-full text-p2 leading-[22px] text-ink/64 sm:leading-[24px] ${isRight ? "text-right" : "text-left"}`}>
         {testimonial.quote.map((segment, i) => (
-          <span key={i} className={segment.emphasized ? "text-ink" : undefined}>
+          <span key={i} className={segment.emphasized ? "text-ink max-sm:text-p1" : undefined}>
             {segment.text}
           </span>
         ))}
@@ -32,7 +32,7 @@ export function TestimonialCard({ testimonial, align, variant = "marquee" }: Tes
 
       <div className="flex w-full items-end gap-sp7">
         <div
-          className={`flex flex-1 flex-col gap-sp1 font-eyebrow text-h6 font-semibold uppercase tracking-[0.8px] ${
+          className={`flex flex-1 flex-col gap-sp1 font-display text-h6 font-semibold uppercase tracking-[0.8px] ${
             isRight ? "items-end text-right" : "items-start text-left"
           }`}
         >

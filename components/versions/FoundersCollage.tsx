@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
-import { useRef } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { LegacyButton as Button } from "@/components/ui/LegacyButton";
 import { ScrollInk } from "./ScrollInk";
 
@@ -44,27 +44,38 @@ const FRAME = "overflow-hidden border-solid border-white bg-white shadow-[0_16px
 /** A print's border: 8 design pixels at 1×, in proportion to its scale, and (in container units) to the stage. */
 const border = (scale: number) => `${((8 * scale) / W) * 100}cqw`;
 
+// Phones (<768px): the stage is only about 360px wide, so the prints drift a quarter as far (the desktop's
+// fixed pixel offsets threw them over the lines below), and the stage gets room above and below.
+const PHONE = "(max-width: 767px)";
+const subscribePhone = (cb: () => void) => {
+  const m = window.matchMedia(PHONE);
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
+
 export function FoundersCollage() {
+  const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
+  const k = phone ? 0.25 : 1;
   const stageRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   // 0 as the stage enters at the bottom of the screen, 1 as it leaves at the top.
   const { scrollYProgress } = useScroll({ target: stageRef, offset: ["start end", "end start"] });
 
-  const y = useTransform(scrollYProgress, [0, 1], [150, -150]); // the nearest print: the biggest drift
+  const y = useTransform(scrollYProgress, [0, 1], [150 * k, -150 * k]); // the nearest print: the biggest drift
   const rotate = useTransform(scrollYProgress, [0, 1], [-2, -5]);
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.04]);
 
   return (
     <section className="mx-2 flex flex-col items-center gap-4 overflow-hidden rounded-[16px] bg-white px-4 pb-r5 pt-7 sm:px-8 sm:pt-r4 md:pb-ds-6 lg:pt-2">
       <div className="flex flex-col items-center gap-2 text-center">
-        <p className="font-display text-h5 font-bold uppercase tracking-[0.08em] text-text-grey-64">The reason Rang De exists</p>
+        <p className="font-display text-h5 font-bold uppercase tracking-[0.08em] text-text-grey-64 max-md:text-[11px] max-md:leading-[16px] max-md:tracking-[0.88px]">The reason Rang De exists</p>
         {/* Fills in as it is read, like the page's other H3s (plain: no coloured edge). */}
         <ScrollInk as="h2" tone="plain" text="Our founders left Oxford for India with a dream to change the lives of millions." className="max-w-[820px] font-display text-h3 font-bold [text-wrap:pretty]" />
       </div>
 
-      <div ref={stageRef} className="relative w-full max-w-[1200px] [container-type:inline-size] md:max-w-[66vw]" style={{ aspectRatio: `${W} / ${H}` }}>
+      <div ref={stageRef} className="relative my-6 w-full max-w-[1200px] [container-type:inline-size] md:my-0 md:max-w-[66vw]" style={{ aspectRatio: `${W} / ${H}` }}>
         {AROUND.map((a) => (
-          <Print key={a.src} item={a} progress={scrollYProgress} reduce={!!reduce} />
+          <Print key={a.src} item={a} progress={scrollYProgress} reduce={!!reduce} k={k} />
         ))}
         {/* The big one: 1.5× Version 6's print, centred, in front of the rest. */}
         <motion.div
@@ -83,7 +94,7 @@ export function FoundersCollage() {
 
       <div className="flex max-w-[1100px] flex-col items-center gap-6 text-center">
         {/* Both lines fill in as they are read: the first pale ink to ink, the second primary blue 64 to 100. */}
-        <h3 className="font-display text-h3 font-bold">
+        <h3 className="font-display text-h3 font-bold max-md:text-h4">
           <ScrollInk as="span" tone="plain" text="Meet Ram and Smita" />
           <br />
           <ScrollInk as="span" tone="blue" text="Every Saturday, 11 am IST" />
@@ -97,8 +108,8 @@ export function FoundersCollage() {
 }
 
 /** One of the smaller prints: its own drift and tilt across the stage's trip up the screen. */
-function Print({ item, progress, reduce }: { item: Around; progress: MotionValue<number>; reduce: boolean }) {
-  const y = useTransform(progress, [0, 1], item.drift);
+function Print({ item, progress, reduce, k }: { item: Around; progress: MotionValue<number>; reduce: boolean; k: number }) {
+  const y = useTransform(progress, [0, 1], [item.drift[0] * k, item.drift[1] * k]);
   const rotate = useTransform(progress, [0, 1], item.rotate);
   const w = BASE * item.scale;
   return (

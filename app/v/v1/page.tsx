@@ -26,6 +26,19 @@ export const metadata: Metadata = {
 const LEAD =
   "Lend to rural entrepreneurs building businesses across India. Your money helps them access credit and build a formal credit history, while you earn returns.";
 
+// Phones (Figma "Home - v1.1" mobile, node 2921:2749): two short paragraphs split by a rule, with the key words in bold.
+const MOBILE_LEAD = (
+  <>
+    <p className="font-display text-p1 font-medium text-ink/64">
+      <strong className="font-bold text-ink/80">Lend to rural entrepreneurs</strong> building businesses across India.
+    </p>
+    <hr className="w-full border-0 border-t border-ink/8" />
+    <p className="font-display text-p1 font-medium text-ink/64">
+      Your money helps them <strong className="font-bold text-ink/80">access credit and build a formal credit history, while you earn returns.</strong>
+    </p>
+  </>
+);
+
 // Version 1.1 (Figma "Home - v1.1", node 2687:14442): the other Startup India headline, recent
 // stories → the problem, with what Rang De built sliding up over it → reels → How it works with the
 // calculator under it → investors → the founders → the top questions as cards. The problem is one card,
@@ -34,7 +47,7 @@ export default function V1() {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
       {/* The same borrower cards (photos and copy) as Version 5. */}
-      <ApproachHero title="Invest in the other Startup India" lead={LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent11" />} />
+      <ApproachHero title="Invest in the other Startup India" lead={LEAD} mobileLead={MOBILE_LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent11" />} />
       {/* ROUGH CUT: two stacked sections, the green solution sliding up over the grey problem; steps left, scene right. */}
       <StackedSections
         first={<StoryCard tone="problem" heading={<ScrollInk as="span" tone="plain" text="The financial system wasn’t built for the businesses of rural India" />} points={V5_PROBLEM_POINTS} scenes={PROBLEM_SCENES} />}
@@ -46,7 +59,7 @@ export default function V1() {
       </HowItWorksTabs>
       <Testimonials refined inked />
       <FoundersCollage />
-      <PlainQuestionCards count={4} flip />
+      <PlainQuestionCards count={4} flip phoneHeading="Questions we get often" autoHighlight />
     </div>
   );
 }

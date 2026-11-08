@@ -13,7 +13,7 @@ const STAGGER_MS = 100;
 // or "₹ 0.00 Cr" before the animation starts (or for anyone who scrolls past quickly).
 const COUNT_FROM = 0.8;
 
-function StatNumber({ target, format, index, inView, pace = 1 }: { target: number; format: (n: number) => string; index: number; inView: boolean; pace?: number }) {
+export function StatNumber({ target, format, index, inView, pace = 1, className = "font-display text-[24px] font-bold leading-[28px] text-ink lg:text-h4 lg:leading-[40px]" }: { target: number; format: (n: number) => string; index: number; inView: boolean; pace?: number; className?: string }) {
   const value = useAnimatedNumber(inView ? target : target * COUNT_FROM, {
     duration: COUNT_UP_DURATION * pace,
     delay: index * STAGGER_MS * pace,
@@ -22,7 +22,7 @@ function StatNumber({ target, format, index, inView, pace = 1 }: { target: numbe
 
   return (
     <p
-      className="font-display text-[24px] font-bold leading-[28px] text-ink lg:text-h4 lg:leading-[40px]"
+      className={className}
       // Tabular digits only while counting (stops the width jittering); once settled, back to
       // Inter's normal digits — its tabular "1" is extra-wide and reads oddly at rest.
       style={{ fontVariantNumeric: value === target ? "normal" : "tabular-nums" }}
@@ -56,7 +56,8 @@ export const HeroStatsStart = createContext<boolean | undefined>(undefined);
 /** `start`: when given (or set by HeroStatsStart), the numbers wait for it too — the hero's intro
  * turns it on right after its body copy has come in. Either way they only count once the row is
  * on screen. */
-export function HeroStats({ start: startProp, intro }: { start?: boolean; intro?: HeroStatsIntro } = {}) {
+/** `sealOnlyMobile` (Version 1.1): on phones only the RBI seal and its label show, with no numbers. */
+export function HeroStats({ start: startProp, intro, sealOnlyMobile = false }: { start?: boolean; intro?: HeroStatsIntro; sealOnlyMobile?: boolean } = {}) {
   const pace = intro?.pace ?? 1;
   const rbiPace = intro?.rbiPace ?? pace;
   const startFromHero = useContext(HeroStatsStart);
@@ -71,7 +72,7 @@ export function HeroStats({ start: startProp, intro }: { start?: boolean; intro?
   return (
     <div
       ref={ref}
-      className="grid w-full grid-cols-2 gap-x-6 gap-y-12 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-[16px] sm:gap-y-8 lg:flex-nowrap"
+      className={`grid w-full grid-cols-2 gap-x-6 ${sealOnlyMobile ? "gap-y-0" : "gap-y-12"} sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-[16px] sm:gap-y-8 lg:flex-nowrap`}
     >
       {heroStats.map((stat, index) => {
         const isRbi = index === rbiIndex;
@@ -85,7 +86,7 @@ export function HeroStats({ start: startProp, intro }: { start?: boolean; intro?
             animate={intro && !isRbi ? (intro.numbers ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }) : undefined}
             transition={{ duration: 0.5 * pace, delay: index * 0.08 * pace, ease: EASE }}
             className={`flex flex-col items-center ${isRbi ? "gap-[8px]" : "gap-[4px]"} sm:order-none sm:flex-1 ${MOBILE_ORDER_CLASS[index]} ${
-              isRbi ? `col-span-2 justify-self-center ${intro ? "sm:min-w-0" : ""}` : ""
+              isRbi ? `col-span-2 justify-self-center ${intro ? "sm:min-w-0" : ""}` : sealOnlyMobile ? "max-sm:hidden" : ""
             }`}
           >
             {stat.kind === "number" ? (

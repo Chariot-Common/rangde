@@ -25,6 +25,6 @@ export function LinkButton({ href, variant = "primary", children }: { href: stri
 }
 
 export function Eyebrow({ children, className = "text-ink/72" }: { children: ReactNode; className?: string }) {
-  return <p className={`font-eyebrow text-h6 font-semibold uppercase tracking-[1.44px] ${className}`}>{children}</p>;
+  return <p className={`font-display text-[9px] font-bold uppercase leading-[12px] tracking-[0.72px] sm:font-eyebrow sm:text-h6 sm:font-semibold sm:leading-[var(--text-h6--line-height)] sm:tracking-[1.44px] ${className}`}>{children}</p>;
 }
 

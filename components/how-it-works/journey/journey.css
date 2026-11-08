@@ -362,3 +362,11 @@
 .hj .nx-l{ display:flex; align-items:center; gap:6px; margin-bottom:8px; font:600 11px/14px var(--f-eyebrow); letter-spacing:1px; text-transform:uppercase; color:var(--ink-64); }
 .hj .nx-l .ic{ width:14px; height:14px; color:var(--green-dark); }
 .hj .nx .rc{ margin:0; box-shadow:0 12px 32px rgba(41,45,54,.18); }
+
+/* Version 1.1 on phones (Figma "Home - v1.1" mobile): just the browser window on the section's cream, with
+   no caption under it (the step line below the progress bar says the same thing). */
+@media (max-width: 639px){
+  .hiw-v11 .hj-cap{ display:none; }
+  .hiw-v11 .hj{ background:transparent; overflow:visible; }
+  .hiw-v11 .hj::before{ display:none; }
+}

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FAQS_URL } from "@/data/faqs";
 import { Icon, type IconName } from "@/components/ui";
 import { FactChip, QUESTION_CARDS } from "./approaches";
+import { ScrollInk } from "./ScrollInk";
 
 // Each question's own icon on the coin's face (Figma "FAQ assets", node 2917:86), in QUESTION_CARDS order.
 const COIN_ICONS: IconName[] = ["faq-returns", "faq-secure", "faq-nri", "faq-warning"];
@@ -13,10 +14,10 @@ const COIN_ICONS: IconName[] = ["faq-returns", "faq-secure", "faq-nri", "faq-war
  * card is hovered (or focused from the keyboard) it flips over like a coin, turning about its vertical axis
  * in perspective (600ms, ease-out), to show a plus (at 80% opacity) on dark blue: the prompt to open the card.
  */
-function FlipCoin({ icon }: { icon: IconName }) {
+function FlipCoin({ icon, auto = false }: { icon: IconName; auto?: boolean }) {
   return (
     <span aria-hidden className="relative size-16 self-end perspective-near">
-      <span className="relative block size-full transition-transform duration-600 ease-out transform-3d group-hover:rotate-y-180 group-focus-visible:rotate-y-180 motion-reduce:duration-0">
+      <span className={`relative block size-full transition-transform duration-600 ease-out transform-3d ${auto ? "max-md:rotate-y-180" : ""} md:group-hover:rotate-y-180 md:group-focus-visible:rotate-y-180 motion-reduce:duration-0`}>
         <span className="absolute inset-zero flex items-center justify-center rounded-full bg-text-grey-48 shadow-popup backface-hidden">
           <Icon name={icon} />
         </span>
@@ -36,9 +37,40 @@ function FlipCoin({ icon }: { icon: IconName }) {
  * With `flip` (v6, v1.1) the plus is replaced by FlipCoin: the question's own icon, turning over to the plus on hover,
  * and the cards grow slightly and tint blue on hover. `navyLink` (v6): "Read more FAQs" in the nav's Login colours.
  */
-export function PlainQuestionCards({ heading, count = 4, flip = false, navyLink = false }: { heading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean }) {
+/** `phoneHeading` (Version 1.1): an H3 over the cards on phones only, filling in as it is read.
+ * `autoHighlight` (with `flip`, Version 1.1 phones): with no hover on a phone, one card at a time lights itself the way a hovered
+ * one does (blue tint, a slight grow, the coin turning to the plus) so it reads as tappable: the first card whose top is
+ * between a quarter and three quarters of the way down the screen; as it climbs past the quarter line the next takes over. */
+export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean }) {
   const cards = QUESTION_CARDS.slice(0, count);
   const [open, setOpen] = useState<number | null>(null);
+  const [auto, setAuto] = useState<number | null>(null);
+  const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!autoHighlight) return;
+    const phone = window.matchMedia("(max-width: 767px)");
+    let raf = 0;
+    const pick = () => {
+      raf = 0;
+      if (!phone.matches) return setAuto(null);
+      const vh = window.innerHeight;
+      const tops = cardRefs.current.map((el) => el?.getBoundingClientRect().top ?? Infinity);
+      let next = tops.findIndex((t) => t >= vh * 0.25 && t <= vh * 0.75);
+      // Once the last card has passed the quarter line it stays lit, as there is no next card to take over.
+      if (next === -1 && tops.length && tops[tops.length - 1] < vh * 0.25 && cardRefs.current[tops.length - 1]!.getBoundingClientRect().bottom > 0) next = tops.length - 1;
+      setAuto(next === -1 ? null : next);
+    };
+    const queue = () => { if (!raf) raf = requestAnimationFrame(pick); };
+    pick();
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", queue);
+      window.removeEventListener("resize", queue);
+    };
+  }, [autoHighlight]);
 
   useEffect(() => {
     if (open === null) return;
@@ -55,20 +87,22 @@ export function PlainQuestionCards({ heading, count = 4, flip = false, navyLink 
   const current = open === null ? null : cards[open];
 
   return (
-    <section className="mx-2 flex flex-col items-center gap-10 rounded-[16px] bg-white px-4 py-16 sm:px-8 md:py-20">
+    <section className="mx-2 flex flex-col items-center gap-10 rounded-[16px] bg-white px-4 pb-12 pt-6 sm:px-8 md:py-20">
+      {phoneHeading && <ScrollInk as="h2" tone="plain" text={phoneHeading} className="text-center font-display text-h3 font-bold md:hidden" />}
       {heading && <h2 className="text-center font-display text-h3 font-bold text-text-grey-100">{heading}</h2>}
       <div className="grid w-full max-w-[1200px] grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c, i) => (
           <button
             key={c.question}
+            ref={(el) => { cardRefs.current[i] = el; }}
             type="button"
             aria-haspopup="dialog"
             aria-label={`Open: ${c.question}`}
             onClick={() => setOpen(i)}
-            className={`group flex min-h-[220px] cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey p-6 text-left ${flip ? "transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8" : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100 sm:min-h-[260px]`}
+            className={`group flex min-h-[220px] cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey p-6 text-left ${flip ? `transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8 ${auto === i ? "max-md:scale-[1.025] max-md:bg-primary-8" : ""}` : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100 sm:min-h-[260px]`}
           >
             <span className="font-display text-p1 font-bold text-text-grey-100 [text-wrap:balance]">{c.question}</span>
-            {flip && COIN_ICONS[i] ? <FlipCoin icon={COIN_ICONS[i]} /> : <span aria-hidden className="flex size-[48px] items-center justify-center self-end rounded-full bg-text-grey-64 text-white transition-transform duration-200 group-hover:scale-105">
+            {flip && COIN_ICONS[i] ? <FlipCoin icon={COIN_ICONS[i]} auto={auto === i} /> : <span aria-hidden className="flex size-[48px] items-center justify-center self-end rounded-full bg-text-grey-64 text-white transition-transform duration-200 group-hover:scale-105">
               <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
                 <path d="M12 5v14M5 12h14" />
               </svg>

@@ -1,9 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { setNavIntro } from "@/lib/nav-intro";
 import { motion, useInView, useReducedMotion } from "motion/react";
-import { HeroStats } from "@/components/sections/hero/HeroStats";
+import { HeroStats, StatNumber } from "@/components/sections/hero/HeroStats";
+import { heroStatsFrom } from "@/lib/content";
+import { useRangDeStats } from "@/components/providers/StatsProvider";
 import { StoryCarousel } from "@/components/sections/hero/StoryCarousel";
 import { StoryCard } from "@/components/sections/hero/StoryCard";
 import { InvestmentSlider } from "@/components/sections/investment-calculator/InvestmentSlider";
@@ -20,6 +23,7 @@ import { FAQS_URL } from "@/data/faqs";
 import { STATS_SNAPSHOT as LIVE, type RangDeStats } from "@/lib/stats";
 import { useAnimatedNumber } from "@/lib/use-animated-number";
 import { recentStories, testimonialsRow1, testimonialsRow2, type Story, type Testimonial } from "@/lib/content";
+import { Icon } from "@/components/ui";
 import { ScrollInk } from "./ScrollInk";
 import { ScrollType } from "./ScrollType";
 import { Eyebrow } from "./ui";
@@ -56,24 +60,97 @@ function Reveal({ children, className, delay = 0 }: { children: ReactNode; class
  * stats count up and the stories slide in. v1.x lead with "Invest in the other Startup India" in
  * green; v3 is one larger ink line with no sub-copy.
  */
-export function ApproachHero({ title, lead = "", tone = "green", wide = false, glow = true, eyebrow, actions, strip, below }: { title: string; lead?: string; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode }) {
+/**
+ * Phones, Version 1.1 (Figma "Home - v1.1" mobile, node 2921:4511): under the RBI seal a chevron invites a scroll. The
+ * first time the page is scrolled the chevron drifts down and fades out while the proof numbers open up in its
+ * place (two columns, a rule between the rows), pushing the stories down. They then stay, once, for good.
+ */
+function PhoneStats() {
+  const [open, setOpen] = useState(false);
+  const reduce = useReducedMotion();
+  const stats = heroStatsFrom(useRangDeStats());
+  useEffect(() => {
+    if (open) return;
+    const check = () => window.scrollY > 24 && setOpen(true);
+    check();
+    window.addEventListener("scroll", check, { passive: true });
+    return () => window.removeEventListener("scroll", check);
+  }, [open]);
+  // Figma's order: businesses funded over investors on the left, loans disbursed over principal repaid on the right.
+  const num = (label: string) => stats.find((s) => s.label === label);
+  const FIG_LABEL: Record<string, string> = { "Entrepreneurs funded": "Businesses funded" };
+  const FIG_FORMAT: Record<string, (n: number) => string> = { "Loans disbursed": (n) => `${Math.floor(n)}+ Cr` };
+  const cols = [["Entrepreneurs funded", "Investors aboard"], ["Loans disbursed", "Principal repaid"]];
+  const dur = reduce ? 0 : 0.7;
+  return (
+    <motion.div className="relative sm:hidden" initial={false} animate={{ height: open ? "auto" : 32 }} transition={{ duration: dur, ease: EASE }} style={{ overflow: "hidden" }}>
+      <motion.div aria-hidden className="absolute inset-x-0 top-2 flex justify-center" initial={false} animate={open ? { y: 24, opacity: 0 } : { y: 0, opacity: 1 }} transition={{ duration: reduce ? 0 : 0.5, ease: EASE }}>
+        <Icon name="chevron-down" size={24} className="opacity-40 brightness-0" />
+      </motion.div>
+      <motion.div className="grid grid-cols-2 gap-6 px-0 pb-4 pt-8" initial={false} animate={{ opacity: open ? 1 : 0 }} transition={{ duration: reduce ? 0 : 0.6, delay: open && !reduce ? 0.2 : 0, ease: EASE }} aria-hidden={!open}>
+        {cols.map((col, ci) => (
+          <div key={ci} className="flex flex-col gap-6">
+            {col.map((label, ri) => {
+              const s = num(label);
+              if (!s || s.kind !== "number") return null;
+              return (
+                <Fragment key={label}>
+                  {ri > 0 && <hr className="w-full border-0 border-t border-ink/8" />}
+                  <div className="flex flex-col items-center gap-1">
+                    <StatNumber target={s.target} format={FIG_FORMAT[label] ?? s.format} index={ci * 2 + ri} inView={open} className="font-display text-h3 font-bold text-text-grey-80" />
+                    <p className="font-display text-[10px] font-semibold uppercase leading-[15px] tracking-[1.2px] text-text-grey-64">{FIG_LABEL[label] ?? label}</p>
+                  </div>
+                </Fragment>
+              );
+            })}
+          </div>
+        ))}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/** `mobileLead` (Version 1.1): on phones, this replaces `lead` (two short paragraphs split by a rule), the stats shrink to
+ * the RBI seal with a chevron under it, and the headline is a little larger (Figma "Home - v1.1" mobile). */
+export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wide = false, glow = true, eyebrow, actions, strip, below }: { title: string; lead?: string; mobileLead?: ReactNode; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode }) {
   const ready = usePageReady();
   const reduce = useReducedMotion();
   const seq = heroSequence(title, lead);
-  const afterBody = lead ? seq.stats : seq.body + 0.1;
+  // Phones (Version 1.1): the short lead fades in as one block as soon as the headline is done, and the RBI seal follows right on it.
+  const phone = useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia("(max-width: 639px)");
+      m.addEventListener("change", cb);
+      return () => m.removeEventListener("change", cb);
+    },
+    () => window.matchMedia("(max-width: 639px)").matches,
+    () => false,
+  );
+  const afterBody = mobileLead && phone ? seq.body + 0.5 : lead ? seq.stats : seq.body + 0.1;
   const [statsStart, setStatsStart] = useState(false);
   useEffect(() => {
     if (!ready) return;
     const id = setTimeout(() => setStatsStart(true), reduce ? 0 : afterBody * 1000);
     return () => clearTimeout(id);
   }, [ready, reduce, afterBody]);
+  // Version 1.1: the nav stays hidden until the stories are in, then fades in with a shine on its buttons.
+  useEffect(() => {
+    if (!mobileLead) return;
+    setNavIntro("hidden");
+    let id: ReturnType<typeof setTimeout> | undefined;
+    if (ready) id = setTimeout(() => setNavIntro("reveal"), reduce ? 0 : (afterBody + 0.8) * 1000);
+    return () => {
+      clearTimeout(id);
+      setNavIntro("idle");
+    };
+  }, [mobileLead, ready, reduce, afterBody]);
   const after = (extra = 0) =>
     reduce
       ? { initial: false as const }
       : { initial: { opacity: 0, y: 16 }, animate: ready ? { opacity: 1, y: 0 } : undefined, transition: { duration: 0.6, delay: afterBody + extra, ease: EASE } };
 
   return (
-    <div className="relative isolate flex w-full flex-col items-center gap-12 overflow-hidden px-4 pt-[100px] sm:px-2 sm:pt-12 md:pt-16 lg:gap-16 lg:pt-[64px]">
+    <div className={`relative isolate flex w-full flex-col items-center overflow-hidden px-4 pt-[100px] sm:px-2 sm:pt-12 md:pt-16 lg:gap-16 lg:pt-[64px] ${mobileLead ? "gap-8 sm:gap-12" : "gap-12"}`}>
       {glow && (
       <div
         aria-hidden
@@ -92,9 +169,19 @@ export function ApproachHero({ title, lead = "", tone = "green", wide = false, g
           className={
             tone === "ink"
               ? "font-display text-h2 font-bold text-ink [text-wrap:balance]"
-              : "font-display text-h1 font-bold leading-[38px] text-green-dark [text-wrap:balance] md:leading-[64px]"
+              : `font-display text-h1 font-bold text-green-dark [text-wrap:balance] md:leading-[64px] ${mobileLead ? "max-sm:text-[38px] max-sm:leading-[44px] max-sm:tracking-[-0.76px] sm:leading-[38px]" : "leading-[38px]"}`
           }
         />
+        {mobileLead && (
+          <motion.div
+            className="flex w-full flex-col items-center gap-4 px-8 pt-4 sm:hidden"
+            initial={reduce ? false : { opacity: 0, y: 12 }}
+            animate={ready ? { opacity: 1, y: 0 } : undefined}
+            transition={{ duration: 0.6, delay: seq.body, ease: EASE }}
+          >
+            {mobileLead}
+          </motion.div>
+        )}
         {lead && (
           <WordReveal
             text={lead}
@@ -102,7 +189,7 @@ export function ApproachHero({ title, lead = "", tone = "green", wide = false, g
             duration={BODY_DURATION}
             delay={seq.body}
             play={ready}
-            className={`w-full max-w-[320px] font-display text-p1 font-medium text-ink/80 [text-wrap:balance] ${wide ? "sm:max-w-[930px]" : "sm:max-w-[820px]"}`}
+            className={`${mobileLead ? "max-sm:hidden " : ""}w-full max-w-[320px] font-display text-p1 font-medium text-ink/80 [text-wrap:balance] ${wide ? "sm:max-w-[930px]" : "sm:max-w-[820px]"}`}
           />
         )}
       </div>
@@ -112,7 +199,8 @@ export function ApproachHero({ title, lead = "", tone = "green", wide = false, g
         </motion.div>
       )}
       <motion.div className="w-full max-w-[1200px]" {...after()}>
-        <HeroStats start={statsStart} />
+        <HeroStats start={statsStart} sealOnlyMobile={!!mobileLead} />
+        {mobileLead && <PhoneStats />}
       </motion.div>
       {/* `strip={false}`: no strip (Version 4 meets the people further down instead). */}
       {strip !== false && (
@@ -501,10 +589,10 @@ export function StackedSections({ first, second }: { first: ReactNode; second: R
   }, []);
   return (
     <div className="relative flex flex-col gap-2">
-      <div ref={ref} className="sticky z-0" style={{ top: top ?? "calc(var(--navbar-bottom, 0px) + 8px)" }}>
+      <div ref={ref} className="z-0 md:sticky" style={{ top: top ?? "calc(var(--navbar-bottom, 0px) + 8px)" }}>
         {first}
       </div>
-      <div className="relative z-10 rounded-[16px] shadow-[0_-12px_32px_rgba(41,45,54,0.08)]">{second}</div>
+      <div className="relative z-10 rounded-[16px] md:shadow-[0_-12px_32px_rgba(41,45,54,0.08)]">{second}</div>
     </div>
   );
 }
@@ -645,8 +733,8 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
       </Reveal>
 
       <div className="flex w-full max-w-[1200px] flex-col" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-        <div className={refined ? "w-full overflow-hidden rounded-[8px]" : "contents"}>
-        <div className={`w-full overflow-hidden bg-white ${refined ? "border-x-4 border-t-4 border-ink/16" : "rounded-[8px]"} ${visual === "journey" ? "h-[560px] sm:h-[600px] lg:h-[520px]" : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
+        <div className={refined ? "w-full overflow-hidden rounded-[8px] max-sm:overflow-visible" : "contents"}>
+        <div className={`w-full overflow-hidden ${refined ? "hiw-v11 max-sm:overflow-visible max-sm:bg-transparent sm:border-x-4 sm:border-t-4 sm:border-ink/16 sm:bg-white" : "rounded-[8px] bg-white"} ${visual === "journey" ? (refined ? "h-[380px] sm:h-[600px] lg:h-[520px]" : "h-[560px] sm:h-[600px] lg:h-[520px]") : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
           {visual === "journey" ? (
             <JourneyStage scene={tab.scene} label={tab.sceneLabel} loopMs={tab.sceneMs} />
           ) : (
@@ -655,7 +743,7 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
         </div>
         {refined && (
           // The grey step line as the frame's bottom edge, with one black indicator gliding along it.
-          <div aria-hidden className="relative h-[4px] w-full bg-ink/16 sm:h-[8px]">
+          <div aria-hidden className="relative hidden h-[4px] w-full bg-ink/16 sm:block sm:h-[8px]">
             <motion.span
               className="pointer-events-none absolute inset-y-0 bg-ink"
               initial={false}
@@ -666,7 +754,28 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
           </div>
         )}
         </div>
-        <div role="tablist" aria-label="How it works steps" className="relative grid grid-cols-5">
+        {refined && (
+          // Phones (Figma): five short segments under the window, the current one in sky blue.
+          <div className="mt-[40px] flex gap-1 sm:hidden">
+            {HIW_TABS.map((t, i) => (
+              <button key={t.title} type="button" aria-label={`Step ${i + 1}: ${t.title}`} aria-current={i === active} onClick={() => setActive(i)} className="flex h-4 flex-1 items-center">
+                <span className="relative h-1 w-full overflow-hidden rounded-full bg-ink/16">
+                  {i < active && <span className="absolute inset-0 bg-primary" />}
+                  {i === active && (
+                    <motion.span
+                      key={`${active}-${running}`}
+                      className="absolute inset-y-0 left-0 bg-primary"
+                      initial={{ width: running ? "0%" : "100%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: running ? tabMs(active) / 1000 : 0, ease: "linear" }}
+                    />
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div role="tablist" aria-label="How it works steps" className={`relative grid-cols-5 ${refined ? "hidden sm:grid" : "grid"}`}>
           {HIW_TABS.map((t, i) => (
             <button
               key={t.title}
@@ -695,6 +804,14 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
             </button>
           ))}
         </div>
+        {refined ? (
+          <div className="mt-6 flex flex-col items-center gap-2 text-center sm:hidden" aria-live="polite">
+            <p className="font-display text-[11px] font-bold uppercase leading-[16px] tracking-[0.88px] text-text-grey-64">Step {active + 1}</p>
+            <p className="font-display text-[24px] font-bold leading-[32px] text-ink">
+              {tab.title} · <span className="text-ink/48">{tab.text}</span>
+            </p>
+          </div>
+        ) : (
         <div className="mt-1 flex flex-col items-center gap-1 text-center sm:hidden" aria-live="polite">
           <p className="font-eyebrow text-h6 font-semibold uppercase tracking-[1.44px] text-ink/56">
             Step {active + 1} of {HIW_TABS.length}
@@ -702,11 +819,12 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
           <p className="font-display text-p1 font-bold text-ink">{tab.title}</p>
           <p className="font-display text-p3 font-medium text-ink/80">{tab.text}</p>
         </div>
+        )}
       </div>
 
       {children && (
         <>
-          <div className={`h-px w-full max-w-[1200px] ${refined ? "my-12 bg-ink/24 sm:my-8" : "bg-ink/8"}`} />
+          <div className={`w-full max-w-[1200px] ${refined ? "my-4 h-px bg-ink/24 max-sm:h-0 max-sm:border-t max-sm:border-dotted max-sm:border-ink/24 max-sm:bg-transparent sm:my-8" : "h-px bg-ink/8"}`} />
           {children}
         </>
       )}

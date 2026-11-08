@@ -75,25 +75,25 @@ export function StoryCard({ tone, eyebrow, heading, points, scenes }: { tone: "p
           width, steps on the left (about 45% of it) and the scene on the right (about 55%). */}
       <section
         ref={sectionRef}
-        className={`mx-2 flex h-[calc(100svh-var(--navbar-bottom,0px)-16px)] flex-col items-center gap-ds-6 rounded-[16px] px-r3 pb-r4 pt-ds-9 ${
+        className={`mx-2 flex flex-col items-center gap-ds-6 rounded-[16px] px-4 md:px-r3 pb-ds-6 pt-[40px] md:h-[calc(100svh-var(--navbar-bottom,0px)-16px)] md:pb-r4 md:pt-ds-9 ${
           tone === "solution" ? "bg-[#cbe0b8]" : "bg-bg-grey"
         }`}
       >
-        <div className="flex max-w-full flex-col items-center gap-2 text-center md:max-w-[90%] lg:max-w-[min(70%,1000px)]">
+        <div className="flex max-w-full flex-col items-center gap-3 text-center md:max-w-[90%] lg:max-w-[min(70%,1000px)]">
           {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
           <h2 className="font-display text-h3 font-bold text-text-grey-100 [text-wrap:balance]">{heading}</h2>
         </div>
 
         {/* Scene above the steps on phones. */}
         <div className="flex min-h-0 w-full justify-center">
-          <div className="flex w-full flex-col-reverse items-center gap-r3 md:grid md:w-[67%] md:grid-cols-[minmax(0,45fr)_minmax(0,55fr)] md:items-center md:gap-[5%]">
+          <div className="flex w-full flex-col-reverse items-center gap-ds-6 md:grid md:w-[67%] md:grid-cols-[minmax(0,45fr)_minmax(0,55fr)] md:items-center md:gap-[5%]">
             <ol className="flex w-full flex-col">
               {points.slice(0, n).map((p, i) => (
                 <StepRow key={p.title} point={p} index={i} n={n} active={i === active} reached={i <= active} progress={progress} onSelect={() => goTo(i)} />
               ))}
             </ol>
             {/* A 1.2px outside stroke round the frame: text grey 8 on the problem; text grey 8 with green 16 laid over it on the solution. */}
-            <div className={`relative aspect-[400/280] w-full max-w-[min(100%,calc((100svh-var(--navbar-bottom,0px)-380px)*1.4286))] justify-self-end overflow-hidden rounded-4 bg-white-100 md:max-w-[min(100%,calc((100svh-var(--navbar-bottom,0px)-260px)*1.4286))] ${tone === "problem" ? "shadow-[0_0_0_1.2px_var(--color-text-grey-8)]" : "shadow-[0_0_0_1.2px_var(--color-green-16),0_0_0_1.2px_var(--color-text-grey-8)]"}`}>
+            <div className={`relative aspect-[361/228] w-full max-w-full md:aspect-[400/280] justify-self-end overflow-hidden rounded-4 bg-white-100 md:max-w-[min(100%,calc((100svh-var(--navbar-bottom,0px)-260px)*1.4286))] ${tone === "problem" ? "shadow-[0_0_0_1.2px_var(--color-text-grey-8)]" : "shadow-[0_0_0_1.2px_var(--color-green-16),0_0_0_1.2px_var(--color-text-grey-8)]"}`}>
               {scenes.slice(0, n).map((s, i) => (
                 <Layer key={s.name} scene={s} index={i} n={n} rel={i - active} progress={progress} />
               ))}

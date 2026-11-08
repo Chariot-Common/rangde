@@ -8,8 +8,6 @@ import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { MobileMenu } from "@/components/MobileMenu";
 import { useCtaLabel } from "@/lib/use-cta-label";
 import { useNavHidden, useNavIntro, useRefreshedNav } from "@/lib/nav-intro";
-import { usePathname } from "next/navigation";
-import { usePageReady } from "@/lib/use-page-ready";
 import { NavShine } from "./NavShine";
 
 const SCROLL_THRESHOLD = 24;
@@ -24,10 +22,8 @@ export function TopNav() {
   // The shine sweeps Get started once: on v5 as its nav fades back in ("reveal"), on v6 as the logo lands
   // in the nav ("landing"), and on Version 1.1 as the page loader goes. Latched, so it isn't cut short
   // when the intro moves on to "shown".
-  const pathname = usePathname();
-  const pageReady = usePageReady();
   const [shine, setShine] = useState(false);
-  const shineNow = intro === "reveal" || intro === "landing" || (pathname === "/v/v1" && pageReady);
+  const shineNow = intro === "reveal" || intro === "landing";
   useEffect(() => {
     if (!shineNow) return;
     const id = setTimeout(() => setShine(true), 0);
@@ -112,7 +108,7 @@ export function TopNav() {
           : "bg-transparent"
       }`}
     >
-      {/* Mobile/tablet (<768px): logo left-aligned, Sign up / Login and the hamburger on
+      {/* Mobile/tablet (<768px): logo left-aligned, Login and the hamburger on
           the right. Desktop keeps its original single-row layout, with Get started first. */}
       <div className="flex items-center justify-between gap-2 md:hidden">
         <div className="flex shrink-0 flex-col items-start">
@@ -127,8 +123,9 @@ export function TopNav() {
         <div className="flex shrink-0 items-center gap-[6px]">
           {/* No Invest button on phones: a "Get started" button floats at the bottom once the
               hero has scrolled away (FloatingGetStarted). */}
-          <Button variant="secondary" size="sm" className={`!px-[12px] whitespace-nowrap ${refreshed ? "!bg-nav-sky !text-nav-navy" : ""}`}>
-            {refreshed ? "Login" : "Sign up / Login"}
+          <Button variant="secondary" size="sm" className={`relative !px-[12px] whitespace-nowrap ${refreshed ? "!bg-nav-sky !text-nav-navy" : ""}`}>
+            Login
+            <NavShine play={shine} />
           </Button>
           {toggleButton}
         </div>
@@ -155,8 +152,9 @@ export function TopNav() {
             {ctaLabel}
             <NavShine play={shine} />
           </Button>
-          <Button variant="secondary" size="sm" className={`!px-[16px] ${refreshed ? "!bg-nav-sky !text-nav-navy" : ""}`}>
-            {refreshed ? "Login" : "Sign up / Login"}
+          <Button variant="secondary" size="sm" className={`relative !px-[16px] ${refreshed ? "!bg-nav-sky !text-nav-navy" : ""}`}>
+            Login
+            <NavShine play={shine} />
           </Button>
           {toggleButton}
         </div>
