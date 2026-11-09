@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { FRAME_H, FRAME_W, mountJourney } from "./journey";
 import "./journey.css";
 
-export type JourneyScene = "vet" | "choose" | "understand" | "lend" | "follow" | "earn";
+export type JourneyScene = "vet" | "choose" | "understand" | "lend" | "follow" | "earn" | "repaid";
 
 /** Boxes at least this wide put the caption beside the window instead of under it. */
 const WIDE = 760;

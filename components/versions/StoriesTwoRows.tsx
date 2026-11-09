@@ -32,9 +32,10 @@ function PersonCard({ p, hidden }: { p: Person; hidden?: boolean }) {
   return (
     <article
       aria-hidden={hidden || undefined}
-      className="flex w-[300px] shrink-0 flex-col justify-between gap-6 rounded-[8px] bg-white p-6 sm:w-[400px] sm:p-sp7 lg:w-[440px]"
+      className="flex min-h-[340px] w-[300px] shrink-0 flex-col justify-between gap-6 rounded-[8px] bg-white p-6 sm:w-[400px] sm:p-sp7 lg:min-h-[380px] lg:w-[440px]"
     >
-      <p className="line-clamp-5 font-display text-p2 leading-[24px] text-ink/64 lg:text-p1 lg:leading-[26px]">{p.words}</p>
+      {/* Tall enough for the whole quote in most cases; only the longest are trimmed. */}
+      <p className="line-clamp-[9] font-display text-p2 leading-[24px] text-ink/64 lg:text-p1 lg:leading-[26px]">{p.words}</p>
       <div className="flex items-end gap-sp7">
         <div className="flex flex-1 flex-col gap-sp1 font-display text-h6 font-semibold uppercase tracking-[0.8px]">
           <p className="text-ink">{p.name}</p>

@@ -394,3 +394,8 @@
 .hiw-bare .hj[data-wide] .rc-l b{ font-weight:600; font-size:12px; line-height:16px; }
 .hiw-bare .hj[data-wide] .rc-bar{ height:4px; margin-top:6px; background:rgba(41,45,54,.07); }
 .hiw-bare .hj[data-wide] .rc-lend{ padding:6px 14px; border:0; border-radius:999px; background:var(--primary); color:#fff; font-size:12px; }
+
+/* Repaid in full: the money credited straight to the investor's bank account. */
+.hj .bankcr{ display:flex; align-items:center; justify-content:center; gap:8px; margin-top:14px; padding:10px 12px; border-radius:10px; background:#EEF6E6;
+  font:600 13px/18px var(--f-display); color:#3A6E0C; opacity:0; transform:translateY(6px); transition:opacity .4s var(--ease), transform .4s var(--ease); }
+.hj .bankcr.show{ opacity:1; transform:none; }

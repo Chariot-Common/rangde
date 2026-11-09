@@ -8,7 +8,8 @@
 //   understand — her page scrolls: gallery, About the Business, Potential Impact, Key facts, partner
 //   lend       — ₹2,000 picked and lent, other investors fill the goal, the money reaches her shop
 //   follow     — a repayment notification, then the log: each month arrives as a row, the ring fills
-//   earn       — repaid in full: your money and returns, Reinvest, and the next entrepreneur
+//   earn       — repaid in full: your money and returns, credited straight to your bank account
+//   repaid     — follow, then earn, as one beat (Version 1.1's "Get repaid" tab)
 export const FRAME_W = 420, FRAME_H = 500;
 
 export function mountJourney(root, scene, reducedMotion, capEl) {
@@ -430,7 +431,7 @@ export function mountJourney(root, scene, reducedMotion, capEl) {
   }
   function playFollow(){
     const list = $('#rlist'), fg = $('#ringfg'), n = $('#ringn'), C = 2 * Math.PI * 22, SHOWN = 6;
-    cap('She repays you every month', 'Each repayment lands in your Rang De account.');
+    cap('She repays you every month', 'Each repayment goes straight to your bank account.');
     after(300, () => $('#ntf').classList.add('show'));
     after(2300, () => $('#ntf').classList.remove('show'));
     const next = document.createElement('div');
@@ -460,10 +461,8 @@ export function mountJourney(root, scene, reducedMotion, capEl) {
       <div class="er-sub">back to you</div>
       <div class="split"><i class="p" id="sp"></i><i class="r" id="sr"></i></div>
       <div class="legend"><span><span class="dot" style="background:var(--green-bright)"></span>Your ₹<b>${inr(YOURS, 0)}</b></span><span><span class="dot" style="background:var(--primary)"></span><b>+₹${inr(TOTAL - YOURS, 0)}</b> returns</span></div>
-      <div class="choose2" id="ch2"><div class="c-re" id="cre">Reinvest</div><div class="c-wd">Withdraw</div></div>
-    </div>
-    <div class="nx" id="nx"><div class="nx-l">${ic('sparkles')}Up next</div>${rcHTML(LISTINGS[1])}</div>
-    <div class="tap" id="tap"></div></div>`;
+      <div class="bankcr" id="bk">${OK}<span>Credited to your bank account</span></div>
+    </div></div>`;
   }
   function playEarn(){
     const amt = $('.er-amt .odo');
@@ -471,11 +470,14 @@ export function mountJourney(root, scene, reducedMotion, capEl) {
     after(250, () => odoSet(amt, TOTAL, 0, 1400));
     after(400, () => { $('#sp').style.width = (YOURS / TOTAL * 100) + '%'; });
     after(1100, () => { $('#sr').style.width = ((TOTAL - YOURS) / TOTAL * 100 - 1) + '%'; });
-    after(1900, () => $('#ch2').classList.add('show'));
-    after(2500, () => { tapFrom(.3, .98); tapTo($('#cre'), .5, .5, 600); });
-    after(3200, () => { tapPress(); $('#cre').classList.add('press'); });
-    after(3350, () => { const b = $('#cre'); b.classList.remove('press'); b.classList.add('done'); b.innerHTML = `${OK}Reinvesting`; $('#tap').classList.remove('show'); });
-    after(3700, () => { cap('Then do it again', 'Reinvest in the next entrepreneur, or withdraw to your bank.'); $('.ve').classList.add('next'); });
+    // Repayments are paid straight to the investor's bank account (there is no wallet to reinvest from any more).
+    after(1900, () => $('#bk').classList.add('show'));
+    after(2700, () => cap('Back in your bank account', `Your ₹${inr(YOURS, 0)} and the returns, paid straight to your bank.`));
+  }
+  /* The repayments month by month, then repaid in full: Follow and Earn as one beat. */
+  function playRepaid(){
+    playFollow();
+    after(4800, () => { const vp = root.querySelector('.vp'); if(!vp) return; vp.innerHTML = visEarn(); playEarn(); });
   }
 
   const SCENES = {
@@ -485,6 +487,7 @@ export function mountJourney(root, scene, reducedMotion, capEl) {
     lend: [visLend, playLend, 'i/durga-294'],
     follow: [visFollow, playFollow, 'dashboard'],
     earn: [visEarn, playEarn, 'dashboard'],
+    repaid: [visFollow, playRepaid, 'dashboard'],
   };
   const [vis, play, url] = SCENES[scene] || SCENES.choose;
   /* A browser window on rangde.in around each scene, so it reads as the real site. */

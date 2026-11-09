@@ -684,6 +684,18 @@ const HIW_TABS: { title: string; text: string; stage: number; segment?: [number,
   { title: "Earn", text: "Get repaid with returns as the loan is repaid.", stage: 3, segment: [0.6, 1], ms: 4800, scene: "earn", sceneMs: 6600, sceneLabel: "Repaid in full: ₹2,133 back, ₹2,000 of it your money and ₹133 returns. Reinvest is tapped and the next entrepreneur, Rekha Bai, comes up." },
 ];
 
+const HIW_TABS_V11 = [
+  ...HIW_TABS.slice(0, 3),
+  {
+    ...HIW_TABS[4],
+    title: "Get repaid",
+    text: "Every repayment, with returns, straight to your bank.",
+    scene: "repaid" as JourneyScene,
+    sceneMs: 10600,
+    sceneLabel: "Durga's repayments arrive month by month, on time, as a ring fills towards 18 of 18; then she has repaid in full: ₹2,133 back, ₹2,000 of it your money and ₹133 returns, credited to your bank account.",
+  },
+];
+
 
 // Version 1.1 plays Follow and Earn on their own, slower 28.8s clock (figma-motion.js, step 4's data-v11 branch).
 const V11_STEP4: Record<string, { segment: [number, number]; ms: number }> = {
@@ -701,21 +713,24 @@ const V11_STEP4: Record<string, { segment: [number, number]; ms: number }> = {
 /** `bare` (Version 1.1): the journey window without its browser bar, centred, with only the beat's one-line caption
  * as a small pointer under it (no explanatory copy beside it: the animation already shows it). */
 export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false, inked = false, bare = false }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean; inked?: boolean; bare?: boolean }) {
+  // Version 1.1 (bare): four steps, Follow and Earn as one ("Get repaid"), since repayments now go straight to the
+  // investor's bank account and there is nothing to reinvest from.
+  const TABS = bare ? HIW_TABS_V11 : HIW_TABS;
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { amount: 0.4 });
   const reduce = useReducedMotion();
   const running = inView && !paused && !reduce;
-  const tabMs = useCallback((i: number) => (visual === "journey" ? HIW_TABS[i].sceneMs : (refined && V11_STEP4[HIW_TABS[i].title]?.ms) || HIW_TABS[i].ms), [visual, refined]);
+  const tabMs = useCallback((i: number) => (visual === "journey" ? TABS[i].sceneMs : (refined && V11_STEP4[TABS[i].title]?.ms) || TABS[i].ms), [visual, refined, TABS]);
 
   useEffect(() => {
     if (!running) return;
-    const id = setTimeout(() => setActive((a) => (a + 1) % HIW_TABS.length), tabMs(active));
+    const id = setTimeout(() => setActive((a) => (a + 1) % TABS.length), tabMs(active));
     return () => clearTimeout(id);
-  }, [active, running, tabMs]);
+  }, [active, running, tabMs, TABS.length]);
 
-  const tab = HIW_TABS[active];
+  const tab = TABS[active];
   return (
     <section
       ref={ref}
@@ -749,9 +764,9 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
             <motion.span
               className="pointer-events-none absolute inset-y-0 bg-ink"
               initial={false}
-              animate={{ left: `${(active * 100) / HIW_TABS.length}%` }}
+              animate={{ left: `${(active * 100) / TABS.length}%` }}
               transition={{ duration: reduce ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
-              style={{ width: `${100 / HIW_TABS.length}%` }}
+              style={{ width: `${100 / TABS.length}%` }}
             />
           </div>
         )}
@@ -759,7 +774,7 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
         {refined && (
           // Phones (Figma): five short segments under the window, the current one in sky blue.
           <div className="mt-[40px] flex gap-1 sm:hidden">
-            {HIW_TABS.map((t, i) => (
+            {TABS.map((t, i) => (
               <button key={t.title} type="button" aria-label={`Step ${i + 1}: ${t.title}`} aria-current={i === active} onClick={() => setActive(i)} className="flex h-4 flex-1 items-center">
                 <span className="relative h-1 w-full overflow-hidden rounded-full bg-ink/16">
                   {i < active && <span className="absolute inset-0 bg-primary" />}
@@ -777,8 +792,8 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
             ))}
           </div>
         )}
-        <div role="tablist" aria-label="How it works steps" className={`relative grid-cols-5 ${refined ? "hidden sm:grid" : "grid"}`}>
-          {HIW_TABS.map((t, i) => (
+        <div role="tablist" aria-label="How it works steps" className={`relative ${TABS.length === 4 ? "grid-cols-4" : "grid-cols-5"} ${refined ? "hidden sm:grid" : "grid"}`}>
+          {TABS.map((t, i) => (
             <button
               key={t.title}
               role="tab"
@@ -816,7 +831,7 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
         ) : (
         <div className="mt-1 flex flex-col items-center gap-1 text-center sm:hidden" aria-live="polite">
           <p className="font-eyebrow text-h6 font-semibold uppercase tracking-[1.44px] text-ink/56">
-            Step {active + 1} of {HIW_TABS.length}
+            Step {active + 1} of {TABS.length}
           </p>
           <p className="font-display text-p1 font-bold text-ink">{tab.title}</p>
           <p className="font-display text-p3 font-medium text-ink/80">{tab.text}</p>

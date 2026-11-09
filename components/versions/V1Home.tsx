@@ -1,3 +1,4 @@
+import { OpportunitiesSection } from "@/components/sections/opportunities/OpportunitiesSection";
 import { InvestmentSlider } from "@/components/sections/investment-calculator/InvestmentSlider";
 import { ReelsWheel } from "@/components/sections/reels/ReelsWheel";
 import { Testimonials } from "@/components/sections/testimonials/Testimonials";
@@ -6,8 +7,6 @@ import { heroIntroStories } from "@/lib/content";
 import { FoundersCollage } from "./FoundersCollage";
 import { PlainQuestionCards } from "./PlainQuestionCards";
 import { ProblemShift } from "./ProblemShift";
-import { ProblemSideBySide } from "./ProblemSideBySide";
-import { ProblemTabs } from "./ProblemTabs";
 import { ScrollInk } from "./ScrollInk";
 import {
   ApproachHero,
@@ -34,23 +33,14 @@ const MOBILE_LEAD = (
 // stories → the problem, with what Rang De built sliding up over it → reels → How it works with the
 // calculator under it → investors → the founders → the top questions as cards. The problem is one card,
 // and so is what Rang De built, each scrolled through point by point with a simple chart (ProblemCard.tsx).
-/** `problem`: "stacked" (Version 1.1: the problem and Rang De's answer as two cards side by side, one pair at a time on
- * scroll, ProblemSideBySide.tsx),
- * "tabs" (Version 1.1 B: one section, three tabs, each pair side by side with its scenes, ProblemTabs.tsx) or
- * "shift" (Version 1.1 C: large before → after pairs, no art, ProblemShift.tsx). Everything else is shared. */
-export function V1Home({ problem = "stacked" }: { problem?: "stacked" | "tabs" | "shift" }) {
+/** Version 1.1. The page is here (rather than in app/v/v1/page.tsx) so a variant can reuse it. */
+export function V1Home() {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
       {/* The same borrower cards (photos and copy) as Version 5. */}
       <ApproachHero title="Invest in the other Startup India" lead={LEAD} mobileLead={MOBILE_LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent11" />} />
-      {/* The problem and Rang De's answer, side by side, one pair at a time on scroll. */}
-      {problem === "tabs" ? (
-        <ProblemTabs />
-      ) : problem === "shift" ? (
-        <ProblemShift />
-      ) : (
-        <ProblemSideBySide />
-      )}
+      {/* The problem, then Rang De's answer to each, struck through one by one on scroll (text only). */}
+      <ProblemShift />
       <ReelsWheel tight heading={<ScrollInk as="span" tone="plain" text="The money may be small. What it makes possible isn’t." />} />
       <HowItWorksTabs refined inked bare visual="journey">
         <InvestmentSlider refined />
@@ -58,6 +48,8 @@ export function V1Home({ problem = "stacked" }: { problem?: "stacked" | "tabs" |
       <Testimonials refined inked />
       <FoundersCollage />
       <PlainQuestionCards count={4} flip large phoneHeading="Questions we get often" autoHighlight />
+      {/* The way in: the live listings, by individuals, states and funds. */}
+      <OpportunitiesSection />
     </div>
   );
 }

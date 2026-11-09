@@ -108,11 +108,12 @@ export const INFO: Record<number, StoryInfo> = {
 
 // Why the other ways to borrow don't work for Rekha, listed under the credit line with a portrait each.
 const FINDEX = "World Bank Global Findex, 2021";
-const OPTIONS: { label: string; fact: string; source: string }[] = [
-  { label: "Bank approvals are strict", fact: "Only about 12% of Indian adults borrowed from a bank or other formal lender in 2021.", source: FINDEX },
-  { label: "Moneylenders charge steep interest", fact: "Informal loans in rural India average 17.77% a year.", source: NABARD_SHORT },
+// `stat`: the number in the fact that its source backs up; on Version 6 only it is underlined, with the source on hover.
+const OPTIONS: { label: string; fact: string; source: string; stat?: string }[] = [
+  { label: "Bank approvals are strict", fact: "Only about 12% of Indian adults borrowed from a bank or other formal lender in 2021.", source: FINDEX, stat: "about 12%" },
+  { label: "Moneylenders charge steep interest", fact: "Informal loans in rural India average 17.77% a year.", source: NABARD_SHORT, stat: "17.77%" },
   { label: "Self-help groups lend in the group's name", fact: "Every member answers for every repayment, and new loans depend on the group's savings.", source: "RBI, SHG–bank linkage circular" },
-  { label: "Family borrowing isn't always an option", fact: "31% of Indian adults borrowed from family or friends in 2021, but a whole village often has the same lean months.", source: FINDEX },
+  { label: "Family borrowing isn't always an option", fact: "31% of Indian adults borrowed from family or friends in 2021, but a whole village often has the same lean months.", source: FINDEX, stat: "31%" },
 ];
 
 // Rang De's check before Rekha's loan is listed, short from the borrower page's verification process.
@@ -405,7 +406,30 @@ function Options({ f, one, large = false }: { f: number; one?: boolean; large?: 
               <div className="min-w-0">
                 <p className={`font-display text-[13px] font-bold leading-[18px] text-ink sm:text-[15px] sm:leading-[22px] ${large ? "sm:text-[17px] sm:leading-[24px] lg:text-[22px] lg:leading-[30px]" : ""}`}>{o.label}</p>
                 <p className={`font-display text-[12px] font-medium leading-[16px] text-ink/64 sm:text-[13px] sm:leading-[18px] ${large ? "mt-0.5 sm:text-[15px] sm:leading-[22px] lg:mt-1 lg:text-[18px] lg:leading-[26px]" : ""}`}>
-                  {o.fact} {!large && <span className="whitespace-nowrap text-[10px] text-ink/40 sm:text-[11px]">{o.source}</span>}
+                  {large ? (
+                    // Version 6: only the number is underlined (dotted), and its source shows on hover or focus instead of under the line.
+                    o.stat && o.fact.includes(o.stat) ? (
+                      <>
+                        {o.fact.slice(0, o.fact.indexOf(o.stat))}
+                        <span tabIndex={-1} className="group/src pointer-events-auto relative cursor-help underline decoration-ink/40 decoration-dotted decoration-2 underline-offset-[4px]">
+                          {o.stat}
+                          <span
+                            role="tooltip"
+                            className="pointer-events-none absolute bottom-full left-0 z-30 mb-2 w-max max-w-[280px] rounded-[8px] bg-[#1d1f24] px-3 py-2 text-left font-display text-[12px] font-medium leading-[16px] text-white opacity-0 shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-opacity duration-150 group-hover/src:opacity-100 group-focus/src:opacity-100"
+                          >
+                            {o.source}
+                          </span>
+                        </span>
+                        {o.fact.slice(o.fact.indexOf(o.stat) + o.stat.length)}
+                      </>
+                    ) : (
+                      o.fact
+                    )
+                  ) : (
+                    <>
+                      {o.fact} <span className="whitespace-nowrap text-[10px] text-ink/40 sm:text-[11px]">{o.source}</span>
+                    </>
+                  )}
                 </p>
               </div>
             </li>

@@ -21,17 +21,15 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 export const REKHA_BUST: Spr = ["rekha", 1470, 450, 250, 250];
 export const ARJUN_BUST: Spr = [ARJUN_CHEER[0], 6, 0, 300, 300];
 
+// Only sources sharp enough for a tile (about 340px wide on a laptop screen): the reel stills (360px), the small story
+// portraits (160px) and three of the investor photos (100px) went soft on the wall, so they are left out here.
 const BORROWERS = [
   ...["gita-devi", "neilhoupe-u-koza", "sitara-devi", "sivakumar"].map((n) => `/images/stories/avatars/${n}.webp`),
-  ...[1, 2, 3, 4].map((i) => `/images/stories/story-${i}-avatar.webp`),
   ...Array.from({ length: 18 }, (_, i) => `/images/collage/collage-${String(i + 1).padStart(2, "0")}.webp`),
-  ...["DHsWunxNohj", "DJ8m_66TYR1", "DKl90LkTp2_", "DZb43WMJGUk", "DZpDB01p6Lo", "DaC1ZZNp7gc", "DaVC13Wporz", "Db5Qn0bpHwS", "Dd3cW7nzdIr", "DdObR7qNxXJ"].map(
-    (n) => `/images/reels/${n}.jpg`,
-  ),
+  ...[1, 2, 3, 4].map((i) => `/images/stories/story-${i}-bg.webp`),
+  "/images/stories/pairs/neilhoupe-fabric.jpg",
 ];
-const INVESTORS = ["ritika-ojha", "ajay-jain", "shiri-baghar", "kishor-nayar", "chaitanya-nadkarny", "hari-balasubramanian", "mahesh-avasare", "amrudesh-santhanam"].map(
-  (n) => `/images/testimonials/${n}.webp`,
-);
+const INVESTORS = ["shiri-baghar", "kishor-nayar", "chaitanya-nadkarny", "hari-balasubramanian", "amrudesh-santhanam"].map((n) => `/images/testimonials/${n}.webp`);
 
 export type Rect = { x: number; y: number; s: number };
 type Cell = { x: number; y: number; w: number; h: number; dist: number; src: string };
@@ -120,7 +118,7 @@ export function CrowdWall({ c, w, h, mobile }: { c: number; w: number; h: number
             className="absolute overflow-hidden rounded-[14px] bg-text-grey-8"
             style={{ left: cell.x, top: cell.y, width: cell.w, height: cell.h, opacity: o, transform: `scale(${0.85 + 0.15 * o})` }}
           >
-            <Image src={cell.src} alt="" fill loading="eager" sizes="(min-width: 768px) 200px, 100px" className="object-cover" />
+            <Image src={cell.src} alt="" fill loading="eager" sizes="(min-width: 768px) 360px, 180px" className="object-cover" />
           </div>
         );
       })}
