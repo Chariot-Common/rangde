@@ -19,6 +19,22 @@ const VERSIONS = [
     measure: "Sign-ups vs. the current homepage",
   },
   {
+    key: "1.1 B",
+    name: "The other Startup India, side-by-side tabs",
+    href: "/v/v1-b",
+    audience: "Everyone (rangde-v1)",
+    idea: "Version 1.1 with the problem and Rang De’s answer in one section of three tabs, each pair side by side with its scene (banks won’t lend → investors lend, and so on).",
+    measure: "Scroll depth past the problem, sign-ups",
+  },
+  {
+    key: "1.1 C",
+    name: "The other Startup India, before → after",
+    href: "/v/v1-c",
+    audience: "Everyone (rangde-v1)",
+    idea: "Version 1.1 with the problem and Rang De’s answer as three large before → after pairs, struck through as Rang De’s side slides in, no art.",
+    measure: "Scroll depth past the problem, sign-ups",
+  },
+  {
     key: "1.2",
     name: "The other Startup India, reshuffled",
     href: "/v/v1-2",

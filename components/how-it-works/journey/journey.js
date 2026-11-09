@@ -256,7 +256,8 @@ export function mountJourney(root, scene, reducedMotion, capEl) {
       const c = cats[i], ind = $('#cind');
       ind.style.width = c.offsetWidth + 'px'; ind.style.transform = `translateX(${c.offsetLeft}px)`;
     };
-    const scrollTo = (y, ms) => { list.style.transition = `transform ${ms}ms cubic-bezier(.1,.75,.2,1)`; list.style.transform = `translateY(${-y}px)`; };
+    // Never past the end of the list (shorter cards, as in the wide window, would otherwise scroll into empty space).
+    const scrollTo = (y, ms) => { y = Math.max(0, Math.min(y, list.scrollHeight - feed.clientHeight)); list.style.transition = `transform ${ms}ms cubic-bezier(.1,.75,.2,1)`; list.style.transform = `translateY(${-y}px)`; };
     function flick(y, ms, at){
       after(at, () => { tapFrom(.5, .9); tapTo(feed, .5, .2, 340); scrollTo(y, ms); list.classList.add('fast'); });
       after(at + ms * .4, () => { list.classList.remove('fast'); $('#tap').classList.remove('show'); });
@@ -421,7 +422,7 @@ export function mountJourney(root, scene, reducedMotion, capEl) {
     return `<div class="stage vf">
       <div class="ntf" id="ntf"><img class="ntf-l" src="https://rangde.imgix.net/rangde-logo.svg?auto=compress,format&w=64&h=50" alt=""><div><b>Rang De · now</b><span>Durga repaid ₹${EMI} on your loan, on time.</span></div>${ph('ntf-a')}</div>
       <div class="lg wcard">
-      <div class="lg-h"><div class="ring"><svg viewBox="0 0 52 52" aria-hidden="true"><circle class="bg" cx="26" cy="26" r="${R}"/><circle class="fg" id="ringfg" cx="26" cy="26" r="${R}" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><b id="ringn">0/${MONTHS}</b></div>
+      <div class="lg-h"><div class="rp-ring"><svg viewBox="0 0 52 52" aria-hidden="true"><circle class="bg" cx="26" cy="26" r="${R}"/><circle class="fg" id="ringfg" cx="26" cy="26" r="${R}" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg><b id="ringn">0/${MONTHS}</b></div>
         <div class="lg-t"><b>Repayments from Durga</b><span>Your ₹${inr(YOURS, 0)}, every month</span></div>
         <span class="chip ok" style="margin-left:auto">On time</span></div>
       <div class="rows"><div class="rlist" id="rlist"></div></div>

@@ -41,7 +41,8 @@ function FlipCoin({ icon, auto = false }: { icon: IconName; auto?: boolean }) {
  * `autoHighlight` (with `flip`, Version 1.1 phones): with no hover on a phone, one card at a time lights itself the way a hovered
  * one does (blue tint, a slight grow, the coin turning to the plus) so it reads as tappable: the first card whose top is
  * between a quarter and three quarters of the way down the screen; as it climbs past the quarter line the next takes over. */
-export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean }) {
+/** `large` (Version 1.1): taller cards with the question at H4 size, so they read as a section of their own. */
+export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean }) {
   const cards = QUESTION_CARDS.slice(0, count);
   const [open, setOpen] = useState<number | null>(null);
   const [auto, setAuto] = useState<number | null>(null);
@@ -90,7 +91,7 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
     <section className="mx-2 flex flex-col items-center gap-10 rounded-[16px] bg-white px-4 pb-12 pt-6 sm:px-8 md:py-20">
       {phoneHeading && <ScrollInk as="h2" tone="plain" text={phoneHeading} className="text-center font-display text-h3 font-bold md:hidden" />}
       {heading && <h2 className="text-center font-display text-h3 font-bold text-text-grey-100">{heading}</h2>}
-      <div className="grid w-full max-w-[1200px] grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={`grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 ${large ? "max-w-[1440px] lg:gap-4" : "max-w-[1200px]"}`}>
         {cards.map((c, i) => (
           <button
             key={c.question}
@@ -99,10 +100,10 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
             aria-haspopup="dialog"
             aria-label={`Open: ${c.question}`}
             onClick={() => setOpen(i)}
-            className={`group flex min-h-[220px] cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey p-6 text-left ${flip ? `transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8 ${auto === i ? "max-md:scale-[1.025] max-md:bg-primary-8" : ""}` : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100 sm:min-h-[260px]`}
+            className={`group flex cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey text-left ${large ? "min-h-[300px] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[500px] lg:rounded-[20px] lg:p-10" : "min-h-[220px] p-6 sm:min-h-[260px]"} ${flip ? `transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8 ${auto === i ? "max-md:scale-[1.025] max-md:bg-primary-8" : ""}` : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100`}
           >
-            <span className="font-display text-p1 font-bold text-text-grey-100 [text-wrap:balance]">{c.question}</span>
-            {flip && COIN_ICONS[i] ? <FlipCoin icon={COIN_ICONS[i]} auto={auto === i} /> : <span aria-hidden className="flex size-[48px] items-center justify-center self-end rounded-full bg-text-grey-64 text-white transition-transform duration-200 group-hover:scale-105">
+            <span className={`font-display font-bold text-text-grey-100 [text-wrap:balance] ${large ? "text-[24px] leading-[30px] md:text-h4 xl:text-[36px] xl:leading-[44px]" : "text-p1"}`}>{c.question}</span>
+            {flip && COIN_ICONS[i] ? <span className={`flex self-end ${large ? "lg:scale-125 lg:origin-bottom-right" : ""}`}><FlipCoin icon={COIN_ICONS[i]} auto={auto === i} /></span> : <span aria-hidden className="flex size-[48px] items-center justify-center self-end rounded-full bg-text-grey-64 text-white transition-transform duration-200 group-hover:scale-105">
               <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
                 <path d="M12 5v14M5 12h14" />
               </svg>

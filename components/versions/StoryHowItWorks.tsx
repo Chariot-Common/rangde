@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { STATS_SNAPSHOT as LIVE, roundedPlus } from "@/lib/stats";
+import { CrowdWall, crowdLayout, type Rect } from "./CrowdWall";
 import { AVATARS, COIN_FLY, GIFT_MACHINE, OFFICER, OFFICER_WALK, REKHA, REKHA_FACE, REKHA_WALK, Sprite, StatTip, type Info, type Spr } from "./CharacterHowItWorks";
 
 /**
@@ -28,7 +29,7 @@ export type Side = "R" | "A" | "B";
 type StepId = "meet" | "arjun" | "need" | "credit" | "options" | "rangde" | "choose" | "invest" | "money" | "repay" | "outcome";
 export const STEPS: { id: StepId; side: Side; part: number; text: string; sub?: string; w: number }[] = [
   { id: "meet", side: "R", part: 0, text: "Meet Rekha. She runs a tailoring business from home, in a village in Rajasthan.", w: 0.9 },
-  { id: "arjun", side: "A", part: 0, text: "Arjun is an Indian citizen, just like you. Eager to make a change and help a fellow Indian in need.", w: 0.9 },
+  { id: "arjun", side: "A", part: 0, text: "Arjun is an Indian citizen, just like you. Eager to make a change and help a fellow Indian grow.", w: 0.9 },
   { id: "need", side: "R", part: 0, text: "Rekha wants to grow her business. She needs ₹25,000 for a second machine.", w: 0.9 },
   {
     id: "credit",
@@ -171,6 +172,10 @@ function usePlay(key: number | null, ms: number) {
 }
 
 const easeOut = (u: number) => 1 - Math.pow(1 - u, 3);
+const easeInOut = (u: number) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+const lerp = (a: number, b: number, u: number) => a + (b - a) * u;
+// `crowd` (Version 6): how much more scrolling, in the story's own units, the wall phase after the last step takes.
+const CROWD = 1.6;
 const WALK_MS = 1200;
 const FRAME_MS = 100;
 
@@ -191,7 +196,8 @@ function Fig({ s, k, x = 0, dim, flip }: { s: Spr; k: number; x?: number; dim?: 
   );
 }
 
-export function Line({ step, hideSub }: { step: number; hideSub?: boolean }) {
+/** `large` (Version 6): the line at 36px on laptops (the same as the founders line above it) and its subtext at 22px. */
+export function Line({ step, hideSub, large = false }: { step: number; hideSub?: boolean; large?: boolean }) {
   const { text } = STEPS[step];
   const info = INFO[step];
   // A number shown in a box under the line gets no tooltip on it as well. Otherwise the fact (or the
@@ -202,22 +208,21 @@ export function Line({ step, hideSub }: { step: number; hideSub?: boolean }) {
   const stick = after.match(/^[.,:;]/)?.[0] ?? "";
   return (
     <div aria-hidden>
-      <p className="font-display text-[18px] font-bold leading-[26px] text-ink [text-wrap:balance] sm:text-[26px] sm:leading-[34px]">
+      <p className={`font-display text-[18px] font-bold leading-[26px] text-ink [text-wrap:balance] sm:text-[26px] sm:leading-[34px] ${large ? "lg:text-[36px] lg:leading-[44px]" : ""}`}>
         {info && cut >= 0 ? (
           <>
             {text.slice(0, cut)}
-            {/* The phrase keeps the punctuation right after it on its line. */}
-            <span className="whitespace-nowrap">
-              <StatTip info={{ ...info, stat: "" }} />
-              {stick}
-            </span>
+            {/* The phrase wraps like the rest of the line; the punctuation after it follows with no space, so it never
+                breaks away from it. */}
+            <StatTip info={{ ...info, stat: "" }} />
+            {stick}
             {after.slice(stick.length)}
           </>
         ) : (
           text
         )}
       </p>
-      {sub && !hideSub && <p className="mt-2 font-display text-[14px] font-medium leading-[20px] text-ink/64 [text-wrap:balance] sm:text-[17px] sm:leading-[24px]">{sub}</p>}
+      {sub && !hideSub && <p className={`mt-2 font-display text-[14px] font-medium leading-[20px] text-ink/64 [text-wrap:balance] sm:text-[17px] sm:leading-[24px] ${large ? "lg:mt-3 lg:text-[22px] lg:leading-[30px]" : ""}`}>{sub}</p>}
     </div>
   );
 }
@@ -375,7 +380,9 @@ const CARD_AT = 0.22;
 /** Why the other ways to borrow don't work: one row each, a portrait the height of the label's line on
  * the left, divided by thin rules. The rows come in one by one as the step goes on; on phones (`one`) only
  * the latest row shows, with a dot for each. */
-function Options({ f, one }: { f: number; one?: boolean }) {
+/** `large` (Version 6): each option's name and line bigger, and no source line under it (the sources stay in the
+ * screen-reader copy of the story). */
+function Options({ f, one, large = false }: { f: number; one?: boolean; large?: boolean }) {
   const at = Math.min(OPTIONS.length - 1, Math.floor(clamp01(f / 0.9) * OPTIONS.length));
   return (
     <div className="w-full">
@@ -387,18 +394,18 @@ function Options({ f, one }: { f: number; one?: boolean }) {
           return (
             <li
               key={o.label}
-              className={`flex gap-2.5 border-ink/10 sm:gap-3 ${i && !one ? "border-t pt-2 sm:pt-4" : ""} ${i < OPTIONS.length - 1 && !one ? "pb-2 sm:pb-4" : ""}`}
+              className={`flex gap-2.5 border-ink/10 sm:gap-3 ${i && !one ? `border-t pt-2 sm:pt-4 ${large ? "lg:pt-5" : ""}` : ""} ${i < OPTIONS.length - 1 && !one ? `pb-2 sm:pb-4 ${large ? "lg:pb-5" : ""}` : ""} ${large ? "lg:gap-4" : ""}`}
               style={{ opacity: shown, transform: `translateY(${(1 - shown) * 6}px)` }}
             >
-              <div className="flex size-[24px] shrink-0 items-center justify-center rounded-[6px] sm:size-[28px] sm:rounded-[8px]" style={{ backgroundColor: icon.tint }}>
-                <svg viewBox="0 0 24 24" className="size-[14px] sm:size-[16px]" fill="none" stroke={icon.ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <div className={`flex size-[24px] shrink-0 items-center justify-center rounded-[6px] sm:size-[28px] sm:rounded-[8px] ${large ? "lg:size-[40px] lg:rounded-[10px]" : ""}`} style={{ backgroundColor: icon.tint }}>
+                <svg viewBox="0 0 24 24" className={`size-[14px] sm:size-[16px] ${large ? "lg:size-[22px]" : ""}`} fill="none" stroke={icon.ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   {icon.path}
                 </svg>
               </div>
               <div className="min-w-0">
-                <p className="font-display text-[13px] font-bold leading-[18px] text-ink sm:text-[15px] sm:leading-[22px]">{o.label}</p>
-                <p className="font-display text-[12px] font-medium leading-[16px] text-ink/64 sm:text-[13px] sm:leading-[18px]">
-                  {o.fact} <span className="whitespace-nowrap text-[10px] text-ink/40 sm:text-[11px]">{o.source}</span>
+                <p className={`font-display text-[13px] font-bold leading-[18px] text-ink sm:text-[15px] sm:leading-[22px] ${large ? "sm:text-[17px] sm:leading-[24px] lg:text-[22px] lg:leading-[30px]" : ""}`}>{o.label}</p>
+                <p className={`font-display text-[12px] font-medium leading-[16px] text-ink/64 sm:text-[13px] sm:leading-[18px] ${large ? "mt-0.5 sm:text-[15px] sm:leading-[22px] lg:mt-1 lg:text-[18px] lg:leading-[26px]" : ""}`}>
+                  {o.fact} {!large && <span className="whitespace-nowrap text-[10px] text-ink/40 sm:text-[11px]">{o.source}</span>}
                 </p>
               </div>
             </li>
@@ -469,16 +476,16 @@ function Stat({ step, first }: { step: number; first?: boolean }) {
       <p className="shrink-0 font-display text-[20px] font-bold leading-[26px] text-ink">{box.value}</p>
       <div className="min-w-0">
         <p className="font-display text-[12px] font-semibold leading-[16px] text-ink/72">{box.label}</p>
-        <p className="font-display text-[10px] font-medium leading-[14px] text-ink/48">{box.source}</p>
+        <p className="story-src font-display text-[10px] font-medium leading-[14px] text-ink/48">{box.source}</p>
       </div>
     </div>
   );
 }
 
 /** The card under the line, if the step has one. `f` is how far through the step the reader is. */
-function StepCard({ step, f, mobile, navyCta }: { step: number; f: number; mobile: boolean; navyCta?: boolean }) {
+function StepCard({ step, f, mobile, navyCta, large = false }: { step: number; f: number; mobile: boolean; navyCta?: boolean; large?: boolean }) {
   const look = useContext(LookContext);
-  if (step === I.options) return <Options f={f} one={mobile} />;
+  if (step === I.options) return <Options f={f} one={mobile} large={large} />;
   if (step === I.rangde) return mobile && f < CARD_AT ? null : <Verify f={mobile ? (f - CARD_AT) / (1 - CARD_AT) : f} mobile={mobile} />;
   if (step === I.choose) return <Feed f={f} />;
   if (step === I.invest) {
@@ -551,9 +558,9 @@ function StepCard({ step, f, mobile, navyCta }: { step: number; f: number; mobil
       <div className="flex flex-col items-center gap-4">
         <a
           href="#opportunities"
-          className={`pointer-events-auto inline-flex items-center justify-center rounded-[4px] ${navyCta ? "bg-nav-navy" : "bg-primary"} px-8 py-3.5 font-display text-p2 font-bold text-white transition-[filter] hover:brightness-95`}
+          className={`pointer-events-auto inline-flex items-center justify-center whitespace-nowrap rounded-[4px] ${navyCta ? "bg-nav-navy" : "bg-primary"} px-8 py-3.5 font-display text-p2 font-bold text-white transition-[filter] hover:brightness-95`}
         >
-          Meet businesses in need
+          Explore businesses to invest in
         </a>
       </div>
     );
@@ -611,6 +618,7 @@ export function Cast({
   rekha,
   arjun,
   orders = true,
+  morph,
 }: {
   step: number;
   f: number;
@@ -620,6 +628,9 @@ export function Cast({
   arjun: { x: number; ground: number };
   /** Whether the orders stack shows (off where there's no room beside her). */
   orders?: boolean;
+  /** Version 6's wall phase: `c` 0–1, and the tiles Rekha and Arjun move into (CrowdWall), where they hand over to
+   * their portraits. */
+  morph?: { c: number; rekha: Rect; arjun: Rect };
 }) {
   const line = useContext(LookContext) === "line";
   const active = STEPS[step].side;
@@ -650,12 +661,31 @@ export function Cast({
 
   const person = (side: Side): CSSProperties => {
     const on = side === active || active === "B";
+    const x = side === "R" ? rekhaX : arjunX;
+    const y = side === "R" ? groundR : groundA;
+    const k = on ? 1 : 0.75;
+    if (morph && morph.c > 0) {
+      // Glide from where they stand into their tile (standing on its bottom edge, about its height), then fade as the
+      // portrait in the tile takes over.
+      const u = easeInOut(clamp01((morph.c - 0.08) / 0.5));
+      const tile = side === "R" ? morph.rekha : morph.arjun;
+      return {
+        left: lerp(x, tile.x + tile.s / 2, u),
+        top: lerp(y, tile.y + tile.s * 0.97, u),
+        width: H * 1.2,
+        height: H,
+        transform: `translate(-50%, -100%) scale(${lerp(k, (tile.s * 0.9) / H, u)})`,
+        opacity: (on ? 1 : 0.4) * (1 - clamp01((morph.c - 0.58) / 0.1)),
+        filter: "none",
+        transition: "none",
+      };
+    }
     return {
-      left: side === "R" ? rekhaX : arjunX,
-      top: side === "R" ? groundR : groundA,
+      left: x,
+      top: y,
       width: H * 1.2,
       height: H,
-      transform: `translate(-50%, -100%) scale(${on ? 1 : 0.75})`,
+      transform: `translate(-50%, -100%) scale(${k})`,
       opacity: on ? 1 : 0.4,
       filter: line || on ? "none" : "grayscale(0.7)",
     };
@@ -717,7 +747,26 @@ export function Cast({
 
 /** `heading`: v3 opens it with "Here’s how that works." (filling in as it is read), carrying on from
  * the founders' paragraph. */
-export function StoryHowItWorks({ look = "color", heading = "How Rang De works", navyCta = false }: { look?: Look; heading?: ReactNode; navyCta?: boolean }) {
+/** `large` (Version 6): bigger lines (see Line), a wider column for them, and the people about 15% bigger on laptops.
+ * `after`: what follows the story inside the same card, so it reads as the next beat rather than a new section. */
+/** `crowd` (Version 6): after the last step the stage carries on into CrowdWall: the words fade, Rekha and Arjun move
+ * into two tiles of a wall of real people, and the counts come up, all in this one pinned stage. */
+export function StoryHowItWorks({
+  look = "color",
+  heading = "How Rang De works",
+  navyCta = false,
+  large = false,
+  after,
+  crowd = false,
+}: {
+  look?: Look;
+  heading?: ReactNode;
+  navyCta?: boolean;
+  large?: boolean;
+  after?: ReactNode;
+  crowd?: boolean;
+}) {
+  const total = TRAVEL + (crowd ? CROWD : 0);
   const line = look === "line";
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -744,7 +793,7 @@ export function StoryHowItWorks({ look = "color", heading = "How Rang De works",
       const rect = section.getBoundingClientRect();
       const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navbar-bottom")) || 0;
       const travel = section.offsetHeight - (window.innerHeight - nav);
-      setT(clamp01((nav - rect.top) / Math.max(1, travel)) * TRAVEL);
+      setT(clamp01((nav - rect.top) / Math.max(1, travel)) * total);
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(read);
@@ -757,7 +806,7 @@ export function StoryHowItWorks({ look = "color", heading = "How Rang De works",
       window.removeEventListener("resize", onScroll);
       cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [total]);
 
   let step = 0;
   while (step < STEPS.length - 1 && t >= STOPS[step + 1]) step++;
@@ -767,7 +816,7 @@ export function StoryHowItWorks({ look = "color", heading = "How Rang De works",
   // H: a full-size person, standing on `ground`. On laptops the two stand well apart, the line between
   // them; on phones Rekha is at the top, Arjun at the bottom (above the floating "Invest now" button,
   // which covers the bottom ~90px) and the line in the middle.
-  const H = mobile ? Math.min(size.h * 0.21, size.w * 0.42) : Math.max(180, Math.min(size.h * 0.4, size.w * 0.2, 320));
+  const H = mobile ? Math.min(size.h * 0.21, size.w * 0.42) : Math.max(180, Math.min(size.h * 0.4, size.w * 0.2, 320)) * (large ? 1.15 : 1);
   const groundR = mobile ? 44 + H : size.h * 0.84;
   const groundA = mobile ? size.h - 100 : size.h * 0.84;
   const rekhaX = size.w * (mobile ? 0.3 : 0.17);
@@ -776,7 +825,13 @@ export function StoryHowItWorks({ look = "color", heading = "How Rang De works",
   const lineTop = mobile ? groundR + 12 : 48;
   // (When Arjun has stepped back he takes up less of the bottom, so the line can use that too.)
   const arjunTop = groundA - (STEPS[step].side === "R" ? 0.75 : 1) * H;
-  const lineBottom = mobile ? arjunTop - 10 : size.h - 48;
+  // Version 6 (large): on the last step the line, its paragraph and the button stay above Rekha's two machines,
+  // which reach into the middle of the stage once everything is drawn bigger.
+  const lineBottom = mobile ? arjunTop - 10 : large && step === I.outcome ? Math.min(size.h - 48, groundR - 0.62 * H) : size.h - 48;
+  // The wall phase (crowd): 0 until the story has finished, then 0–1. The story's words and scenery fade first.
+  const c = crowd ? clamp01((t - TRAVEL) / CROWD) : 0;
+  const storyFade = 1 - clamp01(c / 0.15);
+  const wall = crowd ? crowdLayout(size.w, size.h, mobile) : null;
 
   return (
     <LookContext.Provider value={look}>
@@ -784,7 +839,7 @@ export function StoryHowItWorks({ look = "color", heading = "How Rang De works",
         <div className="flex flex-col items-center gap-2 px-4 pb-2 pt-12 text-center sm:px-8 sm:pt-16 lg:pt-[80px]">
           <h2 className="font-display text-h3 font-bold text-ink [text-wrap:balance]">{heading}</h2>
         </div>
-        <section ref={sectionRef} aria-label="How Rang De works, told as a story" className="relative" style={{ height: `calc(${TRAVEL * PACE + 1} * (100svh - var(--navbar-bottom, 0px)))` }}>
+        <section ref={sectionRef} aria-label="How Rang De works, told as a story" className="relative" style={{ height: `calc(${total * PACE + 1} * (100svh - var(--navbar-bottom, 0px)))` }}>
           {/* The stage only shows one line at a time, so the story is also here, in order. */}
           <div className="sr-only">
             <ol>
@@ -798,10 +853,12 @@ export function StoryHowItWorks({ look = "color", heading = "How Rang De works",
                 </li>
               ))}
             </ol>
-            <a href="#opportunities">Meet businesses in need</a>
+            <a href="#opportunities">Explore businesses to invest in</a>
           </div>
           <div ref={stageRef} className="sticky w-full overflow-hidden" style={{ top: "var(--navbar-bottom, 0px)", height: "calc(100dvh - var(--navbar-bottom, 0px))", minHeight: 520 }}>
-            <Clouds mobile={mobile} />
+            <div aria-hidden className="absolute inset-0" style={{ opacity: storyFade }}>
+              <Clouds mobile={mobile} />
+            </div>
 
             {/* The line look's floor: a pale band under Arjun's ground, and a grey ground line under each
                 of them that stops short of the middle, like a scene at each edge. */}
@@ -818,7 +875,7 @@ export function StoryHowItWorks({ look = "color", heading = "How Rang De works",
             )}
 
             {/* Progress: one pill for each of the story's four parts, filling as the reader scrolls through it. */}
-            <div aria-hidden className="absolute left-1/2 top-4 flex w-[min(560px,calc(100%-32px))] -translate-x-1/2 gap-1.5 sm:top-6">
+            <div aria-hidden className="absolute left-1/2 top-4 flex w-[min(560px,calc(100%-32px))] -translate-x-1/2 gap-1.5 sm:top-6" style={{ opacity: storyFade }}>
               {PARTS.map((p, i) => (
                 <div key={i} className="h-[4px] flex-1 overflow-hidden rounded-full bg-ink/10">
                   <div className="h-full rounded-full bg-ink/72" style={{ width: `${clamp01((t - p.from) / p.w) * 100}%` }} />
@@ -829,25 +886,38 @@ export function StoryHowItWorks({ look = "color", heading = "How Rang De works",
             {/* The line, with its card under it, in the middle. */}
             <div
               className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 flex-col items-center justify-center gap-3 text-center sm:gap-5"
-              style={{ top: lineTop, height: lineBottom - lineTop, width: mobile ? size.w - 32 : Math.min(500, size.w * 0.38) }}
+              style={{ top: lineTop, height: lineBottom - lineTop, width: mobile ? size.w - 32 : large ? Math.min(620, size.w * 0.42) : Math.min(500, size.w * 0.38), opacity: storyFade, visibility: storyFade > 0 ? undefined : "hidden" }}
             >
               {/* The new line and card replace the old ones at once and fade in. (Waiting for the old ones to
                   fade out first could leave a stale line on screen when the reader scrolls quickly.) */}
               <motion.div key={`line-${step}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="pointer-events-auto">
-                <Line step={step} hideSub={mobile && step === I.rangde && f >= CARD_AT} />
+                <Line step={step} large={large} hideSub={mobile && step === I.rangde && f >= CARD_AT} />
               </motion.div>
               <motion.div
                 key={`card-${step}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25 }}
-                className={`w-full ${step === I.options ? "max-w-[400px]" : "max-w-[320px]"}`}
+                className={`w-full ${step === I.options ? (large ? "max-w-[400px] lg:max-w-[560px]" : "max-w-[400px]") : "max-w-[320px]"} ${
+                  // Version 6: the other step cards drawn 30% bigger on laptops (zoom scales the type with the box), and no
+                  // source line under a stat (it stays in the screen-reader copy of the story).
+                  large ? `[&_.story-src]:hidden ${step === I.options ? "" : "lg:[zoom:1.3]"}` : ""
+                }`}
               >
-                <StepCard step={step} f={f} mobile={mobile} navyCta={navyCta} />
+                <StepCard step={step} f={f} mobile={mobile} navyCta={navyCta} large={large} />
               </motion.div>
             </div>
 
-            <Cast step={step} f={f} H={H} mobile={mobile} rekha={{ x: rekhaX, ground: groundR }} arjun={{ x: arjunX, ground: groundA }} />
+            {wall && <CrowdWall c={c} w={size.w} h={size.h} mobile={mobile} />}
+            <Cast
+              step={step}
+              f={f}
+              H={H}
+              mobile={mobile}
+              rekha={{ x: rekhaX, ground: groundR }}
+              arjun={{ x: arjunX, ground: groundA }}
+              morph={wall ? { c, rekha: wall.rekha, arjun: wall.arjun } : undefined}
+            />
 
             {/* The money moving: the loan from Arjun to Rekha, then her repayments back, a coin a month.
                 On laptops the coins dip under the line in the middle; on phones (Rekha above, Arjun
@@ -867,6 +937,7 @@ export function StoryHowItWorks({ look = "color", heading = "How Rang De works",
             </p>
           </div>
         </section>
+        {after}
       </div>
     </LookContext.Provider>
   );

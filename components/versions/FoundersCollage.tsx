@@ -67,10 +67,14 @@ export function FoundersCollage() {
 
   return (
     <section className="mx-2 flex flex-col items-center gap-4 overflow-hidden rounded-[16px] bg-white px-4 pb-r5 pt-7 sm:px-8 sm:pt-r4 md:pb-ds-6 lg:pt-2">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <p className="font-display text-h5 font-bold uppercase tracking-[0.08em] text-text-grey-64 max-md:text-[11px] max-md:leading-[16px] max-md:tracking-[0.88px]">The reason Rang De exists</p>
+      {/* Two levels only: the short line (Oxford is the word that has to land, so nothing else sits beside it)
+          and Ram's own one-sentence why, from the version he shared. */}
+      <div className="flex flex-col items-center gap-4 text-center">
         {/* Fills in as it is read, like the page's other H3s (plain: no coloured edge). */}
-        <ScrollInk as="h2" tone="plain" text="Our founders left Oxford for India with a dream to change the lives of millions." className="max-w-[820px] font-display text-h3 font-bold [text-wrap:pretty]" />
+        <ScrollInk as="h2" tone="plain" text="Ram and Smita left Oxford to build Rang De." className="max-w-[820px] font-display text-h3 font-bold [text-wrap:balance]" />
+        <p className="max-w-[640px] font-display text-[18px] font-medium leading-[28px] text-text-grey-64 md:text-[22px] md:leading-[32px] [text-wrap:pretty]">
+          With a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow.
+        </p>
       </div>
 
       <div ref={stageRef} className="relative my-6 w-full max-w-[1200px] [container-type:inline-size] md:my-0 md:max-w-[66vw]" style={{ aspectRatio: `${W} / ${H}` }}>
@@ -92,13 +96,12 @@ export function FoundersCollage() {
         </motion.div>
       </div>
 
-      <div className="flex max-w-[1100px] flex-col items-center gap-6 text-center">
-        {/* Both lines fill in as they are read: the first pale ink to ink, the second primary blue 64 to 100. */}
-        <h3 className="font-display text-h3 font-bold max-md:text-h4">
-          <ScrollInk as="span" tone="plain" text="Meet Ram and Smita" />
-          <br />
-          <ScrollInk as="span" tone="blue" text="Every Saturday, 11 am IST" />
-        </h3>
+      {/* The call, kept small so it doesn't compete with the line above: one sentence, when, and the button. */}
+      <div className="flex max-w-[560px] flex-col items-center gap-5 text-center">
+        <p className="font-display text-p1 font-bold text-text-grey-100 [text-wrap:balance]">
+          Talk directly with Ram and Smita about Rang De and the story behind it.
+          <span className="mt-1 block font-medium text-text-grey-64">Every Saturday, 11 am IST</span>
+        </p>
         <Button variant="primary" size="lg" className="px-10" style={{ backgroundColor: "var(--color-blue-highlight)" }}>
           Register
         </Button>

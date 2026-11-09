@@ -372,7 +372,7 @@ function OnGround({ world, cam, h, w, x, s, refH, flip, opacity = 1, z = Z.props
 export function StatTip({ info }: { info: Info }) {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
   const id = useId();
-  const ref = useRef<HTMLButtonElement>(null);
+  const ref = useRef<HTMLSpanElement>(null);
   const show = () => {
     const r = ref.current?.getBoundingClientRect();
     if (!r) return;
@@ -395,9 +395,11 @@ export function StatTip({ info }: { info: Info }) {
   }, [at]);
   return (
     <>
-      <button
+      {/* A span, not a button: a button's text never wraps, so a long phrase moved to a line of its own and left the
+          words before it ("Like") stranded on theirs. It still behaves as the button it was. */}
+      <span
         ref={ref}
-        type="button"
+        role="button"
         // The caption is hidden from screen readers (the hidden story list reads every line with its
         // stat), so this stays out of the tab order too.
         tabIndex={-1}
@@ -410,7 +412,7 @@ export function StatTip({ info }: { info: Info }) {
         className="pointer-events-auto cursor-help text-left font-bold text-ink underline decoration-ink/40 decoration-dotted decoration-2 underline-offset-[4px]"
       >
         {info.phrase}
-      </button>
+      </span>
       {at &&
         createPortal(
           <span

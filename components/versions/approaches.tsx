@@ -698,7 +698,9 @@ const V11_STEP4: Record<string, { segment: [number, number]; ms: number }> = {
  * top and right edges; the grey step line is its bottom edge, clipped by the same corners, with the black
  * indicator gliding along it to the chosen step. The divider above the calculator is stronger (ink 24%)
  * with 80px either side. */
-export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false, inked = false }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean; inked?: boolean }) {
+/** `bare` (Version 1.1): the journey window without its browser bar, centred, with only the beat's one-line caption
+ * as a small pointer under it (no explanatory copy beside it: the animation already shows it). */
+export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false, inked = false, bare = false }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean; inked?: boolean; bare?: boolean }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const ref = useRef<HTMLElement>(null);
@@ -734,9 +736,9 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
 
       <div className="flex w-full max-w-[1200px] flex-col" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
         <div className={refined ? "w-full overflow-hidden rounded-[8px] max-sm:overflow-visible" : "contents"}>
-        <div className={`w-full overflow-hidden ${refined ? "hiw-v11 max-sm:overflow-visible max-sm:bg-transparent sm:border-x-4 sm:border-t-4 sm:border-ink/16 sm:bg-white" : "rounded-[8px] bg-white"} ${visual === "journey" ? (refined ? "h-[380px] sm:h-[600px] lg:h-[520px]" : "h-[560px] sm:h-[600px] lg:h-[520px]") : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
+        <div className={`w-full overflow-hidden ${bare ? "hiw-bare " : ""}${refined ? "hiw-v11 max-sm:overflow-visible max-sm:bg-transparent sm:border-x-4 sm:border-t-4 sm:border-ink/16 sm:bg-white" : "rounded-[8px] bg-white"} ${visual === "journey" ? (refined ? `h-[380px] sm:h-[600px] ${bare ? "lg:h-[600px]" : "lg:h-[520px]"}` : "h-[560px] sm:h-[600px] lg:h-[520px]") : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
           {visual === "journey" ? (
-            <JourneyStage scene={tab.scene} label={tab.sceneLabel} loopMs={tab.sceneMs} />
+            <JourneyStage scene={tab.scene} label={tab.sceneLabel} loopMs={tab.sceneMs} frameW={bare ? 760 : undefined} />
           ) : (
             <HowItWorksStage wide v11={refined} stepIndex={tab.stage} segment={(refined && V11_STEP4[tab.title]?.segment) || tab.segment} label={HOW_IT_WORKS_STEPS[tab.stage].illustrationLabel} />
           )}

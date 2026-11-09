@@ -44,7 +44,8 @@ export function FounderScroll() {
         </motion.div>
 
         {/* Same size as the section headings that follow (H3). */}
-        <ScrollInk text={TEXT} className="max-w-[820px] font-display text-h3 font-bold [text-wrap:pretty]" />
+        {/* 36px on laptops, the same as the story's lines below it, so the two read as one voice. */}
+        <ScrollInk text={TEXT} className="max-w-[820px] font-display text-h3 font-bold [text-wrap:pretty] lg:text-[36px] lg:leading-[44px]" />
       </div>
     </section>
   );

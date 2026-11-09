@@ -156,11 +156,11 @@
 .hj .vf{ position:relative; height:100%; display:flex; align-items:center; justify-content:center; padding:16px; }
 .hj .lg{ width:100%; padding:16px; display:flex; flex-direction:column; gap:12px; }
 .hj .lg-h{ display:flex; align-items:center; gap:12px; }
-.hj .ring{ position:relative; width:52px; height:52px; flex:none; }
-.hj .ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
-.hj .ring .bg{ fill:none; stroke:var(--ink-8); stroke-width:5; }
-.hj .ring .fg{ fill:none; stroke:var(--green-bright); stroke-width:5; stroke-linecap:round; transition:stroke-dashoffset .6s var(--ease); }
-.hj .ring b{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font:700 12px/14px var(--f-display); color:var(--ink); }
+.hj .rp-ring{ position:relative; width:52px; height:52px; flex:none; }
+.hj .rp-ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
+.hj .rp-ring .bg{ fill:none; stroke:var(--ink-8); stroke-width:5; }
+.hj .rp-ring .fg{ fill:none; stroke:var(--green-bright); stroke-width:5; stroke-linecap:round; transition:stroke-dashoffset .6s var(--ease); }
+.hj .rp-ring b{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font:700 12px/14px var(--f-display); color:var(--ink); }
 .hj .lg-t b{ display:block; font:700 15px/20px var(--f-display); color:var(--ink); }
 .hj .lg-t span{ font:500 12px/16px var(--f-display); color:var(--ink-64); }
 .hj .rows{ position:relative; height:188px; overflow:hidden;
@@ -370,3 +370,27 @@
   .hiw-v11 .hj{ background:transparent; overflow:visible; }
   .hiw-v11 .hj::before{ display:none; }
 }
+
+/* Version 1.1 (`bare`): no browser bar and no caption, just the window centred; the animation speaks for itself. */
+.hiw-bare .hj .wbar{ display:none; }
+.hiw-bare .hj-cap{ display:none; }
+
+/* Version 1.1's wide window (`bare`, laptops): cleaner and lighter. A softer frame, and each listing as one desktop row
+   (rounded photo, name and need, then what's left to invest with a slim bar and a filled Lend pill) instead of a phone
+   card stretched across the width. */
+.hiw-bare .hj[data-wide] .win{ border-radius:20px; background:#F7F8FA;
+  box-shadow:0 0 0 1px rgba(41,45,54,.05), 0 2px 4px rgba(41,45,54,.04), 0 28px 64px rgba(3,21,56,.10); }
+.hiw-bare .hj[data-wide] .cats{ padding:10px 24px 0; }
+.hiw-bare .hj[data-wide] .flist{ padding:14px 20px 60px; }
+.hiw-bare .hj[data-wide] .rc{ display:grid; grid-template-columns:auto minmax(0,1fr) 220px; grid-template-rows:auto auto; column-gap:14px; align-items:center;
+  padding:12px 14px; margin-bottom:8px; border-radius:14px; border:1px solid rgba(41,45,54,.06); box-shadow:0 1px 2px rgba(41,45,54,.04); }
+.hiw-bare .hj[data-wide] .rc-top{ display:contents; }
+.hiw-bare .hj[data-wide] .rc-ph{ grid-column:1; grid-row:1 / 3; width:48px; height:48px; border-radius:12px; }
+.hiw-bare .hj[data-wide] .rc-t{ grid-column:2; grid-row:1; align-self:end; }
+.hiw-bare .hj[data-wide] .rc-t b{ font-weight:700; font-size:14px; line-height:18px; }
+.hiw-bare .hj[data-wide] .rc-t p{ margin-top:1px; font-size:12px; line-height:16px; -webkit-line-clamp:1; }
+.hiw-bare .hj[data-wide] .rc-st{ grid-column:2; grid-row:2; align-self:start; padding:4px 0 0; font-size:9px; letter-spacing:.4px; }
+.hiw-bare .hj[data-wide] .rc-ft{ grid-column:3; grid-row:1 / 3; gap:12px; padding:0 0 0 14px; background:transparent; border-left:1px solid rgba(41,45,54,.06); }
+.hiw-bare .hj[data-wide] .rc-l b{ font-weight:600; font-size:12px; line-height:16px; }
+.hiw-bare .hj[data-wide] .rc-bar{ height:4px; margin-top:6px; background:rgba(41,45,54,.07); }
+.hiw-bare .hj[data-wide] .rc-lend{ padding:6px 14px; border:0; border-radius:999px; background:var(--primary); color:#fff; font-size:12px; }

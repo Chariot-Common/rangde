@@ -15,7 +15,8 @@ const WIDE = 760;
  * Changing scene blurs the old one out before the new one plays. With `loopMs`, the scene blurs
  * out and plays again from the start every `loopMs` until the scene changes.
  */
-export function JourneyStage({ scene, label, loopMs }: { scene: JourneyScene; label: string; loopMs?: number }) {
+/** `frameW` (Version 1.1): a wider, desktop-shaped window instead of the phone-like 420px one; the UI inside is fluid. */
+export function JourneyStage({ scene, label, loopMs, frameW = FRAME_W }: { scene: JourneyScene; label: string; loopMs?: number; frameW?: number }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -31,7 +32,10 @@ export function JourneyStage({ scene, label, loopMs }: { scene: JourneyScene; la
       const wide = box.clientWidth >= WIDE;
       box.toggleAttribute("data-wide", wide);
       const pad = wide ? 32 : 12;
-      const s = Math.min(1.1, (area.clientWidth - pad * 2) / FRAME_W, (area.clientHeight - pad * 2) / FRAME_H);
+      // The wide frame only where there's room for it; phones keep the narrow one.
+      const fw = box.clientWidth >= 640 ? frameW : FRAME_W;
+      frame.style.width = `${fw}px`;
+      const s = Math.min(fw > FRAME_W ? 1.3 : 1.1, (area.clientWidth - pad * 2) / fw, (area.clientHeight - pad * 2) / FRAME_H);
       frame.style.transform = `translate(-50%, -50%) scale(${s})`;
     };
     fit();
@@ -39,7 +43,7 @@ export function JourneyStage({ scene, label, loopMs }: { scene: JourneyScene; la
     ro.observe(box);
     ro.observe(area);
     return () => ro.disconnect();
-  }, []);
+  }, [frameW]);
 
   useEffect(() => {
     const box = boxRef.current;
@@ -80,7 +84,7 @@ export function JourneyStage({ scene, label, loopMs }: { scene: JourneyScene; la
     <div ref={boxRef} role="img" aria-label={label} className="hj size-full">
       <div className="hj-lay">
         <div ref={areaRef} className="hj-area">
-          <div ref={frameRef} aria-hidden="true" className="absolute left-1/2 top-1/2 origin-center" style={{ width: FRAME_W, height: FRAME_H }} />
+          <div ref={frameRef} aria-hidden="true" className="absolute left-1/2 top-1/2 origin-center" style={{ width: frameW, height: FRAME_H }} />
         </div>
         <div ref={capRef} aria-hidden="true" className="hj-cap" />
       </div>
