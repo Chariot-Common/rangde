@@ -19,6 +19,22 @@ const VERSIONS = [
     measure: "Sign-ups vs. the current homepage",
   },
   {
+    key: "1.1 C",
+    name: "The other Startup India, cut and replace, with motion icons",
+    href: "/v/v1-c",
+    audience: "Everyone (rangde-v1)",
+    idea: "Version 1.1 with the problem section as three cards side by side with the animated icons; on scroll each is struck through and turns into Rang De’s answer, its icon handing over too.",
+    measure: "Scroll depth past the problem, sign-ups",
+  },
+  {
+    key: "1.1 D",
+    name: "The other Startup India, six cards",
+    href: "/v/v1-d",
+    audience: "Everyone (rangde-v1)",
+    idea: "Version 1.1 with the problem section as six cards: the three problems stay along the top, each struck through on scroll and answered by a card that rises in under it.",
+    measure: "Scroll depth past the problem, sign-ups",
+  },
+  {
     key: "1.2",
     name: "The other Startup India, reshuffled",
     href: "/v/v1-2",

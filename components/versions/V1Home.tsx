@@ -6,7 +6,9 @@ import { StoryCarousel } from "@/components/sections/hero/StoryCarousel";
 import { heroIntroStories } from "@/lib/content";
 import { FoundersCollage } from "./FoundersCollage";
 import { PlainQuestionCards } from "./PlainQuestionCards";
-import { ProblemShift } from "./ProblemShift";
+import { ProblemCards, type CutStyle } from "./ProblemCards";
+import { ProblemGrid } from "./ProblemGrid";
+import { ProblemPairs } from "./ProblemPairs";
 import { ScrollInk } from "./ScrollInk";
 import {
   ApproachHero,
@@ -33,14 +35,17 @@ const MOBILE_LEAD = (
 // stories → the problem, with what Rang De built sliding up over it → reels → How it works with the
 // calculator under it → investors → the founders → the top questions as cards. The problem is one card,
 // and so is what Rang De built, each scrolled through point by point with a simple chart (ProblemCard.tsx).
-/** Version 1.1. The page is here (rather than in app/v/v1/page.tsx) so a variant can reuse it. */
-export function V1Home() {
+/** Version 1.1. The page is here (rather than in app/v/v1/page.tsx) so the variants can reuse it.
+ * `problem`: "pairs" (v1: three before → after rows, ProblemPairs.tsx) or one of the three-card takes, side by side and
+ * cut one at a time on scroll (ProblemCards.tsx), with the animated icons: "motion" (v1-c); or "grid" (v1-d: six cards,
+ * the problems stay and each is answered by a card under it, ProblemGrid.tsx). */
+export function V1Home({ problem = "pairs" }: { problem?: "pairs" | "grid" | CutStyle } = {}) {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
       {/* The same borrower cards (photos and copy) as Version 5. */}
       <ApproachHero title="Invest in the other Startup India" lead={LEAD} mobileLead={MOBILE_LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent11" />} />
-      {/* The problem, then Rang De's answer to each, struck through one by one on scroll (text only). */}
-      <ProblemShift />
+      {/* The problem and Rang De's answer: each problem struck through (or cut) as its answer arrives. */}
+      {problem === "pairs" ? <ProblemPairs /> : problem === "grid" ? <ProblemGrid /> : <ProblemCards style={problem} />}
       <ReelsWheel tight heading={<ScrollInk as="span" tone="plain" text="The money may be small. What it makes possible isn’t." />} />
       <HowItWorksTabs refined inked bare visual="journey">
         <InvestmentSlider refined />
