@@ -22,7 +22,7 @@ export const INSTANT_INTRO_ROUTES = ["/v/v5"];
 
 /** Versions with the refreshed nav (navy Get started, "Login", a hairline under it, 24px sides) and no
  * announcement bar above it. Every other page keeps the original nav. */
-export const REFRESHED_NAV_ROUTES = ["/v/v5", "/v/v3", "/v/v3-1"]; // v3 and v3.1 were "Version 6"
+export const REFRESHED_NAV_ROUTES = ["/v/v5", "/v/v3"]; // v3 was "Version 6"
 export function useRefreshedNav() {
   return REFRESHED_NAV_ROUTES.includes(usePathname());
 }
