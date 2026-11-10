@@ -788,7 +788,7 @@ export function StoryHowItWorks({
   navyCta?: boolean;
   large?: boolean;
   after?: ReactNode;
-  crowd?: boolean;
+  crowd?: boolean | "fresh";
 }) {
   const total = TRAVEL + (crowd ? CROWD : 0);
   const line = look === "line";
@@ -855,7 +855,7 @@ export function StoryHowItWorks({
   // The wall phase (crowd): 0 until the story has finished, then 0–1. The story's words and scenery fade first.
   const c = crowd ? clamp01((t - TRAVEL) / CROWD) : 0;
   const storyFade = 1 - clamp01(c / 0.15);
-  const wall = crowd ? crowdLayout(size.w, size.h, mobile) : null;
+  const wall = crowd ? crowdLayout(size.w, size.h, mobile, crowd === "fresh") : null;
 
   return (
     <LookContext.Provider value={look}>
@@ -932,7 +932,7 @@ export function StoryHowItWorks({
               </motion.div>
             </div>
 
-            {wall && <CrowdWall c={c} w={size.w} h={size.h} mobile={mobile} />}
+            {wall && <CrowdWall c={c} w={size.w} h={size.h} mobile={mobile} fresh={crowd === "fresh"} />}
             <Cast
               step={step}
               f={f}

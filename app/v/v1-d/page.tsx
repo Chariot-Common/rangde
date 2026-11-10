@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 // Version 1.1 with the problem section as six cards: the three problems stay along the top, each struck through on
 // scroll and answered by a card that rises in under it.
 export default function V1D() {
-  return <V1Home problem="grid" />;
+  return <V1Home problem="grid" refresh />;
 }

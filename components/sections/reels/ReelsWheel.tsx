@@ -74,9 +74,13 @@ function ReelCard({ reel, onOpen, onHover }: { reel: Reel; onOpen: (r: Reel) => 
   );
 }
 
-/** Plays the reel right here, through Instagram's own embed, instead of sending people off-site. */
+/** Plays the reel right here instead of sending people off to Instagram: Rang De's own copy of the video when it is on
+ * the site (public/videos/reels/<code>.mp4, the same file the hover preview uses), with sound and controls; otherwise
+ * Instagram's embed, which on some devices can only show a "Watch on Instagram" card. */
 export function ReelDialog({ reel, onClose }: { reel: Reel | null; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // Codes whose own video failed to load, so the dialog falls back to the embed for them.
+  const [noOwnVideo, setNoOwnVideo] = useState<Set<string>>(() => new Set(missingVideo));
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
@@ -94,15 +98,31 @@ export function ReelDialog({ reel, onClose }: { reel: Reel | null; onClose: () =
     >
       {reel && (
         <div className="relative flex flex-col gap-3">
-          <div className="h-[min(720px,calc(100svh-120px))] overflow-hidden rounded-[16px] bg-white">
-            <iframe
-              key={reel.code}
-              src={`${reelUrl(reel.code)}embed/`}
-              title={reel.title}
-              className="h-full w-full border-0"
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen
-            />
+          <div className="h-[min(720px,calc(100svh-120px))] overflow-hidden rounded-[16px] bg-black">
+            {noOwnVideo.has(reel.code) ? (
+              <iframe
+                key={reel.code}
+                src={`${reelUrl(reel.code)}embed/`}
+                title={reel.title}
+                className="h-full w-full border-0 bg-white"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                key={reel.code}
+                src={reelVideo(reel.code)}
+                poster={reelCover(reel.code)}
+                controls
+                autoPlay
+                playsInline
+                onError={() => {
+                  missingVideo.add(reel.code);
+                  setNoOwnVideo((s) => new Set(s).add(reel.code));
+                }}
+                className="h-full w-full object-contain"
+              />
+            )}
           </div>
           <div className="flex items-center justify-between gap-3">
             <a

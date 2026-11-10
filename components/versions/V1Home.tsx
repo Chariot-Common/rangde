@@ -6,7 +6,6 @@ import { StoryCarousel } from "@/components/sections/hero/StoryCarousel";
 import { heroIntroStories } from "@/lib/content";
 import { FoundersCollage } from "./FoundersCollage";
 import { PlainQuestionCards } from "./PlainQuestionCards";
-import { ProblemCards, type CutStyle } from "./ProblemCards";
 import { ProblemGrid } from "./ProblemGrid";
 import { ProblemPairs } from "./ProblemPairs";
 import { ScrollInk } from "./ScrollInk";
@@ -17,6 +16,9 @@ import {
 
 const LEAD =
   "Lend to rural entrepreneurs building businesses across India. Your money helps them access credit and build a formal credit history, while you earn returns.";
+// Version 1.1: three lines from sm up, for the rhythm: "India." ends the first, "credit history," the second, "returns." the third.
+const LEAD_V11 =
+  "Lend to rural entrepreneurs building businesses across India.\nYour money helps them access credit and build a formal credit history,\nwhile you earn returns.";
 
 // Phones (Figma "Home - v1.1" mobile, node 2921:2749): two short paragraphs split by a rule, with the key words in bold.
 const MOBILE_LEAD = (
@@ -36,22 +38,27 @@ const MOBILE_LEAD = (
 // calculator under it → investors → the founders → the top questions as cards. The problem is one card,
 // and so is what Rang De built, each scrolled through point by point with a simple chart (ProblemCard.tsx).
 /** Version 1.1. The page is here (rather than in app/v/v1/page.tsx) so the variants can reuse it.
- * `problem`: "pairs" (v1: three before → after rows, ProblemPairs.tsx) or one of the three-card takes, side by side and
- * cut one at a time on scroll (ProblemCards.tsx), with the animated icons: "motion" (v1-c); or "grid" (v1-d: six cards,
- * the problems stay and each is answered by a card under it, ProblemGrid.tsx). */
-export function V1Home({ problem = "pairs" }: { problem?: "pairs" | "grid" | CutStyle } = {}) {
+ * `problem`: "pairs" (v1: three before → after rows, ProblemPairs.tsx) or "grid" (v1-d: six cards, the problems stay and
+ * each is answered by a card under it, ProblemGrid.tsx).
+ * `refresh` (Version 1.1): the lead in three lines, How it works after the founders, the founders photo's thinner frame. */
+export function V1Home({ problem = "pairs", refresh = false }: { problem?: "pairs" | "grid"; refresh?: boolean } = {}) {
+  const howItWorks = (
+    <HowItWorksTabs refined inked bare visual="journey">
+      <InvestmentSlider refined />
+    </HowItWorksTabs>
+  );
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
       {/* The same borrower cards (photos and copy) as Version 5. */}
-      <ApproachHero title="Invest in the other Startup India" lead={LEAD} mobileLead={MOBILE_LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent11" />} />
+      <ApproachHero title="Invest in the other Startup India" lead={refresh ? LEAD_V11 : LEAD} mobileLead={MOBILE_LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent11" />} />
       {/* The problem and Rang De's answer: each problem struck through (or cut) as its answer arrives. */}
-      {problem === "pairs" ? <ProblemPairs /> : problem === "grid" ? <ProblemGrid /> : <ProblemCards style={problem} />}
+      {problem === "grid" ? <ProblemGrid /> : <ProblemPairs />}
       <ReelsWheel tight heading={<ScrollInk as="span" tone="plain" text="The money may be small. What it makes possible isn’t." />} />
-      <HowItWorksTabs refined inked bare visual="journey">
-        <InvestmentSlider refined />
-      </HowItWorksTabs>
+      {!refresh && howItWorks}
       <Testimonials refined inked />
-      <FoundersCollage />
+      <FoundersCollage thinFrame={refresh} />
+      {/* Version 1.1: How it works comes once the case for Rang De has been made (the stories, the investors, the founders). */}
+      {refresh && howItWorks}
       <PlainQuestionCards count={4} flip large phoneHeading="Questions we get often" autoHighlight />
       {/* The way in: the live listings, by individuals, states and funds. */}
       <OpportunitiesSection />

@@ -112,7 +112,8 @@ function PhoneStats() {
 
 /** `mobileLead` (Version 1.1): on phones, this replaces `lead` (two short paragraphs split by a rule), the stats shrink to
  * the RBI seal with a chevron under it, and the headline is a little larger (Figma "Home - v1.1" mobile). */
-export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wide = false, glow = true, eyebrow, actions, strip, below }: { title: string; lead?: string; mobileLead?: ReactNode; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode }) {
+/** `compact` (Version 4): the headline one size smaller, so the visual under it carries more of the hero. */
+export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wide = false, glow = true, compact = false, eyebrow, actions, strip, below }: { title: string; lead?: string; mobileLead?: ReactNode; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; compact?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode }) {
   const ready = usePageReady();
   const reduce = useReducedMotion();
   const seq = heroSequence(title, lead);
@@ -168,7 +169,7 @@ export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wid
           play={ready}
           className={
             tone === "ink"
-              ? "font-display text-h2 font-bold text-ink [text-wrap:balance]"
+              ? `font-display ${compact ? "text-h3" : "text-h2"} font-bold text-ink [text-wrap:balance]`
               : `font-display text-h1 font-bold text-green-dark [text-wrap:balance] md:leading-[64px] ${mobileLead ? "max-sm:text-[38px] max-sm:leading-[44px] max-sm:tracking-[-0.76px] sm:leading-[38px]" : "leading-[38px]"}`
           }
         />
@@ -229,16 +230,22 @@ const PRESS: { name: string; logo?: string; h?: number; note?: string }[] = [
   { name: "Google for Startups Accelerator", logo: "/images/press/google-for-startups.svg", h: 26 },
 ];
 
-function PressItem({ p }: { p: (typeof PRESS)[number] }) {
+function PressItem({ p, scale = 1 }: { p: (typeof PRESS)[number]; scale?: number }) {
   return (
     <li className="flex shrink-0 items-center px-6 opacity-72 grayscale transition-[opacity,filter] duration-300 hover:opacity-100 hover:grayscale-0 sm:px-10">
       {p.logo ? (
         // eslint-disable-next-line @next/next/no-img-element -- third-party logo files, shown at their own aspect ratio
-        <img src={p.logo} alt={p.name} style={{ height: p.h }} className="w-auto max-w-[200px] object-contain" />
+        <img src={p.logo} alt={p.name} style={{ height: p.h !== undefined ? p.h * scale : undefined, maxWidth: 200 * scale }} className="w-auto object-contain" />
       ) : (
         <span className="flex flex-col items-center text-ink">
-          <span className="font-display text-[20px] font-extrabold leading-none tracking-[-0.4px]">{p.name}</span>
-          {p.note && <span className="mt-1 font-display text-[10px] font-bold uppercase tracking-[0.88px]">{p.note}</span>}
+          <span className="font-display font-extrabold leading-none tracking-[-0.4px]" style={{ fontSize: 20 * scale }}>
+            {p.name}
+          </span>
+          {p.note && (
+            <span className="mt-1 font-display font-bold uppercase tracking-[0.88px]" style={{ fontSize: 10 * scale }}>
+              {p.note}
+            </span>
+          )}
         </span>
       )}
     </li>
@@ -248,14 +255,15 @@ function PressItem({ p }: { p: (typeof PRESS)[number] }) {
 /** v3: press, awards and backers as social proof (Figma 2719:51429), moving as one slow strip — the
  * opposite way to the people strip above it — that
  * pauses on hover. Logos sit in grey and take their colour on hover. */
-export function PressRow() {
+/** `big` (Version 6): the logos about 20% bigger. */
+export function PressRow({ big = false }: { big?: boolean } = {}) {
   return (
     <div className="flex w-full flex-col items-center gap-6 border-b border-ink/8 pb-12">
       <Eyebrow className="text-ink/56">In the news, recognised and backed by</Eyebrow>
       <div className="group relative w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)]">
         <ul className="flex w-max animate-[marquee-reverse_45s_linear_infinite] items-center group-hover:[animation-play-state:paused] motion-reduce:animate-none">
           {[...PRESS, ...PRESS].map((p, i) => (
-            <PressItem key={i} p={p} />
+            <PressItem key={i} p={p} scale={big ? 1.2 : 1} />
           ))}
         </ul>
       </div>
@@ -712,7 +720,8 @@ const V11_STEP4: Record<string, { segment: [number, number]; ms: number }> = {
  * with 80px either side. */
 /** `bare` (Version 1.1): the journey window without its browser bar, centred, with only the beat's one-line caption
  * as a small pointer under it (no explanatory copy beside it: the animation already shows it). */
-export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false, inked = false, bare = false }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean; inked?: boolean; bare?: boolean }) {
+/** `heading`/`eyebrow` (Version 4): its own line ("You decide who you back.") instead of the usual one. */
+export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false, inked = false, bare = false, heading = "Investment to repayment – you’re in control at every step", eyebrow = "How it works" }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean; inked?: boolean; bare?: boolean; heading?: string; eyebrow?: string | null }) {
   // Version 1.1 (bare): four steps, Follow and Earn as one ("Get repaid"), since repayments now go straight to the
   // investor's bank account and there is nothing to reinvest from.
   const TABS = bare ? HIW_TABS_V11 : HIW_TABS;
@@ -738,14 +747,14 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
       className={`mx-2 flex flex-col items-center gap-8 rounded-[16px] px-4 py-14 sm:gap-12 sm:px-8 sm:py-20 md:py-24 lg:px-[80px] lg:py-[120px] ${tone === "cream" ? "bg-[#F7F3ED]" : tone === "grey" ? "bg-[#ebeaea]" : "bg-white"}`}
     >
       <Reveal className="flex max-w-[1200px] flex-col items-center gap-2 text-center">
-        <Eyebrow>How it works</Eyebrow>
+        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
         {inked ? (
           // Version 1.1: fills in as it is read, plain (no coloured edge).
-          <ScrollInk as="h2" tone="plain" text="Investment to repayment – you’re in control at every step" className="font-display text-h3 font-bold" />
+          <ScrollInk as="h2" tone="plain" text={heading} className="font-display text-h3 font-bold" />
         ) : typed ? (
-          <ScrollType text="Investment to repayment – you’re in control at every step" className="font-display text-h3 font-bold text-ink" />
+          <ScrollType text={heading} className="font-display text-h3 font-bold text-ink" />
         ) : (
-          <AnimatedText as="h2" text="Investment to repayment – you’re in control at every step" className="font-display text-h3 font-bold text-ink" />
+          <AnimatedText as="h2" text={heading} className="font-display text-h3 font-bold text-ink" />
         )}
       </Reveal>
 

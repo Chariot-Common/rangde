@@ -15,12 +15,12 @@ import { getIndividualOpportunities, uniqueBorrowers } from "@/lib/opportunities
 import { getRangDeStats } from "@/lib/stats";
 
 export const metadata: Metadata = {
-  title: "Version 4 · Lend to a person | Rang De",
+  title: "Version 2 · Lend to a person | Rang De",
   description: "Homepage test version: Ram's Claude Design draft, section for section, in the site's design.",
   robots: { index: false, follow: false },
 };
 
-// Version 4: Ram's Claude Design homepage, in his order, built from the site's own sections and real
+// Version 2 (until now "Version 4", as it is on main): Ram's Claude Design homepage, in his order, built from the site's own sections and real
 // data. "What if you could lend directly to another person?" → one loan, more than one outcome (Gita
 // Devi) → a few thousand rupees can change a business → meet the Other Startup India (live borrowers)
 // → how it works, with the infrastructure behind it → see where your money goes (live figures) → why
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 // someone a loan", covered by the outcome chain) and "what does a loan make possible" (the outcome
 // chain and the small-money section already show it, with real people). His placeholder figures are
 // replaced by the live ones.
-export default async function V4() {
+export default async function V2() {
   const [people, stats] = await Promise.all([getIndividualOpportunities().then((p) => uniqueBorrowers(p).slice(0, 10)), getRangDeStats()]);
   return (
     <div className="flex w-full flex-col gap-2 pb-2">

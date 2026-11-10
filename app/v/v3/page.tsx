@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import { StoryHowItWorks } from "@/components/versions/StoryHowItWorks";
-import { FoundersSection } from "@/components/sections/founders/FoundersSection";
-import { WhyNotHigher } from "@/components/versions/idea";
-import { ClosingCta } from "@/components/versions/proof";
-import { ApproachHero, INFRA_POINTS, PeopleStrip, PointsSection, PressRow, QuestionCards, StoriesBothSides } from "@/components/versions/approaches";
+import { CoinHero } from "@/components/versions/CoinHero";
+import { CollageStrip } from "@/components/versions/CollageStrip";
+import { FounderScroll } from "@/components/versions/FounderScroll";
+import { ScrollInk } from "@/components/versions/ScrollInk";
+import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
+import { StoriesTwoRows } from "@/components/versions/StoriesTwoRows";
+import { ExploreCta, TrustList } from "@/components/versions/V6Sections";
+import { PressRow } from "@/components/versions/approaches";
 
 export const metadata: Metadata = {
   title: "Version 3 · Less said | Rang De",
@@ -11,24 +15,22 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Version 3 (Figma "Home - v3", node 2719:50454): as little text as possible, and each idea once.
-// One line with the stats, the people and the press → how it works (the scroll story) → stories from
-// both sides → the infrastructure behind it → why returns aren't higher → "Now invest in Bharat" →
-// the founders (as on v1) → the remaining questions as cards.
-// Left out on purpose so nothing repeats: the Oxford intro (the founders section tells it), the
-// outcome chain (the scroll story already follows one loan through) and the live borrowers (the hero
-// strip already shows the people). Those live in Version 4.
+// Version 3 (until now "Version 6", as it is on main): the old Version 3 (Figma "Home - v3", node 2719:50454) reworked with the hero in CoinHero (headline fill and rolling figures),
+// the photo collage and scroll-filled text. As little text as possible, and each idea once.
+// The headline with the stats, the gallery and the press → the founders' paragraph → how it works (the
+// scroll story), running straight on into "Rekha and Arjun aren't the only ones": borrowers, then investors → the
+// four infrastructure points, side by side → the questions as cards → a closing card into the listings.
 export default function V3() {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
-      <ApproachHero tone="ink" title="Invest directly in rural entrepreneurs. Help them build credit, while you earn returns." strip={<PeopleStrip />} below={<PressRow />} />
-      <StoryHowItWorks />
-      <StoriesBothSides />
-      <PointsSection tone="cream" heading="A new way of lending needs serious infrastructure." points={INFRA_POINTS} />
-      <WhyNotHigher />
-      <ClosingCta lead="You invest in companies and markets." rest="Now invest in Bharat." sub="In the people building businesses outside the headlines. Start with ₹500." />
-      <FoundersSection />
-      <QuestionCards heading="Questions & Answers" count={4} exclude={["Why aren’t Rang De returns higher?"]} />
+      <CoinHero strip={<CollageStrip />} below={<PressRow />} />
+      <FounderScroll />
+      {/* Starts filling only once the founders paragraph above has finished. */}
+      {/* The borrowers' and investors' stories follow straight on from Rekha and Arjun's, inside the same card. */}
+      <StoryHowItWorks heading={<ScrollInk as="span" text="Here’s how that works." offset={["start 0.55", "start 0.2"]} />} navyCta large crowd after={<StoriesTwoRows />} />
+      <TrustList />
+      <PlainQuestionCards count={4} flip navyLink large />
+      <ExploreCta />
     </div>
   );
 }

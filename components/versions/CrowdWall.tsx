@@ -29,6 +29,8 @@ const BORROWERS = [
   ...[1, 2, 3, 4].map((i) => `/images/stories/story-${i}-bg.webp`),
   "/images/stories/pairs/neilhoupe-fabric.jpg",
 ];
+// From the field trips: borrowers and investors together. A few, mixed in, not too many.
+const FIELD = ["group-entrepreneurs", "social-investor-meetup", "group-picture-2", "group-stakeholders"].map((n) => `/images/founders-collage/${n}.webp`);
 const INVESTORS = ["shiri-baghar", "kishor-nayar", "chaitanya-nadkarny", "hari-balasubramanian", "amrudesh-santhanam"].map((n) => `/images/testimonials/${n}.webp`);
 
 export type Rect = { x: number; y: number; s: number };
@@ -39,13 +41,15 @@ const HEAD = 64; // room for the line above the wall
 const FOOT = 116; // and for the two counts under it
 // Tile shapes, as height ÷ width, cycled per column from a different point so neighbours never line up.
 const RATIOS = [1.3, 0.85, 1.1, 1.45, 0.95, 1.2, 0.8, 1.35];
+// Version 3.1 (`fresh`): none wide and short, since those cropped people in half (a face half in frame at the edge).
+const RATIOS_FRESH = [1.3, 1.0, 1.15, 1.45, 1.05, 1.25, 0.95, 1.35];
 
 /**
  * Where everything sits on a `w` × `h` stage, as an organic masonry wall (RedNote-style): columns across the full
  * width, each a stack of photos of mixed heights starting at a different offset, and Rekha's and Arjun's big portrait
  * tiles in the middle (each two columns wide, Rekha set a little higher than Arjun). Columns flow around them.
  */
-export function crowdLayout(w: number, h: number, mobile: boolean): { cells: Cell[]; rekha: Rect; arjun: Rect; top: number; bottom: number } {
+export function crowdLayout(w: number, h: number, mobile: boolean, fresh = false): { cells: Cell[]; rekha: Rect; arjun: Rect; top: number; bottom: number } {
   const padX = mobile ? 12 : 24;
   const padY = mobile ? 16 : 24;
   const cols = mobile ? 4 : Math.max(6, 2 * Math.round((w - 2 * padX) / 2 / 170));
@@ -65,9 +69,11 @@ export function crowdLayout(w: number, h: number, mobile: boolean): { cells: Cel
   const cells: Cell[] = [];
   let b = 0;
   let v = 0;
+  let f = 0;
   let n = 0;
   const pick = () => {
-    const src = n % 5 === 2 && v < INVESTORS.length ? INVESTORS[v++] : BORROWERS[b++ % BORROWERS.length];
+    // An investor every fifth tile, (fresh) a field-trip photo every ninth, the borrowers in between.
+    const src = fresh && n % 9 === 6 && f < FIELD.length ? FIELD[f++] : n % 5 === 2 && v < INVESTORS.length ? INVESTORS[v++] : BORROWERS[b++ % BORROWERS.length];
     n++;
     return src;
   };
@@ -81,10 +87,13 @@ export function crowdLayout(w: number, h: number, mobile: boolean): { cells: Cel
     let k = (c * 3) % RATIOS.length;
     for (const [from, to] of runs) {
       let y = from;
-      while (to - y > cw * 0.45) {
-        let hh = cw * RATIOS[k++ % RATIOS.length];
+      // The shortest tile allowed, as a share of the width (fresh: taller, so nobody is cropped in half).
+      const minH = fresh ? 0.8 : 0.45;
+      const ratios = fresh ? RATIOS_FRESH : RATIOS;
+      while (to - y > cw * minH) {
+        let hh = cw * ratios[k++ % ratios.length];
         // Stretch the last tile to the end of the run rather than leave a sliver.
-        if (to - (y + hh + GAP) < cw * 0.55) hh = to - y;
+        if (to - (y + hh + GAP) < cw * (fresh ? 0.8 : 0.55)) hh = to - y;
         const dx = (x + cw / 2 - cx) / w;
         const dy = (y + hh / 2 - mid) / h;
         cells.push({ x, y, w: cw, h: hh, dist: Math.hypot(dx * 1.4, dy), src: pick() });
@@ -95,9 +104,9 @@ export function crowdLayout(w: number, h: number, mobile: boolean): { cells: Cel
   return { cells, rekha, arjun, top, bottom };
 }
 
-export function CrowdWall({ c, w, h, mobile }: { c: number; w: number; h: number; mobile: boolean }) {
+export function CrowdWall({ c, w, h, mobile, fresh = false }: { c: number; w: number; h: number; mobile: boolean; fresh?: boolean }) {
   if (c <= 0) return null;
-  const { cells, rekha, arjun, top, bottom } = crowdLayout(w, h, mobile);
+  const { cells, rekha, arjun, top, bottom } = crowdLayout(w, h, mobile, fresh);
   const bust = clamp01((c - 0.55) / 0.12); // the moving figures hand over to the portraits
   const words = clamp01((c - 0.6) / 0.15);
   const count = clamp01((c - 0.6) / 0.25);
@@ -118,7 +127,8 @@ export function CrowdWall({ c, w, h, mobile }: { c: number; w: number; h: number
             className="absolute overflow-hidden rounded-[14px] bg-text-grey-8"
             style={{ left: cell.x, top: cell.y, width: cell.w, height: cell.h, opacity: o, transform: `scale(${0.85 + 0.15 * o})` }}
           >
-            <Image src={cell.src} alt="" fill loading="eager" sizes="(min-width: 768px) 360px, 180px" className="object-cover" />
+            {/* Fresh: framed a little above centre, where faces usually are, so a tall or short crop keeps the people in it. */}
+            <Image src={cell.src} alt="" fill loading="eager" sizes="(min-width: 768px) 360px, 180px" className={`object-cover ${fresh ? "object-[50%_35%]" : ""}`} />
           </div>
         );
       })}

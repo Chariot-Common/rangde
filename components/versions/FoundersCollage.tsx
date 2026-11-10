@@ -69,7 +69,8 @@ const subscribePhone = (cb: () => void) => {
   return () => m.removeEventListener("change", cb);
 };
 
-export function FoundersCollage({ cards = false }: { cards?: boolean } = {}) {
+/** `thinFrame` (v1.1, v2.1): the centre photo's frame as thin as a regular print's (at 1.65× it read as too thick). */
+export function FoundersCollage({ cards = false, thinFrame = false }: { cards?: boolean; thinFrame?: boolean } = {}) {
   const around = cards ? AROUND.map((a) => CARD_SWAPS[a.src] ?? a) : AROUND;
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const k = phone ? 0.25 : 1;
@@ -104,7 +105,7 @@ export function FoundersCollage({ cards = false }: { cards?: boolean } = {}) {
             left: pct((W - BASE * CENTRE_SCALE) / 2, W),
             top: pct((H - BASE * CENTRE_SCALE * 0.75) / 2, H),
             width: pct(BASE * CENTRE_SCALE, W),
-            borderWidth: border(CENTRE_SCALE),
+            borderWidth: border(thinFrame ? 1 : CENTRE_SCALE),
             ...(reduce ? { rotate: -3 } : { y, rotate, scale }),
           }}
           className={`absolute z-10 aspect-[4/3] rounded-[10px] ${FRAME}`}
