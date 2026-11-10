@@ -35,6 +35,8 @@ export function JourneyStage({ scene, label, loopMs, frameW = FRAME_W }: { scene
       // The wide frame only where there's room for it; phones keep the narrow one.
       const fw = box.clientWidth >= 640 ? frameW : FRAME_W;
       frame.style.width = `${fw}px`;
+      // The desktop-shaped window's own styles (listing rows, side-by-side photos) follow the window, not the screen.
+      box.toggleAttribute("data-wideframe", fw > FRAME_W);
       const s = Math.min(fw > FRAME_W ? 1.3 : 1.1, (area.clientWidth - pad * 2) / fw, (area.clientHeight - pad * 2) / FRAME_H);
       frame.style.transform = `translate(-50%, -50%) scale(${s})`;
     };

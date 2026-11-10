@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { FoundersCollage } from "@/components/versions/FoundersCollage";
-import { ClosingCta } from "@/components/versions/proof";
+import { OpportunitiesSection } from "@/components/sections/opportunities/OpportunitiesSection";
+import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
 import { ReelsWheel } from "@/components/sections/reels/ReelsWheel";
-import { ApproachHero, HowItWorksTabs, QuestionCards, SeeWhereMoneyGoes } from "@/components/versions/approaches";
+import { ApproachHero, HowItWorksTabs, InfrastructureRow, SeeWhereMoneyGoes } from "@/components/versions/approaches";
 import { FairReturns, V4HeroCards } from "@/components/versions/V4Sections";
 import { V4Cycle } from "@/components/versions/V4Cycle";
 import { V4HowItWorks } from "@/components/versions/V4HowItWorks";
-import { TrustList } from "@/components/versions/V6Sections";
 import { getRangDeStats } from "@/lib/stats";
 
 export const metadata: Metadata = {
@@ -19,7 +19,8 @@ export const metadata: Metadata = {
 // another person?" with four real investee cards → how it works (the original pop-up, left and right) → the loan as a
 // loop (social investment → business → repayment → credit history → more opportunity) → the Other Startup India, in
 // their own reels → you decide who you back (the product, step by step) → the infrastructure → where the money goes
-// (live figures) → why returns aren't higher (fair on both sides) → now invest in Bharat → the founders → questions.
+// (live figures) → why returns aren't higher (fair on both sides) → the founders → live opportunities → questions (both
+// from Version 1).
 export default async function V2() {
   const stats = await getRangDeStats();
   return (
@@ -46,14 +47,17 @@ export default async function V2() {
           </>
         }
       />
-      <HowItWorksTabs refined inked bare visual="journey" eyebrow={null} heading="You decide who you back." />
-      <TrustList />
+      {/* One section: you decide who you back, then the infrastructure behind it (animated icons). */}
+      <HowItWorksTabs refined inked bare visual="journey" eyebrow={null} heading="You decide who you back.">
+        <InfrastructureRow badge="#fff" />
+      </HowItWorksTabs>
       <SeeWhereMoneyGoes stats={stats} />
       <FairReturns />
-      <ClosingCta lead="You invest in companies and markets." rest="Now invest in Bharat." sub="In the people building businesses outside the headlines. Start with ₹500." />
       {/* Photos only: the Ashoka Fellow card (from 14 years ago) and the quote card are out. */}
       <FoundersCollage thinFrame />
-      <QuestionCards heading="Questions & Answers" count={4} exclude={["Why aren’t Rang De returns higher?"]} />
+      {/* From Version 1: the live opportunities (with "See more") right after the founders, then its questions. */}
+      <OpportunitiesSection />
+      <PlainQuestionCards count={4} flip large phoneHeading="Questions we get often" autoHighlight />
     </div>
   );
 }

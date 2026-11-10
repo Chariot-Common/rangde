@@ -859,11 +859,11 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
 }
 
 /** "A new way of lending needs serious infrastructure." (Figma 2718:46885), under How it works in v1.2. */
-export function InfrastructureRow({ heading = "A new way of lending needs serious infrastructure." }: { heading?: string }) {
+export function InfrastructureRow({ heading = "A new way of lending needs serious infrastructure.", badge = "#F1F2F5" }: { heading?: string; badge?: string }) {
   return (
     <div className="flex w-full max-w-[1200px] flex-col items-center gap-10">
       <AnimatedText as="h3" text={heading} className="text-center font-display text-h4 font-bold text-ink" />
-      <PointsGrid points={INFRA_POINTS} size="sm" badge="#F1F2F5" shapeOffset={1} />
+      <PointsGrid points={INFRA_POINTS} size="sm" badge={badge} shapeOffset={1} />
     </div>
   );
 }
