@@ -1,22 +1,23 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "motion/react";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type Ref } from "react";
 
 /*
- * Version 2.1's "Why it matters" (Figma "why it matters high fidelity", node 3002:14071): the loan as a loop the borrower
- * is otherwise locked out of. Your social investment feeds their business → repayment → credit history → opportunities,
+ * Version 2's "Why it matters" (Figma "why it matters high fidelity", node 3002:14071): the loan as a loop the borrower is
+ * otherwise locked out of. Your social investment feeds their business → repayment → credit history → opportunities,
  * which feeds back into the business.
  *
- * One pinned section, played by the scroll, in this order:
- *   1. the badge fades in, 2. then the heading;
- *   3. "Your social investment" fades in as a plain box (like an upcoming step), then fills: dark green outline, full text;
- *   4. the green line grows out of it, down to the ring;
- *   5. the heading lifts off the top of the screen (fading as it goes) and the ring settles in the middle; Business
- *      becomes the current step;
- *   6. the ring fills round as the progress bar, one step at a time. The open step's line, in the middle of the ring (under
- *      it on phones), starts at text grey 24 and fills in letter by letter as the ring travels on to the next step.
+ * The badge, heading and "Your social investment" are all there from the start and scroll by as normal. As they do:
+ *   - the heading fills in, left to right: its first line from text grey 24 to text grey 100, then the second from green
+ *     dark at 24% to green dark;
+ *   - the grey line out of "Your social investment" fills green, down to the ring.
+ * Then the loop pins, fully in view: a rectangle with 120px corners, as wide as the page's content (Opportunities against
+ * its left edge, Repayment against its right) and as tall as Business's centre (RING_TOP below the nav) to Credit
+ * history's (BOTTOM_GAP plus half a step above the bottom of the screen). Business becomes the current step and the loop
+ * fills round as the progress bar, one step at a time. The open step's line, in the middle (under it on phones), H3 and
+ * up to 1200px wide, starts at text grey 24 and fills in letter by letter as the loop travels on to the next step.
  * With reduced motion it is shown finished, with all four lines.
  */
 
@@ -27,32 +28,30 @@ const STEPS = [
   { label: "Opportunities", text: "And with it, access to the formal financial system: more capital, back into the business." },
 ];
 const N = STEPS.length;
-// From the Figma file; green dark is a token (green-dark), these two are not yet.
+const LINE_1 = "You’re not just giving someone a loan.";
+const LINE_2 = "You’re helping them build their financial future.";
+// From the Figma file; green dark is a token (green-dark), these are not yet.
 const GREEN_LIGHT = "#cbe0b8";
 const GREEN_HIGHLIGHT = "#62af1d";
+const GREEN_DARK_24 = "rgba(58, 110, 12, 0.24)";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-// The scroll, 0 → 1 through the pinned section.
-const T = {
-  badge: [0, 0.05],
-  heading: [0.03, 0.09],
-  box: [0.09, 0.13],
-  boxFill: [0.13, 0.17],
-  line: [0.17, 0.22],
-  lift: [0.2, 0.3],
-  businessOn: 0.26,
-  steps: [0.3, 0.97],
-} as const;
+// Through the pinned ring, 0 → 1: the line's last stretch fills into Business, Business lights up, then the four steps.
+const Q = { segment: [0, 0.05], businessOn: 0.05, steps: [0.08, 0.97] } as const;
 
-// Scroll-linked values are worked out here, in functions, rather than with useTransform's range mapping: Motion hands
-// range-mapped opacity/transform over to the browser's native scroll timeline, which mapped these ranges wrongly (the
-// heading and box faded back out as the section scrolled on).
 const ramp = (v: number, [a, b]: readonly [number, number]) => Math.min(1, Math.max(0, (v - a) / (b - a)));
-const ease = (t: number) => 1 - Math.pow(1 - t, 3);
-const mixRgba = (from: number[], to: number[], t: number) => {
-  const [r, g, b, a] = from.map((f, i) => f + (to[i] - f) * t);
-  return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a.toFixed(3)})`;
-};
+
+// The ring's layout. Step heights: py-2 + 24px line (tablets up), py-1.5 + 22px (phones).
+const RING_TOP = 53; // Business's centre below the top of the pinned stage
+const BOTTOM_GAP = 24;
+const CHIP_H = 42;
+const CHIP_H_PHONE = 36;
+const PHONE_TEXT = 140; // room under the ring for the step's line on phones
+const RADIUS = 120; // the loop's corner radius
+const TEXT_W = 1200; // the open step's line, in the middle
+const TEXT_GAP = 24; // the least room it leaves to Repayment and Opportunities
+const TRACK_PX = 2;
+const PROGRESS_PX = 4;
 
 const PHONE = "(max-width: 767px)";
 const subscribePhone = (cb: () => void) => {
@@ -66,132 +65,200 @@ type ChipState = "upcoming" | "done" | "current";
 export function V4Cycle() {
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const reduce = useReducedMotion();
+  const headRef = useRef<HTMLHeadingElement>(null);
+  const lineRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<HTMLElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
-  const boxRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: p } = useScroll({ target: wrapRef, offset: ["start start", "end end"] });
-  const [pr, setPr] = useState(0);
-  useMotionValueEvent(p, "change", setPr);
+  const stageRef = useRef<HTMLDivElement>(null);
 
-  // How far the column has to rise for the ring's centre to sit in the middle of the stage.
-  const [lift, setLift] = useState(0);
-  const y = useTransform(p, (v) => -lift * ease(ramp(v, T.lift)));
+  // The loop, sized to the pinned stage (see the comment at the top): as wide as the page's content, Opportunities and
+  // Repayment against its left and right edges, and as tall as Business's centre to Credit history's.
+  const [box, setBox] = useState({ w: 1200, h: 560 });
+  // Opportunities and Repayment share one width (the wider of the two), so the loop is symmetrical and Business, the line
+  // into it and Credit history all sit on the page's centre line.
+  const [sideW, setSideW] = useState(0);
+  const oppRef = useRef<HTMLSpanElement>(null);
+  const repRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (reduce) return;
-    const measure = () => {
+    const size = () => {
       const stage = stageRef.current?.getBoundingClientRect();
-      const ring = ringRef.current?.getBoundingClientRect();
-      const box = boxRef.current?.getBoundingClientRect();
-      if (!stage || !ring || !box) return;
-      const now = y.get();
-      // Centre the ring, but never so far that "Your social investment" goes under the top of the stage (and the nav).
-      const toCentre = ring.top + ring.height / 2 - now - (stage.top + stage.height / 2);
-      const boxRoom = box.top - now - stage.top - 32;
-      setLift(Math.max(0, Math.min(toCentre, boxRoom)));
+      if (!stage) return;
+      const chip = phone ? CHIP_H_PHONE : CHIP_H;
+      const h = stage.height - RING_TOP - BOTTOM_GAP - chip / 2 - (phone ? PHONE_TEXT : 0);
+      setBox({ w: Math.round(stage.width), h: Math.max(160, Math.floor(h)) });
+      setSideW(Math.ceil(Math.max(oppRef.current?.offsetWidth ?? 0, repRef.current?.offsetWidth ?? 0)));
     };
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [reduce, phone, y]);
+    size();
+    // The stage's height follows the nav's (--navbar-bottom), which settles after first paint, so watch the stage itself.
+    const ro = new ResizeObserver(size);
+    if (stageRef.current) ro.observe(stageRef.current);
+    return () => ro.disconnect();
+  }, [reduce, phone]);
 
-  // 1–4: the intro, all tied to the scroll.
-  // Both fade back out as they lift away, so the heading always clears the screen, however tall it wraps.
-  const lifted = (v: number) => 1 - ramp(v, [T.lift[0] + 0.03, T.lift[1]]);
-  const badgeOpacity = useTransform(p, (v) => ramp(v, T.badge) * lifted(v));
-  const badgeY = useTransform(p, (v) => 16 * (1 - ramp(v, T.badge)));
-  const headOpacity = useTransform(p, (v) => ramp(v, T.heading) * lifted(v));
-  const headY = useTransform(p, (v) => 16 * (1 - ramp(v, T.heading)));
-  const boxOpacity = useTransform(p, (v) => ramp(v, T.box));
-  const boxBorder = useTransform(p, (v) => mixRgba([41, 45, 54, 0.16], [58, 110, 12, 1], ramp(v, T.boxFill)));
-  const boxText = useTransform(p, (v) => mixRgba([41, 45, 54, 0.64], [41, 45, 54, 1], ramp(v, T.boxFill)));
-  const lineScale = useTransform(p, (v) => ramp(v, T.line));
+  // Three scroll-linked fills, worked out from where things sit on screen: the heading, the line, and the pinned ring.
+  const [fill, setFill] = useState({ head: 0, line: 0, q: 0 });
+  const { scrollY } = useScroll();
+  const update = useCallback(() => {
+    const vh = window.innerHeight;
+    const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navbar-bottom")) || 0;
+    const h = headRef.current?.getBoundingClientRect();
+    const l = lineRef.current?.getBoundingClientRect();
+    const w = wrapRef.current?.getBoundingClientRect();
+    const s = stageRef.current?.getBoundingClientRect();
+    if (!h || !l || !w || !s) return;
+    // The heading: from its top at 85% of the screen to its bottom at 35%.
+    const head = Math.min(1, Math.max(0, (0.85 * vh - h.top) / (0.5 * vh + h.height)));
+    // The line: from its top at 60% of the screen to its bottom reaching the nav, which is when the ring pins.
+    const line = Math.min(1, Math.max(0, (0.6 * vh - l.top) / (0.6 * vh - nav + l.height)));
+    // The ring: 0 as it pins, 1 as it lets go.
+    const q = Math.min(1, Math.max(0, (nav - w.top) / Math.max(1, w.height - s.height)));
+    setFill((f) => (f.head === head && f.line === line && f.q === q ? f : { head, line, q }));
+  }, []);
+  useMotionValueEvent(scrollY, "change", update);
+  useEffect(() => {
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [update, box.h]);
 
-  // 5–6: the steps. s runs 0 → 4 across them; the ring fills by s / 4.
-  const s = reduce ? N : Math.min(N, Math.max(0, ((pr - T.steps[0]) / (T.steps[1] - T.steps[0])) * N));
-  const started = reduce || pr >= T.businessOn;
+  const head = reduce ? 1 : fill.head;
+  const line = reduce ? 1 : fill.line;
+  const q = reduce ? 1 : fill.q;
+  const s = reduce ? N : ramp(q, Q.steps) * N;
+  const started = reduce || q >= Q.businessOn;
   const finished = s >= N;
   const at = Math.min(N - 1, Math.floor(s));
   const within = finished ? 1 : s - at;
   const stateOf = (i: number): ChipState => (!started ? "upcoming" : finished || i < at ? "done" : i === at ? "current" : "upcoming");
+  const filled1 = Math.round(ramp(head, [0, 0.5]) * LINE_1.length);
+  const filled2 = Math.round(ramp(head, [0.5, 1]) * LINE_2.length);
 
-  const ring = phone ? "min(58vw, calc(100svh - var(--navbar-bottom, 0px) - 300px))" : "min(560px, calc(100svh - var(--navbar-bottom, 0px) - 330px))";
-  const line = phone ? 56 : 96;
+  const introLine = phone ? 32 : 64;
 
-  const body = (
-    <div className="flex flex-col items-center">
-      {/* 1–2: badge, eyebrow and heading. */}
-      <div className="flex flex-col items-center gap-ds-6 text-center">
-        <motion.div className="relative size-[80px] md:size-[120px]" style={reduce ? undefined : { opacity: badgeOpacity, y: badgeY }}>
-          <Image src="/images/approaches/why-it-matters-badge.svg" alt="" fill unoptimized />
-        </motion.div>
-        <motion.div className="flex max-w-[1000px] flex-col items-center gap-2" style={reduce ? undefined : { opacity: headOpacity, y: headY }}>
-          <p className="font-display text-h5 font-bold uppercase tracking-[0.88px] text-text-grey-80">Why it matters</p>
-          <h2 className="font-display text-h3 font-bold [text-wrap:balance]">
-            <span className="block text-text-grey-100">You’re not just giving someone a loan.</span>
-            <span className="block text-green-dark">You’re helping them build their financial future.</span>
-          </h2>
-        </motion.div>
-      </div>
+  // The path: a rectangle with RADIUS corners, its sides through the side steps' centres, drawn clockwise from Business
+  // (top centre). It is symmetrical both ways, so each step is a quarter of it and the green fill reaches every step at
+  // the same point in the scroll as the circle did.
+  const xl = sideW / 2;
+  const xr = box.w - sideW / 2;
+  const cx = box.w / 2;
+  const rad = Math.max(0, Math.min(RADIUS, box.h / 2, (xr - xl) / 2));
+  const d = [
+    `M ${cx} 0`,
+    `H ${xr - rad}`,
+    `A ${rad} ${rad} 0 0 1 ${xr} ${rad}`,
+    `V ${box.h - rad}`,
+    `A ${rad} ${rad} 0 0 1 ${xr - rad} ${box.h}`,
+    `H ${xl + rad}`,
+    `A ${rad} ${rad} 0 0 1 ${xl} ${box.h - rad}`,
+    `V ${rad}`,
+    `A ${rad} ${rad} 0 0 1 ${xl + rad} 0`,
+    "Z",
+  ].join(" ");
+  const side = sideW ? { minWidth: sideW } : undefined;
+  const chipAt: CSSProperties[] = [
+    { left: "50%", top: 0, transform: "translate(-50%, -50%)" },
+    { right: 0, top: "50%", transform: "translateY(-50%)", ...side },
+    { left: "50%", top: "100%", transform: "translate(-50%, -50%)" },
+    { left: 0, top: "50%", transform: "translateY(-50%)", ...side },
+  ];
 
-      {/* 3: where it starts. */}
-      <motion.div
-        ref={boxRef}
-        className="mt-ds-6 rounded-[8px] border-[1.2px] border-solid bg-white px-4 py-2 font-display text-p2 font-medium"
-        style={reduce ? { borderColor: "var(--color-green-dark)" } : { opacity: boxOpacity, borderColor: boxBorder, color: boxText }}
-      >
-        Your social investment
-      </motion.div>
-
-      {/* 4: the line out of it, down to the ring. */}
-      <div aria-hidden className="relative w-[2px]" style={{ height: line }}>
-        <motion.span className="absolute inset-0 origin-top" style={{ backgroundColor: GREEN_HIGHLIGHT, scaleY: reduce ? 1 : lineScale }} />
-      </div>
-
-      {/* 5–6: the ring, with the steps round it from the top, clockwise. */}
-      <div ref={ringRef} className="relative shrink-0" style={{ width: ring, height: ring }}>
-        <svg aria-hidden viewBox="0 0 100 100" className="absolute inset-0 size-full -rotate-90 overflow-visible">
-          <circle cx="50" cy="50" r="50" fill="none" stroke="var(--color-text-grey-16)" strokeWidth="0.25" />
-          <circle
-            cx="50"
-            cy="50"
-            r="50"
-            fill="none"
-            stroke={GREEN_HIGHLIGHT}
-            strokeWidth="0.5"
-            pathLength={1}
-            strokeDasharray="1 1"
-            strokeDashoffset={1 - s / N}
-          />
-        </svg>
-        {STEPS.map((step, i) => {
-          const a = (-90 + (360 / N) * i) * (Math.PI / 180);
-          return <Chip key={step.label} label={step.label} state={stateOf(i)} left={50 + 50 * Math.cos(a)} top={50 + 50 * Math.sin(a)} />;
-        })}
-
-        {/* The open step's line, in the middle of the ring (laptops and tablets). */}
-        {!phone && !reduce && (
-          <div className="absolute inset-[26%] flex items-center justify-center text-center">
-            <StepLine started={started} at={at} within={within} />
-          </div>
-        )}
-      </div>
-
-      {/* Phones: the line under the ring. */}
-      {phone && !reduce && (
-        <div className="mt-ds-6 min-h-[96px] max-w-[320px] text-center">
-          <StepLine started={started} at={at} within={within} />
+  const ring = (
+    <div className="relative w-full shrink-0" style={{ height: box.h }}>
+      <svg aria-hidden width={box.w} height={box.h} className="absolute left-0 top-0 overflow-visible">
+        <path d={d} fill="none" stroke="var(--color-text-grey-24)" strokeWidth={TRACK_PX} />
+        <path
+          d={d}
+          fill="none"
+          stroke={GREEN_HIGHLIGHT}
+          strokeWidth={PROGRESS_PX}
+          strokeLinecap="round"
+          pathLength={1}
+          strokeDasharray="1 1"
+          strokeDashoffset={1 - s / N}
+        />
+      </svg>
+      {STEPS.map((step, i) => (
+        <Chip key={step.label} ref={i === 1 ? repRef : i === 3 ? oppRef : undefined} label={step.label} state={stateOf(i)} style={chipAt[i]} />
+      ))}
+      {/* The open step's line, in the middle of the loop (laptops and tablets): H3, centred, 1200px wide, but never
+          running under Repayment or Opportunities. */}
+      {!phone && !reduce && (
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center"
+          style={{ width: TEXT_W, maxWidth: Math.max(240, box.w - 2 * sideW - 2 * TEXT_GAP) }}
+        >
+          <StepLine started={started} at={at} within={within} large />
         </div>
       )}
+    </div>
+  );
 
-      {reduce && (
-        <ol className="mt-ds-6 flex max-w-[560px] flex-col gap-3 text-center">
-          {STEPS.map((step) => (
-            <li key={step.label} className="font-display text-p3 font-bold text-text-grey-80">
-              <span className="text-green-dark">{step.label}.</span> {step.text}
-            </li>
-          ))}
-        </ol>
+  return (
+    <section aria-label="How a loan builds a financial future" className="mx-2 flex flex-col items-center rounded-[16px] bg-white px-4 pt-ds-9 sm:px-8">
+      {/* Badge, eyebrow and heading: all there from the start; the heading fills in as it scrolls by. */}
+      <div className="flex flex-col items-center gap-ds-6 text-center">
+        <div className="relative size-[80px] md:size-[120px]">
+          <Image src="/images/approaches/why-it-matters-badge.svg" alt="" fill unoptimized />
+        </div>
+        <div className="flex max-w-[1000px] flex-col items-center gap-2">
+          <p className="font-display text-h5 font-bold uppercase tracking-[0.88px] text-text-grey-80">Why it matters</p>
+          <h2 ref={headRef} aria-label={`${LINE_1} ${LINE_2}`} className="font-display text-h3 font-bold [text-wrap:balance]">
+            <span aria-hidden className="block">
+              {LINE_1.split("").map((ch, i) => (
+                <span key={i} className={i < filled1 ? "text-text-grey-100" : "text-text-grey-24"}>
+                  {ch}
+                </span>
+              ))}
+            </span>
+            <span aria-hidden className="block">
+              {LINE_2.split("").map((ch, i) => (
+                <span key={i} className={i < filled2 ? "text-green-dark" : undefined} style={i < filled2 ? undefined : { color: GREEN_DARK_24 }}>
+                  {ch}
+                </span>
+              ))}
+            </span>
+          </h2>
+        </div>
+      </div>
+
+      {/* Where it starts. */}
+      <div className="mt-ds-6 rounded-[8px] border-[1.2px] border-solid border-green-dark bg-white px-4 py-2 font-display text-p2 font-medium text-text-grey-100">
+        Your social investment
+      </div>
+
+      {/* The line out of it: grey (the ring's track), filling green as it scrolls up; it carries on inside the stage below. */}
+      <Connector ref={lineRef} height={introLine} fill={line} />
+
+      {reduce ? (
+        <>
+          <Connector height={RING_TOP} fill={1} />
+          {ring}
+          <ol className="mt-ds-6 flex max-w-[560px] flex-col gap-3 pb-r9 text-center">
+            {STEPS.map((step) => (
+              <li key={step.label} className="font-display text-p3 font-bold text-text-grey-80">
+                <span className="text-green-dark">{step.label}.</span> {step.text}
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : (
+        // The ring pins once it is fully in view, and the steps play through the scroll from there.
+        <div ref={wrapRef} className="relative w-full" style={{ height: "calc(4.5 * (100svh - var(--navbar-bottom, 0px)))" }}>
+          <div
+            ref={stageRef}
+            className="sticky flex w-full flex-col items-center"
+            style={{ top: "var(--navbar-bottom, 0px)", height: "calc(100svh - var(--navbar-bottom, 0px))" }}
+          >
+            <Connector height={RING_TOP} fill={ramp(q, Q.segment)} />
+            {ring}
+            {/* Phones: the line under the ring. */}
+            {phone && (
+              <div className="mt-ds-6 min-h-[96px] max-w-[320px] text-center">
+                <StepLine started={started} at={at} within={within} />
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       <ol className="sr-only">
@@ -201,32 +268,24 @@ export function V4Cycle() {
           </li>
         ))}
       </ol>
-    </div>
+    </section>
   );
+}
 
-  if (reduce) {
-    return <section className="mx-2 flex flex-col items-center rounded-[16px] bg-white px-4 py-r9 sm:px-8">{body}</section>;
-  }
-
+/** A stretch of the line from "Your social investment" to Business: the ring's grey track, with a green fill (the ring's
+ * progress width) growing down it as `fill` goes 0 → 1. */
+function Connector({ ref, height, fill }: { ref?: Ref<HTMLDivElement>; height: number; fill: number }) {
   return (
-    <div ref={wrapRef} className="relative" style={{ height: "calc(5.5 * (100svh - var(--navbar-bottom, 0px)))" }}>
-      <section
-        ref={stageRef}
-        aria-label="How a loan builds a financial future"
-        className="sticky mx-2 flex flex-col items-center overflow-hidden rounded-[16px] bg-white px-4 pt-ds-9 sm:px-8"
-        style={{ top: "var(--navbar-bottom, 0px)", height: "calc(100svh - var(--navbar-bottom, 0px) - 8px)" }}
-      >
-        <motion.div className="w-full" style={{ y }}>
-          {body}
-        </motion.div>
-      </section>
+    <div ref={ref} aria-hidden className="relative flex w-[4px] shrink-0 justify-center" style={{ height }}>
+      <span className="h-full bg-text-grey-24" style={{ width: TRACK_PX }} />
+      <span className="absolute inset-x-0 top-0 origin-top rounded-full" style={{ height: "100%", backgroundColor: GREEN_HIGHLIGHT, transform: `scaleY(${fill})` }} />
     </div>
   );
 }
 
 /** A step on the ring (Figma 3002:14131…): upcoming is white with a grey outline; done is green light with a green outline;
  * current is filled green dark, with white text and a soft shadow. */
-function Chip({ label, state, left, top }: { label: string; state: ChipState; left: number; top: number }) {
+function Chip({ ref, label, state, style }: { ref?: Ref<HTMLSpanElement>; label: string; state: ChipState; style: CSSProperties }) {
   const cls =
     state === "current"
       ? "border-green-dark bg-green-dark text-white shadow-[0_8px_12px_rgba(51,13,110,0.24)]"
@@ -235,8 +294,9 @@ function Chip({ label, state, left, top }: { label: string; state: ChipState; le
         : "border-text-grey-16 bg-white text-text-grey-64";
   return (
     <span
-      className={`absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-[8px] border-[1.2px] border-solid px-3 py-1.5 font-display text-p3 font-medium transition-[background-color,color,border-color,box-shadow] duration-300 md:px-4 md:py-2 md:text-p2 ${cls}`}
-      style={{ left: `${left}%`, top: `${top}%`, ...(state === "done" ? { backgroundColor: GREEN_LIGHT, borderColor: GREEN_HIGHLIGHT } : null) }}
+      ref={ref}
+      className={`absolute whitespace-nowrap rounded-[8px] border-[1.2px] border-solid px-3 py-1.5 text-center font-display text-p3 font-medium transition-[background-color,color,border-color,box-shadow] duration-300 md:px-4 md:py-2 md:text-p2 ${cls}`}
+      style={{ ...style, ...(state === "done" ? { backgroundColor: GREEN_LIGHT, borderColor: GREEN_HIGHLIGHT } : null) }}
       aria-current={state === "current" ? "step" : undefined}
     >
       {label}
@@ -244,15 +304,16 @@ function Chip({ label, state, left, top }: { label: string; state: ChipState; le
   );
 }
 
-/** The open step's line: text grey 24 to begin with, filling in to text grey 80 letter by letter as `within` goes 0 → 1. */
-function StepLine({ started, at, within }: { started: boolean; at: number; within: number }) {
+/** The open step's line: text grey 24 to begin with, filling in to text grey 80 letter by letter as `within` goes 0 → 1.
+ * `large`: H3 (in the middle of the loop on laptops and tablets); otherwise P2 (under it on phones). */
+function StepLine({ started, at, within, large = false }: { started: boolean; at: number; within: number; large?: boolean }) {
   const text = STEPS[at].text;
   const filled = started ? Math.round(within * text.length) : 0;
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.p
         key={started ? at : "idle"}
-        className="font-display text-p3 font-bold [text-wrap:pretty]"
+        className={`font-display font-bold [text-wrap:balance] ${large ? "text-h3" : "text-p2"}`}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: started ? 1 : 0, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
