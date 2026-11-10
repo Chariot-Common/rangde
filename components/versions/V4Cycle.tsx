@@ -9,23 +9,21 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CS
  * otherwise locked out of. Your social investment feeds their business → repayment → credit history → opportunities,
  * which feeds back into the business.
  *
- * The badge, heading and "Your social investment" are all there from the start and scroll by as normal. As they do:
- *   - the heading fills in, left to right: its first line from text grey 24 to text grey 100, then the second from green
- *     dark at 24% to green dark;
- *   - the grey line out of "Your social investment" fills green, down to the ring.
- * Then the loop pins, fully in view: a rectangle with 120px corners, as wide as the page's content (Opportunities against
- * its left edge, Repayment against its right) and as tall as Business's centre (RING_TOP below the nav) to Credit
- * history's (BOTTOM_GAP plus half a step above the bottom of the screen). Business becomes the current step and the loop
- * fills round as the progress bar, one step at a time. The open step's line, in the middle (under it on phones), H3 and
- * up to 1200px wide, starts at text grey 24 and fills in letter by letter as the loop travels on to the next step.
- * With reduced motion it is shown finished, with all four lines.
+ * The badge and heading are there from the start and scroll by as normal; the heading fills in, left to right (its first
+ * line from text grey 24 to text grey 100, then the second from green dark at 24% to green dark). Then the stage pins:
+ * "Your social investment" at the top (kept on screen, from the review call of 10 Nov 2026), its line filling green
+ * down into Business, and the loop under it, an oval up to 1040px wide through the four steps. Business becomes the
+ * current step and the oval fills round as the progress bar, one step at a time. The open step's line sits in the
+ * middle (under the oval on phones) with its animated icon over it: P1, up to 600px wide, filling in letter by letter as
+ * the loop travels on to the next step. With reduced motion it is shown finished, with all four lines.
  */
 
+const ICONS = "/images/why-rangde-v2";
 const STEPS = [
-  { label: "Business", text: "They buy equipment, stock a shop, expand a small business, buy livestock, or take on a new opportunity." },
-  { label: "Repayment", text: "They repay, month by month, as their loan agreement sets out." },
-  { label: "Credit history", text: "Every repayment is reported to the credit bureaus. Borrowers who may never have had a credit file start building one." },
-  { label: "Opportunities", text: "And with it, access to the formal financial system: more capital, back into the business." },
+  { label: "Business", icon: `${ICONS}/icon-banknotes.webp`, text: "They buy equipment, stock a shop, expand a small business, buy livestock, or take on a new opportunity." },
+  { label: "Repayment", icon: `${ICONS}/icon-hand-check.webp`, text: "They repay, month by month, as their loan agreement sets out." },
+  { label: "Credit history", icon: `${ICONS}/icon-bar-chart.webp`, text: "Every repayment is reported to the credit bureaus. Borrowers who may never have had a credit file start building one." },
+  { label: "Opportunities", icon: `${ICONS}/icon-target-center.webp`, text: "And with it, access to the formal financial system: more capital, back into the business." },
 ];
 const N = STEPS.length;
 const LINE_1 = "You’re not just giving someone a loan.";
@@ -46,9 +44,9 @@ const RING_TOP = 53; // Business's centre below the top of the pinned stage
 const BOTTOM_GAP = 24;
 const CHIP_H = 42;
 const CHIP_H_PHONE = 36;
-const PHONE_TEXT = 140; // room under the ring for the step's line on phones
-const RADIUS = 120; // the loop's corner radius
-const TEXT_W = 1200; // the open step's line, in the middle
+const PHONE_TEXT = 190; // room under the ring for the step's line on phones
+const LOOP_MAX_W = 1040; // the oval's widest (review call, 10 Nov 2026: an oval, not a rounded rectangle)
+const TEXT_W = 600; // the open step's line, in the middle: P1, half the old width
 const TEXT_GAP = 24; // the least room it leaves to Repayment and Opportunities
 const TRACK_PX = 2;
 const PROGRESS_PX = 4;
@@ -66,9 +64,9 @@ export function V4Cycle() {
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const reduce = useReducedMotion();
   const headRef = useRef<HTMLHeadingElement>(null);
-  const lineRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
 
   // The loop, sized to the pinned stage (see the comment at the top): as wide as the page's content, Opportunities and
   // Repayment against its left and right edges, and as tall as Business's centre to Credit history's.
@@ -84,8 +82,10 @@ export function V4Cycle() {
       const stage = stageRef.current?.getBoundingClientRect();
       if (!stage) return;
       const chip = phone ? CHIP_H_PHONE : CHIP_H;
-      const h = stage.height - RING_TOP - BOTTOM_GAP - chip / 2 - (phone ? PHONE_TEXT : 0);
-      setBox({ w: Math.round(stage.width), h: Math.max(160, Math.floor(h)) });
+      // "Your social investment" and the line down from it sit above the loop, inside the pinned stage.
+      const top = ringRef.current?.offsetTop ?? RING_TOP;
+      const h = stage.height - top - BOTTOM_GAP - chip / 2 - (phone ? PHONE_TEXT : 0);
+      setBox({ w: Math.round(Math.min(stage.width, LOOP_MAX_W)), h: Math.max(160, Math.floor(h)) });
       setSideW(Math.ceil(Math.max(oppRef.current?.offsetWidth ?? 0, repRef.current?.offsetWidth ?? 0)));
     };
     size();
@@ -96,23 +96,20 @@ export function V4Cycle() {
   }, [reduce, phone]);
 
   // Three scroll-linked fills, worked out from where things sit on screen: the heading, the line, and the pinned ring.
-  const [fill, setFill] = useState({ head: 0, line: 0, q: 0 });
+  const [fill, setFill] = useState({ head: 0, q: 0 });
   const { scrollY } = useScroll();
   const update = useCallback(() => {
     const vh = window.innerHeight;
     const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navbar-bottom")) || 0;
     const h = headRef.current?.getBoundingClientRect();
-    const l = lineRef.current?.getBoundingClientRect();
     const w = wrapRef.current?.getBoundingClientRect();
     const s = stageRef.current?.getBoundingClientRect();
-    if (!h || !l || !w || !s) return;
+    if (!h || !w || !s) return;
     // The heading: from its top at 85% of the screen to its bottom at 35%.
     const head = Math.min(1, Math.max(0, (0.85 * vh - h.top) / (0.5 * vh + h.height)));
-    // The line: from its top at 60% of the screen to its bottom reaching the nav, which is when the ring pins.
-    const line = Math.min(1, Math.max(0, (0.6 * vh - l.top) / (0.6 * vh - nav + l.height)));
     // The ring: 0 as it pins, 1 as it lets go.
     const q = Math.min(1, Math.max(0, (nav - w.top) / Math.max(1, w.height - s.height)));
-    setFill((f) => (f.head === head && f.line === line && f.q === q ? f : { head, line, q }));
+    setFill((f) => (f.head === head && f.q === q ? f : { head, q }));
   }, []);
   useMotionValueEvent(scrollY, "change", update);
   useEffect(() => {
@@ -122,7 +119,6 @@ export function V4Cycle() {
   }, [update, box.h]);
 
   const head = reduce ? 1 : fill.head;
-  const line = reduce ? 1 : fill.line;
   const q = reduce ? 1 : fill.q;
   const s = reduce ? N : ramp(q, Q.steps) * N;
   const started = reduce || q >= Q.businessOn;
@@ -133,27 +129,14 @@ export function V4Cycle() {
   const filled1 = Math.round(ramp(head, [0, 0.5]) * LINE_1.length);
   const filled2 = Math.round(ramp(head, [0.5, 1]) * LINE_2.length);
 
-  const introLine = phone ? 32 : 64;
-
-  // The path: a rectangle with RADIUS corners, its sides through the side steps' centres, drawn clockwise from Business
-  // (top centre). It is symmetrical both ways, so each step is a quarter of it and the green fill reaches every step at
-  // the same point in the scroll as the circle did.
+  // The path: an oval through the four steps' centres (Business at the top, Repayment right, Credit history at the
+  // bottom, Opportunities left), drawn clockwise from Business. Symmetrical both ways, so each step is a quarter of it.
   const xl = sideW / 2;
   const xr = box.w - sideW / 2;
   const cx = box.w / 2;
-  const rad = Math.max(0, Math.min(RADIUS, box.h / 2, (xr - xl) / 2));
-  const d = [
-    `M ${cx} 0`,
-    `H ${xr - rad}`,
-    `A ${rad} ${rad} 0 0 1 ${xr} ${rad}`,
-    `V ${box.h - rad}`,
-    `A ${rad} ${rad} 0 0 1 ${xr - rad} ${box.h}`,
-    `H ${xl + rad}`,
-    `A ${rad} ${rad} 0 0 1 ${xl} ${box.h - rad}`,
-    `V ${rad}`,
-    `A ${rad} ${rad} 0 0 1 ${xl + rad} 0`,
-    "Z",
-  ].join(" ");
+  const rx = Math.max(0, (xr - xl) / 2);
+  const ry = box.h / 2;
+  const d = `M ${cx} 0 A ${rx} ${ry} 0 0 1 ${cx} ${box.h} A ${rx} ${ry} 0 0 1 ${cx} 0 Z`;
   const side = sideW ? { minWidth: sideW } : undefined;
   const chipAt: CSSProperties[] = [
     { left: "50%", top: 0, transform: "translate(-50%, -50%)" },
@@ -163,7 +146,7 @@ export function V4Cycle() {
   ];
 
   const ring = (
-    <div className="relative w-full shrink-0" style={{ height: box.h }}>
+    <div ref={ringRef} className="relative mx-auto shrink-0" style={{ width: box.w, maxWidth: "100%", height: box.h }}>
       <svg aria-hidden width={box.w} height={box.h} className="absolute left-0 top-0 overflow-visible">
         <path d={d} fill="none" stroke="var(--color-text-grey-24)" strokeWidth={TRACK_PX} />
         <path
@@ -180,8 +163,8 @@ export function V4Cycle() {
       {STEPS.map((step, i) => (
         <Chip key={step.label} ref={i === 1 ? repRef : i === 3 ? oppRef : undefined} label={step.label} state={stateOf(i)} style={chipAt[i]} />
       ))}
-      {/* The open step's line, in the middle of the loop (laptops and tablets): H3, centred, 1200px wide, but never
-          running under Repayment or Opportunities. */}
+      {/* The open step's line, in the middle of the loop (laptops and tablets): its icon over it, P1, centred, 600px wide, but
+          never running under Repayment or Opportunities. */}
       {!phone && !reduce && (
         <div
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center"
@@ -221,16 +204,10 @@ export function V4Cycle() {
         </div>
       </div>
 
-      {/* Where it starts. */}
-      <div className="mt-ds-6 rounded-[8px] border-[1.2px] border-solid border-green-dark bg-white px-4 py-2 font-display text-p2 font-medium text-text-grey-100">
-        Your social investment
-      </div>
-
-      {/* The line out of it: grey (the ring's track), filling green as it scrolls up; it carries on inside the stage below. */}
-      <Connector ref={lineRef} height={introLine} fill={line} />
-
+      <div className="h-ds-6 shrink-0" />
       {reduce ? (
         <>
+          <Start />
           <Connector height={RING_TOP} fill={1} />
           {ring}
           <ol className="mt-ds-6 flex max-w-[560px] flex-col gap-3 pb-r9 text-center">
@@ -249,6 +226,9 @@ export function V4Cycle() {
             className="sticky flex w-full flex-col items-center"
             style={{ top: "var(--navbar-bottom, 0px)", height: "calc(100svh - var(--navbar-bottom, 0px))" }}
           >
+            {/* Where it starts, kept on screen with the loop (review call): the line out of it fills green into Business. */}
+            <div className="h-4 shrink-0" />
+            <Start />
             <Connector height={RING_TOP} fill={ramp(q, Q.segment)} />
             {ring}
             {/* Phones: the line under the ring. */}
@@ -269,6 +249,15 @@ export function V4Cycle() {
         ))}
       </ol>
     </section>
+  );
+}
+
+/** "Your social investment": where the loop starts. */
+function Start() {
+  return (
+    <div className="shrink-0 rounded-[8px] border-[1.2px] border-solid border-green-dark bg-white px-4 py-2 font-display text-p2 font-medium text-text-grey-100">
+      Your social investment
+    </div>
   );
 }
 
@@ -305,26 +294,36 @@ function Chip({ ref, label, state, style }: { ref?: Ref<HTMLSpanElement>; label:
 }
 
 /** The open step's line: text grey 24 to begin with, filling in to text grey 80 letter by letter as `within` goes 0 → 1.
- * `large`: H3 (in the middle of the loop on laptops and tablets); otherwise P2 (under it on phones). */
+ * `large`: P1 with the step's icon over it (in the middle of the loop on laptops and tablets); otherwise P2 (under it on
+ * phones), with a smaller icon. */
 function StepLine({ started, at, within, large = false }: { started: boolean; at: number; within: number; large?: boolean }) {
   const text = STEPS[at].text;
   const filled = started ? Math.round(within * text.length) : 0;
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.p
+      <motion.div
         key={started ? at : "idle"}
-        className={`font-display font-bold [text-wrap:balance] ${large ? "text-h3" : "text-p2"}`}
+        className="flex flex-col items-center gap-3"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: started ? 1 : 0, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.3, ease: EASE }}
       >
-        {text.split("").map((ch, i) => (
-          <span key={i} className={i < filled ? "text-text-grey-80" : "text-text-grey-24"}>
-            {ch}
-          </span>
-        ))}
-      </motion.p>
+        {/* The step's animated icon (as a mask, in green dark) on a light green tile. */}
+        <span aria-hidden className={`flex items-center justify-center rounded-[16px] ${large ? "size-[64px]" : "size-[44px] rounded-[12px]"}`} style={{ backgroundColor: GREEN_LIGHT }}>
+          <span
+            className={`block bg-green-dark ${large ? "size-[34px]" : "size-[24px]"}`}
+            style={{ WebkitMask: `url(${STEPS[at].icon}) center / contain no-repeat`, mask: `url(${STEPS[at].icon}) center / contain no-repeat` }}
+          />
+        </span>
+        <p className={`font-display font-bold [text-wrap:balance] ${large ? "text-p1 lg:text-[20px] lg:leading-[30px]" : "text-p2"}`}>
+          {text.split("").map((ch, i) => (
+            <span key={i} className={i < filled ? "text-text-grey-80" : "text-text-grey-24"}>
+              {ch}
+            </span>
+          ))}
+        </p>
+      </motion.div>
     </AnimatePresence>
   );
 }

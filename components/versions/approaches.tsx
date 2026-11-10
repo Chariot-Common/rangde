@@ -151,7 +151,7 @@ export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wid
       : { initial: { opacity: 0, y: 16 }, animate: ready ? { opacity: 1, y: 0 } : undefined, transition: { duration: 0.6, delay: afterBody + extra, ease: EASE } };
 
   return (
-    <div className={`relative isolate flex w-full flex-col items-center overflow-hidden px-4 pt-[100px] sm:px-2 sm:pt-12 md:pt-16 lg:gap-16 lg:pt-[64px] ${mobileLead ? "gap-8 sm:gap-12" : "gap-12"}`}>
+    <div className={`relative isolate flex w-full flex-col items-center overflow-hidden px-4 sm:px-2 ${compact ? "gap-8 pt-10 sm:gap-10 sm:pt-8 md:pt-10 lg:gap-12 lg:pt-[40px]" : `pt-[100px] sm:pt-12 md:pt-16 lg:gap-16 lg:pt-[64px] ${mobileLead ? "gap-8 sm:gap-12" : "gap-12"}`}`}>
       {glow && (
       <div
         aria-hidden
@@ -490,7 +490,8 @@ const ICON_GREEN = "#109173";
  * the body text faded with no bold, the sourced phrases marked only by their underline. */
 /** `emojis` (Version 5): one emoji image per point, in order, in place of the badge and icon, each scaled to
  * 92px tall (width in proportion). */
-export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 0, refined = false, emojis }: { points: Point[]; size?: "lg" | "sm"; badge?: string; shapeOffset?: number; refined?: boolean; emojis?: string[] }) {
+/** `onDark`: white titles and text, for a dark section (v2's green "see where your money goes"). */
+export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 0, refined = false, emojis, onDark = false }: { points: Point[]; size?: "lg" | "sm"; badge?: string; shapeOffset?: number; refined?: boolean; emojis?: string[]; onDark?: boolean }) {
   const lg = size === "lg";
   const reduce = useReducedMotion();
   return (
@@ -537,8 +538,8 @@ export function PointsGrid({ points, size = "lg", badge = "#fff", shapeOffset = 
             )}
           </div>
           <div className="flex min-w-0 flex-col gap-1">
-            <h3 className={`font-display font-bold text-ink ${lg ? "text-p2 sm:text-p1" : "text-p2"}`}>{p.title}</h3>
-            <p className={`font-display text-p3 font-medium leading-[22px] sm:text-p2 sm:leading-[24px] ${refined ? "text-ink/64" : "text-ink/80"}`}>
+            <h3 className={`font-display font-bold ${onDark ? "text-white" : "text-ink"} ${lg ? "text-p2 sm:text-p1" : "text-p2"}`}>{p.title}</h3>
+            <p className={`font-display text-p3 font-medium leading-[22px] sm:text-p2 sm:leading-[24px] ${onDark ? "text-white/72" : refined ? "text-ink/64" : "text-ink/80"}`}>
               <PointText parts={p.text} plain={refined} />
             </p>
           </div>
@@ -859,11 +860,11 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
 }
 
 /** "A new way of lending needs serious infrastructure." (Figma 2718:46885), under How it works in v1.2. */
-export function InfrastructureRow({ heading = "A new way of lending needs serious infrastructure.", badge = "#F1F2F5" }: { heading?: string; badge?: string }) {
+export function InfrastructureRow({ heading = "A new way of lending needs serious infrastructure.", badge = "#F1F2F5", onDark = false }: { heading?: string; badge?: string; onDark?: boolean }) {
   return (
     <div className="flex w-full max-w-[1200px] flex-col items-center gap-10">
-      <AnimatedText as="h3" text={heading} className="text-center font-display text-h4 font-bold text-ink" />
-      <PointsGrid points={INFRA_POINTS} size="sm" badge={badge} shapeOffset={1} />
+      <AnimatedText as="h3" text={heading} className={`text-center font-display text-h4 font-bold ${onDark ? "text-white" : "text-ink"}`} />
+      <PointsGrid points={INFRA_POINTS} size="sm" badge={badge} shapeOffset={1} onDark={onDark} />
     </div>
   );
 }
@@ -1493,7 +1494,8 @@ function LiveFigure({ value, format, label, start, delay }: { value: number; for
  * Ram's "We think you should see where your money goes", with the real live figures: rangde.in's own
  * public stats feed (lib/stats.ts, refreshed every 10 minutes), counting up when the section comes in.
  */
-export function SeeWhereMoneyGoes({ stats }: { stats: RangDeStats }) {
+/** `after` (v2): more of the section under the figures, past a divider (the infrastructure points). */
+export function SeeWhereMoneyGoes({ stats, after }: { stats: RangDeStats; after?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.3 });
   const whole = (n: number) => Math.round(n).toLocaleString("en-IN");
@@ -1524,6 +1526,12 @@ export function SeeWhereMoneyGoes({ stats }: { stats: RangDeStats }) {
           ))}
         </div>
         <p className="text-center font-display text-p4 font-medium text-white/56">From Rang De&rsquo;s public platform data, refreshed every 10 minutes.</p>
+        {after && (
+          <>
+            <div className="h-px w-full bg-white/16" />
+            <div className="flex justify-center">{after}</div>
+          </>
+        )}
       </div>
     </section>
   );

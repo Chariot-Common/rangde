@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
-import { useRef, useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore, type ReactNode } from "react";
 import { LegacyButton as Button } from "@/components/ui/LegacyButton";
 import { ScrollInk } from "./ScrollInk";
 import { ASHOKA_CARD, AshokaFellowCard, SMITA_CARD, SmitaQuoteCard } from "./FounderCards";
@@ -71,7 +71,8 @@ const subscribePhone = (cb: () => void) => {
 
 /** `thinFrame` (v1.1, v2.1): the centre photo's frame as thin as a regular print's (at 1.65× it read as too thick).
  * `roomy` (v2): the same space above the heading as the page's other sections (on laptops it was only 8px). */
-export function FoundersCollage({ cards = false, thinFrame = false, roomy = false }: { cards?: boolean; thinFrame?: boolean; roomy?: boolean } = {}) {
+/** `story` (v2): a longer paragraph under the heading in place of the one-line belief (when it began, how it has grown). */
+export function FoundersCollage({ cards = false, thinFrame = false, roomy = false, story }: { cards?: boolean; thinFrame?: boolean; roomy?: boolean; story?: ReactNode } = {}) {
   const around = cards ? AROUND.map((a) => CARD_SWAPS[a.src] ?? a) : AROUND;
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const k = phone ? 0.25 : 1;
@@ -91,8 +92,8 @@ export function FoundersCollage({ cards = false, thinFrame = false, roomy = fals
       <div className="flex flex-col items-center gap-4 text-center">
         {/* Fills in as it is read, like the page's other H3s (plain: no coloured edge). */}
         <ScrollInk as="h2" tone="plain" text="Ram and Smita left Oxford to build Rang De." className="max-w-[820px] font-display text-h3 font-bold [text-wrap:balance]" />
-        <p className="max-w-[640px] font-display text-[18px] font-medium leading-[28px] text-text-grey-64 md:text-[22px] md:leading-[32px] [text-wrap:pretty]">
-          With a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow.
+        <p className={`font-display text-[18px] font-medium leading-[28px] text-text-grey-64 md:text-[22px] md:leading-[32px] [text-wrap:pretty] ${story ? "max-w-[760px]" : "max-w-[640px]"}`}>
+          {story ?? "With a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow."}
         </p>
       </div>
 

@@ -47,14 +47,23 @@ export default async function V2() {
           </>
         }
       />
-      {/* One section: you decide who you back, then the infrastructure behind it (animated icons). */}
-      <HowItWorksTabs refined inked bare visual="journey" eyebrow={null} heading="You decide who you back.">
-        <InfrastructureRow badge="#fff" />
-      </HowItWorksTabs>
-      <SeeWhereMoneyGoes stats={stats} />
+      <HowItWorksTabs refined inked bare visual="journey" eyebrow={null} heading="You decide who you back." />
+      {/* The live figures, then the infrastructure behind them in the same green section (white text, animated icons). */}
+      <SeeWhereMoneyGoes stats={stats} after={<InfrastructureRow badge="#fff" onDark />} />
       <FairReturns />
       {/* Photos only: the Ashoka Fellow card (from 14 years ago) and the quote card are out. */}
-      <FoundersCollage thinFrame roomy />
+      <FoundersCollage
+        thinFrame
+        roomy
+        // From the review call: when it began, and how it has grown since (live figures, as in the section above).
+        story={
+          <>
+            They started Rang De in 2008 with a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow. The idea was to let
+            anyone lend a little to the people banks overlook, and see exactly where every rupee goes. Since then, {stats.investors.toLocaleString("en-IN")} social
+            investors have lent ₹{Math.round(stats.disbursedCr).toLocaleString("en-IN")} crore to {stats.entrepreneurs.toLocaleString("en-IN")} entrepreneurs across India.
+          </>
+        }
+      />
       {/* From Version 1: the live opportunities (with "See more") right after the founders, then its questions. */}
       <OpportunitiesSection />
       <PlainQuestionCards count={4} flip large phoneHeading="Questions we get often" autoHighlight />
