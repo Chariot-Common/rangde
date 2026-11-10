@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 
 /*
  * Version 2's How it works, step 5, "Their credit grows" (from the review call): the borrower's side of the loop. Rekha Bai
- * (the borrower the earlier steps follow) with her credit rating: her repayments tick in, month by month, and the
- * needle on her rating moves from "New to credit" up to "Good". Then an arrow out to what that opens up: new possibilities
+ * (the borrower the earlier steps follow) with her credit score: her repayments tick in, month by month, and the
+ * needle moves from 560 (poor) up to 742 (good). Then an arrow out to what that opens up: new possibilities
  * (expand the business, new machinery, more clients). Plays once each time the step opens (the parent remounts it).
  * Side by side in a wide frame; in a narrow one (phones) the possibilities take the card's place.
  */
@@ -15,16 +15,37 @@ import { useEffect, useState } from "react";
 const EASE = [0.22, 1, 0.36, 1] as const;
 const MONTHS = 12;
 const GREEN = "#62AF1D";
-const BLUE_DEEP = "#00517A";
-// The needle's sweep, in degrees from pointing straight up: left (new to credit) to right of centre (good).
-const FROM = -78;
-const TO = 48;
-
-const RATINGS = [
-  { at: -1, label: "New to credit", color: "rgba(41,45,54,0.48)" },
-  { at: 0.35, label: "Fair", color: "#C98A0B" },
-  { at: 0.72, label: "Good", color: "#399121" },
+// The credit score gauge (from the reference the team shared): a half ring in four bands with gaps, red to orange, then
+// three greens; a tapered dark needle from a pivot under the ring; the score and its band in the middle. Scores run
+// 300–900, as Indian credit scores do; Rekha's rises from 560 to 742 as her repayments come in.
+const MIN = 300;
+const MAX = 900;
+const SCORE_FROM = 560;
+const SCORE_TO = 742;
+const BANDS = [
+  { from: 300, to: 600, label: "Poor", color: "#E0663D", text: "#D9533F" },
+  { from: 600, to: 700, label: "Adequate", color: "#9DC13F", text: "#8FB534" },
+  { from: 700, to: 800, label: "Good", color: "#4E9A2E", text: "#3F8A22" },
+  { from: 800, to: 900, label: "Excellent", color: "#245E12", text: "#245E12" },
 ];
+const bandOf = (score: number) => BANDS.find((b) => score < b.to) ?? BANDS[BANDS.length - 1];
+// Geometry (viewBox 220 × 132): the ring's centre, radius and width, and the gap between bands in degrees.
+const CX = 110;
+const CY = 112;
+const R = 90;
+const RING = 13;
+const GAP = 4;
+/** Degrees from the left end of the ring (0) over the top to the right end (180). */
+const angleOf = (score: number) => (180 * (score - MIN)) / (MAX - MIN);
+const pointAt = (deg: number) => {
+  const a = (deg * Math.PI) / 180;
+  return [CX - R * Math.cos(a), CY - R * Math.sin(a)];
+};
+const arc = (d0: number, d1: number) => {
+  const [x0, y0] = pointAt(d0);
+  const [x1, y1] = pointAt(d1);
+  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${R} ${R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+};
 
 const POSSIBILITIES = [
   { label: "Expand the business", icon: "M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4M5 21V10.85M19 21V10.85M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4" },
@@ -39,7 +60,7 @@ export function CreditGrowsScene() {
   const t = useMotionValue(reduce ? 1 : 0);
   const [phase, setPhase] = useState<"rating" | "open">(reduce ? "open" : "rating");
   const [paid, setPaid] = useState(reduce ? MONTHS : 0);
-  const [rating, setRating] = useState(reduce ? RATINGS.length - 1 : 0);
+  const [score, setScore] = useState(reduce ? SCORE_TO : SCORE_FROM);
 
   useEffect(() => {
     if (reduce) return;
@@ -53,14 +74,11 @@ export function CreditGrowsScene() {
 
   useMotionValueEvent(t, "change", (v) => {
     setPaid(Math.min(MONTHS, Math.floor(v * MONTHS + 0.0001)));
-    let r = 0;
-    RATINGS.forEach((x, i) => {
-      if (v >= x.at) r = i;
-    });
-    setRating(r);
+    setScore(Math.round(SCORE_FROM + (SCORE_TO - SCORE_FROM) * v));
   });
-  const [deg, setDeg] = useState(reduce ? TO : FROM);
-  useMotionValueEvent(t, "change", (v) => setDeg(FROM + (TO - FROM) * v));
+  const band = bandOf(score);
+  // The needle points straight up at 0°, so it turns by the score's angle less 90.
+  const needle = angleOf(score) - 90;
   const open = phase === "open";
 
   return (
@@ -82,31 +100,40 @@ export function CreditGrowsScene() {
             </div>
           </div>
 
-          {/* The gauge: a half ring, the part travelled in green, the needle over it. */}
-          <div className="relative mx-auto w-full max-w-[240px]">
-            <svg viewBox="0 0 200 112" className="block w-full" aria-hidden>
-              <path d="M 16 100 A 84 84 0 0 1 184 100" fill="none" stroke="rgba(41,45,54,0.08)" strokeWidth="14" strokeLinecap="round" />
-              {/* The green runs exactly to the needle. */}
-              <path d="M 16 100 A 84 84 0 0 1 184 100" fill="none" stroke={GREEN} strokeWidth="14" strokeLinecap="round" pathLength={1} strokeDasharray={`${(deg + 90) / 180} 1`} />
-              {/* Rotated by attribute round the hub (a CSS transform origin is unreliable inside SVG). */}
-              <g transform={`rotate(${deg} 100 100)`}>
-                <line x1="100" y1="100" x2="100" y2="40" stroke={BLUE_DEEP} strokeWidth="4" strokeLinecap="round" />
+          {/* The gauge. */}
+          <div className="relative mx-auto w-full max-w-[260px]">
+            <svg viewBox="0 0 220 132" className="block w-full overflow-visible" aria-hidden>
+              <defs>
+                <linearGradient id="cg-poor" gradientUnits="userSpaceOnUse" x1={CX - R} y1="0" x2={CX} y2="0">
+                  <stop offset="0" stopColor="#D9443F" />
+                  <stop offset="1" stopColor="#E8A23D" />
+                </linearGradient>
+              </defs>
+              {BANDS.map((b, i) => (
+                <path
+                  key={b.label}
+                  d={arc(angleOf(b.from) + (i === 0 ? 0 : GAP / 2), angleOf(b.to) - (i === BANDS.length - 1 ? 0 : GAP / 2))}
+                  fill="none"
+                  stroke={i === 0 ? "url(#cg-poor)" : b.color}
+                  strokeWidth={RING}
+                  strokeLinecap="round"
+                />
+              ))}
+              {/* A tapered needle, turned round its pivot by attribute (a CSS origin is unreliable inside SVG). */}
+              <g transform={`rotate(${needle.toFixed(2)} ${CX} ${CY})`}>
+                <path d={`M ${CX - 4.5} ${CY + 6} L ${CX - 0.6} ${CY - R + 14} L ${CX + 0.6} ${CY - R + 14} L ${CX + 4.5} ${CY + 6} Z`} fill="#292D36" />
               </g>
-              <circle cx="100" cy="100" r="8" fill={BLUE_DEEP} />
+              {/* The score and its band, over the needle, with a white halo so it stays readable as the needle passes. */}
+              <g fontFamily="var(--font-inter), Inter, sans-serif" fontWeight="700" textAnchor="middle" stroke="#fff" strokeWidth="6" strokeLinejoin="round" paintOrder="stroke">
+                <text x={CX} y={CY - 38} fontSize="26" fill={band.text} style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {score}
+                </text>
+                <text x={CX} y={CY - 14} fontSize="20" fill="#4B4F57">
+                  {band.label}
+                </text>
+              </g>
             </svg>
-            <div className="mt-1 text-center">
-              <p className="font-display text-[11px] font-bold uppercase leading-[14px] tracking-[0.88px] text-ink/48">Credit rating</p>
-              <motion.p
-                key={rating}
-                initial={reduce ? false : { opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, ease: EASE }}
-                className="font-display text-[22px] font-bold leading-[28px]"
-                style={{ color: RATINGS[rating].color }}
-              >
-                {RATINGS[rating].label}
-              </motion.p>
-            </div>
+            <p className="mt-1 text-center font-display text-[11px] font-bold uppercase leading-[14px] tracking-[0.88px] text-ink/48">Credit score</p>
           </div>
 
           {/* Her repayments, month by month, each reported to the credit bureaus. */}

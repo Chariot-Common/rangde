@@ -38,7 +38,7 @@ const STEPS = [
     body: "Every repayment is reported to the credit bureaus, so the borrower builds a formal credit history, and with it new possibilities: a bigger loan, new machinery, more clients.",
   },
 ];
-const LABEL_5 = "Rekha Bai's repayments tick in month by month and her credit rating rises from new to credit to good; then her new possibilities appear: expand the business, buy new machinery, take on more clients, a bigger loan next time.";
+const LABEL_5 = "Rekha Bai's repayments tick in month by month and her credit score rises from 560 (poor) to 742 (good); then her new possibilities appear: expand the business, buy new machinery, take on more clients, a bigger loan next time.";
 
 export function V4HowItWorks({ children }: { children?: ReactNode }) {
   const ref = useRef<HTMLElement>(null);
