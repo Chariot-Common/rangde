@@ -4,7 +4,8 @@ import { OpportunitiesSection } from "@/components/sections/opportunities/Opport
 import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
 import { ReelsWheel } from "@/components/sections/reels/ReelsWheel";
 import { ApproachHero, HowItWorksTabs, InfrastructureRow, SeeWhereMoneyGoes } from "@/components/versions/approaches";
-import { FairReturns, V4HeroCards } from "@/components/versions/V4Sections";
+import { V4HeroCards } from "@/components/versions/V4Sections";
+import { V4Returns } from "@/components/versions/V4Returns";
 import { V4Cycle } from "@/components/versions/V4Cycle";
 import { V4HowItWorks } from "@/components/versions/V4HowItWorks";
 import { getRangDeStats } from "@/lib/stats";
@@ -50,7 +51,8 @@ export default async function V2() {
       <HowItWorksTabs refined inked bare visual="journey" eyebrow={null} heading="You decide who you back." />
       {/* The live figures, then the infrastructure behind them in the same green section (white text, animated icons). */}
       <SeeWhereMoneyGoes stats={stats} after={<InfrastructureRow badge="#fff" onDark />} />
-      <FairReturns />
+      {/* Why aren't returns higher: what one loan returns, beyond the interest (no comparison with other investments). */}
+      <V4Returns />
       {/* Photos only: the Ashoka Fellow card (from 14 years ago) and the quote card are out. */}
       <FoundersCollage
         thinFrame

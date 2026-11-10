@@ -93,7 +93,8 @@ export function CreditGrowsScene() {
         >
           <div className="flex items-center gap-3">
             <span className="relative size-[44px] shrink-0 overflow-hidden rounded-full bg-[#F1F2F5]">
-              <Image src="/how-it-works/s4-rekha.webp" alt="" fill sizes="44px" className="object-cover object-top" />
+              {/* The photo has a dark ring drawn into it: scaled up so the circle crops it off. */}
+              <Image src="/how-it-works/s4-rekha.webp" alt="" fill sizes="44px" className="scale-[1.2] object-cover" />
             </span>
             <div className="min-w-0">
               <p className="font-display text-[15px] font-bold leading-[20px] text-ink">Rekha Bai</p>
