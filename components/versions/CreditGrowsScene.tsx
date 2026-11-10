@@ -34,7 +34,8 @@ const CX = 110;
 const CY = 112;
 const R = 90;
 const RING = 13;
-const GAP = 4;
+// The round caps reach RING/2 past each end (about 4° at this radius), so the gap allows for both caps plus clear space.
+const GAP = 12;
 /** Degrees from the left end of the ring (0) over the top to the right end (180). */
 const angleOf = (score: number) => (180 * (score - MIN)) / (MAX - MIN);
 const pointAt = (deg: number) => {
