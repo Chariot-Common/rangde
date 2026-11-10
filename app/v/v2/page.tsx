@@ -54,7 +54,7 @@ export default async function V2() {
       <SeeWhereMoneyGoes stats={stats} />
       <FairReturns />
       {/* Photos only: the Ashoka Fellow card (from 14 years ago) and the quote card are out. */}
-      <FoundersCollage thinFrame />
+      <FoundersCollage thinFrame roomy />
       {/* From Version 1: the live opportunities (with "See more") right after the founders, then its questions. */}
       <OpportunitiesSection />
       <PlainQuestionCards count={4} flip large phoneHeading="Questions we get often" autoHighlight />

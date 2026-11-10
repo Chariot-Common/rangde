@@ -69,8 +69,9 @@ const subscribePhone = (cb: () => void) => {
   return () => m.removeEventListener("change", cb);
 };
 
-/** `thinFrame` (v1.1, v2.1): the centre photo's frame as thin as a regular print's (at 1.65× it read as too thick). */
-export function FoundersCollage({ cards = false, thinFrame = false }: { cards?: boolean; thinFrame?: boolean } = {}) {
+/** `thinFrame` (v1.1, v2.1): the centre photo's frame as thin as a regular print's (at 1.65× it read as too thick).
+ * `roomy` (v2): the same space above the heading as the page's other sections (on laptops it was only 8px). */
+export function FoundersCollage({ cards = false, thinFrame = false, roomy = false }: { cards?: boolean; thinFrame?: boolean; roomy?: boolean } = {}) {
   const around = cards ? AROUND.map((a) => CARD_SWAPS[a.src] ?? a) : AROUND;
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const k = phone ? 0.25 : 1;
@@ -84,7 +85,7 @@ export function FoundersCollage({ cards = false, thinFrame = false }: { cards?: 
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.04]);
 
   return (
-    <section className="mx-2 flex flex-col items-center gap-4 overflow-hidden rounded-[16px] bg-white px-4 pb-r5 pt-7 sm:px-8 sm:pt-r4 md:pb-ds-6 lg:pt-2">
+    <section className={`mx-2 flex flex-col items-center gap-4 overflow-hidden rounded-[16px] bg-white px-4 pb-r5 sm:px-8 md:pb-ds-6 ${roomy ? "pt-14 sm:pt-20 md:pt-24 lg:pt-[120px]" : "pt-7 sm:pt-r4 lg:pt-2"}`}>
       {/* Two levels only: the short line (Oxford is the word that has to land, so nothing else sits beside it)
           and Ram's own one-sentence why, from the version he shared. */}
       <div className="flex flex-col items-center gap-4 text-center">
