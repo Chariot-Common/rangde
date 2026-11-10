@@ -44,12 +44,12 @@ const AROUND: Around[] = [
  * Version 4 (`cards`): the same collage, with two prints swapped for cards from Figma (see FounderCards.tsx):
  * the top-left one becomes Ram's Ashoka Fellow card and the bottom-right one Smita's quote. They keep those
  * prints' tilt and drift; `scale` is in multiples of the card's Figma size. The quote card sits a little
- * further out than the print did so the centre photo doesn't cover it; the Ashoka card is tucked onto the
- * centre photo's top-left corner, in front of it so the laurel stays whole. The two top photos also move
+ * further out than the print did so the centre photo doesn't cover it; the Ashoka card is tucked under the
+ * centre photo's top-left corner. The two top photos also move
  * left, closer in (from the v4 review).
  */
 const CARD_SWAPS: Record<string, Around> = {
-  "/images/collage/collage-02.webp": { src: "card:ashoka", card: "ashoka", scale: 1.15, left: 110, top: 112, rotate: [-7, -10], drift: [120, -90], z: 11 },
+  "/images/collage/collage-02.webp": { src: "card:ashoka", card: "ashoka", scale: 1.15, left: 110, top: 112, rotate: [-7, -10], drift: [120, -90], z: 3 },
   "/images/founders-collage/social-investor-meetup.webp": { src: "card:smita", card: "smita", scale: 0.8, left: 875, top: 470, rotate: [4, 2], drift: [70, -120], z: 3 },
   "/images/founders-collage/group-stakeholders.webp": { ...AROUND[3], left: 470 },
   "/images/founders-collage/group-entrepreneurs.webp": { ...AROUND[1], left: 830, top: 26 },
