@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { FoundersSection } from "@/components/sections/founders/FoundersSection";
+import { FoundersCollage } from "@/components/versions/FoundersCollage";
 import { OtherStartupIndia, OutcomeChain, WhyNotHigher } from "@/components/versions/idea";
 import { ClosingCta } from "@/components/versions/proof";
 import { LinkButton } from "@/components/versions/ui";
@@ -47,6 +47,7 @@ export default async function V4() {
           </>
         }
         strip={false}
+        glow={false}
       />
       <OutcomeChain />
       <SmallMoney />
@@ -56,7 +57,8 @@ export default async function V4() {
       </HowItWorksTabs>
       <SeeWhereMoneyGoes stats={stats} />
       <WhyNotHigher />
-      <FoundersSection />
+      {/* Version 1.1's founders collage, with Ram's Ashoka Fellow card and Smita's quote in place of two photos. */}
+      <FoundersCollage cards />
       <ClosingCta lead="You invest in companies and markets." rest="Now invest in Bharat." sub="In the people building businesses outside the headlines. Start with ₹500." />
       <QuestionCards heading="Questions & Answers" count={4} exclude={["Why aren’t Rang De returns higher?"]} />
     </div>

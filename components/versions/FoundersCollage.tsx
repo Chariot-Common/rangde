@@ -5,6 +5,7 @@ import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } f
 import { useRef, useSyncExternalStore } from "react";
 import { LegacyButton as Button } from "@/components/ui/LegacyButton";
 import { ScrollInk } from "./ScrollInk";
+import { ASHOKA_CARD, AshokaFellowCard, SMITA_CARD, SmitaQuoteCard } from "./FounderCards";
 
 /*
  * Version 1.1's founders section: the line, then one big photo of the two of them, behaving like Version 6's (a print
@@ -26,7 +27,7 @@ const H = 700;
 const BASE = 320; // Version 6's print width; its height is 3/4 of that
 const CENTRE_SCALE = 1.65; // the main print, in multiples of that
 
-type Around = { src: string; scale: number; left: number; top: number; rotate: [number, number]; drift: [number, number]; z: number };
+type Around = { src: string; scale: number; left: number; top: number; rotate: [number, number]; drift: [number, number]; z: number; card?: "smita" | "ashoka" };
 // left/top: the print's top-left in design pixels; rotate: degrees at the start and end of its trip;
 // drift: px offset at the start and end of its trip (the far ones barely move); z: stacking, far to near.
 const AROUND: Around[] = [
@@ -38,6 +39,21 @@ const AROUND: Around[] = [
   { src: "/images/founders-collage/group-stakeholders.webp", scale: 0.6, left: 560, top: 22, rotate: [5, 8], drift: [20, -30], z: 1 },
   { src: "/images/founders-collage/group-picture-2.webp", scale: 0.6, left: 60, top: 440, rotate: [-4, -2], drift: [28, -18], z: 1 },
 ];
+
+/*
+ * Version 4 (`cards`): the same collage, with two prints swapped for cards from Figma (see FounderCards.tsx):
+ * the top-left one becomes Ram's Ashoka Fellow card and the bottom-right one Smita's quote. They keep those
+ * prints' tilt and drift; `scale` is in multiples of the card's Figma size. The quote card sits a little
+ * further out than the print did so the centre photo doesn't cover it; the Ashoka card is tucked onto the
+ * centre photo's top-left corner, in front of it so the laurel stays whole. The two top photos also move
+ * left, closer in (from the v4 review).
+ */
+const CARD_SWAPS: Record<string, Around> = {
+  "/images/collage/collage-02.webp": { src: "card:ashoka", card: "ashoka", scale: 1.15, left: 110, top: 112, rotate: [-7, -10], drift: [120, -90], z: 11 },
+  "/images/founders-collage/social-investor-meetup.webp": { src: "card:smita", card: "smita", scale: 0.8, left: 875, top: 470, rotate: [4, 2], drift: [70, -120], z: 3 },
+  "/images/founders-collage/group-stakeholders.webp": { ...AROUND[3], left: 470 },
+  "/images/founders-collage/group-entrepreneurs.webp": { ...AROUND[1], left: 830, top: 26 },
+};
 
 const pct = (n: number, of: number) => `${(n / of) * 100}%`;
 const FRAME = "overflow-hidden border-solid border-white bg-white shadow-[0_16px_40px_rgba(0,0,0,0.22)]";
@@ -53,7 +69,8 @@ const subscribePhone = (cb: () => void) => {
   return () => m.removeEventListener("change", cb);
 };
 
-export function FoundersCollage() {
+export function FoundersCollage({ cards = false }: { cards?: boolean } = {}) {
+  const around = cards ? AROUND.map((a) => CARD_SWAPS[a.src] ?? a) : AROUND;
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const k = phone ? 0.25 : 1;
   const stageRef = useRef<HTMLDivElement>(null);
@@ -78,7 +95,7 @@ export function FoundersCollage() {
       </div>
 
       <div ref={stageRef} className="relative my-6 w-full max-w-[1200px] [container-type:inline-size] md:my-0 md:max-w-[66vw]" style={{ aspectRatio: `${W} / ${H}` }}>
-        {AROUND.map((a) => (
+        {around.map((a) => (
           <Print key={a.src} item={a} progress={scrollYProgress} reduce={!!reduce} k={k} />
         ))}
         {/* The big one: 1.5× Version 6's print, centred, in front of the rest. */}
@@ -114,6 +131,17 @@ export function FoundersCollage() {
 function Print({ item, progress, reduce, k }: { item: Around; progress: MotionValue<number>; reduce: boolean; k: number }) {
   const y = useTransform(progress, [0, 1], [item.drift[0] * k, item.drift[1] * k]);
   const rotate = useTransform(progress, [0, 1], item.rotate);
+  if (item.card) {
+    const size = item.card === "smita" ? SMITA_CARD : ASHOKA_CARD;
+    return (
+      <motion.div
+        style={{ left: pct(item.left, W), top: pct(item.top, H), width: pct(size.w * item.scale, W), aspectRatio: `${size.w} / ${size.h}`, zIndex: item.z, ...(reduce ? { rotate: item.rotate[0] } : { y, rotate }) }}
+        className="absolute"
+      >
+        {item.card === "smita" ? <SmitaQuoteCard scale={item.scale} /> : <AshokaFellowCard scale={item.scale} />}
+      </motion.div>
+    );
+  }
   const w = BASE * item.scale;
   return (
     <motion.div
