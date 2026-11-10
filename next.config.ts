@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
       // Renamed: Version 4 is now Version 2, Version 6 is now Version 3 (the old Version 3 is at /v/archive/v3).
       { source: "/v/v4", destination: "/v/v2", permanent: false },
       { source: "/v/v6", destination: "/v/v3", permanent: false },
+      // Version 2.1 replaced Version 2 (10 Nov 2026).
+      { source: "/v/v2-1", destination: "/v/v2", permanent: false },
       ...(VERSIONS_SITE ? [{ source: "/", destination: "/v", permanent: false }] : []),
       // The approach versions (Figma 2743:14706): rangde-v1 opens Version 1.1, rangde-v2 now opens
       // Version 3 (it used to open Version B, still at /v/idea), and rangde-v1-2 opens Version 1.2

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import type { Story } from "@/lib/content";
 
@@ -27,6 +28,10 @@ interface StoryCardProps {
    * on phones — so those images aren't downloaded (or preloaded) on first load.
    */
   loading?: "eager" | "lazy";
+  /** Shown under the story, above the figures (Version 2.1: the strip of investors' faces, Figma 2989:48). */
+  faces?: ReactNode;
+  /** The photo's white stroke drawn inside its edge (as "recent11" has it), so the photo fills the full 80px. */
+  insetAvatar?: boolean;
 }
 
 const CARD_WIDTH_CLASSES = {
@@ -39,7 +44,7 @@ const IMAGE_HEIGHT_CLASSES = {
   grid: "aspect-[16/9]",
 };
 
-export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading = "eager", layout = "default", stretch = false }: StoryCardProps) {
+export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading = "eager", layout = "default", stretch = false, faces, insetAvatar = false }: StoryCardProps) {
   const recent = (layout === "recent" || layout === "recent11") && !!story.name;
   const v11 = layout === "recent11";
   return (
@@ -63,7 +68,7 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
           size={80}
           radius={8}
           borderClassName={
-            v11
+            v11 || insetAvatar
               ? "after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:border-2 after:border-white after:content-['']"
               : "border-2 border-white"
           }
@@ -85,6 +90,8 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
             <span className="font-display font-normal">{story.rest}</span>
           </p>
         )}
+
+        {faces}
 
         <div className={`h-px w-full shrink-0 bg-white/16 ${stretch ? "mt-auto" : ""}`} />
 

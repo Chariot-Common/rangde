@@ -47,15 +47,7 @@ const VERSIONS = [
     name: "Lend to a person",
     href: "/v/v2",
     audience: "Everyone (rangde-v1)",
-    idea: "Ram’s Claude Design draft, section for section, in the site’s design (until now Version 4).",
-    measure: "Sign-ups vs. the current homepage",
-  },
-  {
-    key: "2.1",
-    name: "Lend to a person, reworked",
-    href: "/v/v2-1",
-    audience: "Everyone (rangde-v1)",
-    idea: "Version 2 rebuilt from the Figma (Home - v4): investee cards in the hero, How it works left and right, the loan as a loop from your investment to more opportunity, the Other Startup India in reels, you decide who you back, fair returns.",
+    idea: "Ram’s draft rebuilt from the Figma (Home - v4): investee cards in the hero ticker, How it works left and right, the loan as a scroll-played loop from your investment to more opportunity, the Other Startup India in reels, you decide who you back, fair returns (until now Version 2.1).",
     measure: "Sign-ups vs. the current homepage",
   },
   {

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { StoryCard } from "@/components/sections/hero/StoryCard";
+import { StoryCarousel } from "@/components/sections/hero/StoryCarousel";
 import { stories } from "@/lib/content";
 import { AnimatedText } from "@/components/ui/AnimatedText";
 
@@ -9,42 +9,43 @@ import { AnimatedText } from "@/components/ui/AnimatedText";
 
 /* ───────────── Hero: one person, funded by many ───────────── */
 
-// The investors each story names ("57 social investors funded…"), and generic faces to stand for them (the How it works
-// pop-up's avatars: we don't have each borrower's actual investors, so these are not meant as real people).
+// The investors each story names ("57 social investors funded…"), and faces to stand for them: the investor photos from
+// the Figma example card (2989:48). We don't have each borrower's actual investors, so the same faces appear on every
+// card, as many as the story's count, up to nine.
 const COUNTS = [57, 240, 4, 13];
-const FACES = [1, 4, 7, 10, 13].map((n) => `/how-it-works/s1-av${n}.webp`);
+const FACES = Array.from({ length: 9 }, (_, i) => `/images/investors/investor-${String(i + 1).padStart(2, "0")}.png`);
+// The card's own green, so each face's 1px ring cuts it out of the one beside it (Figma: border #084a2f).
+const CARD_GREEN = "#084a2f";
 
-function InvestorPill({ count }: { count: number }) {
+/** Figma 2989:14126: a row of 40px round faces, each overlapping the next by 8px, under the story. */
+function InvestorFaces({ count }: { count: number }) {
   const shown = FACES.slice(0, Math.min(FACES.length, count));
   return (
-    <div className="absolute left-1/2 top-3 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-white/92 py-1 pl-1 pr-3 shadow-[0_6px_20px_rgba(0,0,0,0.16)] backdrop-blur-sm sm:top-4">
-      <span className="flex -space-x-2">
-        {shown.map((src) => (
-          <span key={src} className="relative block size-[26px] overflow-hidden rounded-full border-2 border-white bg-[#cbe8f6]">
-            <Image src={src} alt="" fill sizes="26px" className="object-cover" />
-          </span>
-        ))}
-      </span>
-      <span className="whitespace-nowrap font-display text-p4 font-bold text-ink">
-        {count} investor{count === 1 ? "" : "s"}
-      </span>
+    <div className="flex items-center" aria-label={`${count} social investor${count === 1 ? "" : "s"}`} role="img">
+      {shown.map((src, i) => (
+        <span
+          key={src}
+          className={`relative block size-[40px] shrink-0 overflow-hidden rounded-full border border-solid shadow-[0_2px_4px_rgba(0,0,0,0.1)] ${i < shown.length - 1 ? "-mr-2" : ""}`}
+          style={{ borderColor: CARD_GREEN }}
+        >
+          <Image src={src} alt="" fill sizes="40px" className="object-cover" />
+        </span>
+      ))}
     </div>
   );
 }
 
-/** The four investee cards under the hero ("240 social investors funded Sivakumar's…"), each with the investors on it.
- * Four across on laptops, two on tablets, a sideways scroll on phones. */
+/** The four investee cards under the hero ("240 social investors funded Sivakumar's…"), each with its investors' faces
+ * set inside the card, under the story (Figma 2989:48). They run in the homepage's own story ticker, so the cards' width,
+ * height, borrower photos and motion are the homepage's: a continuous scroll on tablets and up (pauses on hover, drag to
+ * scrub) and a one-at-a-time swiper on phones. */
+// Sharper borrower portraits for these cards (the design team's mock faces, 320px wide), in the stories' order:
+// Neilhoupe, Sivakumar, Gita Devi, Sitara Devi.
+const PORTRAITS = ["neilhoupe", "sivakumar", "gita-devi", "sitara-devi"].map((n) => `/images/stories/portraits/${n}.jpg`);
+
 export function V4HeroCards() {
-  return (
-    <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-2 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden">
-      {stories.map((s, i) => (
-        <div key={s.highlight} className="relative w-[calc(100vw-48px)] shrink-0 snap-center sm:w-auto">
-          <StoryCard story={s} variant="grid" stretch />
-          <InvestorPill count={COUNTS[i]} />
-        </div>
-      ))}
-    </div>
-  );
+  const items = stories.map((s, i) => ({ ...s, avatar: PORTRAITS[i] ?? s.avatar }));
+  return <StoryCarousel items={items} insetAvatar faces={stories.map((s, i) => <InvestorFaces key={s.highlight} count={COUNTS[i]} />)} />;
 }
 
 /* ───────────── Why aren't returns higher? ───────────── */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type gsap from "gsap";
 import { stories as defaultStories, type Story } from "@/lib/content";
 import { StoryCard, type StoryCardLayout } from "./StoryCard";
@@ -35,8 +35,11 @@ function getServerSnapshot() {
   return false;
 }
 
-/** `items`/`layout`: the approach versions (app/v/v1, v1-2, v3) pass recent stories in the "recent" card layout. */
-export function StoryCarousel({ items: stories = defaultStories, layout = "default" }: { items?: Story[]; layout?: StoryCardLayout } = {}) {
+/** `items`/`layout`: the approach versions (app/v/v1, v1-2, v3) pass recent stories in the "recent" card layout.
+ * `faces`: one node per story, shown inside its card under the story (Version 2.1: the investors' faces); cards with faces
+ * also fill the row's height, figures pinned to the bottom. `insetAvatar`: the borrower photo's white stroke drawn inside
+ * its edge, as Version 1.1 has it. */
+export function StoryCarousel({ items: stories = defaultStories, layout = "default", faces, insetAvatar = false }: { items?: Story[]; layout?: StoryCardLayout; faces?: ReactNode[]; insetAvatar?: boolean } = {}) {
   const trackRef = useRef<HTMLDivElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
   const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -159,7 +162,7 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
   const desktopGrid = (
     <div className="hidden lg:grid lg:grid-cols-4 lg:gap-[8px]">
       {stories.map((story, i) => (
-        <StoryCard layout={layout} stretch={layout !== "default"} key={i} story={story} variant="grid" loading={wideLoading} />
+        <StoryCard layout={layout} stretch={layout !== "default" || !!faces} insetAvatar={insetAvatar} key={i} story={story} faces={faces?.[i]} variant="grid" loading={wideLoading} />
       ))}
     </div>
   );
@@ -179,7 +182,7 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
         // rest switch to eager once hydrated on a phone, well before anyone can swipe
         // to them (and never on md+, where this swiper is display:none).
         renderItem={(story, i) => (
-          <StoryCard layout={layout} stretch={layout !== "default"} key={i} story={story} variant="grid" loading={i === 0 || isMobile ? "eager" : "lazy"} />
+          <StoryCard layout={layout} stretch={layout !== "default" || !!faces} insetAvatar={insetAvatar} key={i} story={story} faces={faces?.[i]} variant="grid" loading={i === 0 || isMobile ? "eager" : "lazy"} />
         )}
       />
     </div>
@@ -191,7 +194,7 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
         {mobileSwiper}
         <div className="hidden md:flex md:w-full md:snap-x md:snap-mandatory md:gap-[8px] md:overflow-x-auto md:scroll-smooth md:px-[80px] md:[scrollbar-width:none] lg:hidden md:[&::-webkit-scrollbar]:hidden">
           {stories.map((story, i) => (
-            <StoryCard layout={layout} stretch={layout !== "default"} key={i} story={story} loading={wideLoading} />
+            <StoryCard layout={layout} stretch={layout !== "default" || !!faces} insetAvatar={insetAvatar} key={i} story={story} faces={faces?.[i]} loading={wideLoading} />
           ))}
         </div>
         {desktopGrid}
@@ -223,12 +226,12 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
       >
         <div ref={trackRef} className="flex w-max gap-[8px]">
           {stories.map((story, i) => (
-            <StoryCard layout={layout} stretch={layout !== "default"} key={`a-${i}`} story={story} loading={wideLoading} />
+            <StoryCard layout={layout} stretch={layout !== "default" || !!faces} insetAvatar={insetAvatar} key={`a-${i}`} story={story} faces={faces?.[i]} loading={wideLoading} />
           ))}
           {/* Repeats: the loop shifts by half the track (xPercent -50), so half must stay wider
               than the screen — seven extra sets keep very wide / zoomed-out screens (~25%) filled. */}
           {[1, 2, 3, 4, 5, 6, 7].flatMap((n) =>
-            stories.map((story, i) => <StoryCard layout={layout} stretch={layout !== "default"} key={`r${n}-${i}`} story={story} hiddenFromAT loading={wideLoading} />),
+            stories.map((story, i) => <StoryCard layout={layout} stretch={layout !== "default" || !!faces} insetAvatar={insetAvatar} key={`r${n}-${i}`} story={story} faces={faces?.[i]} hiddenFromAT loading={wideLoading} />),
           )}
         </div>
       </div>
