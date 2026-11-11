@@ -80,6 +80,9 @@ export function V4Cycle() {
   const [phoneTop, setPhoneTop] = useState(0);
   const oppRef = useRef<HTMLSpanElement>(null);
   const repRef = useRef<HTMLSpanElement>(null);
+  // Every step's chip, measured so the loop can stop short of each one (for the arrows into them).
+  const chipEls = useRef<(HTMLSpanElement | null)[]>([]);
+  const [chipSizes, setChipSizes] = useState(STEPS.map(() => ({ w: 120, h: 40 })));
   useEffect(() => {
     if (reduce) return;
     const size = () => {
@@ -102,6 +105,10 @@ export function V4Cycle() {
       }
       setBox({ w, h: Math.max(160, Math.floor(h)) });
       setSideW(sw);
+      setChipSizes((prev) => {
+        const next = STEPS.map((_, i) => ({ w: chipEls.current[i]?.offsetWidth ?? prev[i].w, h: chipEls.current[i]?.offsetHeight ?? prev[i].h }));
+        return next.every((c, i) => c.w === prev[i].w && c.h === prev[i].h) ? prev : next;
+      });
     };
     size();
     // The stage's height follows the nav's (--navbar-bottom), which settles after first paint, so watch the stage itself.
@@ -186,16 +193,30 @@ export function V4Cycle() {
   const cx = box.w / 2;
   const rx = Math.max(0, (xr - xl) / 2);
   const ry = box.h / 2;
-  // Arrows half-way between the steps, pointing the way round (clockwise), green once the loop has passed them.
+  // An arrow at the end of each stretch of the loop, pointing into the next step, with a gap between its tip and the step
+  // (the line is broken there). θ runs clockwise from Business at the top.
+  const at_ = (t: number) => [cx + rx * Math.sin(t), ry - ry * Math.cos(t)] as const;
+  const r2 = (n: number) => Math.round(n * 100) / 100; // so the server's and the browser's numbers match exactly
+  const ARROW_GAP = phone ? 6 : 8;
   const arrows = [0, 1, 2, 3].map((k) => {
-    const t = ((k + 0.5) / N) * Math.PI * 2;
-    const x = cx + rx * Math.sin(t);
-    const y = ry - ry * Math.cos(t);
+    const j = (k + 1) % N; // the step this stretch runs into
+    const tc = ((k + 1) / N) * Math.PI * 2;
+    const [ccx, ccy] = at_(tc);
+    const hw = chipSizes[j].w / 2 + ARROW_GAP;
+    const hh = chipSizes[j].h / 2 + ARROW_GAP;
+    // Back along the loop from the step's centre until clear of its chip (and the gap).
+    let t = tc;
+    for (let n = 0; n < 2000; n++) {
+      const [x, y] = at_(t);
+      if (Math.abs(x - ccx) > hw || Math.abs(y - ccy) > hh) break;
+      t -= 0.0015;
+    }
+    const [x, y] = at_(t);
     const deg = (Math.atan2(ry * Math.sin(t), rx * Math.cos(t)) * 180) / Math.PI;
     const passed = reduce || finished || at > k;
-    // Rounded so the server's and the browser's numbers match exactly (they differed in the last decimal place).
-    const r2 = (n: number) => Math.round(n * 100) / 100;
-    return { x: r2(x), y: r2(y), deg: r2(deg), passed };
+    // The gap: the loop between the arrow's tip and the step's centre, painted over in white (the chip covers the rest).
+    const gap = `M ${r2(x)} ${r2(y)} A ${r2(rx)} ${r2(ry)} 0 0 1 ${r2(ccx)} ${r2(ccy)}`;
+    return { x: r2(x), y: r2(y), deg: r2(deg), passed, gap };
   });
   const d = `M ${cx} 0 A ${rx} ${ry} 0 0 1 ${cx} ${box.h} A ${rx} ${ry} 0 0 1 ${cx} 0 Z`;
   const side = sideW ? { minWidth: sideW } : undefined;
@@ -222,18 +243,20 @@ export function V4Cycle() {
           strokeDashoffset={1 - progress.get()}
         />
         {arrows.map((a, k) => (
-          <g key={k} transform={`translate(${a.x} ${a.y}) rotate(${a.deg})`}>
-            <circle r={phone ? 13 : 17} fill="#fff" stroke={a.passed ? GREEN_HIGHLIGHT : "var(--color-text-grey-24)"} strokeWidth={1.5} style={{ transition: "stroke .3s" }} />
-            <path
-              d={phone ? "M -3 -5 L 2.5 0 L -3 5" : "M -4 -7 L 3.5 0 L -4 7"}
-              fill="none"
-              stroke={a.passed ? "#3A6E0C" : "var(--color-text-grey-64)"}
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ transition: "stroke .3s" }}
-            />
-          </g>
+          <path key={`gap-${k}`} d={a.gap} fill="none" stroke="#fff" strokeWidth={PROGRESS_PX + 6} />
+        ))}
+        {arrows.map((a, k) => (
+          <path
+            key={k}
+            transform={`translate(${a.x} ${a.y}) rotate(${a.deg})`}
+            d={phone ? "M -7 -5 L 0 0 L -7 5" : "M -9 -6.5 L 0 0 L -9 6.5"}
+            fill="none"
+            stroke={a.passed ? GREEN_HIGHLIGHT : "var(--color-text-grey-40)"}
+            strokeWidth={a.passed ? PROGRESS_PX : TRACK_PX + 0.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ transition: "stroke .3s" }}
+          />
         ))}
         {/* Your money, going round. */}
         <g ref={markerRef} style={{ opacity: 0, transition: "opacity .25s" }}>
@@ -244,7 +267,13 @@ export function V4Cycle() {
         </g>
       </svg>
       {STEPS.map((step, i) => (
-        <Chip key={step.label} ref={i === 1 ? repRef : i === 3 ? oppRef : undefined} label={step.label} state={stateOf(i)} style={chipAt[i]} />
+        <Chip
+          key={step.label}
+          ref={(el: HTMLSpanElement | null) => {
+            chipEls.current[i] = el;
+            if (i === 1) repRef.current = el;
+            if (i === 3) oppRef.current = el;
+          }} label={step.label} state={stateOf(i)} style={chipAt[i]} />
       ))}
       {/* The open step's line, in the middle of the loop (laptops and tablets): its icon over it, P1, centred, 600px wide, but
           never running under Repayment or Opportunities. */}
