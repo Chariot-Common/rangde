@@ -5,33 +5,33 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { RangDeStats } from "@/lib/stats";
 
 /*
- * Version 2 C's "Why it matters": the loop, drawn with Version 2 B's direct cards (review, 11 Nov 2026: B read well but
- * lost the loop, which is the idea). The four stages are cards in a square, joined clockwise by lines with arrows:
- * Business → Repayment → Credit history → Opportunities → back into Business. "Your social investment" sits in the
- * middle and feeds the first card.
+ * Version 2 C's "Why it matters": the loop, laid out like the 3 × 3 card grid the team shared (review, 11 Nov 2026):
+ * a white panel on a soft grey frame; the four stages as white cards in the corners (an icon chip, a two-line bold claim,
+ * a short grey line); soft gradient tiles between them that carry the flow round, each with a small arrow; and in the
+ * middle, a ringed circle with a green ₹ for your social investment. Clockwise: Business → Repayment → Credit history →
+ * Opportunities → back into Business.
  *
- * Laptops and tablets: the section pins and the loop plays as you scroll: the investment lights up and its line fills
- * into Business, then each card in turn, the line out of it filling green, until the last line closes back into
- * Business ("And round again"). Phones: the cards stack, joined by a line down their left; a return line runs up their
- * right from the last card to the first. Each card lights up as it comes into view. Copy in Version 1's voice, with the
- * live figures. With reduced motion everything is shown lit.
+ * Laptops and tablets: the section pins and plays as you scroll: the ₹ lights up, then each card in turn, the tile after
+ * it filling green in the direction of travel, until the last tile closes back into Business ("And round again").
+ * Phones: the cards stacked in the same style, joined down their left, with the way back drawn up their right.
+ * Copy in Version 1's voice, with the live figures. With reduced motion everything is shown lit.
  */
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const GREEN = "#62af1d";
 const GREEN_DARK = "#3A6E0C";
 const GREY = "#d6d7da";
+const ICONS = "/images/why-rangde-v2";
 
-type Card = { label: string; title: string; line: string };
+type Card = { label: string; title: string; line: string; icon: string };
 const cardsFor = (stats: RangDeStats): Card[] => [
-  { label: "Business", title: `${stats.entrepreneurs.toLocaleString("en-IN")} businesses funded`, line: "Stock for a shop, tools for a workshop, livestock for a farm." },
-  { label: "Repayment", title: "Interest stays fair", line: `Up to 8.5% a year, no hidden charges. ${stats.principalRepaidPct.toFixed(1)}% of principal repaid so far.` },
-  { label: "Credit history", title: "Repaying builds credit", line: "Every repayment is reported to the credit bureaus, so a credit history starts." },
-  { label: "Opportunities", title: "The next loan doesn’t start from zero", line: "A credit record opens the door to more capital, back into the business." },
+  { label: "Business", title: `${stats.entrepreneurs.toLocaleString("en-IN")} businesses funded`, line: "Stock for a shop, tools for a workshop, livestock for a farm.", icon: `${ICONS}/icon-bank.webp` },
+  { label: "Repayment", title: "Interest stays fair", line: `Up to 8.5% a year, no hidden charges. ${stats.principalRepaidPct.toFixed(1)}% of principal repaid.`, icon: `${ICONS}/icon-hand-check.webp` },
+  { label: "Credit history", title: "Repaying builds credit", line: "Every repayment is reported to the credit bureaus, so a credit history starts.", icon: `${ICONS}/icon-bar-chart.webp` },
+  { label: "Opportunities", title: "The next loan doesn’t start from zero", line: "A credit record opens the door to more capital, back into the business.", icon: `${ICONS}/icon-target-center.webp` },
 ];
 
-// Through the pinned scroll, 0 → 1: the investment and its line, then the four cards and the lines out of them.
-// stage: 0 investment · 1–4 the cards · 5 the loop closed
+// Through the pinned scroll: 0 the ₹ · 1–4 the cards (each with the tile after it filling) · 5 the loop closed.
 const STAGES = 6;
 
 const PHONE = "(max-width: 767px)";
@@ -57,39 +57,17 @@ export function V4LoopCards({ stats }: { stats: RangDeStats }) {
     return () => m.removeEventListener("change", on);
   }, []);
   const cards = cardsFor(stats);
-  return phone ? <PhoneLoop cards={cards} reduce={!!reduce} /> : <SquareLoop cards={cards} reduce={!!reduce} />;
+  return phone ? <PhoneLoop cards={cards} reduce={!!reduce} /> : <GridLoop cards={cards} reduce={!!reduce} />;
 }
 
-/* ───────────── Laptops and tablets: four cards in a square ───────────── */
+/* ───────────── Laptops and tablets: the 3 × 3 grid ───────────── */
 
-function SquareLoop({ cards, reduce }: { cards: Card[]; reduce: boolean }) {
+type Dir = "right" | "down" | "left" | "up";
+
+function GridLoop({ cards, reduce }: { cards: Card[]; reduce: boolean }) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const hubRef = useRef<HTMLDivElement>(null);
-  const [geo, setGeo] = useState<{ c: { x: number; y: number; w: number; h: number }[]; hub: { x: number; y: number; r: number } } | null>(null);
   const [stage, setStage] = useState(reduce ? STAGES - 1 : 0);
-  const [within, setWithin] = useState(reduce ? 1 : 0); // 0 → 1 through the current stage
-
-  // The cards' centres and sizes, relative to the grid, for the lines between them.
-  useEffect(() => {
-    const grid = gridRef.current;
-    if (!grid) return;
-    const measure = () => {
-      const g = grid.getBoundingClientRect();
-      const c = cardRefs.current.map((el) => {
-        const r = el!.getBoundingClientRect();
-        return { x: r.left - g.left + r.width / 2, y: r.top - g.top + r.height / 2, w: r.width, h: r.height };
-      });
-      const hr = hubRef.current!.getBoundingClientRect();
-      setGeo({ c, hub: { x: hr.left - g.left + hr.width / 2, y: hr.top - g.top + hr.height / 2, r: hr.width / 2 } });
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(grid);
-    return () => ro.disconnect();
-  }, []);
-
+  const [within, setWithin] = useState(reduce ? 1 : 0);
   const { scrollYProgress } = useScroll({ target: wrapRef, offset: ["start start", "end end"] });
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     if (reduce) return;
@@ -98,62 +76,35 @@ function SquareLoop({ cards, reduce }: { cards: Card[]; reduce: boolean }) {
     setWithin(s - Math.floor(s));
   });
 
-  // Which card is lit: card i lights at stage i + 1 and stays lit.
   const lit = (i: number) => reduce || stage >= i + 1;
   const current = (i: number) => !reduce && stage === i + 1;
-  // How far each line is filled: the hub's line (into card 0) through stage 0; card i's line out through stage i + 1.
-  const fillOf = (k: number) => (reduce ? 1 : stage > k ? 1 : stage === k ? Math.min(1, within / 0.7) : 0);
+  // Tile k (after card k) fills while card k is current, and stays full.
+  const fill = (k: number) => (reduce ? 1 : stage > k + 1 ? 1 : stage === k + 1 ? Math.min(1, within / 0.75) : 0);
   const closed = reduce || stage >= STAGES - 1;
-
-  // Clockwise around the square: 0 top left → 1 top right → 2 bottom right → 3 bottom left → back to 0.
-  const order = [0, 1, 3, 2]; // grid positions (row by row) of cards 0–3
-  const pos = (i: number) => geo?.c[order.indexOf(i)];
 
   return (
     <section aria-label="How a loan builds a financial future" className="mx-2 rounded-[16px] bg-white">
       <div ref={wrapRef} className="relative" style={{ height: reduce ? "auto" : "calc(3.6 * (100svh - var(--navbar-bottom, 0px)))" }}>
         <div
-          className={`${reduce ? "py-20" : "sticky overflow-hidden"} flex flex-col items-center justify-center gap-10 px-8 lg:gap-12`}
+          className={`${reduce ? "py-20" : "sticky overflow-hidden"} flex flex-col items-center justify-center gap-6 px-8 lg:gap-8`}
           style={reduce ? undefined : { top: "var(--navbar-bottom, 0px)", height: "calc(100svh - var(--navbar-bottom, 0px))" }}
         >
           {heading}
 
-          <div ref={gridRef} className="relative grid w-full max-w-[920px] grid-cols-2 gap-x-[140px] gap-y-[96px] lg:gap-x-[180px]">
-            {/* The lines, under the cards: the hub's into Business, then each card's into the next, round. */}
-            {geo && (
-              <svg aria-hidden className="pointer-events-none absolute inset-0 size-full overflow-visible">
-                <Connector from={{ x: geo.hub.x, y: geo.hub.y }} fromPad={geo.hub.r + 4} to={pos(0)!} fill={fillOf(0)} gap={6} />
-                {[0, 1, 2, 3].map((i) => (
-                  <Connector key={i} from={pos(i)!} to={pos((i + 1) % 4)!} fill={fillOf(i + 1)} closing={i === 3} />
-                ))}
-              </svg>
-            )}
+          {/* The frame: a soft grey border round a white panel. */}
+          <div className="w-full max-w-[880px] rounded-[28px] bg-[#eef0f3] p-2.5">
+            <div className="grid grid-cols-[minmax(0,1fr)_112px_minmax(0,1fr)] grid-rows-[auto_92px_auto] gap-2.5 rounded-[22px] bg-white p-5 lg:grid-cols-[minmax(0,1fr)_128px_minmax(0,1fr)] lg:grid-rows-[auto_100px_auto] lg:p-6">
+              <GridCard card={cards[0]} lit={lit(0)} current={current(0)} />
+              <FlowTile dir="right" fill={fill(0)} />
+              <GridCard card={cards[1]} lit={lit(1)} current={current(1)} />
 
-            {/* Grid order is row by row; cards go round clockwise, so Opportunities (3) is bottom left. */}
-            {order.map((ci, slot) => (
-              <div key={cards[ci].label} ref={(el) => { cardRefs.current[slot] = el; }} className="relative z-10">
-                <LoopCard card={cards[ci]} step={ci + 1} lit={lit(ci)} current={current(ci)} />
-              </div>
-            ))}
+              <FlowTile dir="up" fill={fill(3)} />
+              <Hub on={reduce || stage >= 0} pulse={!reduce && stage === 0} />
+              <FlowTile dir="down" fill={fill(1)} />
 
-            {/* Your social investment, in the middle, feeding the loop. */}
-            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-              <div
-                ref={hubRef}
-                className={`flex size-[116px] flex-col items-center justify-center gap-0.5 rounded-full border-[1.5px] text-center transition-[background-color,border-color,box-shadow] duration-500 ${
-                  reduce || stage >= 0 ? "border-green-dark bg-white shadow-[0_16px_40px_rgba(41,45,54,0.10)]" : "border-text-grey-16 bg-white"
-                }`}
-              >
-                <span className="flex size-[30px] items-center justify-center rounded-full font-display text-[16px] font-bold text-white" style={{ backgroundColor: GREEN_DARK }}>
-                  ₹
-                </span>
-                <span className="font-display text-[12px] font-bold leading-[15px] text-text-grey-100">
-                  Your social
-                  <br />
-                  investment
-                </span>
-                <span className="font-display text-[11px] font-medium leading-[14px] text-text-grey-48">from ₹500</span>
-              </div>
+              <GridCard card={cards[3]} lit={lit(3)} current={current(3)} />
+              <FlowTile dir="left" fill={fill(2)} />
+              <GridCard card={cards[2]} lit={lit(2)} current={current(2)} />
             </div>
           </div>
 
@@ -171,58 +122,89 @@ function SquareLoop({ cards, reduce }: { cards: Card[]; reduce: boolean }) {
   );
 }
 
-/** A line from one point to another, stopping short of the card or hub at each end, grey with green filling along it, and
- * an arrowhead at its end. */
-function Connector({ from, to, fill, fromPad, closing = false, gap = 14 }: { from: { x: number; y: number; w?: number; h?: number }; to: { x: number; y: number; w: number; h: number }; fill: number; fromPad?: number; closing?: boolean; gap?: number }) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len;
-  const uy = dy / len;
-  // How far along the line the edge of a w × h box around a centre is.
-  const out = (w: number, h: number) => Math.min(Math.abs(ux) > 1e-6 ? w / 2 / Math.abs(ux) : Infinity, Math.abs(uy) > 1e-6 ? h / 2 / Math.abs(uy) : Infinity);
-  const GAP = gap;
-  const a = fromPad ?? out(from.w ?? 0, from.h ?? 0) + GAP;
-  const b = len - out(to.w, to.h) - GAP;
-  const x1 = from.x + ux * a;
-  const y1 = from.y + uy * a;
-  const x2 = from.x + ux * b;
-  const y2 = from.y + uy * b;
-  const deg = (Math.atan2(uy, ux) * 180) / Math.PI;
-  const r = (n: number) => Math.round(n * 10) / 10;
+/** A tile between two cards: a soft grey gradient that fills green in the direction of travel, with a small arrow. */
+function FlowTile({ dir, fill }: { dir: Dir; fill: number }) {
+  const horizontal = dir === "right" || dir === "left";
+  const origin = dir === "right" ? "left" : dir === "left" ? "right" : dir === "down" ? "top" : "bottom";
+  const fade = dir === "right" ? "to right" : dir === "left" ? "to left" : dir === "down" ? "to bottom" : "to top";
+  const rotate = dir === "right" ? 0 : dir === "down" ? 90 : dir === "left" ? 180 : 270;
   const on = fill > 0.98;
   return (
-    <g>
-      <line x1={r(x1)} y1={r(y1)} x2={r(x2)} y2={r(y2)} stroke={GREY} strokeWidth={2} strokeDasharray={closing ? "6 6" : undefined} />
-      <line x1={r(x1)} y1={r(y1)} x2={r(x1 + (x2 - x1) * fill)} y2={r(y1 + (y2 - y1) * fill)} stroke={GREEN} strokeWidth={4} strokeLinecap="round" />
-      <path
-        transform={`translate(${r(x2)} ${r(y2)}) rotate(${r(deg)})`}
-        d="M -10 -7 L 0 0 L -10 7"
-        fill="none"
-        stroke={on ? GREEN : GREY}
-        strokeWidth={on ? 4 : 2.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={{ transition: "stroke .3s" }}
+    <div aria-hidden className="relative overflow-hidden rounded-[16px]" style={{ background: `linear-gradient(${fade}, #f6f7f9, #fbfbfc)` }}>
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(${fade}, rgba(98,175,29,0.06), rgba(98,175,29,0.22))`,
+          transform: horizontal ? `scaleX(${fill})` : `scaleY(${fill})`,
+          transformOrigin: origin,
+        }}
       />
-    </g>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <svg width="28" height="28" viewBox="0 0 28 28" style={{ transform: `rotate(${rotate}deg)` }}>
+          <path d="M 6 14 H 21 M 15 8 L 21 14 L 15 20" fill="none" stroke={on ? GREEN_DARK : "#b9bcc2"} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ transition: "stroke .3s" }} />
+        </svg>
+      </div>
+    </div>
   );
 }
 
-/** A stage of the loop: its number and name, a short bold claim, one line. Lit once reached; the current one lifts. */
-function LoopCard({ card, step, lit, current }: { card: Card; step: number; lit: boolean; current: boolean }) {
+/** The middle: your social investment, a green ₹ in a ringed circle. */
+function Hub({ on, pulse }: { on: boolean; pulse: boolean }) {
+  return (
+    <div className="relative flex flex-col items-center justify-center gap-2 rounded-[16px] border border-[#eceef1] bg-white">
+      <div className="relative flex size-[72px] items-center justify-center rounded-full border border-[#e6e8ec] lg:size-[80px]">
+        {pulse && <motion.span aria-hidden className="absolute inset-0 rounded-full border-2" style={{ borderColor: GREEN }} animate={{ scale: [1, 1.18], opacity: [0.6, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }} />}
+        <span
+          className="flex size-[44px] items-center justify-center rounded-full font-display text-[20px] font-bold text-white transition-[background-color,box-shadow] duration-500 lg:size-[48px]"
+          style={{ backgroundColor: on ? GREEN : "#c9ccd1", boxShadow: on ? "0 8px 20px rgba(98,175,29,0.35)" : "none" }}
+        >
+          ₹
+        </span>
+      </div>
+      <span className="absolute bottom-2 font-display text-[10px] font-bold uppercase leading-[12px] tracking-[0.8px] text-text-grey-48">Your investment</span>
+    </div>
+  );
+}
+
+/** A stage in a corner: an icon chip, a two-line bold claim, a short grey line. Lit once reached; the current one gets a
+ * green outline. */
+function GridCard({ card, lit, current }: { card: Card; lit: boolean; current: boolean }) {
   return (
     <div
-      className={`flex flex-col gap-2 rounded-[16px] p-6 transition-[background-color,box-shadow,opacity,transform] duration-500 ${
-        current ? "bg-white shadow-[0_0_0_1.5px_#62af1d,0_16px_40px_rgba(41,45,54,0.12)]" : lit ? "bg-[#f3f8ee]" : "bg-[#f4f5f7] opacity-60"
+      className={`flex flex-col gap-2.5 rounded-[16px] border p-5 transition-[border-color,box-shadow,opacity] duration-500 ${
+        current ? "border-[#62af1d] shadow-[0_16px_40px_rgba(41,45,54,0.10)]" : lit ? "border-[#e3eadb]" : "border-[#eceef1] opacity-60"
       }`}
-      style={{ transform: current ? "translateY(-4px)" : "none" }}
     >
-      <p className={`font-display text-[12px] font-bold uppercase leading-[16px] tracking-[1px] ${lit ? "text-green-dark" : "text-text-grey-48"}`}>
-        {step} · {card.label}
-      </p>
-      <p className="font-display text-[22px] font-bold leading-[28px] tracking-[-0.44px] text-text-grey-100 [text-wrap:balance]">{card.title}</p>
-      <p className="font-display text-[16px] font-medium leading-[23px] text-text-grey-64">{card.line}</p>
+      <span className="flex size-[38px] items-center justify-center rounded-[10px] transition-colors duration-500" style={{ backgroundColor: lit ? "#eef6e6" : "#f4f5f7" }}>
+        <span
+          aria-hidden
+          className="block size-[20px] transition-colors duration-500"
+          style={{ backgroundColor: lit ? GREEN_DARK : "#9a9ea6", WebkitMask: `url(${card.icon}) center / contain no-repeat`, mask: `url(${card.icon}) center / contain no-repeat` }}
+        />
+      </span>
+      <div className="flex flex-col gap-1.5">
+        <p className="font-display text-[11px] font-bold uppercase leading-[14px] tracking-[1px] text-text-grey-48">{card.label}</p>
+        <p className="font-display text-[18px] font-bold leading-[24px] tracking-[-0.3px] text-text-grey-100 [text-wrap:balance]">{card.title}</p>
+        <p className="font-display text-[14px] font-medium leading-[20px] text-text-grey-48">{card.line}</p>
+      </div>
+    </div>
+  );
+}
+
+/** Phones: the same card, as a list item (step number with the name). */
+function LoopCard({ card, step, lit }: { card: Card; step: number; lit: boolean; current?: boolean }) {
+  return (
+    <div className={`flex flex-col gap-3 rounded-[16px] border bg-white p-5 transition-[border-color,opacity] duration-500 ${lit ? "border-[#cfe3bd]" : "border-[#eceef1]"}`}>
+      <div className="flex items-center gap-3">
+        <span className="flex size-[40px] items-center justify-center rounded-[12px]" style={{ backgroundColor: lit ? "#eef6e6" : "#f4f5f7" }}>
+          <span aria-hidden className="block size-[20px]" style={{ backgroundColor: lit ? GREEN_DARK : "#9a9ea6", WebkitMask: `url(${card.icon}) center / contain no-repeat`, mask: `url(${card.icon}) center / contain no-repeat` }} />
+        </span>
+        <p className={`font-display text-[12px] font-bold uppercase leading-[16px] tracking-[1px] ${lit ? "text-green-dark" : "text-text-grey-48"}`}>
+          {step} · {card.label}
+        </p>
+      </div>
+      <p className="font-display text-[20px] font-bold leading-[26px] text-text-grey-100 [text-wrap:balance]">{card.title}</p>
+      <p className="font-display text-[15px] font-medium leading-[22px] text-text-grey-64">{card.line}</p>
     </div>
   );
 }
