@@ -45,8 +45,8 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
   }, [ready, reduce, line1]);
 
   return (
-    <div className="relative isolate flex w-full flex-col items-center gap-12 overflow-hidden px-4 pt-[100px] sm:px-2 sm:pt-12 md:pt-16 lg:gap-16 lg:pt-[64px]">
-      <div className="flex w-full flex-col items-center gap-12 lg:gap-16">
+    <div className="relative isolate flex w-full flex-col items-center gap-12 overflow-hidden px-4 pt-[100px] sm:px-2 sm:pt-12">
+      <div className="flex w-full flex-col items-center gap-12">
         {/* Each sentence on its own line from lg up. */}
         <h1 className="w-full max-w-[1280px] text-center font-display text-h1 font-bold text-ink">
           <ScrollInk as="span" text={LINE_1} drive={line1} className="lg:block lg:whitespace-nowrap" />{" "}
@@ -70,7 +70,8 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
         </motion.div>
       </div>
 
-      <div className="flex w-full flex-col items-center gap-12 lg:gap-16">
+      {/* 24px under the gallery before the press row. */}
+      <div className="flex w-full flex-col items-center gap-6">
         <motion.div
           className="relative -mx-4 w-[calc(100%+32px)] sm:-mx-2 sm:w-[calc(100%+16px)]"
           initial={reduce ? false : { opacity: 0, y: GALLERY.rise }}

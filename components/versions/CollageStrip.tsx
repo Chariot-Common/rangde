@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 /*
  * Version 6's hero gallery: a collage of photos filling the screen below the stats, 8px apart with 8px
  * corners and 8px from either edge of the screen, laid out like the reference: columns that are either one
- * photo or two rows, where a row is one photo or two side by side (never more than two rows). The columns
+ * photo or two rows, where a row is one to three photos side by side (never more than two rows). The columns
  * always fit the screen exactly.
  *
  * The frames never move. Every 4 seconds one photo, working left to right, fades out into another that is
@@ -17,24 +17,30 @@ const GAP = 8; // px between photos, and from the edges of the screen
 const INTERVAL = 4000; // ms between one photo changing and the next
 const FADE = 1.2; // s for a photo to dissolve into the next
 
-// The gallery photos (public/images/collage), used in turn.
-const POOL = Array.from({ length: 18 }, (_, i) => `/images/collage/collage-${String(i + 1).padStart(2, "0")}.webp`);
+// The gallery photos (public/images/hero-gallery: 18 borrowers, 9 field visits), used in turn. Two borrowers,
+// then a field visit, so the two kinds stay mixed across the strip.
+const pad = (n: number) => String(n).padStart(2, "0");
+const POOL = Array.from({ length: 9 }, (_, i) => [
+  `/images/hero-gallery/borrower-${pad(2 * i + 1)}.webp`,
+  `/images/hero-gallery/borrower-${pad(2 * i + 2)}.webp`,
+  `/images/hero-gallery/field-visit-${pad(i + 1)}.webp`,
+]).flat();
 
-/** A row: the number of photos side by side, and the left photo's share of the width. */
-type Row = { cells: number; split: number };
+/** A row: the photos side by side, each as its share of the row's width. */
+type Row = number[];
 /** A column: its natural width as a multiple of the strip's height, and one or two rows (`split` = the top row's share). */
 type Shape = { w: number; rows: Row[]; split: number };
 
-// The column shapes in the reference, in order: a wide single photo; two photos stacked; two rows of
-// two side by side (a tall pair over a short strip); another wide single; a narrow portrait; a pair
-// over a single.
+// The column shapes in the reference, in order: a wide single photo; two photos stacked; a tall pair over
+// a short strip of three (the strip's wide left part is two photos, so no frame is a thin 4:1 band);
+// another wide single; a narrow portrait; a pair over a single.
 const SHAPES: Shape[] = [
-  { w: 1.32, rows: [{ cells: 1, split: 1 }], split: 1 },
-  { w: 0.54, rows: [{ cells: 1, split: 1 }, { cells: 1, split: 1 }], split: 0.36 },
-  { w: 1.66, rows: [{ cells: 2, split: 0.36 }, { cells: 2, split: 0.84 }], split: 0.66 },
-  { w: 1.25, rows: [{ cells: 1, split: 1 }], split: 1 },
-  { w: 0.42, rows: [{ cells: 1, split: 1 }], split: 1 },
-  { w: 0.95, rows: [{ cells: 2, split: 0.5 }, { cells: 1, split: 1 }], split: 0.42 },
+  { w: 1.32, rows: [[1]], split: 1 },
+  { w: 0.54, rows: [[1], [1]], split: 0.36 },
+  { w: 1.66, rows: [[0.36, 0.64], [0.42, 0.42, 0.16]], split: 0.66 },
+  { w: 1.25, rows: [[1]], split: 1 },
+  { w: 0.42, rows: [[1]], split: 1 },
+  { w: 0.95, rows: [[0.5, 0.5], [1]], split: 0.42 },
 ];
 
 /** How many columns (from the start of the sequence) best fill `width` at strip height `h`. */
@@ -54,16 +60,13 @@ export function CollageStrip() {
   const stripRef = useRef<HTMLDivElement>(null);
   const [count, setCount] = useState(5);
 
-  // Size the strip to fill the screen down to the bottom and pick how many columns fit.
+  // Pick how many columns fit the strip's fixed height and width.
   useLayoutEffect(() => {
     const strip = stripRef.current;
     if (!strip) return;
     const fit = () => {
-      let top = 0;
-      for (let el: HTMLElement | null = strip; el; el = el.offsetParent as HTMLElement | null) top += el.offsetTop;
-      const h = Math.min(560, Math.max(220, window.innerHeight - top - GAP));
-      strip.style.setProperty("--h", `${h}px`);
-      setCount(columnsFor(strip.clientWidth - 2 * GAP, h));
+      // The height is a fixed pixel amount set in CSS (--h on the strip below), not tied to the viewport.
+      setCount(columnsFor(strip.clientWidth - 2 * GAP, strip.clientHeight));
     };
     const raf = requestAnimationFrame(fit);
     window.addEventListener("resize", fit);
@@ -74,7 +77,7 @@ export function CollageStrip() {
   }, []);
 
   const columns = useMemo(() => Array.from({ length: count }, (_, i) => SHAPES[i % SHAPES.length]), [count]);
-  const total = columns.reduce((n, c) => n + c.rows.reduce((m, r) => m + r.cells, 0), 0);
+  const total = columns.reduce((n, c) => n + c.rows.reduce((m, r) => m + r.length, 0), 0);
 
   // What each frame shows, in reading order. The pool is dealt out in turn, skipping any photo already on screen.
   const [photos, setPhotos] = useState<string[]>(() => Array.from({ length: 40 }, (_, i) => POOL[i % POOL.length]));
@@ -99,15 +102,15 @@ export function CollageStrip() {
 
   let cellIndex = 0;
   return (
-    <div ref={stripRef} className="flex w-full overflow-hidden px-2 [--h:280px]" style={{ height: "var(--h)", gap: GAP }}>
+    <div ref={stripRef} className="flex w-full overflow-hidden px-2 [--h:360px] md:[--h:404px]" style={{ height: "var(--h)", gap: GAP }}>
       {columns.map((c, ci) => (
         <div key={ci} className="flex h-full min-w-0 flex-col" style={{ flex: `${c.w} 1 0px`, gap: GAP }}>
           {c.rows.map((row, ri) => (
             <div key={ri} className="flex min-h-0" style={{ flex: `${c.rows.length === 1 ? 1 : ri === 0 ? c.split : 1 - c.split} 1 0px`, gap: GAP }}>
-              {Array.from({ length: row.cells }, (_, k) => {
+              {row.map((share, k) => {
                 const src = photos[cellIndex++ % photos.length];
                 return (
-                  <div key={k} className="relative min-w-0 overflow-hidden rounded-[8px] bg-ink/8" style={{ flex: `${row.cells === 1 ? 1 : k === 0 ? row.split : 1 - row.split} 1 0px` }}>
+                  <div key={k} className="relative min-w-0 overflow-hidden rounded-[8px] bg-ink/8" style={{ flex: `${share} 1 0px` }}>
                     <Slot src={src} />
                   </div>
                 );
