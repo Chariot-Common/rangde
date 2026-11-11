@@ -8,6 +8,8 @@ import { FoundersCollage } from "./FoundersCollage";
 import { PlainQuestionCards } from "./PlainQuestionCards";
 import { ProblemGrid } from "./ProblemGrid";
 import { ProblemPairs } from "./ProblemPairs";
+import { ProblemGap } from "./ProblemGap";
+import type { RangDeStats } from "@/lib/stats";
 import { ScrollInk } from "./ScrollInk";
 import { ApproachHero } from "./approaches";
 import { V4HowItWorks } from "./V4HowItWorks";
@@ -54,13 +56,15 @@ const FOUNDERS_STORY = (
 // the founders, with Version 2's eyebrow and line → as on Version 3: the live opportunities with "How it works" beside
 // "Explore all opportunities" and the infrastructure points under a divider in the same card, then the questions with
 // "Read more FAQs" and "Talk to our founders".
-export function V1Home({ problem = "pairs", refresh = false }: { problem?: "pairs" | "grid"; refresh?: boolean } = {}) {
+/** `problem: "gap"` (v1, 11 Nov 2026, Figma 3020:62): the problem, then how Rang De closes the gap, in one pinned section
+ * (ProblemGap.tsx); `stats` for its live figures. */
+export function V1Home({ problem = "pairs", refresh = false, stats }: { problem?: "pairs" | "grid" | "gap"; refresh?: boolean; stats?: RangDeStats } = {}) {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
       {/* The same borrower cards (photos and copy) as Version 5. */}
       <ApproachHero title="Invest in the other Startup India" lead={refresh ? LEAD_V11 : LEAD} mobileLead={MOBILE_LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent11" />} />
       {/* The problem and Rang De's answer: each problem struck through (or cut) as its answer arrives. */}
-      {problem === "grid" ? <ProblemGrid /> : <ProblemPairs />}
+      {problem === "gap" ? <ProblemGap stats={stats} /> : problem === "grid" ? <ProblemGrid /> : <ProblemPairs />}
       {/* The calculator, on its own card now (it sat under the real-UI How it works, in the same cream). */}
       <section className="mx-2 flex flex-col items-center rounded-[16px] bg-[#F7F3ED] px-4 py-14 sm:px-8 sm:py-20 md:py-24 lg:px-[80px] lg:py-[120px]">
         <InvestmentSlider refined />
