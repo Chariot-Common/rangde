@@ -118,9 +118,10 @@ function Pinned({ solutions }: { solutions: Card[] }) {
   const bg = useTransform(turn, [0, 1], [GREY_BG, GREEN_BG]);
   const [green, setGreen] = useState(false);
   useMotionValueEvent(turn, "change", (v) => setGreen(v > 0.5));
-  // The problems fall back as the background turns: blurred and faded, still there under the answers.
+  // The problems fall back as the background turns (blurred and faded), then fade away entirely as the answers land
+  // over them.
   const blur = useTransform(turn, (v) => `blur(${v * 6}px)`);
-  const fade = useTransform(turn, [0, 1], [1, 0.35]);
+  const fade = useTransform(scrollYProgress, [T.turn[0], T.turn[1], T.solution2[1]], [1, 0.35, 0], { clamp: true });
 
   // How far the heading sits below its place to begin with, so it starts in the middle of the screen.
   const stageRef = useRef<HTMLElement>(null);
@@ -240,11 +241,12 @@ function RiseIn({
   );
 }
 
-/** A card as in the Figma: a bold title, three points between hairlines, and (for the problems) the source. */
+/** A card as in the Figma: a bold title, three points between hairlines, and (for the problems) the source. The
+ * solutions are as tall as the problems they land on, with their content centred in them (even room above and below). */
 function GapCard({ card, solution = false }: { card: Card; solution?: boolean }) {
   return (
     <div
-      className={`flex h-full flex-col items-center gap-6 rounded-[20px] bg-white p-8 text-center xl:gap-8 xl:p-12 2xl:gap-12 2xl:p-16 [@media(max-height:820px)]:gap-4 [@media(max-height:820px)]:p-6 ${solution ? "shadow-[0_24px_60px_rgba(41,45,54,0.14)]" : ""}`}
+      className={`flex h-full flex-col items-center ${solution ? "justify-center" : ""} gap-6 rounded-[20px] bg-white p-8 text-center xl:gap-8 xl:p-12 2xl:gap-12 2xl:p-16 [@media(max-height:820px)]:gap-4 [@media(max-height:820px)]:p-6 ${solution ? "shadow-[0_24px_60px_rgba(41,45,54,0.14)]" : ""}`}
     >
       <p className="font-display text-[22px] font-bold leading-[28px] text-[#292d36] [text-wrap:balance] xl:text-[26px] xl:leading-[34px] 2xl:text-[32px] 2xl:leading-[40px] [@media(max-height:820px)]:text-[20px] [@media(max-height:820px)]:leading-[26px]">{card.title}</p>
       <div className="flex w-full flex-col gap-5 xl:gap-6 2xl:gap-10 [@media(max-height:820px)]:gap-3">
