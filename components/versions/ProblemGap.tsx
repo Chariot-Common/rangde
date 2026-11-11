@@ -98,11 +98,14 @@ export function ProblemGap({ stats }: { stats?: RangDeStats }) {
 /* ───────────── Laptops and tablets: pinned ───────────── */
 
 // Through the pinned scroll, 0 → 1.
+// First the heading alone in the middle of the screen; then it moves up to its place and the problem cards scroll up
+// from below into theirs (review, 11 Nov 2026).
 const T = {
-  problem1: [0.06, 0.18],
-  problem2: [0.16, 0.28],
-  turn: [0.4, 0.5], // green, heading swap, problems fall back
-  solution1: [0.5, 0.62],
+  headUp: [0.03, 0.14],
+  problem1: [0.1, 0.24],
+  problem2: [0.17, 0.31],
+  turn: [0.42, 0.52], // green, heading swap, problems fall back
+  solution1: [0.52, 0.64],
   solution2: [0.6, 0.72],
 } as const;
 
@@ -119,17 +122,48 @@ function Pinned({ solutions }: { solutions: Card[] }) {
   const blur = useTransform(turn, (v) => `blur(${v * 6}px)`);
   const fade = useTransform(turn, [0, 1], [1, 0.35]);
 
+  // How far the heading sits below its place to begin with, so it starts in the middle of the screen.
+  const stageRef = useRef<HTMLElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  const groupRef = useRef<HTMLDivElement>(null);
+  const [drop, setDrop] = useState(0);
+  // How far the heading and the cards together run past the bottom of the screen once the cards are in (on shorter
+  // screens): the whole group moves up by that much as the cards come in, so the cards are always seen whole.
+  const [lift, setLift] = useState(0);
+  useEffect(() => {
+    const stage = stageRef.current;
+    const head = headRef.current;
+    if (!stage || !head) return;
+    const measure = () => {
+      const st = stage.getBoundingClientRect();
+      const top = head.offsetTop; // its place in the stage, ignoring the transform
+      setDrop(Math.max(0, st.height / 2 - (top + head.offsetHeight / 2)));
+      const group = groupRef.current;
+      if (group) setLift(Math.max(0, group.offsetTop + group.offsetHeight + 16 - stage.clientHeight));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(stage);
+    return () => ro.disconnect();
+  }, []);
+  const up = useTransform(scrollYProgress, [...T.headUp], [0, 1], { clamp: true });
+  const headY = useTransform(up, (v) => (1 - v * v * (3 - 2 * v)) * drop);
+  const lifting = useTransform(scrollYProgress, [T.problem1[0], T.problem2[1]], [0, 1], { clamp: true });
+  const groupY = useTransform(lifting, (v) => -v * lift);
+
   return (
     <div ref={ref} className="relative mx-2" style={{ height: reduce ? "auto" : "calc(4 * (100svh - var(--navbar-bottom, 0px)))" }}>
       <motion.section
+        ref={stageRef}
         aria-label="The problem, and how Rang De closes the gap"
-        className={`${reduce ? "" : "sticky"} flex flex-col items-center justify-center gap-8 overflow-hidden rounded-[16px] px-4 py-12 xl:gap-10 2xl:gap-12 2xl:py-20`}
+        className={`${reduce ? "" : "sticky"} flex flex-col items-center justify-[safe_center] gap-8 overflow-hidden rounded-[16px] px-4 py-12 xl:gap-10 2xl:gap-12 2xl:py-20 [@media(max-height:820px)]:gap-5 [@media(max-height:820px)]:py-6`}
         style={{ top: "var(--navbar-bottom, 0px)", height: reduce ? "auto" : "calc(100svh - var(--navbar-bottom, 0px))", backgroundColor: reduce ? GREY_BG : bg }}
       >
+        <motion.div ref={groupRef} className="flex w-full flex-col items-center gap-8 xl:gap-10 2xl:gap-12 [@media(max-height:820px)]:gap-5" style={reduce ? undefined : { y: groupY }}>
         {/* The heading: the problem, then (crossfading) the way Rang De closes the gap. */}
-        <div className="relative grid place-items-center text-center">
+        <motion.div ref={headRef} className="relative z-10 grid place-items-center text-center" style={reduce ? undefined : { y: headY }}>
           <motion.h2
-            className="col-start-1 row-start-1 font-display text-[32px] font-bold leading-[40px] text-[#292d36] 2xl:text-[40px] 2xl:leading-[48px]"
+            className="col-start-1 row-start-1 font-display text-[32px] font-bold leading-[40px] text-[#292d36] 2xl:text-[40px] 2xl:leading-[48px] [@media(max-height:820px)]:text-[26px] [@media(max-height:820px)]:leading-[32px]"
             initial={false}
             animate={{ opacity: green && !reduce ? 0 : 1, y: green && !reduce ? -10 : 0 }}
             transition={{ duration: 0.4, ease: EASE }}
@@ -139,7 +173,7 @@ function Pinned({ solutions }: { solutions: Card[] }) {
           {!reduce && (
             <motion.p
               aria-hidden={!green}
-              className="col-start-1 row-start-1 font-display text-[32px] font-bold leading-[40px] text-[#292d36] 2xl:text-[40px] 2xl:leading-[48px]"
+              className="col-start-1 row-start-1 font-display text-[32px] font-bold leading-[40px] text-[#292d36] 2xl:text-[40px] 2xl:leading-[48px] [@media(max-height:820px)]:text-[26px] [@media(max-height:820px)]:leading-[32px]"
               initial={false}
               animate={{ opacity: green ? 1 : 0, y: green ? 0 : 10 }}
               transition={{ duration: 0.4, ease: EASE }}
@@ -147,7 +181,7 @@ function Pinned({ solutions }: { solutions: Card[] }) {
               {HEAD_SOLUTION}
             </motion.p>
           )}
-        </div>
+        </motion.div>
 
         {/* The cards: the two problems, and the two solutions landing over them. */}
         <div className="relative grid w-full max-w-[1296px] grid-cols-2 gap-4">
@@ -166,6 +200,7 @@ function Pinned({ solutions }: { solutions: Card[] }) {
             </div>
           )}
         </div>
+        </motion.div>
       </motion.section>
       {/* Reduced motion: the solutions as their own green panel, under the problem. */}
       {reduce && <SolutionPanel solutions={solutions} />}
@@ -193,7 +228,8 @@ function RiseIn({
   opacity?: MotionValue<number>;
 }) {
   const t = useTransform(progress, [...range], [0, 1], { clamp: true });
-  const y = useTransform(t, [0, 1], [land ? 120 : 48, 0]);
+  // From well below, so they scroll up into place (the solutions land from a little further still).
+  const y = useTransform(t, [0, 1], [land ? 160 : 320, 0]);
   const inOpacity = useTransform(t, [0, 1], [0, 1]);
   const both = useTransform(() => inOpacity.get() * (opacity ? opacity.get() : 1));
   if (reduce) return <div className="h-full">{children}</div>;
@@ -208,14 +244,14 @@ function RiseIn({
 function GapCard({ card, solution = false }: { card: Card; solution?: boolean }) {
   return (
     <div
-      className={`flex h-full flex-col items-center gap-6 rounded-[20px] bg-white p-8 text-center xl:gap-8 xl:p-12 2xl:gap-12 2xl:p-16 ${solution ? "shadow-[0_24px_60px_rgba(41,45,54,0.14)]" : ""}`}
+      className={`flex h-full flex-col items-center gap-6 rounded-[20px] bg-white p-8 text-center xl:gap-8 xl:p-12 2xl:gap-12 2xl:p-16 [@media(max-height:820px)]:gap-4 [@media(max-height:820px)]:p-6 ${solution ? "shadow-[0_24px_60px_rgba(41,45,54,0.14)]" : ""}`}
     >
-      <p className="font-display text-[22px] font-bold leading-[28px] text-[#292d36] [text-wrap:balance] xl:text-[26px] xl:leading-[34px] 2xl:text-[32px] 2xl:leading-[40px]">{card.title}</p>
-      <div className="flex w-full flex-col gap-5 xl:gap-6 2xl:gap-10">
+      <p className="font-display text-[22px] font-bold leading-[28px] text-[#292d36] [text-wrap:balance] xl:text-[26px] xl:leading-[34px] 2xl:text-[32px] 2xl:leading-[40px] [@media(max-height:820px)]:text-[20px] [@media(max-height:820px)]:leading-[26px]">{card.title}</p>
+      <div className="flex w-full flex-col gap-5 xl:gap-6 2xl:gap-10 [@media(max-height:820px)]:gap-3">
         {card.points.map((p, i) => (
-          <div key={i} className="flex flex-col gap-5 xl:gap-6 2xl:gap-10">
+          <div key={i} className="flex flex-col gap-5 xl:gap-6 2xl:gap-10 [@media(max-height:820px)]:gap-3">
             {i > 0 && <span aria-hidden className="h-px w-full bg-[rgba(41,45,54,0.24)]" />}
-            <p className="font-display text-[17px] font-medium leading-[25px] text-[rgba(41,45,54,0.64)] [text-wrap:balance] xl:text-[20px] xl:leading-[29px] 2xl:text-[32px] 2xl:leading-[40px]">{p}</p>
+            <p className="font-display text-[17px] font-medium leading-[25px] text-[rgba(41,45,54,0.64)] [text-wrap:balance] xl:text-[20px] xl:leading-[29px] 2xl:text-[32px] 2xl:leading-[40px] [@media(max-height:820px)]:text-[16px] [@media(max-height:820px)]:leading-[22px]">{p}</p>
           </div>
         ))}
       </div>
