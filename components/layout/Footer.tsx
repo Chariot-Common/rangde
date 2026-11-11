@@ -3,10 +3,14 @@ import { footerLegalLinks, footerNavLinks } from "@/lib/content";
 
 export function Footer() {
   return (
-    <footer className="mx-auto flex w-full max-w-[1170px] flex-col gap-12 px-4 pb-12 sm:gap-16 sm:px-6 sm:pb-16 lg:gap-[80px] lg:pb-[80px]">
+    // As much room above the logo as below the footer (it sat flush against the last section, which cut into it).
+    <footer className="mx-auto flex w-full max-w-[1170px] flex-col gap-12 px-4 pb-12 pt-12 sm:gap-16 sm:px-6 sm:pb-16 sm:pt-16 lg:gap-[80px] lg:pb-[80px] lg:pt-[80px]">
       <div className="flex flex-col items-center gap-[24px]">
-        <div className="relative h-[80px] w-[70px] sm:h-[100px] sm:w-[88px]">
-          <Image src="/icons/rangde-logo-footer.svg" alt="Rang De" fill className="object-contain" />
+        {/* The tree in grey; hovered, it fades to its own colours (rangde-logo-footer-colour.svg: the same paths, coloured
+            as in the nav's logo). */}
+        <div className="group relative h-[80px] w-[70px] sm:h-[100px] sm:w-[88px]">
+          <Image src="/icons/rangde-logo-footer.svg" alt="Rang De" fill className="object-contain transition-opacity duration-300 group-hover:opacity-0" />
+          <Image src="/icons/rangde-logo-footer-colour.svg" alt="" aria-hidden fill className="object-contain opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>
 
         <div className="flex flex-col items-center gap-[48px]">
