@@ -10,6 +10,8 @@ import { V4Returns } from "@/components/versions/V4Returns";
 import { V4Cycle } from "@/components/versions/V4Cycle";
 import { V4HowItWorks } from "@/components/versions/V4HowItWorks";
 import { getRangDeStats } from "@/lib/stats";
+// Phones: one spacing system for every section (after cruise.money); see the file.
+import "./v2-mobile.css";
 
 export const metadata: Metadata = {
   title: "Version 2 · Lend to a person | Rang De",
@@ -40,7 +42,7 @@ const MOBILE_LEAD = (
 export default async function V2() {
   const stats = await getRangDeStats();
   return (
-    <div className="flex w-full flex-col gap-2 pb-2">
+    <div className="v2-page flex w-full flex-col gap-2 pb-2">
       <ApproachHero
         tone="ink"
         eyebrow="Peer-to-peer social investing"

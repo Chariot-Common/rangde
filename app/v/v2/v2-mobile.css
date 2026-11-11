@@ -1,0 +1,74 @@
+/*
+ * Version 2 on phones (< 640px), one spacing system for every section, after cruise.money's phone layout:
+ *   - each section is a card 8px in from the screen's edges, with 16px corners and 8px between cards;
+ *   - 80px of room above and below its content;
+ *   - text 32px from the screen's edges (8px margin + 24px padding);
+ *   - cards inside a section: 16px corners.
+ * Carousels (the reels, the live opportunities) keep running edge to edge inside their card.
+ * The sections are the page wrapper's children in order (app/v/v2/page.tsx):
+ *   1 hero · 2 How it works · 3 Why it matters (pinned) · 4 reels · 5 You decide who you back · 6 the money and the
+ *   infrastructure · 7 returns · 8 founders · 9 opportunities · 10 questions
+ */
+@media (max-width: 639px) {
+  .v2-page > section {
+    margin-inline: 8px !important;
+    border-radius: 16px !important;
+    padding: 80px 24px !important;
+    overflow: hidden;
+  }
+
+  /* Why it matters pins its loop to the screen: room above only, and nothing may clip the sticky stage. */
+  .v2-page > section:nth-child(3) {
+    padding-bottom: 0 !important;
+    overflow: visible;
+  }
+
+  /* Carousels: the cards run to the card's edges; their headings keep the 24px. */
+  .v2-page > section:nth-child(4),
+  .v2-page > section:nth-child(9) {
+    padding-inline: 0 !important;
+  }
+  .v2-page > section:nth-child(4) h2,
+  .v2-page > section:nth-child(9) > :first-child {
+    padding-inline: 24px;
+  }
+
+  /* One heading size for every section: 32 on 36. */
+  .v2-page > section h2 {
+    font-size: 32px !important;
+    line-height: 36px !important;
+  }
+
+  /* Cards inside sections: 16px corners. */
+  .v2-page > section .rounded-\[12px\],
+  .v2-page > section .rounded-\[20px\],
+  .v2-page > section .rounded-\[24px\] {
+    border-radius: 16px !important;
+  }
+
+  /* The cards sit on a light grey page, as cruise.money's sit on its dark one: without it the white sections ran into the
+     white page and their corners and the gaps between them disappeared. The hero is a white card too, and How it works
+     (grey, the same as the page) turns white. */
+  .v2-page {
+    background: #f1f2f5;
+    padding-top: 8px;
+  }
+  .v2-page > div:first-child {
+    margin-inline: 8px;
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+    padding-bottom: 40px;
+  }
+  .v2-page > section:nth-child(2) {
+    background: #fff !important;
+  }
+}
+
+@media (max-width: 639px) {
+  /* You decide who you back: the step's line under the window, smaller (it was 24px, as big as a heading). */
+  .v2-page > section:nth-child(5) .text-\[24px\] {
+    font-size: 18px;
+    line-height: 26px;
+  }
+}

@@ -1498,7 +1498,7 @@ function LiveFigure({ value, format, label, start, delay }: { value: number; for
   const n = useAnimatedNumber(start ? value : 0, { duration: 1400, delay, enabled: true });
   return (
     <div className="flex flex-col gap-1 rounded-[12px] bg-white/8 p-4 sm:p-5">
-      <p className="font-display text-[26px] font-bold leading-[32px] text-white tabular-nums sm:text-h4">{format(n)}</p>
+      <p className="whitespace-nowrap font-display text-[24px] font-bold leading-[30px] text-white tabular-nums sm:text-h4">{format(n)}</p>
       <p className="font-display text-p4 font-medium text-white/72">{label}</p>
     </div>
   );
