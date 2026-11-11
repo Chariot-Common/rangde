@@ -17,9 +17,9 @@
     overflow: hidden;
   }
 
-  /* Why it matters pins its loop to the screen: room above only, and nothing may clip the sticky stage. */
+  /* Why it matters pins its loop to the screen: nothing may clip the sticky stage. (Its stage hugs its content on
+     phones, so it takes the usual room below.) */
   .v2-page > section:nth-child(3) {
-    padding-bottom: 0 !important;
     overflow: visible;
   }
 
@@ -54,7 +54,10 @@
     padding-top: 8px;
   }
   .v2-page > div:first-child {
+    /* w-full plus the margins ran it 8px past the screen's right edge. */
+    width: auto !important;
     margin-inline: 8px;
+    padding-inline: 24px !important;
     border-radius: 16px;
     background: #fff;
     overflow: hidden;
@@ -85,5 +88,34 @@
   .v2-page > section:nth-child(6) .tabular-nums.text-\[24px\] {
     font-size: 20px;
     line-height: 26px;
+  }
+}
+
+@media (max-width: 639px) {
+  /* Headings use the width they have: balanced wrapping made short, narrow lines that looked squeezed in from both
+     sides (Why it matters most of all). */
+  .v2-page h1,
+  .v2-page > section h2 {
+    text-wrap: pretty !important;
+  }
+  .v2-page > section h2 span {
+    text-wrap: inherit;
+  }
+
+  /* Hero story cards: the swiper runs to the hero card's own edges (not inside its 24px padding), and each card is
+     tighter inside, so the cards come out wider and less tall. */
+  .v2-page > div:first-child .md\:hidden {
+    margin-inline: -24px;
+  }
+  .v2-page > div:first-child .md\:hidden .px-\[28px\] {
+    padding-inline: 18px;
+    padding-bottom: 18px;
+  }
+  .v2-page > div:first-child .md\:hidden .gap-\[24px\] {
+    gap: 16px;
+  }
+  .v2-page > div:first-child .md\:hidden .text-p2 {
+    font-size: 15px;
+    line-height: 21px;
   }
 }

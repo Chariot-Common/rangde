@@ -76,6 +76,7 @@ export default async function V2() {
       <FoundersCollage
         thinFrame
         roomy
+        phoneLayout
         // From the review call: when it began, and how it has grown since (live figures, as in the section above).
         story={
           <>

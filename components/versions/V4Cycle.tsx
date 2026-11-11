@@ -75,6 +75,9 @@ export function V4Cycle() {
   // Opportunities and Repayment share one width (the wider of the two), so the loop is symmetrical and Business, the line
   // into it and Credit history all sit on the page's centre line.
   const [sideW, setSideW] = useState(0);
+  // Phones: the stage hugs its content, so it is pinned in the middle of the screen under the nav, with the room left over
+  // split evenly above and below it (pinned to the top, it left half a screen of white under the step's line).
+  const [phoneTop, setPhoneTop] = useState(0);
   const oppRef = useRef<HTMLSpanElement>(null);
   const repRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
@@ -85,9 +88,19 @@ export function V4Cycle() {
       const chip = phone ? CHIP_H_PHONE : CHIP_H;
       // "Your social investment" and the line down from it sit above the loop, inside the pinned stage.
       const top = ringRef.current?.offsetTop ?? RING_TOP;
-      const h = stage.height - top - BOTTOM_GAP - chip / 2 - (phone ? PHONE_TEXT : 0);
-      setBox({ w: Math.round(Math.min(stage.width, LOOP_MAX_W)), h: Math.max(160, Math.floor(h)) });
-      setSideW(Math.ceil(Math.max(oppRef.current?.offsetWidth ?? 0, repRef.current?.offsetWidth ?? 0)));
+      const w = Math.round(Math.min(stage.width, LOOP_MAX_W));
+      const sw = Math.ceil(Math.max(oppRef.current?.offsetWidth ?? 0, repRef.current?.offsetWidth ?? 0));
+      // Phones: a circle, as wide as the side steps allow (the full height made a tall, thin oval), with the step's line
+      // right under it. The stage there hugs its content, so the room is worked out from the screen, not the stage.
+      const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navbar-bottom")) || 0;
+      const avail = phone ? window.innerHeight - nav : stage.height;
+      let h = avail - top - BOTTOM_GAP - chip / 2 - (phone ? PHONE_TEXT : 0);
+      if (phone) {
+        h = Math.min(h, w - sw);
+        setPhoneTop(Math.max(0, Math.round((window.innerHeight - nav - stage.height) / 2)));
+      }
+      setBox({ w, h: Math.max(160, Math.floor(h)) });
+      setSideW(sw);
     };
     size();
     // The stage's height follows the nav's (--navbar-bottom), which settles after first paint, so watch the stage itself.
@@ -246,7 +259,8 @@ export function V4Cycle() {
           <div
             ref={stageRef}
             className="sticky flex w-full flex-col items-center"
-            style={{ top: "var(--navbar-bottom, 0px)", height: "calc(100svh - var(--navbar-bottom, 0px))" }}
+            // Phones: only as tall as what's in it, so no blank screen is left under the step's line when it lets go.
+            style={{ top: phone ? `calc(var(--navbar-bottom, 0px) + ${phoneTop}px)` : "var(--navbar-bottom, 0px)", height: phone ? "auto" : "calc(100svh - var(--navbar-bottom, 0px))" }}
           >
             {/* Where it starts, kept on screen with the loop (review call): the line out of it fills green into Business. */}
             <div className="h-4 shrink-0" />
@@ -255,8 +269,19 @@ export function V4Cycle() {
             {ring}
             {/* Phones: the line under the ring. */}
             {phone && (
-              <div className="mt-ds-6 min-h-[96px] max-w-[320px] text-center">
+              <div className="mt-10 min-h-[132px] max-w-[320px] text-center">
                 <StepLine started={started} at={at} filled={lineFilled} />
+                {/* Where you are in the loop: step n of 4, a dot for each. */}
+                <div aria-hidden className="mt-5 flex items-center justify-center gap-3" style={{ opacity: started ? 1 : 0 }}>
+                  <span className="font-display text-[11px] font-bold uppercase leading-[14px] tracking-[0.88px] text-text-grey-48">
+                    Step {at + 1} of {N}
+                  </span>
+                  <span className="flex gap-1.5">
+                    {STEPS.map((step, i) => (
+                      <span key={step.label} className="h-[6px] rounded-full transition-all duration-300" style={{ width: i === at ? 18 : 6, backgroundColor: i <= at ? GREEN_HIGHLIGHT : "var(--color-text-grey-16)" }} />
+                    ))}
+                  </span>
+                </div>
               </div>
             )}
           </div>
