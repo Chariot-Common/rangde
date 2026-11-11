@@ -14,8 +14,9 @@ import type { RangDeStats } from "@/lib/stats";
  * solution cards land over them, one after the other: the answer sitting on top of the problem it answers.
  * Phones: the same two panels one after the other (grey, then green), each card rising in as it comes into view.
  *
- * Copy as in the Figma; the solution card's figures are live (entrepreneurs funded, ₹ crore lent). Sizes follow the
- * Figma's 1920px frame on very large screens and scale down so the pinned section fits a laptop screen.
+ * Copy as in the Figma; the solution card's figures are live (entrepreneurs funded, ₹ crore lent). Type on the page's own
+ * scale (review, 11 Nov 2026), so it sits with the sections around it: the heading H3, card titles H4, points P2 in ink 64
+ * (P1 on very large screens), sources P4; the title and points in a centred column of steady width inside each card.
  */
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -157,14 +158,17 @@ function Pinned({ solutions }: { solutions: Card[] }) {
       <motion.section
         ref={stageRef}
         aria-label="The problem, and how Rang De closes the gap"
-        className={`${reduce ? "" : "sticky"} flex flex-col items-center justify-[safe_center] gap-8 overflow-hidden rounded-[16px] px-4 py-12 xl:gap-10 2xl:gap-12 2xl:py-20 [@media(max-height:820px)]:gap-5 [@media(max-height:820px)]:py-6`}
+        // The heading at the top and the cards filling the rest of the screen under it (review, 11 Nov 2026: the cards sat
+        // small in the middle of a laptop screen). On short screens the cards keep their content height and the group
+        // lifts to show them whole (`lift`).
+        className={`${reduce ? "" : "sticky"} flex flex-col items-center gap-8 overflow-hidden rounded-[16px] px-4 py-[clamp(24px,5svh,80px)] lg:px-8 xl:gap-10 2xl:gap-12 [@media(max-height:820px)]:gap-5`}
         style={{ top: "var(--navbar-bottom, 0px)", height: reduce ? "auto" : "calc(100svh - var(--navbar-bottom, 0px))", backgroundColor: reduce ? GREY_BG : bg }}
       >
-        <motion.div ref={groupRef} className="flex w-full flex-col items-center gap-8 xl:gap-10 2xl:gap-12 [@media(max-height:820px)]:gap-5" style={reduce ? undefined : { y: groupY }}>
+        <motion.div ref={groupRef} className="flex w-full flex-1 flex-col items-center gap-[clamp(20px,4svh,48px)]" style={reduce ? undefined : { y: groupY }}>
         {/* The heading: the problem, then (crossfading) the way Rang De closes the gap. */}
         <motion.div ref={headRef} className="relative z-10 grid place-items-center text-center" style={reduce ? undefined : { y: headY }}>
           <motion.h2
-            className="col-start-1 row-start-1 font-display text-[32px] font-bold leading-[40px] text-[#292d36] 2xl:text-[40px] 2xl:leading-[48px] [@media(max-height:820px)]:text-[26px] [@media(max-height:820px)]:leading-[32px]"
+            className="col-start-1 row-start-1 font-display text-h3 font-bold text-ink [text-wrap:balance] [@media(max-height:820px)]:text-[32px] [@media(max-height:820px)]:leading-[40px]"
             initial={false}
             animate={{ opacity: green && !reduce ? 0 : 1, y: green && !reduce ? -10 : 0 }}
             transition={{ duration: 0.4, ease: EASE }}
@@ -174,7 +178,7 @@ function Pinned({ solutions }: { solutions: Card[] }) {
           {!reduce && (
             <motion.p
               aria-hidden={!green}
-              className="col-start-1 row-start-1 font-display text-[32px] font-bold leading-[40px] text-[#292d36] 2xl:text-[40px] 2xl:leading-[48px] [@media(max-height:820px)]:text-[26px] [@media(max-height:820px)]:leading-[32px]"
+              className="col-start-1 row-start-1 font-display text-h3 font-bold text-ink [text-wrap:balance] [@media(max-height:820px)]:text-[32px] [@media(max-height:820px)]:leading-[40px]"
               initial={false}
               animate={{ opacity: green ? 1 : 0, y: green ? 0 : 10 }}
               transition={{ duration: 0.4, ease: EASE }}
@@ -185,17 +189,17 @@ function Pinned({ solutions }: { solutions: Card[] }) {
         </motion.div>
 
         {/* The cards: the two problems, and the two solutions landing over them. */}
-        <div className="relative grid w-full max-w-[1296px] grid-cols-2 gap-4">
+        <div className="relative grid w-full max-w-[1600px] flex-1 grid-cols-2 gap-4">
           {PROBLEMS.map((c, i) => (
             <RiseIn key={i} progress={scrollYProgress} range={i === 0 ? T.problem1 : T.problem2} reduce={!!reduce} filter={blur} opacity={fade}>
-              <GapCard card={c} />
+              <GapCard card={c} fill={!reduce} />
             </RiseIn>
           ))}
           {!reduce && (
             <div className="absolute inset-0 grid grid-cols-2 gap-4">
               {solutions.map((c, i) => (
                 <RiseIn key={i} progress={scrollYProgress} range={i === 0 ? T.solution1 : T.solution2} reduce={false} land>
-                  <GapCard card={c} solution />
+                  <GapCard card={c} solution fill />
                 </RiseIn>
               ))}
             </div>
@@ -242,22 +246,29 @@ function RiseIn({
 }
 
 /** A card as in the Figma: a bold title, three points between hairlines, and (for the problems) the source. The
- * solutions are as tall as the problems they land on, with their content centred in them (even room above and below). */
-function GapCard({ card, solution = false }: { card: Card; solution?: boolean }) {
+ * solutions are as tall as the problems they land on. `fill` (laptops, pinned): the card is as tall as the room under the
+ * heading, so its padding and spacing grow with the screen's height and the title and points sit centred in it, the
+ * source pinned to the bottom. */
+function GapCard({ card, solution = false, fill = false }: { card: Card; solution?: boolean; fill?: boolean }) {
+  // Pinned on laptops: room that grows with the screen's height; elsewhere the Figma's steps.
+  const pad = fill ? "px-[clamp(24px,4vw,72px)] py-[clamp(24px,5svh,72px)] [@media(max-height:820px)]:p-6" : "p-8 xl:p-12 2xl:p-16 [@media(max-height:820px)]:p-6";
+  const gap = fill ? "gap-[clamp(12px,3.2svh,40px)] [@media(max-height:820px)]:gap-3" : "gap-5 xl:gap-6 2xl:gap-10 [@media(max-height:820px)]:gap-3";
   return (
     <div
-      className={`flex h-full flex-col items-center ${solution ? "justify-center" : ""} gap-6 rounded-[20px] bg-white p-8 text-center xl:gap-8 xl:p-12 2xl:gap-12 2xl:p-16 [@media(max-height:820px)]:gap-4 [@media(max-height:820px)]:p-6 ${solution ? "shadow-[0_24px_60px_rgba(41,45,54,0.14)]" : ""}`}
+      className={`flex h-full flex-col items-center ${solution || fill ? "justify-center" : ""} ${fill ? "gap-[clamp(16px,4svh,48px)]" : "gap-6 xl:gap-8 2xl:gap-12"} rounded-[20px] bg-white text-center [@media(max-height:820px)]:gap-4 ${pad} ${solution ? "shadow-[0_24px_60px_rgba(41,45,54,0.14)]" : ""}`}
     >
-      <p className="font-display text-[22px] font-bold leading-[28px] text-[#292d36] [text-wrap:balance] xl:text-[26px] xl:leading-[34px] 2xl:text-[32px] 2xl:leading-[40px] [@media(max-height:820px)]:text-[20px] [@media(max-height:820px)]:leading-[26px]">{card.title}</p>
-      <div className="flex w-full flex-col gap-5 xl:gap-6 2xl:gap-10 [@media(max-height:820px)]:gap-3">
+      {/* With a source pinned to the bottom (mt-auto), the title takes an auto margin too, so the spare room splits evenly
+          above the title and above the source: the content sits centred. */}
+      <p className={`${fill && card.note ? "mt-auto" : ""} w-full max-w-[520px] font-display text-h4 font-bold text-ink [text-wrap:balance] [@media(max-height:820px)]:text-[26px] [@media(max-height:820px)]:leading-[32px]`}>{card.title}</p>
+      <div className={`flex w-full max-w-[480px] flex-col 2xl:max-w-[560px] ${gap}`}>
         {card.points.map((p, i) => (
-          <div key={i} className="flex flex-col gap-5 xl:gap-6 2xl:gap-10 [@media(max-height:820px)]:gap-3">
-            {i > 0 && <span aria-hidden className="h-px w-full bg-[rgba(41,45,54,0.24)]" />}
-            <p className="font-display text-[17px] font-medium leading-[25px] text-[rgba(41,45,54,0.64)] [text-wrap:balance] xl:text-[20px] xl:leading-[29px] 2xl:text-[32px] 2xl:leading-[40px] [@media(max-height:820px)]:text-[16px] [@media(max-height:820px)]:leading-[22px]">{p}</p>
+          <div key={i} className={`flex flex-col ${gap}`}>
+            {i > 0 && <span aria-hidden className="h-px w-full bg-ink/12" />}
+            <p className="font-display text-p2 font-medium text-ink/64 [text-wrap:pretty] 2xl:text-p1">{p}</p>
           </div>
         ))}
       </div>
-      {card.note && <p className="mt-auto font-display text-[12px] font-medium leading-[18px] text-[rgba(41,45,54,0.64)] 2xl:text-[14px] 2xl:leading-[20px]">{card.note}</p>}
+      {card.note && <p className="mt-auto font-display text-p4 font-medium text-ink/48">{card.note}</p>}
     </div>
   );
 }
@@ -266,7 +277,7 @@ function GapCard({ card, solution = false }: { card: Card; solution?: boolean })
 function SolutionPanel({ solutions, phone = false }: { solutions: Card[]; phone?: boolean }) {
   return (
     <section aria-label="How Rang De closes the gap" className={`mt-2 flex flex-col items-center gap-8 rounded-[16px] px-4 ${phone ? "py-12" : "py-16"}`} style={{ backgroundColor: GREEN_BG }}>
-      <h2 className="text-center font-display text-[28px] font-bold leading-[34px] text-[#292d36] md:text-[32px] md:leading-[40px]">{HEAD_SOLUTION}</h2>
+      <h2 className="text-center font-display text-h3 font-bold text-ink [text-wrap:balance]">{HEAD_SOLUTION}</h2>
       <div className={`grid w-full max-w-[1296px] gap-4 ${phone ? "grid-cols-1" : "grid-cols-2"}`}>
         {solutions.map((c, i) => (
           <InView key={i} index={i}>
@@ -284,7 +295,7 @@ function Stacked({ solutions }: { solutions: Card[] }) {
   return (
     <div className="mx-2 flex flex-col">
       <section aria-label="The problem" className="flex flex-col items-center gap-8 rounded-[16px] px-4 py-12" style={{ backgroundColor: GREY_BG }}>
-        <h2 className="text-center font-display text-[28px] font-bold leading-[34px] text-[#292d36] [text-wrap:balance]">{HEAD_PROBLEM}</h2>
+        <h2 className="text-center font-display text-h3 font-bold text-ink [text-wrap:balance]">{HEAD_PROBLEM}</h2>
         <div className="flex w-full flex-col gap-4">
           {PROBLEMS.map((c, i) => (
             <InView key={i} index={i}>
