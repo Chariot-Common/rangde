@@ -60,18 +60,28 @@ export function CollageStrip() {
   const stripRef = useRef<HTMLDivElement>(null);
   const [count, setCount] = useState(5);
 
-  // Pick how many columns fit the strip's fixed height and width.
+  // Fill the screen from the strip's top down to 8px above the bottom of the viewport, on every device (at least), and
+  // pick how many columns fit. The top is measured with offsetTop (not getBoundingClientRect) so the gallery's
+  // rise-in transform doesn't count; the height uses 100svh so a phone's address bar showing or hiding while
+  // scrolling doesn't make the strip jump.
   useLayoutEffect(() => {
     const strip = stripRef.current;
     if (!strip) return;
     const fit = () => {
-      // The height is a fixed pixel amount set in CSS (--h on the strip below), not tied to the viewport.
+      let top = 0;
+      for (let el: HTMLElement | null = strip; el; el = el.offsetParent as HTMLElement | null) top += el.offsetTop;
+      // Never shorter than --min (360px on phones, 404px from md up), so short screens keep a full-size gallery.
+      strip.style.setProperty("--h", `max(var(--min), calc(100svh - ${top}px - ${GAP}px))`);
       setCount(columnsFor(strip.clientWidth - 2 * GAP, strip.clientHeight));
     };
-    const raf = requestAnimationFrame(fit);
+    fit();
+    // Anything above that changes height (the headline rewrapping once the web font loads, say) moves the
+    // strip's top, so measure again. Re-measuring doesn't move the top, so this settles after one pass.
+    const ro = new ResizeObserver(fit);
+    ro.observe(document.body);
     window.addEventListener("resize", fit);
     return () => {
-      cancelAnimationFrame(raf);
+      ro.disconnect();
       window.removeEventListener("resize", fit);
     };
   }, []);
@@ -102,7 +112,7 @@ export function CollageStrip() {
 
   let cellIndex = 0;
   return (
-    <div ref={stripRef} className="flex w-full overflow-hidden px-2 [--h:360px] md:[--h:404px]" style={{ height: "var(--h)", gap: GAP }}>
+    <div ref={stripRef} className="flex w-full overflow-hidden px-2 [--min:360px] md:[--min:404px] [--h:var(--min)]" style={{ height: "var(--h)", gap: GAP }}>
       {columns.map((c, ci) => (
         <div key={ci} className="flex h-full min-w-0 flex-col" style={{ flex: `${c.w} 1 0px`, gap: GAP }}>
           {c.rows.map((row, ri) => (
