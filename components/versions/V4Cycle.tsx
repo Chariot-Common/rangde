@@ -116,7 +116,22 @@ export function V4Cycle() {
   const progress = useMotionValue(reduce ? 1 : 0); // the loop's green, 0 → 1 round it
   const segment = useMotionValue(reduce ? 1 : 0); // the line's last stretch into Business
   const pathRef = useRef<SVGPathElement>(null);
-  useMotionValueEvent(progress, "change", (v) => pathRef.current?.setAttribute("stroke-dashoffset", String(1 - v)));
+  // The ₹ marker rides the front of the green round the loop (hidden before it sets off and once it is back at Business).
+  const markerRef = useRef<SVGGElement>(null);
+  const placeMarker = (v: number) => {
+    const path = pathRef.current;
+    const m = markerRef.current;
+    if (!path || !m) return;
+    const show = v > 0.004 && v < 0.996;
+    m.style.opacity = show ? "1" : "0";
+    if (!show) return;
+    const pt = path.getPointAtLength(path.getTotalLength() * v);
+    m.setAttribute("transform", `translate(${pt.x} ${pt.y})`);
+  };
+  useMotionValueEvent(progress, "change", (v) => {
+    pathRef.current?.setAttribute("stroke-dashoffset", String(1 - v));
+    placeMarker(v);
+  });
   const [view, setView] = useState({ f1: 0, f2: 0, started: false, at: 0, finished: false, lineFilled: 0 });
   const { scrollY } = useScroll();
   const update = useCallback(() => {
@@ -171,6 +186,17 @@ export function V4Cycle() {
   const cx = box.w / 2;
   const rx = Math.max(0, (xr - xl) / 2);
   const ry = box.h / 2;
+  // Arrows half-way between the steps, pointing the way round (clockwise), green once the loop has passed them.
+  const arrows = [0, 1, 2, 3].map((k) => {
+    const t = ((k + 0.5) / N) * Math.PI * 2;
+    const x = cx + rx * Math.sin(t);
+    const y = ry - ry * Math.cos(t);
+    const deg = (Math.atan2(ry * Math.sin(t), rx * Math.cos(t)) * 180) / Math.PI;
+    const passed = reduce || finished || at > k;
+    // Rounded so the server's and the browser's numbers match exactly (they differed in the last decimal place).
+    const r2 = (n: number) => Math.round(n * 100) / 100;
+    return { x: r2(x), y: r2(y), deg: r2(deg), passed };
+  });
   const d = `M ${cx} 0 A ${rx} ${ry} 0 0 1 ${cx} ${box.h} A ${rx} ${ry} 0 0 1 ${cx} 0 Z`;
   const side = sideW ? { minWidth: sideW } : undefined;
   const chipAt: CSSProperties[] = [
@@ -195,6 +221,27 @@ export function V4Cycle() {
           strokeDasharray="1 1"
           strokeDashoffset={1 - progress.get()}
         />
+        {arrows.map((a, k) => (
+          <g key={k} transform={`translate(${a.x} ${a.y}) rotate(${a.deg})`}>
+            <circle r={phone ? 13 : 17} fill="#fff" stroke={a.passed ? GREEN_HIGHLIGHT : "var(--color-text-grey-24)"} strokeWidth={1.5} style={{ transition: "stroke .3s" }} />
+            <path
+              d={phone ? "M -3 -5 L 2.5 0 L -3 5" : "M -4 -7 L 3.5 0 L -4 7"}
+              fill="none"
+              stroke={a.passed ? "#3A6E0C" : "var(--color-text-grey-64)"}
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ transition: "stroke .3s" }}
+            />
+          </g>
+        ))}
+        {/* Your money, going round. */}
+        <g ref={markerRef} style={{ opacity: 0, transition: "opacity .25s" }}>
+          <circle r={15} fill="#fff" stroke={GREEN_HIGHLIGHT} strokeWidth={2.5} />
+          <text textAnchor="middle" dominantBaseline="central" fontSize={15} fontWeight={700} fill="#3A6E0C" fontFamily="var(--font-inter), Inter, sans-serif">
+            ₹
+          </text>
+        </g>
       </svg>
       {STEPS.map((step, i) => (
         <Chip key={step.label} ref={i === 1 ? repRef : i === 3 ? oppRef : undefined} label={step.label} state={stateOf(i)} style={chipAt[i]} />
@@ -207,6 +254,14 @@ export function V4Cycle() {
           style={{ width: TEXT_W, maxWidth: Math.max(240, box.w - 2 * sideW - 2 * TEXT_GAP) }}
         >
           <StepLine started={started} at={at} filled={lineFilled} large />
+          {/* Before it sets off: what the loop is, so the middle isn't empty. */}
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 transition-opacity duration-300" style={{ opacity: started ? 0 : 1 }} aria-hidden>
+            <span className="flex size-[64px] items-center justify-center rounded-[16px] font-display text-[30px] font-bold text-green-dark" style={{ backgroundColor: GREEN_LIGHT }}>
+              ₹
+            </span>
+            <p className="font-display text-p1 font-bold text-text-grey-80 lg:text-[20px] lg:leading-[30px]">Follow one loan round the loop</p>
+            <p className="font-display text-p3 font-medium text-text-grey-48">Keep scrolling</p>
+          </div>
         </div>
       )}
     </div>
