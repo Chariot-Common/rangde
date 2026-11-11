@@ -56,8 +56,8 @@ export default async function V2B() {
         glow={false}
       />
       <V4HowItWorks />
-      {/* Version 2 B: Why it matters as one borrower's story on a timeline, in place of the loop. */}
-      <V4Timeline />
+      {/* Version 2 B: Why it matters on a timeline (about everyone Rang De lends to), in place of the loop. */}
+      <V4Timeline stats={stats} />
       <ReelsWheel
         tight
         heading={

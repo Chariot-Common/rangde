@@ -36,10 +36,10 @@ const VERSIONS = [
   },
   {
     key: "2 B",
-    name: "Lend to a person, as a story",
+    name: "Lend to a person, on a timeline",
     href: "/v/v2-b",
     audience: "Everyone (rangde-v1)",
-    idea: "Version 2 with Why it matters told as one borrower's story on a timeline that slides past as you scroll (your ₹2,000, her shop, 12 repayments, her first credit score, a bigger loan) instead of the loop.",
+    idea: "Version 2 with Why it matters as a timeline that slides past as you scroll, in Version 1’s voice: investors lend to them, businesses funded, interest stays fair, repaying builds credit, the next loan doesn’t start from zero (instead of the loop).",
     measure: "Sign-ups vs. Version 2",
   },
   {

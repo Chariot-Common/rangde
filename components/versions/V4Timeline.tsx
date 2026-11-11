@@ -2,34 +2,36 @@
 
 import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import type { RangDeStats } from "@/lib/stats";
 
 /*
  * Version 2 B's "Why it matters": Version 2's loop (your social investment → business → repayment → credit history →
- * opportunities) told as one borrower's story over time. The section pins and a timeline slides past sideways as you
- * scroll, resting on each stop in the middle of the screen: Month 0, you lend ₹2,000; Month 1, Rekha restocks her shop;
- * Months 2–13, 12 of 12 repaid on time; Month 13, her first credit score; Year 2, a ₹1,00,000 loan.
+ * opportunities) told as a timeline that slides past sideways as you scroll, resting on each stop in the middle of the
+ * screen. About everyone Rang De lends to, not one borrower (review, 11 Nov 2026), with the live figures where there
+ * are some (entrepreneurs funded, principal repaid, from the same feed as the money section).
  *
- * Kept direct (review, 11 Nov 2026): each stop is a small label, one big figure and one short line. The track is a line
- * with a dot per stop that moves with the cards and fills green up to the current stop; each date sits under its dot,
- * clear of the line. The figures are an illustration (marked as such). With reduced motion the stops are a plain row.
+ * Kept direct, in Version 1's voice: each stop is a small label, a short bold claim and one plain line. The track is a line with a dot per stop
+ * that moves with the cards and fills green up to the current stop; each "when" sits under its dot, clear of the line.
+ * With reduced motion the stops are a plain row.
  */
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const GREEN = "#62af1d";
 const DOT = 14; // the dot's size; the line runs through the dots' centres
 
-type Stop = { when: string; label: string; figure: string; line: string; photo?: string };
-const REKHA = "https://rangde.imgix.net/bImg/Rekha-42-img.jpg?auto=compress,format&w=160&h=160&fit=facearea&facepad=2.2";
-const STOPS: Stop[] = [
-  { when: "Month 0", label: "Your social investment", figure: "₹2,000", line: "You lend to Rekha, with 30 others." },
-  { when: "Month 1", label: "Business", figure: "Restocked", line: "Rekha fills the shelves of her grocery store.", photo: REKHA },
-  { when: "Months 2–13", label: "Repayment", figure: "12/12", line: "Repaid on time, from what the shop earns." },
-  { when: "Month 13", label: "Credit history", figure: "742", line: "Her first credit score. Rated good." },
-  { when: "Year 2", label: "Opportunities", figure: "₹1,00,000", line: "Her next loan, two and a half times the first." },
+// In Version 1's voice (its problem → answer cards, ProblemPairs.tsx): a short bold claim, then one plain line.
+type Stop = { when: string; label: string; title: string; line: string };
+const stopsFor = (stats: RangDeStats): Stop[] => [
+  { when: "Today", label: "Your social investment", title: "Investors lend to them", line: "Directly, from ₹500, with no land needed. Every borrower is vetted in person first." },
+  { when: "Month 1", label: "Business", title: `${stats.entrepreneurs.toLocaleString("en-IN")} businesses funded`, line: "Stock for a shop, tools for a workshop, livestock for a farm." },
+  { when: "Every month", label: "Repayment", title: "Interest stays fair", line: `Up to 8.5% a year, no hidden charges. ${stats.principalRepaidPct.toFixed(1)}% of principal repaid so far.` },
+  { when: "As they repay", label: "Credit history", title: "Repaying builds credit", line: "Every repayment is reported to the credit bureaus, so a credit history starts." },
+  { when: "Next", label: "Opportunities", title: "The next loan doesn’t start from zero", line: "A credit record opens the door to more capital, from banks too." },
 ];
-const N = STOPS.length;
+const N = 5;
 
-export function V4Timeline() {
+export function V4Timeline({ stats }: { stats: RangDeStats }) {
+  const STOPS = stopsFor(stats);
   const reduce = useReducedMotion();
   const wrapRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -139,7 +141,6 @@ export function V4Timeline() {
             <motion.div initial={false} animate={{ opacity: done ? 1 : 0, y: done ? 0 : 8 }} transition={{ duration: 0.4, ease: EASE }}>
               <Closing />
             </motion.div>
-            <p className="px-4 text-center font-display text-[11px] font-medium leading-[16px] text-text-grey-48">An illustration of how a typical loan unfolds.</p>
           </div>
         </div>
       </div>
@@ -151,7 +152,7 @@ function Closing() {
   return <p className="px-4 text-center font-display text-p1 font-bold text-text-grey-100 md:text-[20px] md:leading-[30px]">Today’s loan helps make tomorrow’s credit possible.</p>;
 }
 
-/** A stop: what it is, one big figure, one line. The one in the middle is white with a green outline; the rest are grey. */
+/** A stop: what it is, a short bold claim, one line. The one in the middle is white with a green outline; the rest are grey. */
 function StopCard({ stop, on }: { stop: Stop; on: boolean }) {
   return (
     <div
@@ -160,13 +161,7 @@ function StopCard({ stop, on }: { stop: Stop; on: boolean }) {
       }`}
     >
       <p className="font-display text-[12px] font-bold uppercase leading-[16px] tracking-[1px] text-text-grey-64">{stop.label}</p>
-      <div className="flex items-center gap-3">
-        {stop.photo && (
-          // eslint-disable-next-line @next/next/no-img-element -- Rekha Bai's photo from her rangde.in listing, sized by imgix
-          <img src={stop.photo} alt="" className="size-[48px] shrink-0 rounded-full object-cover" loading="lazy" />
-        )}
-        <p className="font-display text-[40px] font-bold leading-[44px] tracking-[-0.8px] text-green-dark">{stop.figure}</p>
-      </div>
+      <p className="font-display text-[24px] font-bold leading-[30px] tracking-[-0.48px] text-text-grey-100 [text-wrap:balance]">{stop.title}</p>
       <p className="font-display text-[17px] font-medium leading-[24px] text-text-grey-80">{stop.line}</p>
     </div>
   );
