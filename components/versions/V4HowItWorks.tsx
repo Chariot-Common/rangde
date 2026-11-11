@@ -33,7 +33,7 @@ const STEPS = [
     title: "Payments towards them are collected",
     body: "We collect on the 1st or 15th of the month, whichever comes next. Within 24 hours the money reaches the borrower’s bank account, as RBI regulations require.",
   },
-  { title: "Keep track of all your investments", body: "See every investment you’ve made, your total earnings, the repayments you’ve had and the ones still to come, borrower by borrower." },
+  { title: "Keep track of all your investments", body: "See every investment you’ve made on Rang De, your total earnings, the repayments you’ve already had and the ones still to come, borrower by borrower, all in one place." },
   {
     title: "Formal credit history helps them grow",
     body: "Every repayment is reported to the credit bureaus, so the borrower builds a formal credit history, and with it new possibilities: a bigger loan, new machinery, more clients.",

@@ -29,7 +29,9 @@ export function useRefreshedNav() {
 
 /** Versions whose phone "Get started" button steps aside (fades and drops) while the page is scrolled up, and comes
  * back as it is scrolled down. */
-export const CTA_HIDES_ON_SCROLL_UP_ROUTES = ["/v/v2"];
+// Empty: v2 had it, but the button dropping away while scrolling back up was distracting (review, 11 Nov 2026). On v2 it
+// now stays at the bottom of the screen once the hero's intro has played (it waits for the nav, see useNavHidden).
+export const CTA_HIDES_ON_SCROLL_UP_ROUTES: string[] = [];
 export function useCtaHidesOnScrollUp() {
   return CTA_HIDES_ON_SCROLL_UP_ROUTES.includes(usePathname());
 }

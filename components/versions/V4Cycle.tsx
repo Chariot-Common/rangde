@@ -21,7 +21,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CS
 const ICONS = "/images/why-rangde-v2";
 const STEPS = [
   { label: "Business", icon: `${ICONS}/icon-banknotes.webp`, text: "They buy equipment, stock a shop, expand a small business, buy livestock, or take on a new opportunity." },
-  { label: "Repayment", icon: `${ICONS}/icon-hand-check.webp`, text: "They repay, month by month, as their loan agreement sets out." },
+  { label: "Repayment", icon: `${ICONS}/icon-hand-check.webp`, text: "They repay month by month, on the dates their loan agreement sets out, from what the business earns." },
   { label: "Credit history", icon: `${ICONS}/icon-bar-chart.webp`, text: "Every repayment is reported to the credit bureaus. Borrowers who may never have had a credit file start building one." },
   { label: "Opportunities", icon: `${ICONS}/icon-target-center.webp`, text: "And with it, access to the formal financial system: more capital, back into the business." },
 ];
@@ -97,7 +97,8 @@ export function V4Cycle() {
       let h = avail - top - BOTTOM_GAP - chip / 2 - (phone ? PHONE_TEXT : 0);
       if (phone) {
         h = Math.min(h, w - sw);
-        setPhoneTop(Math.max(0, Math.round((window.innerHeight - nav - stage.height) / 2)));
+        // Centred in what's visible: between the nav and the floating Get started button (52px + 8px under it + 16px).
+        setPhoneTop(Math.max(0, Math.round((window.innerHeight - nav - 76 - stage.height) / 2)));
       }
       setBox({ w, h: Math.max(160, Math.floor(h)) });
       setSideW(sw);

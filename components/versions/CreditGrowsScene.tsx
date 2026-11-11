@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /*
  * Version 2's How it works, step 5, "Their credit grows" (from the review call): the borrower's side of the loop. Rekha Bai
@@ -82,9 +82,38 @@ export function CreditGrowsScene() {
   const needle = angleOf(score) - 90;
   const open = phase === "open";
 
+  // Scaled down to fit when the frame is shorter than the scene (phones: the frame is about 300px tall and the rating card
+  // was cut off top and bottom). The scene is laid out at 1/s of the frame's size and shrunk by s, so it always fits whole.
+  const boxRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState(1);
+  useEffect(() => {
+    const box = boxRef.current;
+    const content = contentRef.current;
+    if (!box || !content) return;
+    const measure = () => {
+      const room = box.clientHeight - 24;
+      const need = content.offsetHeight;
+      if (!room || !need) return;
+      setFit((f) => {
+        const next = Math.min(1, Math.round((room / need) * 1000) / 1000);
+        return Math.abs(next - f) < 0.005 ? f : next;
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(box);
+    ro.observe(content);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div className="@container size-full bg-[#FAFBF8]">
-      <div className="flex size-full flex-col items-center justify-center gap-4 p-5 @[560px]:flex-row @[560px]:gap-6 @[560px]:p-10">
+    <div ref={boxRef} className="relative size-full overflow-hidden bg-[#FAFBF8]">
+      <div
+        className="@container absolute left-0 top-0 flex items-center justify-center transition-transform duration-300"
+        style={{ width: `${100 / fit}%`, height: `${100 / fit}%`, transform: `scale(${fit})`, transformOrigin: "top left" }}
+      >
+      <div ref={contentRef} className="flex w-full flex-col items-center justify-center gap-4 p-5 @[560px]:flex-row @[560px]:gap-6 @[560px]:p-10">
         {/* Her credit rating. */}
         <motion.div
           layout={!reduce}
@@ -196,6 +225,7 @@ export function CreditGrowsScene() {
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   );

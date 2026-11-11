@@ -82,7 +82,7 @@ const subscribePhone = (cb: () => void) => {
 /** `thinFrame` (v1.1, v2.1): the centre photo's frame as thin as a regular print's (at 1.65× it read as too thick).
  * `roomy` (v2): the same space above the heading as the page's other sections (on laptops it was only 8px). */
 /** `story` (v2): a longer paragraph under the heading in place of the one-line belief (when it began, how it has grown). */
-export function FoundersCollage({ cards = false, thinFrame = false, roomy = false, story, phoneLayout = false }: { cards?: boolean; thinFrame?: boolean; roomy?: boolean; story?: ReactNode; phoneLayout?: boolean } = {}) {
+export function FoundersCollage({ cards = false, thinFrame = false, roomy = false, story, phoneLayout = false, eyebrow }: { cards?: boolean; thinFrame?: boolean; roomy?: boolean; story?: ReactNode; phoneLayout?: boolean; eyebrow?: string } = {}) {
   const around = cards ? AROUND.map((a) => CARD_SWAPS[a.src] ?? a) : AROUND;
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const k = phone ? 0.25 : 1;
@@ -101,6 +101,7 @@ export function FoundersCollage({ cards = false, thinFrame = false, roomy = fals
       {/* Two levels only: the short line (Oxford is the word that has to land, so nothing else sits beside it)
           and Ram's own one-sentence why, from the version he shared. */}
       <div className="flex flex-col items-center gap-4 text-center">
+        {eyebrow && <p className="font-display text-h5 font-bold uppercase tracking-[0.88px] text-text-grey-80">{eyebrow}</p>}
         {/* Fills in as it is read, like the page's other H3s (plain: no coloured edge). */}
         <ScrollInk as="h2" tone="plain" text="Ram and Smita left Oxford to build Rang De." className="max-w-[820px] font-display text-h3 font-bold [text-wrap:balance]" />
         <p className={`font-display text-[18px] font-medium leading-[28px] text-text-grey-64 md:text-[22px] md:leading-[32px] [text-wrap:pretty] ${story ? "max-w-[760px]" : "max-w-[640px]"}`}>
@@ -118,13 +119,15 @@ export function FoundersCollage({ cards = false, thinFrame = false, roomy = fals
           >
             <Image src={CENTRE} alt="Ram and Smita, Rang De’s founders" fill sizes="90vw" className="rounded-[4px] object-cover" />
           </motion.div>
-          <div className="-mx-6 w-[calc(100%+48px)] overflow-hidden py-3 [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
+          {/* Room above and below for the prints' shadows to fade out fully: clipped short, they showed as a grey band with a
+              hard edge under the strip. */}
+          <div className="-mx-6 -my-6 w-[calc(100%+48px)] overflow-hidden py-9 [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
             <div className={`flex w-max gap-4 px-2 ${reduce ? "" : "animate-[founders-strip_28s_linear_infinite]"}`}>
               {[...PHONE_AROUND, ...PHONE_AROUND].map((a, i) => (
                 <div
                   key={`${a.src}-${i}`}
                   aria-hidden={i >= PHONE_AROUND.length}
-                  className={`relative aspect-[4/3] w-[150px] shrink-0 rounded-[6px] ${FRAME}`}
+                  className="relative aspect-[4/3] w-[150px] shrink-0 overflow-hidden rounded-[6px] border-solid border-white bg-white shadow-[0_6px_16px_rgba(0,0,0,0.12)]"
                   style={{ borderWidth: 3, transform: `rotate(${i % 2 ? 3 : -3}deg)` }}
                 >
                   <Image src={a.src} alt="" fill sizes="150px" className="rounded-[2px] object-cover" />

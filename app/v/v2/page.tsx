@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { FoundersCollage } from "@/components/versions/FoundersCollage";
 import { OpportunitiesSection } from "@/components/sections/opportunities/OpportunitiesSection";
 import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
-import { ScrollInk } from "@/components/versions/ScrollInk";
+import { ScrollInkLines } from "@/components/versions/ScrollInk";
 import { ReelsWheel } from "@/components/sections/reels/ReelsWheel";
 import { ApproachHero, HowItWorksTabs, InfrastructureRow, SeeWhereMoneyGoes } from "@/components/versions/approaches";
 import { V4HeroCards } from "@/components/versions/V4Sections";
@@ -60,11 +60,14 @@ export default async function V2() {
       <ReelsWheel
         tight
         heading={
-          // Each line fills in letter by letter as it scrolls up: grey 24 → 100, then green dark 24% → green dark.
-          <>
-            <ScrollInk as="span" tone="grey" text="Meet the Other Startup India." className="block" />
-            <ScrollInk as="span" tone="green" text="No pitch decks. No valuations. Just people building Bharat." className="block" />
-          </>
+          // Fills in letter by letter as it scrolls up: "Meet the Other Startup India." first (grey 24 → 100), and only once
+          // it is full, the green line (green dark 24% → green dark).
+          <ScrollInkLines
+            lines={[
+              { text: "Meet the Other Startup India.", tone: "grey" },
+              { text: "No pitch decks. No valuations. Just people building Bharat.", tone: "green" },
+            ]}
+          />
         }
       />
       <HowItWorksTabs refined inked bare visual="journey" eyebrow={null} heading="You decide who you back." />
@@ -77,12 +80,12 @@ export default async function V2() {
         thinFrame
         roomy
         phoneLayout
-        // From the review call: when it began, and how it has grown since (live figures, as in the section above).
+        eyebrow="Why Rang De exists?"
+        // From the review call: when it began and why (the live figures sentence is out, 11 Nov 2026).
         story={
           <>
             They started Rang De in 2008 with a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow. The idea was to let
-            anyone lend a little to the people banks overlook, and see exactly where every rupee goes. Since then, {stats.investors.toLocaleString("en-IN")} social
-            investors have lent ₹{Math.round(stats.disbursedCr).toLocaleString("en-IN")} crore to {stats.entrepreneurs.toLocaleString("en-IN")} entrepreneurs across India.
+            anyone lend a little to the people banks overlook, and see exactly where every rupee goes.
           </>
         }
       />

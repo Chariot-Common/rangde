@@ -1,6 +1,6 @@
 "use client";
 
-import { useMotionValueEvent, useReducedMotion, useScroll, useSpring, type MotionValue } from "motion/react";
+import { useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "motion/react";
 import { Fragment, useRef, useSyncExternalStore } from "react";
 
 /*
@@ -174,4 +174,31 @@ export function ScrollInk({
   if (as === "h3") return <h3 ref={ref} className={className} aria-label={text}>{letters}</h3>;
   if (as === "span") return <span ref={ref} className={className} aria-label={text}>{letters}</span>;
   return <p ref={ref} className={className} aria-label={text}>{letters}</p>;
+}
+
+/** Several lines that fill one after the other on one scroll (v2's "Meet the Other Startup India." and then "No pitch
+ * decks…"): the block's trip up the screen is shared out by length, so the second line only starts once the first is full.
+ * Each line is its own block. */
+export function ScrollInkLines({ lines, offset }: { lines: { text: string; tone: Tone }[]; offset?: [`start ${number}`, `start ${number}`] }) {
+  const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
+  const ref = useRef<HTMLSpanElement>(null);
+  // A little longer than one line's fill, as there is more to fill: from the top entering the screen to just above the middle.
+  const { scrollYProgress } = useScroll({ target: ref, offset: offset ?? (phone ? ["start 1", "start 0.3"] : ["start 1", "start 0.55"]) });
+  const smooth = useSpring(scrollYProgress, { stiffness: 70, damping: 22, restDelta: 0.0005 });
+  const total = lines.reduce((n, l) => n + l.text.length, 0);
+  // Each line's share of the trip: from the letters before it to the letters up to its end.
+  const ends = lines.map((_, i) => lines.slice(0, i + 1).reduce((n, l) => n + l.text.length, 0) / total);
+  const spans = ends.map((end, i) => [i === 0 ? 0 : ends[i - 1], end] as const);
+  return (
+    <span ref={ref} className="block">
+      {lines.map((l, i) => (
+        <InkLine key={l.text} text={l.text} tone={l.tone} progress={smooth} span={spans[i]} />
+      ))}
+    </span>
+  );
+}
+
+function InkLine({ text, tone, progress, span }: { text: string; tone: Tone; progress: MotionValue<number>; span: readonly [number, number] }) {
+  const drive = useTransform(progress, [span[0], span[1]], [0, 1], { clamp: true });
+  return <ScrollInk as="span" tone={tone} text={text} drive={drive} className="block" />;
 }
