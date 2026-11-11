@@ -18,6 +18,8 @@ interface SwipeCarouselProps<T> {
    * sides — so it's obvious there's more to swipe to, even before anyone spots the dots.
    */
   peek?: boolean;
+  /** With `peek`: less of the neighbours shows and the current item is wider (Version 1's hero cards, sized like Version 2's). */
+  peekWide?: boolean;
   /** Moves to the next item after this many ms (looping), pausing while it's being touched. */
   autoAdvanceMs?: number;
   /** Colour of the active pagination dot. */
@@ -35,6 +37,7 @@ export function SwipeCarousel<T>({
   renderItem,
   ariaLabel,
   peek = false,
+  peekWide = false,
   autoAdvanceMs,
   accent = "blue",
 }: SwipeCarouselProps<T>) {
@@ -117,13 +120,13 @@ export function SwipeCarousel<T>({
         onTouchEnd={() => setTouching(false)}
         onTouchCancel={() => setTouching(false)}
         className={`flex w-full snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
-          peek ? "gap-2 px-[8%]" : "gap-4"
+          peek ? `gap-2 ${peekWide ? "px-[4%]" : "px-[8%]"}` : "gap-4"
         }`}
       >
         {items.map((item, i) => (
           <div
             key={i}
-            className={`min-w-0 shrink-0 grow-0 ${peek ? "basis-[84%] snap-center" : "basis-[calc(100%-16px)] snap-start"}`}
+            className={`min-w-0 shrink-0 grow-0 ${peek ? `${peekWide ? "basis-[90%]" : "basis-[84%]"} snap-center` : "basis-[calc(100%-16px)] snap-start"}`}
           >
             {renderItem(item, i)}
           </div>

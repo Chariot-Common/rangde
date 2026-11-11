@@ -44,7 +44,9 @@ function FlipCoin({ icon, auto = false }: { icon: IconName; auto?: boolean }) {
  * between a quarter and three quarters of the way down the screen; as it climbs past the quarter line the next takes over. */
 /** `large` (Version 1.1): taller cards with the question at H4 size, so they read as a section of their own. */
 /** `fadeIn` (Version 2): the cards fade in, one after another and rising a little, as they come into view (ease-out). */
-export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean }) {
+/** `foundersCall` (Version 3): "Talk to our founders" beside "Read more FAQs", with when under both buttons (the weekly
+ * live call with Ram and Smita). */
+export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false, foundersCall = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean; foundersCall?: boolean }) {
   const cards = QUESTION_CARDS.slice(0, count);
   const reduce = useReducedMotion();
   const fade = fadeIn && !reduce;
@@ -119,15 +121,40 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
           </motion.button>
         ))}
       </div>
-      <a
-        href={FAQS_URL}
-        className={`inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] px-8 font-display text-p3 font-bold transition-[color,background-color,filter] ${navyLink ? "bg-nav-sky text-nav-navy hover:brightness-95" : "bg-primary/12 text-primary hover:bg-primary/20"}`}
-      >
-        Read more FAQs
-        <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M5 12h14M13 6l6 6-6 6" />
-        </svg>
-      </a>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+          <a
+            href={FAQS_URL}
+            className={`inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] px-8 font-display text-p3 font-bold transition-[color,background-color,filter] ${navyLink ? "bg-nav-sky text-nav-navy hover:brightness-95" : "bg-primary/12 text-primary hover:bg-primary/20"}`}
+          >
+            Read more FAQs
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
+          {foundersCall && (
+            // When the call is, in a black tooltip above the button on hover (or focus, so a tap on a phone shows it too),
+            // in the style of the source tooltips in the story above (StoryHowItWorks).
+            <span className="group/call relative inline-flex">
+              {/* TODO: link to the founders' call sign-up once there is one (the site's other founders' call buttons have none yet). */}
+              <button
+                type="button"
+                aria-describedby="founders-call-when"
+                className="inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] bg-nav-navy px-8 font-display text-p3 font-bold text-white transition-[filter] hover:brightness-110"
+              >
+                Talk to our founders
+              </button>
+              <span
+                id="founders-call-when"
+                role="tooltip"
+                className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-3 w-max max-w-[260px] -translate-x-1/2 translate-y-1 rounded-[8px] bg-[#1d1f24] px-3 py-2 text-center font-display text-[12px] font-medium leading-[16px] text-white opacity-0 shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-[opacity,translate] duration-150 group-hover/call:translate-y-0 group-hover/call:opacity-100 group-focus-within/call:translate-y-0 group-focus-within/call:opacity-100"
+              >
+                Live with Ram and Smita, Rang De’s founders, every Saturday at 11 am IST.
+                {/* The pointer, down to the button. */}
+                <span aria-hidden className="absolute left-1/2 top-full size-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-[#1d1f24]" />
+              </span>
+            </span>
+          )}
+      </div>
 
       {current && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={current.question}>

@@ -196,6 +196,8 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
       <SwipeCarousel
         items={stories}
         peek
+        // Version 1: wider cards on phones (about 310px on a 375px screen, was 265), so its three figures fit.
+        peekWide={layout === "recent11"}
         accent="green"
         autoAdvanceMs={3000}
         ariaLabel="Rural entrepreneur stories"

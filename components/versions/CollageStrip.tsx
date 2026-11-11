@@ -43,6 +43,15 @@ const SHAPES: Shape[] = [
   { w: 0.95, rows: [[0.5, 0.5], [1]], split: 0.42 },
 ];
 
+// Phones (under 640px): a fixed 360px strip of three columns, a stacked pair, one tall photo and another stacked pair,
+// so five smaller photos show at once (the shapes above give one big photo, or slivers, at phone widths).
+const PHONE_SHAPES: Shape[] = [
+  { w: 1, rows: [[1], [1]], split: 0.56 },
+  { w: 1.2, rows: [[1]], split: 1 },
+  { w: 1, rows: [[1], [1]], split: 0.44 },
+];
+const PHONE_QUERY = "(max-width: 639px)";
+
 /** How many columns (from the start of the sequence) best fill `width` at strip height `h`. */
 function columnsFor(width: number, h: number) {
   let used = 0;
@@ -60,17 +69,25 @@ export function CollageStrip() {
   const stripRef = useRef<HTMLDivElement>(null);
   const [count, setCount] = useState(5);
 
-  // Fill the screen from the strip's top down to 8px above the bottom of the viewport, on every device (at least), and
+  const [phone, setPhone] = useState(false);
+
+  // From sm up: fill the screen from the strip's top down to 8px above the bottom of the viewport (at least), and
   // pick how many columns fit. The top is measured with offsetTop (not getBoundingClientRect) so the gallery's
-  // rise-in transform doesn't count; the height uses 100svh so a phone's address bar showing or hiding while
-  // scrolling doesn't make the strip jump.
+  // rise-in transform doesn't count; the height uses 100svh so the screen's height changing doesn't make it jump.
+  // Phones: a fixed 360px (the strip's --min) and PHONE_SHAPES.
   useLayoutEffect(() => {
     const strip = stripRef.current;
     if (!strip) return;
     const fit = () => {
+      const isPhone = window.matchMedia(PHONE_QUERY).matches;
+      setPhone(isPhone);
+      if (isPhone) {
+        strip.style.setProperty("--h", "var(--min)");
+        return;
+      }
       let top = 0;
       for (let el: HTMLElement | null = strip; el; el = el.offsetParent as HTMLElement | null) top += el.offsetTop;
-      // Never shorter than --min (360px on phones, 404px from md up), so short screens keep a full-size gallery.
+      // Never shorter than --min (360px up to md, 404px from md up), so short screens keep a full-size gallery.
       strip.style.setProperty("--h", `max(var(--min), calc(100svh - ${top}px - ${GAP}px))`);
       setCount(columnsFor(strip.clientWidth - 2 * GAP, strip.clientHeight));
     };
@@ -86,7 +103,7 @@ export function CollageStrip() {
     };
   }, []);
 
-  const columns = useMemo(() => Array.from({ length: count }, (_, i) => SHAPES[i % SHAPES.length]), [count]);
+  const columns = useMemo(() => (phone ? PHONE_SHAPES : Array.from({ length: count }, (_, i) => SHAPES[i % SHAPES.length])), [count, phone]);
   const total = columns.reduce((n, c) => n + c.rows.reduce((m, r) => m + r.length, 0), 0);
 
   // What each frame shows, in reading order. The pool is dealt out in turn, skipping any photo already on screen.

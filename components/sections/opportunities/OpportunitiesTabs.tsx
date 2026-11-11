@@ -31,9 +31,11 @@ interface Props {
   individuals: IndividualOpportunity[];
   states: StateOpportunity[];
   funds: FundOpportunity[];
+  /** A second button beside "Explore all opportunities" (Version 3: "How it works"). */
+  secondaryCta?: React.ReactNode;
 }
 
-export function OpportunitiesTabs({ individuals, states, funds }: Props) {
+export function OpportunitiesTabs({ individuals, states, funds, secondaryCta }: Props) {
   const [tab, setTab] = useState<TabKey>("individuals");
   const allTabs: { key: TabKey; label: string; count: number }[] = [
     { key: "individuals", label: "Individuals", count: individuals.length },
@@ -112,15 +114,19 @@ export function OpportunitiesTabs({ individuals, states, funds }: Props) {
         )}
       </div>
 
-      <a
-        href={EXPLORE_URL[tab]}
-        className="inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] bg-primary px-8 font-display text-p3 font-bold text-white transition-[filter] hover:brightness-95"
-      >
-        Explore all opportunities
-        <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M5 12h14M13 6l6 6-6 6" />
-        </svg>
-      </a>
+      <div className="flex flex-wrap items-center justify-center gap-3 px-4">
+        <a
+          href={EXPLORE_URL[tab]}
+          className="inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] bg-primary px-8 font-display text-p3 font-bold text-white transition-[filter] hover:brightness-95"
+        >
+          Explore all opportunities
+          <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+        {/* Wrapped so the element passed in from the server page sits as a single child (no list "key" warning). */}
+        {secondaryCta && <span className="contents">{secondaryCta}</span>}
+      </div>
 
       {/* Moved down from under the heading (too small there, and it crowded the tabs). */}
       <ul className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 font-display text-p4 font-medium text-ink/64">

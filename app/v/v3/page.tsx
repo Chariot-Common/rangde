@@ -9,6 +9,7 @@ import { StoriesTwoRows } from "@/components/versions/StoriesTwoRows";
 import { TrustList } from "@/components/versions/V6Sections";
 import { OpportunitiesSection } from "@/components/sections/opportunities/OpportunitiesSection";
 import { PressRow } from "@/components/versions/approaches";
+import { HowItWorksModalButton } from "@/components/versions/HowItWorksModal";
 
 export const metadata: Metadata = {
   title: "Version 3 · Less said | Rang De",
@@ -21,7 +22,8 @@ export const metadata: Metadata = {
 // the photo collage and scroll-filled text. As little text as possible, and each idea once.
 // The headline with the stats, the gallery and the press → the founders' paragraph → how it works (the
 // scroll story), running straight on into "Rekha and Arjun aren't the only ones": borrowers, then investors → the
-// four infrastructure points, side by side → the questions as cards → the live investment opportunities.
+// live investment opportunities with the four infrastructure points in the same card (11 Nov 2026) → the questions
+// as cards, with the founders' call beside "Read more FAQs".
 export default function V3() {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
@@ -30,10 +32,11 @@ export default function V3() {
       {/* Starts filling only once the founders paragraph above has finished. */}
       {/* The borrowers' and investors' stories follow straight on from Rekha and Arjun's, inside the same card. */}
       <StoryHowItWorks heading={<ScrollInk as="span" text="Here’s how that works." offset={["start 0.55", "start 0.2"]} />} navyCta large crowd="fresh" after={<StoriesTwoRows />} />
-      <TrustList />
-      <PlainQuestionCards count={4} flip navyLink large />
-      {/* The way in, as on Version 1.1: the live listings, by individuals, states and funds. */}
-      <OpportunitiesSection />
+      {/* The way in, as on Version 1.1: the live listings, by individuals, states and funds, with "How it works" (Version 2's
+          "You decide who you back", as a pop-up) beside "Explore all opportunities"; then, in the same card under a divider,
+          the four infrastructure points. */}
+      <OpportunitiesSection roomy secondaryCta={<HowItWorksModalButton />} after={<TrustList inCard />} />
+      <PlainQuestionCards count={4} flip navyLink large foundersCall />
     </div>
   );
 }

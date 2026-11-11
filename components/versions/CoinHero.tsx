@@ -6,6 +6,7 @@ import { useRangDeStats } from "@/components/providers/StatsProvider";
 import { heroStatsFrom } from "@/lib/content";
 import { usePageReady } from "@/lib/use-page-ready";
 import { ScrollInk } from "./ScrollInk";
+import { PhoneStats } from "./approaches";
 
 /*
  * Version 6's hero. No coins and no flying logo: the Rang De logo stays where it is in the nav. When the page
@@ -45,8 +46,9 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
   }, [ready, reduce, line1]);
 
   return (
-    <div className="relative isolate flex w-full flex-col items-center gap-12 overflow-hidden px-4 pt-[100px] sm:px-2 sm:pt-12">
-      <div className="flex w-full flex-col items-center gap-12">
+    // Phones (as on Versions 1 and 2): 32px between the headline, the RBI seal and the gallery (48px from sm up).
+    <div className="relative isolate flex w-full flex-col items-center gap-8 overflow-hidden px-4 pt-[100px] sm:gap-12 sm:px-2 sm:pt-12">
+      <div className="flex w-full flex-col items-center gap-8 sm:gap-12">
         {/* Each sentence on its own line from lg up. */}
         <h1 className="w-full max-w-[1280px] text-center font-display text-h1 font-bold text-ink">
           <ScrollInk as="span" text={LINE_1} drive={line1} className="lg:block lg:whitespace-nowrap" />{" "}
@@ -67,6 +69,9 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
           transition={{ ...STATS, ease: "easeOut" }}
         >
           <RollingStats stats={stats} play={play} />
+          {/* Phones, as on Versions 1 and 2: only the RBI seal shows, with a chevron under it; the first scroll opens the
+              figures in its place (two columns, a rule between the rows). */}
+          <PhoneStats />
         </motion.div>
       </div>
 
@@ -91,11 +96,12 @@ const MOBILE_ORDER_CLASS = ["order-[2]", "order-[3]", "order-[1]", "order-[4]", 
 
 function RollingStats({ stats, play }: { stats: ReturnType<typeof heroStatsFrom>; play: boolean }) {
   return (
-    <div className="grid w-full grid-cols-2 gap-x-6 gap-y-12 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-[16px] sm:gap-y-8 lg:flex-nowrap">
+    // Phones: the seal alone (the figures open under it in PhoneStats).
+    <div className="grid w-full grid-cols-2 gap-x-6 gap-y-0 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-[16px] sm:gap-y-8 lg:flex-nowrap">
       {stats.map((stat, index) => {
         const isRbi = stat.kind === "icon";
         return (
-          <div key={stat.label} className={`flex flex-col items-center ${isRbi ? "col-span-2 gap-[8px] justify-self-center sm:min-w-0" : "gap-[4px]"} sm:order-none sm:flex-1 ${MOBILE_ORDER_CLASS[index]}`}>
+          <div key={stat.label} className={`flex flex-col items-center ${isRbi ? "col-span-2 gap-[8px] justify-self-center sm:min-w-0" : "gap-[4px] max-sm:hidden"} sm:order-none sm:flex-1 ${MOBILE_ORDER_CLASS[index]}`}>
             {stat.kind === "number" ? (
               <p className="font-display text-[24px] font-bold text-ink tabular-nums lg:text-h4" style={{ lineHeight: 1.25 }}>
                 <RollNumber text={stat.format(stat.target)} play={play} />

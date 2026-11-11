@@ -32,6 +32,8 @@ interface StoryCardProps {
   faces?: ReactNode;
   /** The photo's white stroke drawn inside its edge (as "recent11" has it), so the photo fills the full 80px. */
   insetAvatar?: boolean;
+  /** No grow on hover (Version 3's drifting rows, where hovering pauses the row instead). */
+  still?: boolean;
 }
 
 const CARD_WIDTH_CLASSES = {
@@ -44,13 +46,13 @@ const IMAGE_HEIGHT_CLASSES = {
   grid: "aspect-[16/9]",
 };
 
-export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading = "eager", layout = "default", stretch = false, faces, insetAvatar = false }: StoryCardProps) {
+export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading = "eager", layout = "default", stretch = false, faces, insetAvatar = false, still = false }: StoryCardProps) {
   const recent = (layout === "recent" || layout === "recent11") && !!story.name;
   const v11 = layout === "recent11";
   return (
     <div
       aria-hidden={hiddenFromAT || undefined}
-      className={`flex flex-col items-center overflow-hidden rounded-[8px] bg-[#084a2f] p-[4px] transition-transform duration-300 ease-out hover:scale-[1.015] ${CARD_WIDTH_CLASSES[variant]} ${stretch ? "self-stretch" : ""}`}
+      className={`flex flex-col items-center overflow-hidden rounded-[8px] bg-[#084a2f] p-[4px] ${still ? "" : "transition-transform duration-300 ease-out hover:scale-[1.015]"} ${CARD_WIDTH_CLASSES[variant]} ${stretch ? "self-stretch" : ""}`}
     >
       <div className={`relative mb-[-48px] w-full shrink-0 rounded-[4px] ${IMAGE_HEIGHT_CLASSES[variant]}`}>
         {/*
@@ -61,7 +63,8 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
         <Image src={story.image} alt="" fill sizes="440px" loading={loading} className="rounded-[4px] object-cover" />
       </div>
 
-      <div className={`flex w-full flex-col items-center gap-[24px] px-[28px] pb-[28px] ${stretch ? "flex-1" : ""}`}>
+      {/* Version 1 on phones: Version 2's tighter card (18px in from the edges, 16px between the parts). */}
+      <div className={`flex w-full flex-col items-center gap-[24px] px-[28px] pb-[28px] ${v11 ? "max-sm:gap-4 max-sm:px-[18px] max-sm:pb-[18px]" : ""} ${stretch ? "flex-1" : ""}`}>
         <Avatar
           src={story.avatar}
           alt=""
@@ -96,7 +99,7 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
         <div className={`h-px w-full shrink-0 bg-white/16 ${stretch ? "mt-auto" : ""}`} />
 
         {recent ? (
-          <div className="flex w-full items-center gap-3 sm:gap-sp5">
+          <div className={`flex w-full items-center gap-3 sm:gap-sp5 ${v11 ? "max-sm:gap-2" : ""}`}>
             {[
               [story.totalFunded, "Funded"],
               [String(story.investors), "investors"],
@@ -104,9 +107,13 @@ export function StoryCard({ story, hiddenFromAT, variant = "carousel", loading =
             ].map(([value, label], k) => (
               <div key={label} className="contents">
                 {k > 0 && <div className="h-[48px] w-px shrink-0 bg-white/16" />}
-                <div className="flex flex-1 flex-col items-center gap-[4px]">
-                  <p className="w-full whitespace-nowrap text-center font-display text-p2 font-bold text-white">{value}</p>
-                  <p className="w-full whitespace-nowrap text-center font-display text-h5 font-bold uppercase tracking-[0.88px] text-white/64">{label}</p>
+                {/* Version 1 on phones: each column takes its figure's width first (equal thirds were too narrow for
+                    "8.00% p.a.", which ran past the card's edge), the figures at 15/21 as on Version 2's cards, and the
+                    labels a little tighter. On the narrowest phones (360px) the interest figure may wrap its "p.a." under
+                    the number rather than run past the padding (the other two figures never wrap). */}
+                <div className={`flex flex-1 flex-col items-center gap-[4px] ${v11 ? `max-sm:flex-auto ${k === 2 ? "max-sm:min-w-0" : ""}` : ""}`}>
+                  <p className={`w-full whitespace-nowrap text-center font-display text-p2 font-bold text-white ${v11 ? `max-sm:text-[15px] max-sm:leading-[21px] ${k === 2 ? "max-sm:whitespace-normal" : ""}` : ""}`}>{value}</p>
+                  <p className={`w-full whitespace-nowrap text-center font-display text-h5 font-bold uppercase tracking-[0.88px] text-white/64 ${v11 ? "max-sm:tracking-[0.5px]" : ""}`}>{label}</p>
                 </div>
               </div>
             ))}

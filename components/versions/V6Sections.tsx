@@ -17,10 +17,18 @@ const TRUST = [
   { title: "Credit-linked", text: "Repayments build borrowers’ formal credit histories.", icon: "/brand/trust-credit-linked.svg" },
 ];
 
-export function TrustList() {
+/** `inCard` (Version 3): set inside the live opportunities' card, under its divider: no card, margin or vertical
+ * padding of its own (the card has those). */
+export function TrustList({ inCard = false }: { inCard?: boolean } = {}) {
   const reduce = useReducedMotion();
   return (
-    <section className="mx-2 flex flex-col items-center gap-12 rounded-[16px] bg-bg-grey bg-[linear-gradient(var(--color-primary-8),var(--color-primary-8))] px-4 py-14 sm:px-8 sm:py-20 md:gap-16 lg:py-[120px]">
+    <section
+      className={
+        inCard
+          ? "flex w-full flex-col items-center gap-12 px-4 sm:px-8 md:gap-16"
+          : "mx-2 flex flex-col items-center gap-12 rounded-[16px] bg-bg-grey bg-[linear-gradient(var(--color-primary-8),var(--color-primary-8))] px-4 py-14 sm:px-8 sm:py-20 md:gap-16 lg:py-[120px]"
+      }
+    >
       <ScrollInk as="h2" tone="plain" text="A new way of lending needs serious infrastructure." className="max-w-[820px] text-center font-display text-h3 font-bold [text-wrap:balance]" />
       <ul className="grid w-full max-w-[1280px] grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
         {TRUST.map((p, i) => (

@@ -64,8 +64,9 @@ function Reveal({ children, className, delay = 0 }: { children: ReactNode; class
  * Phones, Version 1.1 (Figma "Home - v1.1" mobile, node 2921:4511): under the RBI seal a chevron invites a scroll. The
  * first time the page is scrolled the chevron drifts down and fades out while the proof numbers open up in its
  * place (two columns, a rule between the rows), pushing the stories down. They then stay, once, for good.
+ * Also under Version 3's hero (CoinHero) on phones.
  */
-function PhoneStats() {
+export function PhoneStats() {
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
   const stats = heroStatsFrom(useRangDeStats());
@@ -720,6 +721,13 @@ const V11_STEP4: Record<string, { segment: [number, number]; ms: number }> = {
   Earn: { segment: [13.82 / 28.8, 1], ms: 14980 },
 };
 
+// The pop-up's frame height: the screen less what sits around it and above the step names (the pop-up's 16px margins,
+// its 64px top padding with the close button, the step line, and the step name's row: about 170px from sm up; on phones
+// the progress bars, "Step 1" and the step's line come first, about 230px). Never above the section's own 600px / 380px.
+const MODAL_FRAME_H = "h-[clamp(220px,calc(100svh_-_230px),380px)] sm:h-[clamp(260px,calc(100svh_-_170px),600px)]";
+// The pop-up's shorter "Get repaid" line, so all four steps' lines are two lines at most.
+const MODAL_TEXT: Record<string, string> = { "Get repaid": "Repaid with returns, straight to your bank." };
+
 /** `visual`: "ui" — the homepage pop-up's animated product UI (v1); "journey" — Durga's journey from the
  * How it works v3 prototype, real listings in light mock UI (v1.2). */
 /** `typed`: the heading types itself out as it is scrolled into view (Version 5).
@@ -730,7 +738,11 @@ const V11_STEP4: Record<string, { segment: [number, number]; ms: number }> = {
 /** `bare` (Version 1.1): the journey window without its browser bar, centred, with only the beat's one-line caption
  * as a small pointer under it (no explanatory copy beside it: the animation already shows it). */
 /** `heading`/`eyebrow` (Version 4): its own line ("You decide who you back.") instead of the usual one. */
-export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false, inked = false, bare = false, heading = "Investment to repayment – you’re in control at every step", eyebrow = "How it works" }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean; inked?: boolean; bare?: boolean; heading?: string; eyebrow?: string | null }) {
+/** `modal` (Version 3's "How it works" pop-up): only the animation frame and the steps under it; no heading, and no
+ * section padding, background or id. The frame is as tall as the screen allows with the step names still showing under
+ * it on opening (MODAL_FRAME_H; the animation scales down to fit), and "Get repaid" has a shorter line so every step's
+ * line is two lines at most. */
+export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed = false, refined = false, inked = false, bare = false, modal = false, heading = "Investment to repayment – you’re in control at every step", eyebrow = "How it works" }: { children?: ReactNode; tone?: "cream" | "white" | "grey"; visual?: "ui" | "journey"; typed?: boolean; refined?: boolean; inked?: boolean; bare?: boolean; modal?: boolean; heading?: string; eyebrow?: string | null }) {
   // Version 1.1 (bare): four steps, Follow and Earn as one ("Get repaid"), since repayments now go straight to the
   // investor's bank account and there is nothing to reinvest from.
   const TABS = bare ? HIW_TABS_V11 : HIW_TABS;
@@ -752,9 +764,11 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
   return (
     <section
       ref={ref}
-      id="how-it-works"
-      className={`mx-2 flex flex-col items-center gap-8 rounded-[16px] px-4 py-14 sm:gap-12 sm:px-8 sm:py-20 md:py-24 lg:px-[80px] lg:py-[120px] ${tone === "cream" ? "bg-[#F7F3ED]" : tone === "grey" ? "bg-[#ebeaea]" : "bg-white"}`}
+      id={modal ? undefined : "how-it-works"}
+      aria-label={modal ? "How it works" : undefined}
+      className={modal ? "flex w-full flex-col items-center" : `mx-2 flex flex-col items-center gap-8 rounded-[16px] px-4 py-14 sm:gap-12 sm:px-8 sm:py-20 md:py-24 lg:px-[80px] lg:py-[120px] ${tone === "cream" ? "bg-[#F7F3ED]" : tone === "grey" ? "bg-[#ebeaea]" : "bg-white"}`}
     >
+      {!modal && (
       <Reveal className="flex max-w-[1200px] flex-col items-center gap-2 text-center">
         {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
         {inked ? (
@@ -766,10 +780,11 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
           <AnimatedText as="h2" text={heading} className="font-display text-h3 font-bold text-ink" />
         )}
       </Reveal>
+      )}
 
       <div className="flex w-full max-w-[1200px] flex-col" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
         <div className={refined ? "w-full overflow-hidden rounded-[8px] max-sm:overflow-visible" : "contents"}>
-        <div className={`w-full overflow-hidden ${bare ? "hiw-bare " : ""}${refined ? "hiw-v11 max-sm:overflow-visible max-sm:bg-transparent sm:border-x-4 sm:border-t-4 sm:border-ink/16 sm:bg-white" : "rounded-[8px] bg-white"} ${visual === "journey" ? (refined ? `h-[380px] sm:h-[600px] ${bare ? "lg:h-[600px]" : "lg:h-[520px]"}` : "h-[560px] sm:h-[600px] lg:h-[520px]") : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
+        <div className={`w-full overflow-hidden ${bare ? "hiw-bare " : ""}${refined ? "hiw-v11 max-sm:overflow-visible max-sm:bg-transparent sm:border-x-4 sm:border-t-4 sm:border-ink/16 sm:bg-white" : "rounded-[8px] bg-white"} ${visual === "journey" ? (modal ? MODAL_FRAME_H : refined ? `h-[380px] sm:h-[600px] ${bare ? "lg:h-[600px]" : "lg:h-[520px]"}` : "h-[560px] sm:h-[600px] lg:h-[520px]") : "h-[340px] sm:h-[420px] lg:h-[480px]"}`}>
           {visual === "journey" ? (
             <JourneyStage scene={tab.scene} label={tab.sceneLabel} loopMs={tab.sceneMs} frameW={bare ? 760 : undefined} />
           ) : (
@@ -835,15 +850,16 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
               )}
               <span className={`hidden font-display font-bold sm:block sm:text-p1 ${i === active ? "text-ink" : "text-ink/56 group-hover:text-ink"}`}>{t.title}</span>
               <span className="sr-only sm:hidden">{t.title}</span>
-              <span className="hidden font-display text-p3 font-medium text-ink/80 sm:block sm:text-p2">{t.text}</span>
+              <span className="hidden font-display text-p3 font-medium text-ink/80 sm:block sm:text-p2">{(modal && MODAL_TEXT[t.title]) || t.text}</span>
             </button>
           ))}
         </div>
         {refined ? (
           <div className="mt-6 flex flex-col items-center gap-2 text-center sm:hidden" aria-live="polite">
             <p className="font-display text-[11px] font-bold uppercase leading-[16px] tracking-[0.88px] text-text-grey-64">Step {active + 1}</p>
-            <p className="font-display text-[24px] font-bold leading-[32px] text-ink">
-              {tab.title} · <span className="text-ink/48">{tab.text}</span>
+            {/* In the pop-up, 18/26 as Version 2 sets it on phones (v2-mobile.css). */}
+            <p className={`font-display text-[24px] font-bold leading-[32px] text-ink ${modal ? "max-sm:text-[18px] max-sm:leading-[26px]" : ""}`}>
+              {tab.title} · <span className="text-ink/48">{(modal && MODAL_TEXT[tab.title]) || tab.text}</span>
             </p>
           </div>
         ) : (

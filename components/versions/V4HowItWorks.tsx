@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, animate, motion, useInView, useMotionValue, useReducedMotion, type MotionValue } from "motion/react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type TouchEvent } from "react";
 import { HowItWorksStage } from "@/components/how-it-works/HowItWorksStage";
 import { HOW_IT_WORKS_STEPS } from "@/components/how-it-works/steps";
 import { ScrollInk } from "./ScrollInk";
@@ -41,8 +41,14 @@ const STEPS = [
 ];
 const LABEL_5 = "Rekha Bai's repayments tick in month by month and her credit score rises from 560 (poor) to 742 (good); then her new possibilities appear: expand the business, buy new machinery, take on more clients, a bigger loan next time.";
 
-export function V4HowItWorks({ children }: { children?: ReactNode }) {
+// A swipe: at least this far sideways (px), and more sideways than up or down, so scrolling the page never counts.
+const SWIPE_PX = 40;
+
+/** `swipe` (Version 2, phones and tablets): swiping the animation frame moves between the steps, as a carousel does: drag it
+ * to the left for the next step, to the right for the one before (both wrap round). Tapping the progress bar still works. */
+export function V4HowItWorks({ children, swipe = false }: { children?: ReactNode; swipe?: boolean }) {
   const ref = useRef<HTMLElement>(null);
+  const touch = useRef<{ x: number; y: number } | null>(null);
   const inView = useInView(ref, { amount: 0.35 });
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(0);
@@ -60,6 +66,28 @@ export function V4HowItWorks({ children }: { children?: ReactNode }) {
     const a = animate(fill, 1, { duration: STEP_MS[open] / 1000, ease: "linear", onComplete: () => setOpen((o) => (o + 1) % n) });
     return () => a.stop();
   }, [open, running, reduce, fill, n]);
+
+  const swipeHandlers = swipe
+    ? {
+        onTouchStart: (e: TouchEvent) => {
+          const t = e.touches[0];
+          touch.current = { x: t.clientX, y: t.clientY };
+        },
+        onTouchEnd: (e: TouchEvent) => {
+          const start = touch.current;
+          touch.current = null;
+          if (!start || window.matchMedia("(min-width: 1024px)").matches) return;
+          const t = e.changedTouches[0];
+          const dx = t.clientX - start.x;
+          const dy = t.clientY - start.y;
+          if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+          setOpen((o) => (dx < 0 ? (o + 1) % n : (o - 1 + n) % n));
+        },
+        onTouchCancel: () => {
+          touch.current = null;
+        },
+      }
+    : {};
 
   return (
     <section
@@ -124,7 +152,8 @@ export function V4HowItWorks({ children }: { children?: ReactNode }) {
             as tall as the steps beside it, in its earlier 758 × 620 proportions; on phones and tablets it takes the animation's own
             shape (374 × 342), so it hugs the scaled-down animation with no space above or below. */}
         <motion.div
-          className="order-1 aspect-[374/342] w-full max-w-[560px] justify-self-center overflow-hidden rounded-[16px] bg-white shadow-[0_0_0_1.2px_var(--color-text-grey-8)] lg:order-2 lg:h-[560px] lg:w-auto xl:h-[640px] lg:max-w-full lg:aspect-[758/620] lg:justify-self-end"
+          {...swipeHandlers}
+          className={`order-1 aspect-[374/342] w-full max-w-[560px] justify-self-center overflow-hidden rounded-[16px] bg-white shadow-[0_0_0_1.2px_var(--color-text-grey-8)] lg:order-2 lg:h-[560px] lg:w-auto xl:h-[640px] lg:max-w-full lg:aspect-[758/620] lg:justify-self-end ${swipe ? "max-lg:touch-pan-y" : ""}`}
           initial={reduce ? false : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}

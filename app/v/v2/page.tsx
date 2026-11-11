@@ -55,7 +55,8 @@ export default async function V2() {
         strip={<V4HeroCards />}
         glow={false}
       />
-      <V4HowItWorks />
+      {/* Phones: swipe the animation to move between the steps (as well as tapping the progress bar). */}
+      <V4HowItWorks swipe />
       <V4Cycle />
       <ReelsWheel
         tight
