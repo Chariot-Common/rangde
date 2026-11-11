@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { stories, testimonialsRow1, testimonialsRow2 } from "@/lib/content";
 import { StoryCard } from "@/components/sections/hero/StoryCard";
 import { TestimonialMarquee } from "./TestimonialMarquee";
@@ -20,9 +21,27 @@ const allTestimonials = [...testimonialsRow1, ...testimonialsRow2];
 /** `typed`: the heading types itself out as it is scrolled into view (Version 5).
  * `refined` (Version 1.1): an H3 "Trusted by … across the world" heading, both rows (on phones too) stop on
  * hover and can be dragged left or right, and no "Explore more investors" button.
- * `inked` (with `refined`, Version 1.1): the heading fills in as it is read (plain, no coloured edge). */
-export function Testimonials({ withStories = false, typed = false, refined = false, inked = false }: { withStories?: boolean; typed?: boolean; refined?: boolean; inked?: boolean }) {
+ * `inked` (with `refined`, Version 1.1): the heading fills in as it is read (plain, no coloured edge).
+ * `evenRows` (Version 1): both rows as tall as the taller one. Each row is as tall as its longest quote, so the second
+ * row came out shorter than the first; measured on load and on resize, since quote lengths and card widths vary. */
+export function Testimonials({ withStories = false, typed = false, refined = false, inked = false, evenRows = false }: { withStories?: boolean; typed?: boolean; refined?: boolean; inked?: boolean; evenRows?: boolean }) {
   const { investors } = useRangDeStats();
+  const rowsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const rows = rowsRef.current;
+    if (!evenRows || !rows) return;
+    const even = () => {
+      // Each row's track (the strip of cards inside it); clear any height set before so the natural heights are measured.
+      const tracks = [...rows.children].map((row) => row.firstElementChild as HTMLElement | null).filter((t): t is HTMLElement => !!t);
+      tracks.forEach((t) => (t.style.minHeight = ""));
+      const tallest = Math.max(...tracks.map((t) => t.offsetHeight));
+      tracks.forEach((t) => (t.style.minHeight = `${tallest}px`));
+    };
+    even();
+    document.fonts?.ready.then(even);
+    window.addEventListener("resize", even);
+    return () => window.removeEventListener("resize", even);
+  }, [evenRows]);
   return (
     <section className="mx-2 flex flex-col items-center gap-8 overflow-hidden rounded-[16px] bg-white px-4 py-12 sm:gap-sp9 sm:px-8 sm:py-16 lg:py-sp12">
       <div className="flex flex-col items-center gap-4 pt-sp6 text-center sm:gap-5">
@@ -80,7 +99,7 @@ export function Testimonials({ withStories = false, typed = false, refined = fal
       </div>
 
       {/* Bleeds past the section padding (-mx-8 = sm:px-8) so the rows run edge to edge. */}
-      <div className={`w-[calc(100%+2rem)] flex-col gap-sp3 pb-sp6 -mx-4 sm:-mx-8 sm:w-[calc(100%+4rem)] md:flex ${refined ? "flex" : "hidden"}`}>
+      <div ref={rowsRef} className={`w-[calc(100%+2rem)] flex-col gap-sp3 pb-sp6 -mx-4 sm:-mx-8 sm:w-[calc(100%+4rem)] md:flex ${refined ? "flex" : "hidden"}`}>
         {withStories ? (
           <>
             <TestimonialMarquee items={allTestimonials} align="left" direction="forward" />

@@ -9,10 +9,10 @@ import { PlainQuestionCards } from "./PlainQuestionCards";
 import { ProblemGrid } from "./ProblemGrid";
 import { ProblemPairs } from "./ProblemPairs";
 import { ScrollInk } from "./ScrollInk";
-import {
-  ApproachHero,
-  HowItWorksTabs,
-} from "./approaches";
+import { ApproachHero } from "./approaches";
+import { V4HowItWorks } from "./V4HowItWorks";
+import { HowItWorksModalButton } from "./HowItWorksModal";
+import { TrustList } from "./V6Sections";
 
 const LEAD =
   "Lend to rural entrepreneurs building businesses across India. Your money helps them access credit and build a formal credit history, while you earn returns.";
@@ -40,28 +40,38 @@ const MOBILE_LEAD = (
 /** Version 1.1. The page is here (rather than in app/v/v1/page.tsx) so the variants can reuse it.
  * `problem`: "pairs" (v1: three before → after rows, ProblemPairs.tsx) or "grid" (v1-d: six cards, the problems stay and
  * each is answered by a card under it, ProblemGrid.tsx).
- * `refresh` (Version 1.1): the lead in three lines, How it works after the founders, the founders photo's thinner frame. */
+ * `refresh` (Version 1.1): the lead in three lines and the founders photo's thinner frame. */
+// The founders' line from Version 2: when it began and why.
+const FOUNDERS_STORY = (
+  <>
+    They started Rang De in 2008 with a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow. The idea was to let
+    anyone lend a little to the people banks overlook, and see exactly where every rupee goes.
+  </>
+);
+
+// 11 Nov 2026: the hero → the problem and what Rang De built → the investment calculator → the reels → Version 2's How it
+// works (grey card; the real-UI How it works is out, and lives on in the "How it works" pop-up at the end) → the investors →
+// the founders, with Version 2's eyebrow and line → as on Version 3: the live opportunities with "How it works" beside
+// "Explore all opportunities" and the infrastructure points under a divider in the same card, then the questions with
+// "Read more FAQs" and "Talk to our founders".
 export function V1Home({ problem = "pairs", refresh = false }: { problem?: "pairs" | "grid"; refresh?: boolean } = {}) {
-  const howItWorks = (
-    <HowItWorksTabs refined inked bare visual="journey">
-      <InvestmentSlider refined />
-    </HowItWorksTabs>
-  );
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
       {/* The same borrower cards (photos and copy) as Version 5. */}
       <ApproachHero title="Invest in the other Startup India" lead={refresh ? LEAD_V11 : LEAD} mobileLead={MOBILE_LEAD} strip={<StoryCarousel items={heroIntroStories} layout="recent11" />} />
       {/* The problem and Rang De's answer: each problem struck through (or cut) as its answer arrives. */}
       {problem === "grid" ? <ProblemGrid /> : <ProblemPairs />}
+      {/* The calculator, on its own card now (it sat under the real-UI How it works, in the same cream). */}
+      <section className="mx-2 flex flex-col items-center rounded-[16px] bg-[#F7F3ED] px-4 py-14 sm:px-8 sm:py-20 md:py-24 lg:px-[80px] lg:py-[120px]">
+        <InvestmentSlider refined />
+      </section>
       <ReelsWheel tight heading={<ScrollInk as="span" tone="plain" text="The money may be small. What it makes possible isn’t." />} />
-      {!refresh && howItWorks}
-      <Testimonials refined inked />
-      <FoundersCollage thinFrame={refresh} />
-      {/* Version 1.1: How it works comes once the case for Rang De has been made (the stories, the investors, the founders). */}
-      {refresh && howItWorks}
-      <PlainQuestionCards count={4} flip large phoneHeading="Questions we get often" autoHighlight />
-      {/* The way in: the live listings, by individuals, states and funds. */}
-      <OpportunitiesSection />
+      {/* Version 2's How it works, in its grey card; swipe the animation on phones to move between the steps. */}
+      <V4HowItWorks swipe />
+      <Testimonials refined inked evenRows />
+      <FoundersCollage thinFrame={refresh} eyebrow="Why Rang De exists?" story={FOUNDERS_STORY} />
+      <OpportunitiesSection roomy secondaryCta={<HowItWorksModalButton />} after={<TrustList inCard />} />
+      <PlainQuestionCards count={4} flip navyLink large foundersCall />
     </div>
   );
 }
