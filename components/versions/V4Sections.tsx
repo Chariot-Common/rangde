@@ -17,7 +17,8 @@ const FACES = Array.from({ length: 9 }, (_, i) => `/images/investors/investor-${
 // The card's own green, so each face's 1px ring cuts it out of the one beside it (Figma: border #084a2f).
 const CARD_GREEN = "#084a2f";
 
-/** Figma 2989:14126: a row of 40px round faces, each overlapping the next by 8px, under the story. */
+/** Figma 2989:14126: a row of 40px round faces, each overlapping the next by 8px, under the story. On phones they are 28px,
+ * so nine of them fit inside the card (at 40px the row was wider than the card and stretched it past its slot). */
 function InvestorFaces({ count }: { count: number }) {
   const shown = FACES.slice(0, Math.min(FACES.length, count));
   return (
@@ -25,7 +26,7 @@ function InvestorFaces({ count }: { count: number }) {
       {shown.map((src, i) => (
         <span
           key={src}
-          className={`relative block size-[40px] shrink-0 overflow-hidden rounded-full border border-solid shadow-[0_2px_4px_rgba(0,0,0,0.1)] ${i < shown.length - 1 ? "-mr-2" : ""}`}
+          className={`relative block size-[28px] shrink-0 sm:size-[40px] overflow-hidden rounded-full border border-solid shadow-[0_2px_4px_rgba(0,0,0,0.1)] ${i < shown.length - 1 ? "-mr-2" : ""}`}
           style={{ borderColor: CARD_GREEN }}
         >
           <Image src={src} alt="" fill sizes="40px" className="object-cover" />

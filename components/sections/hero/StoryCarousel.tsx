@@ -65,6 +65,27 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
   );
   const wideLoading = isWide ? "eager" : "lazy";
 
+  // How many copies of the stories the md+ marquee needs. It loops by moving half the track, so there are always an even
+  // number and half of them must be wider than the screen. Worked out from the screen (and its zoom) after hydration;
+  // until then two, which covers ordinary screens. This used to be a fixed eight copies (32 cards, each with its photo,
+  // avatar and, on Version 2, nine investor faces), far more than a normal laptop needs.
+  const [sets, setSets] = useState(2);
+  useEffect(() => {
+    if (!isWide) return;
+    const fit = () => {
+      const track = trackRef.current;
+      const first = track?.children[0] as HTMLElement | undefined;
+      if (!track || !first) return;
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+      const setWidth = stories.length * (first.offsetWidth + gap);
+      const half = Math.max(1, Math.ceil(window.innerWidth / setWidth));
+      setSets((n) => (n === half * 2 ? n : half * 2));
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [isWide, stories.length]);
+
   useEffect(() => {
     if (reducedMotion || isMobile) return;
     // isMobile is still the server's `false` on the hydration pass — check the real
@@ -99,7 +120,7 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
       tween?.kill();
       tweenRef.current = null;
     };
-  }, [reducedMotion, isMobile]);
+  }, [reducedMotion, isMobile, sets]);
 
   const pause = () => tweenRef.current?.pause();
   const resume = () => {
@@ -229,8 +250,8 @@ export function StoryCarousel({ items: stories = defaultStories, layout = "defau
             <StoryCard layout={layout} stretch={layout !== "default" || !!faces} insetAvatar={insetAvatar} key={`a-${i}`} story={story} faces={faces?.[i]} loading={wideLoading} />
           ))}
           {/* Repeats: the loop shifts by half the track (xPercent -50), so half must stay wider
-              than the screen — seven extra sets keep very wide / zoomed-out screens (~25%) filled. */}
-          {[1, 2, 3, 4, 5, 6, 7].flatMap((n) =>
+              than the screen — `sets` (above) is just enough for this screen. */}
+          {Array.from({ length: sets - 1 }, (_, k) => k + 1).flatMap((n) =>
             stories.map((story, i) => <StoryCard layout={layout} stretch={layout !== "default" || !!faces} insetAvatar={insetAvatar} key={`r${n}-${i}`} story={story} faces={faces?.[i]} hiddenFromAT loading={wideLoading} />),
           )}
         </div>

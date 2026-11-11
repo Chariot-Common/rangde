@@ -123,7 +123,7 @@ export function SwipeCarousel<T>({
         {items.map((item, i) => (
           <div
             key={i}
-            className={`shrink-0 grow-0 ${peek ? "basis-[84%] snap-center" : "basis-[calc(100%-16px)] snap-start"}`}
+            className={`min-w-0 shrink-0 grow-0 ${peek ? "basis-[84%] snap-center" : "basis-[calc(100%-16px)] snap-start"}`}
           >
             {renderItem(item, i)}
           </div>

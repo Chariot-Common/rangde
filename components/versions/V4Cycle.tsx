@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
+import { AnimatePresence, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, type MotionValue } from "motion/react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type Ref } from "react";
 
 /*
@@ -96,22 +96,45 @@ export function V4Cycle() {
     return () => ro.disconnect();
   }, [reduce, phone]);
 
-  // Three scroll-linked fills, worked out from where things sit on screen: the heading, the line, and the pinned ring.
-  const [fill, setFill] = useState({ head: 0, q: 0 });
+  // The scroll-linked fills, worked out from where things sit on screen: the heading, the line into the loop, and the
+  // pinned loop. For smoothness the continuous parts (the loop's green, the line's green) go straight to the DOM through
+  // motion values; React only re-renders when something discrete changes (a letter fills, a step moves on).
+  const progress = useMotionValue(reduce ? 1 : 0); // the loop's green, 0 → 1 round it
+  const segment = useMotionValue(reduce ? 1 : 0); // the line's last stretch into Business
+  const pathRef = useRef<SVGPathElement>(null);
+  useMotionValueEvent(progress, "change", (v) => pathRef.current?.setAttribute("stroke-dashoffset", String(1 - v)));
+  const [view, setView] = useState({ f1: 0, f2: 0, started: false, at: 0, finished: false, lineFilled: 0 });
   const { scrollY } = useScroll();
   const update = useCallback(() => {
     const vh = window.innerHeight;
-    const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navbar-bottom")) || 0;
+    // The nav writes its bottom edge as an inline style on <html>: reading that avoids a style recalculation every frame.
+    const root = document.documentElement;
+    const nav = parseFloat(root.style.getPropertyValue("--navbar-bottom")) || parseFloat(getComputedStyle(root).getPropertyValue("--navbar-bottom")) || 0;
     const h = headRef.current?.getBoundingClientRect();
     const w = wrapRef.current?.getBoundingClientRect();
-    const s = stageRef.current?.getBoundingClientRect();
-    if (!h || !w || !s) return;
+    const st = stageRef.current?.getBoundingClientRect();
+    if (!h || !w || !st) return;
     // The heading: from its top at 85% of the screen to its bottom at 35%.
     const head = Math.min(1, Math.max(0, (0.85 * vh - h.top) / (0.5 * vh + h.height)));
-    // The ring: 0 as it pins, 1 as it lets go.
-    const q = Math.min(1, Math.max(0, (nav - w.top) / Math.max(1, w.height - s.height)));
-    setFill((f) => (f.head === head && f.q === q ? f : { head, q }));
-  }, []);
+    // The loop: 0 as it pins, 1 as it lets go.
+    const q = Math.min(1, Math.max(0, (nav - w.top) / Math.max(1, w.height - st.height)));
+    const s = ramp(q, Q.steps) * N;
+    progress.set(s / N);
+    segment.set(ramp(q, Q.segment));
+    const started = q >= Q.businessOn;
+    const finished = s >= N;
+    const at = Math.min(N - 1, Math.floor(s));
+    const within = finished ? 1 : s - at;
+    // The open step's line is fully filled TEXT_DONE of the way to the next step, so a quick scroll still leaves it readable.
+    const lineFilled = started ? Math.round(Math.min(1, within / TEXT_DONE) * STEPS[at].text.length) : 0;
+    const f1 = Math.round(ramp(head, [0, 0.5]) * LINE_1.length);
+    const f2 = Math.round(ramp(head, [0.5, 1]) * LINE_2.length);
+    setView((v) =>
+      v.f1 === f1 && v.f2 === f2 && v.started === started && v.at === at && v.finished === finished && v.lineFilled === lineFilled
+        ? v
+        : { f1, f2, started, at, finished, lineFilled },
+    );
+  }, [progress, segment]);
   useMotionValueEvent(scrollY, "change", update);
   useEffect(() => {
     update();
@@ -119,16 +142,13 @@ export function V4Cycle() {
     return () => window.removeEventListener("resize", update);
   }, [update, box.h]);
 
-  const head = reduce ? 1 : fill.head;
-  const q = reduce ? 1 : fill.q;
-  const s = reduce ? N : ramp(q, Q.steps) * N;
-  const started = reduce || q >= Q.businessOn;
-  const finished = s >= N;
-  const at = Math.min(N - 1, Math.floor(s));
-  const within = finished ? 1 : s - at;
+  const started = reduce || view.started;
+  const finished = reduce || view.finished;
+  const at = reduce ? N - 1 : view.at;
+  const lineFilled = reduce ? STEPS[at].text.length : view.lineFilled;
   const stateOf = (i: number): ChipState => (!started ? "upcoming" : finished || i < at ? "done" : i === at ? "current" : "upcoming");
-  const filled1 = Math.round(ramp(head, [0, 0.5]) * LINE_1.length);
-  const filled2 = Math.round(ramp(head, [0.5, 1]) * LINE_2.length);
+  const filled1 = reduce ? LINE_1.length : view.f1;
+  const filled2 = reduce ? LINE_2.length : view.f2;
 
   // The path: an oval through the four steps' centres (Business at the top, Repayment right, Credit history at the
   // bottom, Opportunities left), drawn clockwise from Business. Symmetrical both ways, so each step is a quarter of it.
@@ -151,6 +171,7 @@ export function V4Cycle() {
       <svg aria-hidden width={box.w} height={box.h} className="absolute left-0 top-0 overflow-visible">
         <path d={d} fill="none" stroke="var(--color-text-grey-24)" strokeWidth={TRACK_PX} />
         <path
+          ref={pathRef}
           d={d}
           fill="none"
           stroke={GREEN_HIGHLIGHT}
@@ -158,7 +179,7 @@ export function V4Cycle() {
           strokeLinecap="round"
           pathLength={1}
           strokeDasharray="1 1"
-          strokeDashoffset={1 - s / N}
+          strokeDashoffset={1 - progress.get()}
         />
       </svg>
       {STEPS.map((step, i) => (
@@ -171,7 +192,7 @@ export function V4Cycle() {
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center"
           style={{ width: TEXT_W, maxWidth: Math.max(240, box.w - 2 * sideW - 2 * TEXT_GAP) }}
         >
-          <StepLine started={started} at={at} within={within} large />
+          <StepLine started={started} at={at} filled={lineFilled} large />
         </div>
       )}
     </div>
@@ -230,12 +251,12 @@ export function V4Cycle() {
             {/* Where it starts, kept on screen with the loop (review call): the line out of it fills green into Business. */}
             <div className="h-4 shrink-0" />
             <Start />
-            <Connector height={RING_TOP} fill={ramp(q, Q.segment)} />
+            <Connector height={RING_TOP} fill={segment} />
             {ring}
             {/* Phones: the line under the ring. */}
             {phone && (
               <div className="mt-ds-6 min-h-[96px] max-w-[320px] text-center">
-                <StepLine started={started} at={at} within={within} />
+                <StepLine started={started} at={at} filled={lineFilled} />
               </div>
             )}
           </div>
@@ -264,11 +285,11 @@ function Start() {
 
 /** A stretch of the line from "Your social investment" to Business: the ring's grey track, with a green fill (the ring's
  * progress width) growing down it as `fill` goes 0 → 1. */
-function Connector({ ref, height, fill }: { ref?: Ref<HTMLDivElement>; height: number; fill: number }) {
+function Connector({ ref, height, fill }: { ref?: Ref<HTMLDivElement>; height: number; fill: number | MotionValue<number> }) {
   return (
     <div ref={ref} aria-hidden className="relative flex w-[4px] shrink-0 justify-center" style={{ height }}>
       <span className="h-full bg-text-grey-24" style={{ width: TRACK_PX }} />
-      <span className="absolute inset-x-0 top-0 origin-top rounded-full" style={{ height: "100%", backgroundColor: GREEN_HIGHLIGHT, transform: `scaleY(${fill})` }} />
+      <motion.span className="absolute inset-x-0 top-0 origin-top rounded-full" style={{ height: "100%", backgroundColor: GREEN_HIGHLIGHT, scaleY: fill }} />
     </div>
   );
 }
@@ -297,11 +318,8 @@ function Chip({ ref, label, state, style }: { ref?: Ref<HTMLSpanElement>; label:
 /** The open step's line: text grey 24 to begin with, filling in to text grey 80 letter by letter as `within` goes 0 → 1.
  * `large`: P1 with the step's icon over it (in the middle of the loop on laptops and tablets); otherwise P2 (under it on
  * phones), with a smaller icon. */
-function StepLine({ started, at, within, large = false }: { started: boolean; at: number; within: number; large?: boolean }) {
+function StepLine({ started, at, filled, large = false }: { started: boolean; at: number; filled: number; large?: boolean }) {
   const text = STEPS[at].text;
-  // Fully filled by the time the loop is TEXT_DONE of the way to the next step, so a quick scroll still leaves the
-  // whole line readable before the next one takes its place.
-  const filled = started ? Math.round(Math.min(1, within / TEXT_DONE) * text.length) : 0;
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
