@@ -51,6 +51,14 @@ const VERSIONS = [
     measure: "Sign-ups vs. Version 2",
   },
   {
+    key: "4",
+    name: "Why we exist (draft)",
+    href: "/v/why",
+    audience: "First-time visitors discovering the category",
+    idea: "From the 11 Nov review call, read like a print ad: the problem with sources (86%, where India stands), the government-schemes question, why Rang De exists and who does what, what Rang De isn’t, then a featured entrepreneur and investor. Yellow chips are figures still to be sourced.",
+    measure: "Scroll depth, sign-ups vs. Version 1",
+  },
+  {
     key: "3",
     name: "Less said",
     href: "/v/v3",

@@ -1,0 +1,47 @@
+import type { Metadata } from "next";
+import { FoundersCollage } from "@/components/versions/FoundersCollage";
+import { HowItWorksModalButton } from "@/components/versions/HowItWorksModal";
+import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
+import { BePartOfIt, GovernmentSchemes, Sources, TheProblem, WhatItIsnt, WhereRangDeComesIn, WhyHero } from "@/components/versions/WhyWeExist";
+import { getRangDeStats } from "@/lib/stats";
+
+export const metadata: Metadata = {
+  title: "Version 4 · Why we exist | Rang De",
+  description: "Homepage test version (draft): the problem, why Rang De exists, and how you can be part of the solution.",
+  robots: { index: false, follow: false },
+};
+
+// Version 4 (draft, review call 11 Nov 2026): for someone discovering the category, read like a print ad. The problem with
+// authority → "but the government has schemes" → why Rang De exists and who does what → what Rang De isn't → the founders →
+// be part of the solution (a featured entrepreneur and investor, as links onward) → How it works and the questions, last.
+// Figures still to be sourced show as yellow dashed chips (components/versions/WhyWeExist.tsx).
+export default async function WhyWeExistPage() {
+  const stats = await getRangDeStats();
+  return (
+    <div className="flex w-full flex-col gap-2 pb-2 pt-2">
+      <WhyHero />
+      <TheProblem />
+      <GovernmentSchemes />
+      <WhereRangDeComesIn />
+      <WhatItIsnt />
+      <FoundersCollage
+        thinFrame
+        roomy
+        eyebrow="Who we are"
+        story={
+          <>
+            Ram and Smita started Rang De in 2008 with a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow. Every
+            week they still answer investors’ questions live.
+          </>
+        }
+      />
+      <BePartOfIt stats={stats} />
+      <section className="mx-2 flex flex-col items-center gap-4 rounded-[16px] bg-bg-grey px-4 py-16 text-center sm:px-8">
+        <h2 className="font-display text-[28px] font-bold leading-[34px] text-ink md:text-[36px] md:leading-[44px]">Want to see exactly how it works?</h2>
+        <HowItWorksModalButton />
+      </section>
+      <PlainQuestionCards count={4} flip navyLink large foundersCall />
+      <Sources />
+    </div>
+  );
+}
