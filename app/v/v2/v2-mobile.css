@@ -62,6 +62,9 @@
   }
   .v2-page > section:nth-child(2) {
     background: #fff !important;
+    /* How it works: less room above its heading and below its last line (review, 11 Nov 2026). */
+    padding-top: 48px !important;
+    padding-bottom: 48px !important;
   }
 }
 
