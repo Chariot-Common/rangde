@@ -55,24 +55,15 @@ const CARD_SWAPS: Record<string, Around> = {
   "/images/founders-collage/group-entrepreneurs.webp": { ...AROUND[1], left: 830, top: 26 },
 };
 
-/*
- * `phoneLayout` (v2, phones): the same collage laid out for a phone's width instead of the desktop one shrunk to fit (which
- * left every print tiny). A 360 × 470 design: the founders' photo nearly full width in the middle, and the five other
- * prints, two to three times their shrunk size, tucked round its top and bottom edges. `w` is each print's width there.
- */
-const PW = 360;
-const PH = 470;
-const PHONE_CENTRE = { left: 30, top: 122, w: 300 };
-type PhonePrint = { src: string; left: number; top: number; w: number; rotate: [number, number]; z: number };
+/* `phoneLayout` (v2, phones): the photos shown under the founders' print, sliding past as a strip. */
+type PhonePrint = { src: string };
 const PHONE_AROUND: PhonePrint[] = [
-  { src: "/images/founders-collage/group-stakeholders.webp", left: 118, top: 0, w: 120, rotate: [5, 7], z: 1 },
-  { src: "/images/collage/collage-02.webp", left: 0, top: 22, w: 150, rotate: [-7, -9], z: 3 },
-  { src: "/images/founders-collage/group-entrepreneurs.webp", left: 200, top: 24, w: 158, rotate: [-4, -6], z: 3 },
-  { src: "/images/founders-collage/group-picture-2.webp", left: 4, top: 322, w: 158, rotate: [-4, -2], z: 3 },
-  { src: "/images/founders-collage/social-investor-meetup.webp", left: 194, top: 318, w: 162, rotate: [4, 2], z: 3 },
+  { src: "/images/collage/collage-02.webp" },
+  { src: "/images/founders-collage/group-entrepreneurs.webp" },
+  { src: "/images/founders-collage/group-stakeholders.webp" },
+  { src: "/images/founders-collage/social-investor-meetup.webp" },
+  { src: "/images/founders-collage/group-picture-2.webp" },
 ];
-/** A phone print's border: 4 design pixels, as a share of the stage's width. */
-const phoneBorder = (px = 4) => `${(px / PW) * 100}cqw`;
 
 const pct = (n: number, of: number) => `${(n / of) * 100}%`;
 const FRAME = "overflow-hidden border-solid border-white bg-white shadow-[0_16px_40px_rgba(0,0,0,0.22)]";
@@ -118,16 +109,30 @@ export function FoundersCollage({ cards = false, thinFrame = false, roomy = fals
       </div>
 
       {phoneStage ? (
-        <div ref={stageRef} className="relative my-4 w-full [container-type:inline-size]" style={{ aspectRatio: `${PW} / ${PH}` }}>
-          {PHONE_AROUND.map((a) => (
-            <PhonePrintView key={a.src} item={a} progress={scrollYProgress} reduce={!!reduce} />
-          ))}
+        // Phones (v2): the founders' photo as one big print, then the other photos as a strip of small prints sliding past
+        // underneath, round and round (a collage at phone width either crowded or shrank them).
+        <div ref={stageRef} className="my-4 flex w-full flex-col items-center gap-6">
           <motion.div
-            style={{ left: pct(PHONE_CENTRE.left, PW), top: pct(PHONE_CENTRE.top, PH), width: pct(PHONE_CENTRE.w, PW), borderWidth: phoneBorder(), ...(reduce ? { rotate: -3 } : { y, rotate, scale }) }}
-            className={`absolute z-10 aspect-[4/3] rounded-[10px] ${FRAME}`}
+            style={{ borderWidth: 5, ...(reduce ? { rotate: -2 } : { rotate, scale }) }}
+            className={`relative z-10 aspect-[4/3] w-full rounded-[10px] ${FRAME}`}
           >
             <Image src={CENTRE} alt="Ram and Smita, Rang De’s founders" fill sizes="90vw" className="rounded-[4px] object-cover" />
           </motion.div>
+          <div className="-mx-6 w-[calc(100%+48px)] overflow-hidden py-3 [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
+            <div className={`flex w-max gap-4 px-2 ${reduce ? "" : "animate-[founders-strip_28s_linear_infinite]"}`}>
+              {[...PHONE_AROUND, ...PHONE_AROUND].map((a, i) => (
+                <div
+                  key={`${a.src}-${i}`}
+                  aria-hidden={i >= PHONE_AROUND.length}
+                  className={`relative aspect-[4/3] w-[150px] shrink-0 rounded-[6px] ${FRAME}`}
+                  style={{ borderWidth: 3, transform: `rotate(${i % 2 ? 3 : -3}deg)` }}
+                >
+                  <Image src={a.src} alt="" fill sizes="150px" className="rounded-[2px] object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <style>{`@keyframes founders-strip { to { transform: translateX(-50%); } }`}</style>
         </div>
       ) : (
       <div ref={stageRef} className="relative my-6 w-full max-w-[1200px] [container-type:inline-size] md:my-0 md:max-w-[66vw]" style={{ aspectRatio: `${W} / ${H}` }}>
@@ -186,20 +191,6 @@ function Print({ item, progress, reduce, k }: { item: Around; progress: MotionVa
       className={`absolute aspect-[4/3] rounded-[6px] ${FRAME}`}
     >
       <Image src={item.src} alt="" fill sizes={`${Math.round(w)}px`} className="rounded-[2px] object-cover" />
-    </motion.div>
-  );
-}
-
-/** A print in the phone layout: a small drift and its own tilt as the stage goes up the screen. */
-function PhonePrintView({ item, progress, reduce }: { item: PhonePrint; progress: MotionValue<number>; reduce: boolean }) {
-  const y = useTransform(progress, [0, 1], [18, -18]);
-  const rotate = useTransform(progress, [0, 1], item.rotate);
-  return (
-    <motion.div
-      style={{ left: pct(item.left, PW), top: pct(item.top, PH), width: pct(item.w, PW), zIndex: item.z, borderWidth: phoneBorder(3), ...(reduce ? { rotate: item.rotate[0] } : { y, rotate }) }}
-      className={`absolute aspect-[4/3] rounded-[6px] ${FRAME}`}
-    >
-      <Image src={item.src} alt="" fill sizes="45vw" className="rounded-[2px] object-cover" />
     </motion.div>
   );
 }
