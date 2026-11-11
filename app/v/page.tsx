@@ -35,6 +35,14 @@ const VERSIONS = [
     measure: "Sign-ups vs. the current homepage",
   },
   {
+    key: "2 B",
+    name: "Lend to a person, as a story",
+    href: "/v/v2-b",
+    audience: "Everyone (rangde-v1)",
+    idea: "Version 2 with Why it matters told as one borrower's story on a timeline that slides past as you scroll (your ₹2,000, her shop, 12 repayments, her first credit score, a bigger loan) instead of the loop.",
+    measure: "Sign-ups vs. Version 2",
+  },
+  {
     key: "3",
     name: "Less said",
     href: "/v/v3",
