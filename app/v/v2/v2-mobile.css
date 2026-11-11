@@ -1,7 +1,7 @@
 /*
  * Version 2 on phones (< 640px), one spacing system for every section, after cruise.money's phone layout:
  *   - each section is a card 8px in from the screen's edges, with 16px corners and 8px between cards;
- *   - 80px of room above and below its content;
+ *   - 48px of room above and below its content (80px, as on cruise.money, read as too empty on a page this long);
  *   - text 32px from the screen's edges (8px margin + 24px padding);
  *   - cards inside a section: 16px corners.
  * Carousels (the reels, the live opportunities) keep running edge to edge inside their card.
@@ -13,7 +13,7 @@
   .v2-page > section {
     margin-inline: 8px !important;
     border-radius: 16px !important;
-    padding: 80px 24px !important;
+    padding: 48px 24px !important;
     overflow: hidden;
   }
 
@@ -58,13 +58,11 @@
     border-radius: 16px;
     background: #fff;
     overflow: hidden;
-    padding-bottom: 40px;
+    padding-top: 48px !important;
+    padding-bottom: 48px;
   }
   .v2-page > section:nth-child(2) {
     background: #fff !important;
-    /* How it works: less room above its heading and below its last line (review, 11 Nov 2026). */
-    padding-top: 48px !important;
-    padding-bottom: 48px !important;
   }
 }
 
@@ -72,6 +70,20 @@
   /* You decide who you back: the step's line under the window, smaller (it was 24px, as big as a heading). */
   .v2-page > section:nth-child(5) .text-\[24px\] {
     font-size: 18px;
+    line-height: 26px;
+  }
+}
+
+@media (max-width: 639px) {
+  /* Sections that add room of their own under their content, evened out so every one ends 48px below its last line. */
+  .v2-page > section:nth-child(4) { padding-bottom: 28px !important; } /* reels: the carousel's own 20px */
+  .v2-page > section:nth-child(6) { padding-bottom: 53px !important; } /* the money: 5px short */
+  .v2-page > section:nth-child(7) { padding-bottom: 16px !important; } /* returns: the grid's own 32px */
+  .v2-page > section:nth-child(9) { padding-bottom: 61px !important; } /* opportunities: 13px short */
+
+  /* The live figures: 20px on phones so "₹124.11 Cr" fits its half-width card. */
+  .v2-page > section:nth-child(6) .tabular-nums.text-\[24px\] {
+    font-size: 20px;
     line-height: 26px;
   }
 }
