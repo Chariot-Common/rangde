@@ -62,12 +62,18 @@ export function V4LoopCards({ stats }: { stats: RangDeStats }) {
 
 /* ───────────── Laptops and tablets: the 3 × 3 grid ───────────── */
 
-type Dir = "right" | "down" | "left" | "up";
+// From the reference: a lime accent for the arc and the lit icon chips (a brighter tint of Rang De's green).
+const LIME = "#c6e87a";
+const LIME_DEEP = "#9fd04a";
+// Where each card's corner is from the middle, in degrees clockwise from 12 o'clock, counted on round so the arc only ever
+// turns clockwise: Business top left (315 = -45), Repayment top right, Credit history bottom right, Opportunities bottom left.
+const CORNER = [-45, 45, 135, 225];
 
 function GridLoop({ cards, reduce }: { cards: Card[]; reduce: boolean }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [stage, setStage] = useState(reduce ? STAGES - 1 : 0);
   const [within, setWithin] = useState(reduce ? 1 : 0);
+  const [hover, setHover] = useState<number | null>(null);
   const { scrollYProgress } = useScroll({ target: wrapRef, offset: ["start start", "end end"] });
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     if (reduce) return;
@@ -76,11 +82,18 @@ function GridLoop({ cards, reduce }: { cards: Card[]; reduce: boolean }) {
     setWithin(s - Math.floor(s));
   });
 
-  const lit = (i: number) => reduce || stage >= i + 1;
-  const current = (i: number) => !reduce && stage === i + 1;
-  // Tile k (after card k) fills while card k is current, and stays full.
+  // The card in focus: the hovered one (as in the reference), else the one the scroll has reached.
+  const scrolled = reduce ? null : stage >= 1 && stage <= 4 ? stage - 1 : null;
+  const focus = hover ?? scrolled;
+  // The tile after card k washes green while card k is current, and stays washed.
   const fill = (k: number) => (reduce ? 1 : stage > k + 1 ? 1 : stage === k + 1 ? Math.min(1, within / 0.75) : 0);
   const closed = reduce || stage >= STAGES - 1;
+  // The arc's angle: always forward, one quarter per card, and on round to Business again once the loop has closed.
+  const arcAngle = focus !== null ? CORNER[focus] : closed ? 315 : -45;
+
+  const card = (i: number) => (
+    <GridCard card={cards[i]} focus={focus === i} onEnter={() => setHover(i)} onLeave={() => setHover(null)} />
+  );
 
   return (
     <section aria-label="How a loan builds a financial future" className="mx-2 rounded-[16px] bg-white">
@@ -91,20 +104,21 @@ function GridLoop({ cards, reduce }: { cards: Card[]; reduce: boolean }) {
         >
           {heading}
 
-          {/* The frame: a soft grey border round a white panel. */}
-          <div className="w-full max-w-[880px] rounded-[28px] bg-[#eef0f3] p-2.5">
-            <div className="grid grid-cols-[minmax(0,1fr)_112px_minmax(0,1fr)] grid-rows-[auto_92px_auto] gap-2.5 rounded-[22px] bg-white p-5 lg:grid-cols-[minmax(0,1fr)_128px_minmax(0,1fr)] lg:grid-rows-[auto_100px_auto] lg:p-6">
-              <GridCard card={cards[0]} lit={lit(0)} current={current(0)} />
+          {/* The frame: a soft grey border round a white panel, as in the reference. */}
+          <div className="w-full max-w-[760px] rounded-[30px] bg-[#eef0f3] p-2.5 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset]">
+            <div className="grid grid-cols-[minmax(0,1fr)_116px_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_116px_minmax(0,1fr)] gap-2 rounded-[24px] bg-white p-5 lg:p-6">
+              {card(0)}
               <FlowTile dir="right" fill={fill(0)} />
-              <GridCard card={cards[1]} lit={lit(1)} current={current(1)} />
+              {card(1)}
 
               <FlowTile dir="up" fill={fill(3)} />
-              <Hub on={reduce || stage >= 0} pulse={!reduce && stage === 0} />
+              {/* Once the loop has closed, the arc comes to rest back on Business: round again. */}
+              <Hub angle={arcAngle} active={focus !== null || closed} reduce={reduce} />
               <FlowTile dir="down" fill={fill(1)} />
 
-              <GridCard card={cards[3]} lit={lit(3)} current={current(3)} />
+              {card(3)}
               <FlowTile dir="left" fill={fill(2)} />
-              <GridCard card={cards[2]} lit={lit(2)} current={current(2)} />
+              {card(2)}
             </div>
           </div>
 
@@ -122,70 +136,95 @@ function GridLoop({ cards, reduce }: { cards: Card[]; reduce: boolean }) {
   );
 }
 
-/** A tile between two cards: a soft grey gradient that fills green in the direction of travel, with a small arrow. */
+type Dir = "right" | "down" | "left" | "up";
+
+/** A tile between two cards: a soft grey gradient (as in the reference: no arrows, the arc in the middle shows the way
+ * round), washing faintly green in the direction of travel once the loop has passed through it. */
 function FlowTile({ dir, fill }: { dir: Dir; fill: number }) {
   const horizontal = dir === "right" || dir === "left";
   const origin = dir === "right" ? "left" : dir === "left" ? "right" : dir === "down" ? "top" : "bottom";
   const fade = dir === "right" ? "to right" : dir === "left" ? "to left" : dir === "down" ? "to bottom" : "to top";
-  const rotate = dir === "right" ? 0 : dir === "down" ? 90 : dir === "left" ? 180 : 270;
-  const on = fill > 0.98;
   return (
-    <div aria-hidden className="relative overflow-hidden rounded-[16px]" style={{ background: `linear-gradient(${fade}, #f6f7f9, #fbfbfc)` }}>
+    <div aria-hidden className="relative overflow-hidden rounded-[18px]" style={{ background: `linear-gradient(${fade}, #f7f8fa, #fdfdfe)` }}>
       <div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(${fade}, rgba(98,175,29,0.06), rgba(98,175,29,0.22))`,
+          background: `linear-gradient(${fade}, rgba(198,232,122,0.10), rgba(198,232,122,0.38))`,
           transform: horizontal ? `scaleX(${fill})` : `scaleY(${fill})`,
           transformOrigin: origin,
         }}
       />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <svg width="28" height="28" viewBox="0 0 28 28" style={{ transform: `rotate(${rotate}deg)` }}>
-          <path d="M 6 14 H 21 M 15 8 L 21 14 L 15 20" fill="none" stroke={on ? GREEN_DARK : "#b9bcc2"} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ transition: "stroke .3s" }} />
-        </svg>
-      </div>
     </div>
   );
 }
 
-/** The middle: your social investment, a green ₹ in a ringed circle. */
-function Hub({ on, pulse }: { on: boolean; pulse: boolean }) {
+/** The middle: your social investment. A ring round a ₹ disc; the disc is lime while nothing is in focus, and when a card
+ * is, the disc goes quiet and a thick lime arc on the ring swings round (always clockwise) to point at it. */
+function Hub({ angle, active, reduce }: { angle: number; active: boolean; reduce: boolean }) {
+  const R = 46; // the ring's radius, in a 120 × 120 box
+  const C = 2 * Math.PI * R;
+  const ARC = 0.2; // the arc's length, as a share of the ring
   return (
-    <div className="relative flex flex-col items-center justify-center gap-2 rounded-[16px] border border-[#eceef1] bg-white">
-      <div className="relative flex size-[72px] items-center justify-center rounded-full border border-[#e6e8ec] lg:size-[80px]">
-        {pulse && <motion.span aria-hidden className="absolute inset-0 rounded-full border-2" style={{ borderColor: GREEN }} animate={{ scale: [1, 1.18], opacity: [0.6, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }} />}
-        <span
-          className="flex size-[44px] items-center justify-center rounded-full font-display text-[20px] font-bold text-white transition-[background-color,box-shadow] duration-500 lg:size-[48px]"
-          style={{ backgroundColor: on ? GREEN : "#c9ccd1", boxShadow: on ? "0 8px 20px rgba(98,175,29,0.35)" : "none" }}
-        >
-          ₹
-        </span>
-      </div>
-      <span className="absolute bottom-2 font-display text-[10px] font-bold uppercase leading-[12px] tracking-[0.8px] text-text-grey-48">Your investment</span>
+    <div className="relative flex items-center justify-center rounded-[18px] border border-[#eef0f3] bg-white">
+      <svg aria-hidden viewBox="0 0 120 120" className="absolute size-[104px]">
+        <defs>
+          <linearGradient id="hub-arc" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor={LIME} stopOpacity="0.15" />
+            <stop offset="1" stopColor={LIME_DEEP} />
+          </linearGradient>
+        </defs>
+        <circle cx="60" cy="60" r={R} fill="none" stroke="#eceef1" strokeWidth="1" />
+        <circle cx="60" cy="60" r={R - 14} fill="none" stroke="#f1f2f4" strokeWidth="1" />
+        {/* The arc: centred on 12 o'clock, then turned to the card. */}
+        <motion.g style={{ originX: "60px", originY: "60px" }} initial={false} animate={{ rotate: angle, opacity: active ? 1 : 0 }} transition={{ duration: reduce ? 0 : 0.7, ease: EASE }}>
+          <circle
+            cx="60"
+            cy="60"
+            r={R}
+            fill="none"
+            stroke="url(#hub-arc)"
+            strokeWidth="11"
+            strokeLinecap="round"
+            strokeDasharray={`${C * ARC} ${C}`}
+            transform={`rotate(${-90 - ARC * 180} 60 60)`}
+          />
+        </motion.g>
+      </svg>
+      <span
+        className="relative flex size-[46px] items-center justify-center rounded-full font-display text-[19px] font-bold transition-[background-color,color,box-shadow] duration-500"
+        style={
+          active
+            ? { backgroundColor: "#f4f5f7", color: "#5c6170", boxShadow: "0 0 0 1px #e6e8ec" }
+            : { backgroundColor: LIME, color: GREEN_DARK, boxShadow: `0 0 0 6px rgba(198,232,122,0.35)` }
+        }
+      >
+        ₹
+      </span>
     </div>
   );
 }
 
-/** A stage in a corner: an icon chip, a two-line bold claim, a short grey line. Lit once reached; the current one gets a
- * green outline. */
-function GridCard({ card, lit, current }: { card: Card; lit: boolean; current: boolean }) {
+/** A stage in a corner, as in the reference: an icon chip, a two-line claim, a short grey line. The card in focus (hovered,
+ * or reached by the scroll) gets a lime icon chip, darker text and a soft lift. */
+function GridCard({ card, focus, onEnter, onLeave }: { card: Card; focus: boolean; onEnter: () => void; onLeave: () => void }) {
   return (
     <div
-      className={`flex flex-col gap-2.5 rounded-[16px] border p-5 transition-[border-color,box-shadow,opacity] duration-500 ${
-        current ? "border-[#62af1d] shadow-[0_16px_40px_rgba(41,45,54,0.10)]" : lit ? "border-[#e3eadb]" : "border-[#eceef1] opacity-60"
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      className={`flex min-h-[172px] flex-col gap-3 rounded-[18px] border bg-white p-5 transition-[border-color,box-shadow] duration-500 lg:p-6 ${
+        focus ? "border-[#e2e8d6] shadow-[0_12px_32px_rgba(41,45,54,0.08)]" : "border-[#eef0f3]"
       }`}
     >
-      <span className="flex size-[38px] items-center justify-center rounded-[10px] transition-colors duration-500" style={{ backgroundColor: lit ? "#eef6e6" : "#f4f5f7" }}>
+      <span className="flex size-[38px] items-center justify-center rounded-[11px] transition-colors duration-500" style={{ backgroundColor: focus ? LIME : "#f4f5f7" }}>
         <span
           aria-hidden
-          className="block size-[20px] transition-colors duration-500"
-          style={{ backgroundColor: lit ? GREEN_DARK : "#9a9ea6", WebkitMask: `url(${card.icon}) center / contain no-repeat`, mask: `url(${card.icon}) center / contain no-repeat` }}
+          className="block size-[19px] transition-colors duration-500"
+          style={{ backgroundColor: focus ? GREEN_DARK : "#6b7080", WebkitMask: `url(${card.icon}) center / contain no-repeat`, mask: `url(${card.icon}) center / contain no-repeat` }}
         />
       </span>
-      <div className="flex flex-col gap-1.5">
-        <p className="font-display text-[11px] font-bold uppercase leading-[14px] tracking-[1px] text-text-grey-48">{card.label}</p>
-        <p className="font-display text-[18px] font-bold leading-[24px] tracking-[-0.3px] text-text-grey-100 [text-wrap:balance]">{card.title}</p>
-        <p className="font-display text-[14px] font-medium leading-[20px] text-text-grey-48">{card.line}</p>
+      <div className="mt-auto flex flex-col gap-1.5">
+        <p className={`font-display text-[17px] font-semibold leading-[22px] tracking-[-0.2px] transition-colors duration-500 [text-wrap:balance] ${focus ? "text-text-grey-100" : "text-text-grey-80"}`}>{card.title}</p>
+        <p className="font-display text-[13px] font-medium leading-[19px] text-text-grey-48">{card.line}</p>
       </div>
     </div>
   );
