@@ -2,28 +2,29 @@ import type { Metadata } from "next";
 import { FoundersCollage } from "@/components/versions/FoundersCollage";
 import { HowItWorksModalButton } from "@/components/versions/HowItWorksModal";
 import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
-import { BePartOfIt, GovernmentSchemes, Sources, TheProblem, WhatItIsnt, WhereRangDeComesIn, WhyHero } from "@/components/versions/WhyWeExist";
+import { StoryHowItWorks } from "@/components/versions/StoryHowItWorks";
+import { BePartOfIt, Sources, TheProblem, WhyHero } from "@/components/versions/WhyWeExist";
 import { getRangDeStats } from "@/lib/stats";
 
 export const metadata: Metadata = {
   title: "Version 4 · Why we exist | Rang De",
-  description: "Homepage test version (draft): the problem, why Rang De exists, and how you can be part of the solution.",
+  description: "Homepage test version (draft): why Rang De exists, told as Rekha and Arjun's story.",
   robots: { index: false, follow: false },
 };
 
-// Version 4 (draft, review call 11 Nov 2026): for someone discovering the category, read like a print ad. The problem with
-// authority → "but the government has schemes" → why Rang De exists and who does what → what Rang De isn't → the founders →
-// be part of the solution (a featured entrepreneur and investor, as links onward) → How it works and the questions, last.
-// Figures still to be sourced show as yellow dashed chips (components/versions/WhyWeExist.tsx).
+// Version 4 (draft, review call 11 Nov 2026): for someone discovering the category. The 86% acted out with real
+// borrowers → why Rang De exists, as Version 3's Rekha and Arjun story with its own script (the bank says no, the
+// government schemes reach few, the other ways cost too much, Rang De connects them, escrow, repaid with interest, a credit
+// history), turning into the wall of real people → the bigger picture (where India stands) → the founders → be part of it
+// (a featured entrepreneur and investor) → How it works and the questions, last. Figures still to be sourced show as
+// yellow dashed chips.
 export default async function WhyWeExistPage() {
   const stats = await getRangDeStats();
   return (
     <div className="flex w-full flex-col gap-2 pb-2 pt-2">
       <WhyHero />
+      <StoryHowItWorks script="why" heading="Why Rang De exists, in one story." navyCta large crowd="fresh" />
       <TheProblem />
-      <GovernmentSchemes />
-      <WhereRangDeComesIn />
-      <WhatItIsnt />
       <FoundersCollage
         thinFrame
         roomy

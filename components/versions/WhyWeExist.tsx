@@ -206,15 +206,15 @@ export function WhyHero() {
           You lend directly to the rural entrepreneurs banks leave out, and
           you’re repaid with interest.
         </p>
-        <LinkButton href="#the-problem" variant="secondary">
-          See the problem
+        <LinkButton href="#how-it-works" variant="secondary">
+          Meet Rekha ↓
         </LinkButton>
       </motion.div>
     </section>
   );
 }
 
-/* 2. The problem, with authority: the 86%, then where India stands against other countries. */
+/* 3. After the story, the bigger picture: where India stands against other countries. */
 const COUNTRIES: { name: string; pct?: number }[] = [
   { name: "India", pct: 14 },
   { name: "United Kingdom" },
@@ -231,19 +231,13 @@ export function TheProblem() {
       id="the-problem"
       className="mx-2 flex scroll-mt-[var(--navbar-bottom,0px)] flex-col items-center gap-14 rounded-[16px] bg-ink px-4 py-20 text-white sm:px-8 md:py-28 lg:py-[120px]"
     >
-      <Rise className="flex max-w-[960px] flex-col items-center gap-4 text-center">
-        <Label className="text-white/56">The problem</Label>
-        <p className="font-display text-[120px] font-bold leading-[1] tracking-[-4px] text-[#c6e87a] md:text-[200px] md:tracking-[-8px]">
-          86%
-        </p>
-        <h2 className="font-display text-[28px] font-bold leading-[34px] [text-wrap:balance] md:text-[40px] md:leading-[48px]">
-          of India’s eligible adults can’t get a loan from a bank.
-          <sup className="text-[0.5em] text-white/56">1</sup>
+      {/* After the story: Rekha isn't one person. The comparison Ram asked for, with authority and sources. */}
+      <Rise className="flex max-w-[860px] flex-col items-center gap-4 text-center">
+        <Label className="text-white/56">The bigger picture</Label>
+        <h2 className="font-display text-[32px] font-bold leading-[38px] [text-wrap:balance] md:text-[48px] md:leading-[56px]">
+          Rekha isn’t one person.{" "}
+          <span className="text-[#c6e87a]">She’s most of India.</span>
         </h2>
-        <p className="max-w-[620px] font-display text-p1 font-medium text-white/72 md:text-[20px] md:leading-[30px]">
-          Not because they can’t repay. Because they have no land to pledge and
-          no credit history to show, so the system never says yes.
-        </p>
       </Rise>
 
       {/* Where India stands. India's bar from the same source as the 86%; the others are placeholders until sourced. */}
@@ -307,181 +301,7 @@ export function TheProblem() {
   );
 }
 
-/* 3. "But the government has schemes": respectful, factual, no fight. 100 dots, the share schemes reach filled in. */
-const REACHED = 15; // Ram's figure on the call; to be sourced.
-
-export function GovernmentSchemes() {
-  const reduce = useReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.4 });
-  return (
-    <section className="mx-2 flex justify-center rounded-[16px] bg-[#F7F3ED] px-4 py-20 sm:px-8 md:py-28 lg:py-[120px]">
-      <div className="grid w-full max-w-[1100px] items-center gap-12 lg:grid-cols-2 lg:gap-20">
-        <Rise className="flex flex-col gap-5">
-          <Label>The question we hear most</Label>
-          <h2 className="font-display text-[28px] font-bold leading-[34px] text-ink [text-wrap:balance] md:text-[40px] md:leading-[48px]">
-            “Doesn’t the government already have schemes for this?”
-          </h2>
-          <p className="font-display text-p1 font-medium text-ink/72 md:text-[20px] md:leading-[30px]">
-            It does, and they matter. But all of them together reach only about{" "}
-            <Tbc note="Ram's figure on the call; source needed">{REACHED}%</Tbc>{" "}
-            of the people who need credit.
-          </p>
-          <p className="font-display text-p1 font-medium text-ink/72 md:text-[20px] md:leading-[30px]">
-            The rest borrow from moneylenders, at interest that keeps them in
-            debt and never builds a credit score.
-            <sup className="text-[0.6em] text-ink/56">2</sup>
-          </p>
-        </Rise>
-        <div
-          ref={ref}
-          className="mx-auto w-full max-w-[260px] sm:max-w-[420px]"
-        >
-          <div className="grid grid-cols-10 gap-[6px] sm:gap-2">
-            {Array.from({ length: 100 }, (_, i) => (
-              <motion.span
-                key={i}
-                aria-hidden
-                className="aspect-square rounded-full"
-                initial={
-                  reduce ? false : { backgroundColor: "rgba(41,45,54,0.12)" }
-                }
-                animate={{
-                  backgroundColor:
-                    i < REACHED && (reduce || inView)
-                      ? GREEN
-                      : "rgba(41,45,54,0.12)",
-                }}
-                transition={{
-                  duration: 0.3,
-                  delay: reduce ? 0 : 0.3 + i * 0.04,
-                }}
-              />
-            ))}
-          </div>
-          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 font-display text-[13px] font-bold leading-[18px] text-ink/72">
-            <span className="flex items-center gap-2">
-              <span
-                className="size-3 rounded-full"
-                style={{ backgroundColor: GREEN }}
-              />{" "}
-              Reached by schemes
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="size-3 rounded-full bg-ink/12" /> Left to
-              moneylenders
-            </span>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* 4. Why Rang De exists: for everyone else. Who does what, in one line each. */
-const ROLES = [
-  {
-    who: "Rang De",
-    does: "Finds and vets each entrepreneur in person, and gets them the capital banks won’t.",
-  },
-  {
-    who: "Impact partners",
-    does: "Local organisations that support them on the ground, before and after the loan.",
-  },
-  {
-    who: "You, the social investor",
-    does: "Lend from ₹500. They build a credit score; you’re repaid every month, with interest.",
-  },
-];
-
-export function WhereRangDeComesIn() {
-  return (
-    <section className="mx-2 flex flex-col items-center gap-12 rounded-[16px] bg-[#cbe0b8] px-4 py-20 sm:px-8 md:py-28 lg:py-[120px]">
-      <Rise className="flex max-w-[860px] flex-col items-center gap-4 text-center">
-        <Label className="text-green-dark">Why we exist</Label>
-        <h2 className="font-display text-[32px] font-bold leading-[38px] text-ink [text-wrap:balance] md:text-[48px] md:leading-[56px]">
-          Rang De exists for everyone else.
-        </h2>
-        <p className="font-display text-p1 font-medium text-ink/72 [text-wrap:balance] md:text-[20px] md:leading-[30px]">
-          Since 2008, we’ve connected ordinary people who can lend a little with
-          the entrepreneurs the system leaves out.
-        </p>
-      </Rise>
-      <ol className="grid w-full max-w-[1100px] gap-2 md:grid-cols-3">
-        {ROLES.map((r, i) => (
-          <Rise key={r.who} delay={i * 0.12} className="h-full">
-            <li
-              className={`flex h-full flex-col gap-4 rounded-[16px] p-6 sm:p-8 ${i === 2 ? "bg-ink text-white" : "bg-white text-ink"}`}
-            >
-              <span
-                className={`font-display text-[13px] font-bold ${i === 2 ? "text-[#c6e87a]" : "text-green-dark"}`}
-              >
-                0{i + 1}
-              </span>
-              <p className="font-display text-[24px] font-bold leading-[30px]">
-                {r.who}
-              </p>
-              <p
-                className={`font-display text-[17px] font-medium leading-[26px] ${i === 2 ? "text-white/80" : "text-ink/72"}`}
-              >
-                {r.does}
-              </p>
-            </li>
-          </Rise>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
-/* 5. What Rang De isn't: the misunderstandings from the Q&A calls, each struck through and answered. */
-const ISNT = [
-  {
-    not: "A donation",
-    is: "It’s a loan. It’s repaid to you every month, with interest.",
-  },
-  {
-    not: "Crowdfunding",
-    is: "You lend to one named person, and see every repayment they make.",
-  },
-  {
-    not: "Money we hold",
-    is: "It goes into an escrow account and reaches the borrower within 24 hours. It never sits in Rang De’s account.",
-  },
-  {
-    not: "Instead of the government",
-    is: "We reach the people the schemes don’t, alongside them.",
-  },
-];
-
-export function WhatItIsnt() {
-  return (
-    <section className="mx-2 flex flex-col items-center gap-12 rounded-[16px] bg-white px-4 py-20 sm:px-8 md:py-28 lg:py-[120px]">
-      <Rise className="flex flex-col items-center gap-4 text-center">
-        <Label>Clearing things up</Label>
-        <h2 className="font-display text-[32px] font-bold leading-[38px] text-ink md:text-[48px] md:leading-[56px]">
-          What Rang De isn’t.
-        </h2>
-      </Rise>
-      <ul className="grid w-full max-w-[1100px] gap-2 sm:grid-cols-2">
-        {ISNT.map((x, i) => (
-          <Rise key={x.not} delay={i * 0.08} className="h-full">
-            <li className="flex h-full flex-col gap-3 rounded-[16px] bg-bg-grey p-6 sm:p-8">
-              <p className="font-display text-[26px] font-bold leading-[32px] text-ink/40 line-through decoration-[#d4492f] decoration-[3px]">
-                {x.not}
-              </p>
-              <p className="font-display text-[17px] font-medium leading-[26px] text-ink">
-                {x.is}
-              </p>
-            </li>
-          </Rise>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-/* 6. Be part of the solution: one featured entrepreneur, one featured social investor, both as links onward. */
+/* 4. Be part of the solution: one featured entrepreneur, one featured social investor, both as links onward. */
 export function BePartOfIt({ stats }: { stats: RangDeStats }) {
   const borrower = heroIntroStories[0];
   const investor = testimonialsRow1[1];
@@ -489,7 +309,10 @@ export function BePartOfIt({ stats }: { stats: RangDeStats }) {
     investor.quote.find((q) => q.emphasized)?.text ??
     investor.quote.map((q) => q.text).join("");
   return (
-    <section className="mx-2 flex flex-col items-center gap-12 rounded-[16px] bg-[#F7F3ED] px-4 py-20 sm:px-8 md:py-28 lg:py-[120px]">
+    <section
+      id="opportunities"
+      className="mx-2 flex scroll-mt-[var(--navbar-bottom,0px)] flex-col items-center gap-12 rounded-[16px] bg-[#F7F3ED] px-4 py-20 sm:px-8 md:py-28 lg:py-[120px]"
+    >
       <Rise className="flex max-w-[820px] flex-col items-center gap-4 text-center">
         <Label className="text-green-dark">The solution needs people</Label>
         <h2 className="font-display text-[32px] font-bold leading-[38px] text-ink [text-wrap:balance] md:text-[48px] md:leading-[56px]">
@@ -569,8 +392,11 @@ export function Sources() {
   return (
     <section className="mx-2 rounded-[16px] bg-white px-4 py-10 sm:px-8">
       <ol className="mx-auto flex max-w-[1100px] flex-col gap-1 font-display text-[13px] font-medium leading-[20px] text-ink/56">
-        <li>1. World Bank, Global Findex Database 2021.</li>
-        <li>2. NABARD.</li>
+        <li>
+          86% of India’s eligible adults without a bank loan: World Bank, Global
+          Findex Database 2021.
+        </li>
+        <li>Informal loans’ interest (in Rekha’s story): NABARD, July 2026.</li>
         <li>
           <Tbc>
             Sources for the other countries and for the share government schemes

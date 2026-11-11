@@ -26,8 +26,9 @@ export type Side = "R" | "A" | "B";
 // Each step: an id, who it's about, its line (and any subtext under it), which of the four parts of the
 // story it belongs to, and how much scrolling (in screens) it takes. Arjun is met right after Rekha, then
 // steps back until he finds her loan.
-type StepId = "meet" | "arjun" | "need" | "credit" | "options" | "rangde" | "choose" | "invest" | "money" | "repay" | "outcome";
-export const STEPS: { id: StepId; side: Side; part: number; text: string; sub?: string; w: number }[] = [
+type StepId = "meet" | "arjun" | "need" | "credit" | "schemes" | "options" | "rangde" | "choose" | "invest" | "money" | "repay" | "outcome";
+type Step = { id: StepId; side: Side; part: number; text: string; sub?: string; w: number };
+export const STEPS: Step[] = [
   { id: "meet", side: "R", part: 0, text: "Meet Rekha. She runs a tailoring business from home, in a village in Rajasthan.", w: 0.9 },
   { id: "arjun", side: "A", part: 0, text: "Arjun is an Indian citizen, just like you. Eager to make a change and help a fellow Indian grow.", w: 0.9 },
   { id: "need", side: "R", part: 0, text: "Rekha wants to grow her business. She needs ₹25,000 for a second machine.", w: 0.9 },
@@ -105,6 +106,96 @@ export const INFO: Record<number, StoryInfo> = {
     box: { value: `${LIVE.principalRepaidPct}%`, label: "of the money invested has been repaid", source: PLATFORM_SHORT },
   },
 };
+
+/* ── Scripts ─────────────────────────────────────────────────────────────────────────────────── */
+
+// The story can be told with another script (`script="why"`, Version 4): the same cast and scenes, the steps in a
+// different order with different lines. Everything that reads the steps takes them from ScriptContext.
+type Script = { steps: Step[]; I: Record<StepId, number>; stops: number[]; travel: number; parts: { from: number; w: number }[]; info: Record<number, StoryInfo>; labels?: string[] };
+function makeScript(steps: Step[], info: (i: Record<StepId, number>) => Record<number, StoryInfo>, labels?: string[]): Script {
+  const i = Object.fromEntries(steps.map((st, n) => [st.id, n])) as Record<StepId, number>;
+  const stops = steps.reduce<number[]>((acc, st) => [...acc, acc[acc.length - 1] + st.w], [0]);
+  const count = Math.max(...steps.map((st) => st.part)) + 1;
+  const parts = Array.from({ length: count }, (_, p) => {
+    const own = steps.map((st, n) => [st, n] as const).filter(([st]) => st.part === p);
+    return { from: stops[own[0][1]], w: own.reduce((sum, [st]) => sum + st.w, 0) };
+  });
+  return { steps, I: i, stops, travel: stops[steps.length], parts, info: info(i), labels };
+}
+const HOW_SCRIPT: Script = { steps: STEPS, I, stops: STOPS, travel: TRAVEL, parts: PARTS, info: INFO };
+
+/** Version 4 ("Why we exist", review call 11 Nov 2026): the story of why Rang De exists, for someone who has never heard of
+ * it. Rekha's need, then the problem in three beats (the bank says no, the government schemes reach few, the other ways
+ * cost too much), then Arjun and Rang De as the bridge, then how it goes: the loan through escrow, repaid with interest
+ * (a loan, not a donation), and a credit history at the end. The schemes figure is Ram's, still to be sourced. */
+export const SCHEMES_REACH = 15;
+const WHY_STEPS: Step[] = [
+  { id: "meet", side: "R", part: 0, text: "Meet Rekha. She runs a tailoring business from home, in a village in Rajasthan.", w: 0.9 },
+  { id: "need", side: "R", part: 0, text: "She has more orders than one machine can take. A second one costs ₹25,000.", w: 0.9 },
+  {
+    id: "credit",
+    side: "R",
+    part: 1,
+    text: "But like 86% of India's eligible adults, Rekha can't get a loan from a bank.",
+    sub: "Not because she can't repay. She has no land to pledge and no credit history, so the answer is no.",
+    w: 1.2,
+  },
+  { id: "schemes", side: "R", part: 1, text: `What about government schemes? They help, but together they reach only about ${SCHEMES_REACH}% of people like her.`, w: 1.4 },
+  { id: "options", side: "R", part: 1, text: "Everything else costs her more, or doesn't go far enough.", w: 1.7 },
+  { id: "arjun", side: "A", part: 2, text: "Meanwhile, in Bengaluru, there's Arjun. He'd gladly help, but he has never met anyone like Rekha.", w: 1 },
+  {
+    id: "rangde",
+    side: "R",
+    part: 2,
+    text: "That's why Rang De exists: to connect people like Arjun with people like Rekha.",
+    sub: "First, a local impact partner meets Rekha and vets her business in person.",
+    w: 2,
+  },
+  { id: "choose", side: "A", part: 3, text: "Arjun scrolls through the businesses on Rang De and finds Rekha's.", w: 1.2 },
+  { id: "invest", side: "A", part: 3, text: "Arjun lends ₹5,000. Together with others, he fully funds Rekha's loan.", w: 1.3 },
+  { id: "money", side: "R", part: 3, text: "The money goes through an escrow account, never Rang De's own, and reaches Rekha within 24 hours.", w: 1.1 },
+  { id: "repay", side: "A", part: 3, text: "Every month Rekha repays, and Arjun's money comes back with interest. It's a loan, not a donation.", w: 1.4 },
+  {
+    id: "outcome",
+    side: "B",
+    part: 3,
+    text: "Rekha now has a credit history. Next time, a bank can say yes.",
+    sub: "And Arjun can lend again, to the next Rekha. That's why Rang De exists.",
+    w: 1.2,
+  },
+];
+const WHY_SCRIPT = makeScript(
+  WHY_STEPS,
+  (i) => ({
+    [i.credit]: { phrase: "86% of India's eligible adults", stat: "", source: "Source: World Bank Global Findex Database, 2021. Formal credit: loans from banks and other regulated lenders." },
+    [i.invest]: INFO[I.invest],
+    [i.money]: INFO[I.money],
+    [i.repay]: INFO[I.repay],
+  }),
+  ["Rekha", "The problem", "Rang De", "How it goes"],
+);
+const ScriptContext = createContext<Script>(HOW_SCRIPT);
+
+/** The schemes step's card: a hundred people like Rekha, the share the schemes reach filling in green. */
+function Schemes({ f }: { f: number }) {
+  const lit = Math.round(clamp01((f - 0.1) / 0.5) * SCHEMES_REACH);
+  return (
+    <Card>
+      <div className="grid grid-cols-20 gap-[3px] sm:grid-cols-10 sm:gap-1.5">
+        {Array.from({ length: 100 }, (_, n) => (
+          <span key={n} className={`aspect-square rounded-full transition-colors duration-300 ${n < lit ? "bg-[#62af1d]" : "bg-ink/12"}`} />
+        ))}
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-2 font-display text-[12px] font-bold leading-[16px] sm:text-[13px]">
+        <span className="flex items-center gap-1.5 text-ink/72">
+          <span className="size-2.5 rounded-full bg-[#62af1d]" /> Reached by schemes
+        </span>
+        {/* Draft: Ram's figure on the call, to be sourced. */}
+        <span className="rounded-[6px] border border-dashed border-[#c99a00] bg-[#fff3c4] px-1.5 text-[11px] text-[#5c4700]">Figure to confirm</span>
+      </div>
+    </Card>
+  );
+}
 
 // Why the other ways to borrow don't work for Rekha, listed under the credit line with a portrait each.
 const FINDEX = "World Bank Global Findex, 2021";
@@ -199,6 +290,7 @@ function Fig({ s, k, x = 0, dim, flip }: { s: Spr; k: number; x?: number; dim?: 
 
 /** `large` (Version 6): the line at 36px on laptops (the same as the founders line above it) and its subtext at 22px. */
 export function Line({ step, hideSub, large = false }: { step: number; hideSub?: boolean; large?: boolean }) {
+  const { steps: STEPS, info: INFO } = useContext(ScriptContext);
   const { text } = STEPS[step];
   const info = INFO[step];
   // A number shown in a box under the line gets no tooltip on it as well. Otherwise the fact (or the
@@ -493,7 +585,7 @@ function Verify({ f, mobile }: { f: number; mobile: boolean }) {
 
 /** A number shown directly, in a tinted box: the value, what it means and where it's from. */
 function Stat({ step, first }: { step: number; first?: boolean }) {
-  const box = INFO[step]?.box;
+  const box = useContext(ScriptContext).info[step]?.box;
   if (!box) return null;
   return (
     <div className={`flex items-center gap-3 rounded-[8px] bg-primary/8 px-3 py-2 text-left ${first ? "" : "mt-3"}`}>
@@ -509,6 +601,8 @@ function Stat({ step, first }: { step: number; first?: boolean }) {
 /** The card under the line, if the step has one. `f` is how far through the step the reader is. */
 function StepCard({ step, f, mobile, navyCta, large = false }: { step: number; f: number; mobile: boolean; navyCta?: boolean; large?: boolean }) {
   const look = useContext(LookContext);
+  const { I } = useContext(ScriptContext);
+  if (step === I.schemes) return <Schemes f={f} />;
   if (step === I.options) return <Options f={f} one={mobile} large={large} />;
   if (step === I.rangde) return mobile && f < CARD_AT ? null : <Verify f={mobile ? (f - CARD_AT) / (1 - CARD_AT) : f} mobile={mobile} />;
   if (step === I.choose) return <Feed f={f} />;
@@ -657,6 +751,7 @@ export function Cast({
   morph?: { c: number; rekha: Rect; arjun: Rect };
 }) {
   const line = useContext(LookContext) === "line";
+  const { steps: STEPS, I } = useContext(ScriptContext);
   const active = STEPS[step].side;
   const rekhaX = rekha.x;
   const arjunX = arjun.x;
@@ -671,7 +766,7 @@ export function Cast({
   const partnerU = usePlay(step === I.rangde ? step : null, WALK_MS);
   const walking = walkU < 1;
   const frame = (u: number) => Math.floor((u * WALK_MS) / FRAME_MS) % 6;
-  const rekhaPose: Spr = walking ? REKHA_WALK[frame(walkU)] : step === I.credit || step === I.options ? REKHA.sad : step === I.rangde ? REKHA.proud : REKHA.sew;
+  const rekhaPose: Spr = walking ? REKHA_WALK[frame(walkU)] : step === I.credit || step === I.schemes || step === I.options ? REKHA.sad : step === I.rangde ? REKHA.proud : REKHA.sew;
   // Once the new machine has arrived she leans on it, and from then on she has two.
   const withMachine = step === I.money && !walking ? WITH_MACHINE.lean : step > I.money ? WITH_MACHINE.two : null;
   const wk = (0.95 * H) / WITH_MACHINE_REF;
@@ -782,6 +877,7 @@ export function StoryHowItWorks({
   large = false,
   after,
   crowd = false,
+  script = "how",
 }: {
   look?: Look;
   heading?: ReactNode;
@@ -789,7 +885,11 @@ export function StoryHowItWorks({
   large?: boolean;
   after?: ReactNode;
   crowd?: boolean | "fresh";
+  /** "why" (Version 4): the story of why Rang De exists, with the problem told in three beats (WHY_STEPS). */
+  script?: "how" | "why";
 }) {
+  const S = script === "why" ? WHY_SCRIPT : HOW_SCRIPT;
+  const { steps: STEPS, I, stops: STOPS, travel: TRAVEL, parts: PARTS, info: INFO } = S;
   const total = TRAVEL + (crowd ? CROWD : 0);
   const line = look === "line";
   const sectionRef = useRef<HTMLElement>(null);
@@ -858,6 +958,7 @@ export function StoryHowItWorks({
   const wall = crowd ? crowdLayout(size.w, size.h, mobile, crowd === "fresh") : null;
 
   return (
+    <ScriptContext.Provider value={S}>
     <LookContext.Provider value={look}>
       <div id="how-it-works" className={`relative mx-2 overflow-clip rounded-[16px] ${line ? "bg-[#FAFAFA]" : "bg-gradient-to-b from-white to-bg-grey"}`}>
         <div className="flex flex-col items-center gap-2 px-4 pb-2 pt-12 text-center sm:px-8 sm:pt-16 lg:pt-[80px]">
@@ -901,8 +1002,14 @@ export function StoryHowItWorks({
             {/* Progress: one pill for each of the story's four parts, filling as the reader scrolls through it. */}
             <div aria-hidden className="absolute left-1/2 top-4 flex w-[min(560px,calc(100%-32px))] -translate-x-1/2 gap-1.5 sm:top-6" style={{ opacity: storyFade }}>
               {PARTS.map((p, i) => (
-                <div key={i} className="h-[4px] flex-1 overflow-hidden rounded-full bg-ink/10">
-                  <div className="h-full rounded-full bg-ink/72" style={{ width: `${clamp01((t - p.from) / p.w) * 100}%` }} />
+                <div key={i} className="flex flex-1 flex-col gap-1.5">
+                  <div className="h-[4px] overflow-hidden rounded-full bg-ink/10">
+                    <div className="h-full rounded-full bg-ink/72" style={{ width: `${clamp01((t - p.from) / p.w) * 100}%` }} />
+                  </div>
+                  {/* The why script names its parts, so the reader knows where the story is going. */}
+                  {S.labels && (
+                    <span className={`font-display text-[10px] font-bold uppercase leading-[12px] tracking-[0.8px] transition-colors duration-300 sm:text-[11px] ${t >= p.from ? "text-ink/72" : "text-ink/32"}`}>{S.labels[i]}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -964,5 +1071,6 @@ export function StoryHowItWorks({
         {after}
       </div>
     </LookContext.Provider>
+    </ScriptContext.Provider>
   );
 }
