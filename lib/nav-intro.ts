@@ -37,7 +37,7 @@ export function useCtaHidesOnScrollUp() {
 }
 
 /** Versions that keep the original nav but take the refreshed one's hairline under it. */
-export const NAV_STROKE_ROUTES = ["/v/v2", "/v/v2-b"];
+export const NAV_STROKE_ROUTES = ["/v/v2", "/v/v2-b", "/v/v2-c"];
 export function useNavStroke() {
   const pathname = usePathname();
   return REFRESHED_NAV_ROUTES.includes(pathname) || NAV_STROKE_ROUTES.includes(pathname);

@@ -43,6 +43,14 @@ const VERSIONS = [
     measure: "Sign-ups vs. Version 2",
   },
   {
+    key: "2 C",
+    name: "Lend to a person, the loop as cards",
+    href: "/v/v2-c",
+    audience: "Everyone (rangde-v1)",
+    idea: "Version 2 with Why it matters as the loop drawn with cards: your social investment in the middle, feeding four cards round a square (businesses funded, interest stays fair, repaying builds credit, the next loan doesn’t start from zero) that fill green in turn and close back into the first.",
+    measure: "Sign-ups vs. Version 2",
+  },
+  {
     key: "3",
     name: "Less said",
     href: "/v/v3",
