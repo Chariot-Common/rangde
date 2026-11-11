@@ -33,10 +33,22 @@
     padding-inline: 24px;
   }
 
-  /* One heading size for every section: 32 on 36. */
+  /* Type sizes from rangdeorg.framer.website on phones (sizes only; the fonts stay Inter): H1 35/36, H2 32/34, H3 24/26,
+     each with a little negative tracking (-2% / -3% / -2%); body 18; small uppercase labels 12/16 with 1.44px tracking. */
+  .v2-page h1 {
+    font-size: 35px !important;
+    line-height: 36px !important;
+    letter-spacing: -0.7px !important;
+  }
   .v2-page > section h2 {
     font-size: 32px !important;
-    line-height: 36px !important;
+    line-height: 34px !important;
+    letter-spacing: -0.96px !important;
+  }
+  .v2-page > section h3.text-h4 {
+    font-size: 24px !important;
+    line-height: 26px !important;
+    letter-spacing: -0.48px !important;
   }
 
   /* Cards inside sections: 16px corners. */
@@ -117,5 +129,29 @@
   .v2-page > div:first-child .md\:hidden .text-p2 {
     font-size: 15px;
     line-height: 21px;
+  }
+}
+
+@media (max-width: 639px) {
+  /* Eyebrows and labels: 12/16, 1.44px tracking (they were 10-11px). */
+  .v2-page > div:first-child p.uppercase,
+  .v2-page > section p.uppercase {
+    font-size: 12px !important;
+    line-height: 16px !important;
+    letter-spacing: 1.44px !important;
+  }
+  /* Body text under a step or heading: 18px, as on the Framer site (it was 16). */
+  .v2-page > section:nth-child(2) p.text-p2 {
+    font-size: 18px !important;
+    line-height: 26px !important;
+  }
+}
+
+@media (max-width: 639px) {
+  /* The hero's figure labels stay on one line in their half-width column ("Businesses funded" wrapped at 12px). */
+  .v2-page > div:first-child .grid p.uppercase {
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+    white-space: nowrap;
   }
 }
