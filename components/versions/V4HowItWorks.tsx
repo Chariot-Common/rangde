@@ -1,9 +1,10 @@
 "use client";
 
-import { animate, motion, useInView, useMotionValue, useReducedMotion, type MotionValue } from "motion/react";
+import { AnimatePresence, animate, motion, useInView, useMotionValue, useReducedMotion, type MotionValue } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { HowItWorksStage } from "@/components/how-it-works/HowItWorksStage";
 import { HOW_IT_WORKS_STEPS } from "@/components/how-it-works/steps";
+import { ScrollInk } from "./ScrollInk";
 import { CreditGrowsScene } from "./CreditGrowsScene";
 
 /*
@@ -29,12 +30,12 @@ const STEPS = [
   { title: "We find and verify rural entrepreneurs", body: HOW_IT_WORKS_STEPS[0].description },
   { title: "Choose whom you’d like to invest in", body: HOW_IT_WORKS_STEPS[1].description },
   {
-    title: "Payments are collected",
+    title: "Payments towards them are collected",
     body: "We collect on the 1st or 15th of the month, whichever comes next. Within 24 hours the money reaches the borrower’s bank account, as RBI regulations require.",
   },
-  { title: "Track all your investments", body: "See every investment you’ve made, your total earnings, the repayments you’ve had and the ones still to come, borrower by borrower." },
+  { title: "Keep track of all your investments", body: "See every investment you’ve made, your total earnings, the repayments you’ve had and the ones still to come, borrower by borrower." },
   {
-    title: "Their credit grows",
+    title: "Formal credit history helps them grow",
     body: "Every repayment is reported to the credit bureaus, so the borrower builds a formal credit history, and with it new possibilities: a bigger loan, new machinery, more clients.",
   },
 ];
@@ -64,14 +65,16 @@ export function V4HowItWorks({ children }: { children?: ReactNode }) {
     <section
       ref={ref}
       id="how-it-works"
-      className="mx-2 flex flex-col items-center gap-ds-6 rounded-[16px] bg-[#ebeaea] px-4 pb-ds-6 pt-[40px] md:px-r3 md:pb-r8 md:pt-ds-9"
+      className="mx-2 flex flex-col items-center gap-ds-6 rounded-[16px] bg-[#ebeaea] px-4 pb-ds-6 pt-[40px] md:px-r3 md:pb-r8 md:pt-ds-9 lg:gap-ds-9"
     >
-      <h2 className="text-center font-display text-h3 font-bold text-text-grey-100 [text-wrap:balance]">How it works</h2>
+      {/* Fills in letter by letter as it scrolls up, text grey 24 → 100 (as "Why it matters"). */}
+      <ScrollInk as="h2" tone="grey" text="How it works" className="text-center font-display text-h3 font-bold [text-wrap:balance]" />
 
-      {/* Steps take what the frame leaves; the block is held to the two of them so no gap opens up between. */}
-      <div className="grid w-full max-w-[1320px] grid-cols-1 items-center gap-8 lg:max-w-[1360px] lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-r7">
-        {/* The steps (under the animation on phones, as on the section lab). */}
-        <ol className="order-2 flex w-full flex-col lg:order-1">
+      {/* Laptops: the steps beside the frame, their tops level with its top (the heading sits 64px above both, the gap the
+          reels have under their heading). Phones and tablets: the frame, then one step at a time under it. */}
+      <div className="grid w-full max-w-[1320px] grid-cols-1 items-start gap-6 lg:max-w-[1360px] lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-r7">
+        {/* Laptops: all the steps, the open one unfolded. */}
+        <ol className="order-2 hidden w-full flex-col lg:order-1 lg:flex">
           {STEPS.map((s, i) => (
             <StepRow
               key={s.title}
@@ -87,10 +90,41 @@ export function V4HowItWorks({ children }: { children?: ReactNode }) {
           ))}
         </ol>
 
+        {/* Phones and tablets: the progress as a horizontal bar of the five steps (the open one filling as its animation
+            plays; tap one to jump to it), then just the open step's pill, title and body. */}
+        <div className="order-2 flex w-full max-w-[560px] flex-col gap-5 justify-self-center lg:hidden">
+          <div className="flex gap-1.5">
+            {STEPS.map((s, i) => (
+              <button key={s.title} type="button" onClick={() => setOpen(i)} aria-label={`Step ${i + 1}: ${s.title}`} aria-current={i === open ? "step" : undefined} className="flex-1 py-2">
+                <span className="relative block h-[4px] overflow-hidden rounded-full bg-text-grey-16">
+                  <motion.span className="absolute inset-0 origin-left rounded-full bg-primary-64" style={{ scaleX: i === open ? fill : i < open ? 1 : 0 }} />
+                </span>
+              </button>
+            ))}
+          </div>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={open}
+              className="flex flex-col items-center gap-2.5 text-center"
+              initial={reduce ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduce ? undefined : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.3, ease: EASE }}
+            >
+              <span className="rounded-full px-3 py-1 font-display text-h5 font-bold uppercase tracking-[0.88px] text-white" style={{ backgroundColor: DOT_BLUE }}>
+                Step {open + 1}
+              </span>
+              <p className="font-display text-p1 font-bold text-text-grey-100">{STEPS[open].title}</p>
+              <p className="font-display text-p2 font-medium text-text-grey-64">{STEPS[open].body}</p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
         {/* The pop-up's animation for the open step, with the problem card's outside stroke (text grey 8). On laptops it is about
-            as tall as the steps beside it (520px), in its earlier 758 × 620 proportions. */}
+            as tall as the steps beside it, in its earlier 758 × 620 proportions; on phones and tablets it takes the animation's own
+            shape (374 × 342), so it hugs the scaled-down animation with no space above or below. */}
         <motion.div
-          className="order-1 h-[400px] w-full overflow-hidden rounded-[16px] bg-white shadow-[0_0_0_1.2px_var(--color-text-grey-8)] sm:h-[500px] lg:order-2 lg:h-[560px] lg:w-auto xl:h-[640px] lg:max-w-full lg:aspect-[758/620] lg:justify-self-end"
+          className="order-1 aspect-[374/342] w-full max-w-[560px] justify-self-center overflow-hidden rounded-[16px] bg-white shadow-[0_0_0_1.2px_var(--color-text-grey-8)] lg:order-2 lg:h-[560px] lg:w-auto xl:h-[640px] lg:max-w-full lg:aspect-[758/620] lg:justify-self-end"
           initial={reduce ? false : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}

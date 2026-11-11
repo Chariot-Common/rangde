@@ -48,6 +48,7 @@ const PHONE_TEXT = 190; // room under the ring for the step's line on phones
 const LOOP_MAX_W = 1040; // the oval's widest (review call, 10 Nov 2026: an oval, not a rounded rectangle)
 const TEXT_W = 600; // the open step's line, in the middle: P1, half the old width
 const TEXT_GAP = 24; // the least room it leaves to Repayment and Opportunities
+const TEXT_DONE = 0.75; // the open step's line is fully filled three quarters of the way to the next step
 const TRACK_PX = 2;
 const PROGRESS_PX = 4;
 
@@ -298,7 +299,9 @@ function Chip({ ref, label, state, style }: { ref?: Ref<HTMLSpanElement>; label:
  * phones), with a smaller icon. */
 function StepLine({ started, at, within, large = false }: { started: boolean; at: number; within: number; large?: boolean }) {
   const text = STEPS[at].text;
-  const filled = started ? Math.round(within * text.length) : 0;
+  // Fully filled by the time the loop is TEXT_DONE of the way to the next step, so a quick scroll still leaves the
+  // whole line readable before the next one takes its place.
+  const filled = started ? Math.round(Math.min(1, within / TEXT_DONE) * text.length) : 0;
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.div

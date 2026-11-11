@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { FAQS_URL } from "@/data/faqs";
 import { Icon, type IconName } from "@/components/ui";
@@ -42,8 +43,11 @@ function FlipCoin({ icon, auto = false }: { icon: IconName; auto?: boolean }) {
  * one does (blue tint, a slight grow, the coin turning to the plus) so it reads as tappable: the first card whose top is
  * between a quarter and three quarters of the way down the screen; as it climbs past the quarter line the next takes over. */
 /** `large` (Version 1.1): taller cards with the question at H4 size, so they read as a section of their own. */
-export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean }) {
+/** `fadeIn` (Version 2): the cards fade in, one after another and rising a little, as they come into view (ease-out). */
+export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean }) {
   const cards = QUESTION_CARDS.slice(0, count);
+  const reduce = useReducedMotion();
+  const fade = fadeIn && !reduce;
   const [open, setOpen] = useState<number | null>(null);
   const [auto, setAuto] = useState<number | null>(null);
   const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -93,8 +97,12 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
       {heading && <h2 className="text-center font-display text-h3 font-bold text-text-grey-100">{heading}</h2>}
       <div className={`grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 ${large ? "max-w-[1440px] lg:gap-4" : "max-w-[1200px]"}`}>
         {cards.map((c, i) => (
-          <button
+          <motion.button
             key={c.question}
+            initial={fade ? { opacity: 0, y: 24 } : false}
+            whileInView={fade ? { opacity: 1, y: 0 } : undefined}
+            viewport={{ once: true, amount: 0.25 }}
+            transition={{ duration: 0.8, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
             ref={(el) => { cardRefs.current[i] = el; }}
             type="button"
             aria-haspopup="dialog"
@@ -108,7 +116,7 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
                 <path d="M12 5v14M5 12h14" />
               </svg>
             </span>}
-          </button>
+          </motion.button>
         ))}
       </div>
       <a

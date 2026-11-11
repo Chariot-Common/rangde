@@ -7,7 +7,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { MobileMenu } from "@/components/MobileMenu";
 import { useCtaLabel } from "@/lib/use-cta-label";
-import { useNavHidden, useNavIntro, useRefreshedNav } from "@/lib/nav-intro";
+import { useNavHidden, useNavIntro, useNavStroke, useRefreshedNav } from "@/lib/nav-intro";
 import { NavShine } from "./NavShine";
 
 const SCROLL_THRESHOLD = 24;
@@ -19,6 +19,8 @@ export function TopNav() {
   const hidden = useNavHidden();
   // v5 / v6 have the refreshed nav; every other page keeps the original look.
   const refreshed = useRefreshedNav();
+  // The refreshed nav's hairline, also on pages that keep the original nav (Version 2).
+  const stroke = useNavStroke();
   // The shine sweeps Get started once: on v5 as its nav fades back in ("reveal"), on v6 as the logo lands
   // in the nav ("landing"), and on Version 1.1 as the page loader goes. Latched, so it isn't cut short
   // when the intro moves on to "shown".
@@ -99,12 +101,12 @@ export function TopNav() {
     <div
       ref={navRef}
       className={`relative w-full px-4 py-[16px] transition-[background-color,backdrop-filter,box-shadow,opacity] duration-300 ease-out sm:px-6 ${
-        refreshed ? "border-b border-nav-stroke" : "md:px-10 lg:px-[135px]"
-      } ${
+        refreshed ? "" : "md:px-10 lg:px-[135px]"
+      } ${stroke ? "border-b border-nav-stroke" : ""} ${
         hidden ? "pointer-events-none opacity-0" : "opacity-100"
       } ${
         isScrolled
-          ? `bg-white/82 backdrop-blur-[16px] ${refreshed ? "" : "shadow-[0_1px_0_rgba(3,21,56,0.06)]"}`
+          ? `bg-white/82 backdrop-blur-[16px] ${stroke ? "" : "shadow-[0_1px_0_rgba(3,21,56,0.06)]"}`
           : "bg-transparent"
       }`}
     >

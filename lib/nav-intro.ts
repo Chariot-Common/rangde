@@ -27,6 +27,20 @@ export function useRefreshedNav() {
   return REFRESHED_NAV_ROUTES.includes(usePathname());
 }
 
+/** Versions whose phone "Get started" button steps aside (fades and drops) while the page is scrolled up, and comes
+ * back as it is scrolled down. */
+export const CTA_HIDES_ON_SCROLL_UP_ROUTES = ["/v/v2"];
+export function useCtaHidesOnScrollUp() {
+  return CTA_HIDES_ON_SCROLL_UP_ROUTES.includes(usePathname());
+}
+
+/** Versions that keep the original nav but take the refreshed one's hairline under it. */
+export const NAV_STROKE_ROUTES = ["/v/v2"];
+export function useNavStroke() {
+  const pathname = usePathname();
+  return REFRESHED_NAV_ROUTES.includes(pathname) || NAV_STROKE_ROUTES.includes(pathname);
+}
+
 let state: NavIntro = "idle";
 const listeners = new Set<() => void>();
 

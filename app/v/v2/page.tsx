@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { FoundersCollage } from "@/components/versions/FoundersCollage";
 import { OpportunitiesSection } from "@/components/sections/opportunities/OpportunitiesSection";
 import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
+import { ScrollInk } from "@/components/versions/ScrollInk";
 import { ReelsWheel } from "@/components/sections/reels/ReelsWheel";
 import { ApproachHero, HowItWorksTabs, InfrastructureRow, SeeWhereMoneyGoes } from "@/components/versions/approaches";
 import { V4HeroCards } from "@/components/versions/V4Sections";
@@ -22,6 +23,20 @@ export const metadata: Metadata = {
 // their own reels → you decide who you back (the product, step by step) → the infrastructure → where the money goes
 // (live figures) → why returns aren't higher (fair on both sides) → the founders → live opportunities → questions (both
 // from Version 1).
+// Phones (as on Version 1): a short lead in two parts with a rule between them; the stats wait under an arrow and open
+// as the page is scrolled, so the RBI seal leads straight into the investee cards.
+const MOBILE_LEAD = (
+  <>
+    <p className="font-display text-p1 font-medium text-ink/64">
+      <strong className="font-bold text-ink/80">With Rang De, you can.</strong> Lend to people building businesses and livelihoods across rural India.
+    </p>
+    <hr className="w-full border-0 border-t border-ink/8" />
+    <p className="font-display text-p1 font-medium text-ink/64">
+      Your money helps them <strong className="font-bold text-ink/80">access credit and build a formal credit history, while you earn returns.</strong>
+    </p>
+  </>
+);
+
 export default async function V2() {
   const stats = await getRangDeStats();
   return (
@@ -29,9 +44,11 @@ export default async function V2() {
       <ApproachHero
         tone="ink"
         eyebrow="Peer-to-peer social investing"
-        title="What if you could lend directly to another person?"
+        title={"What if you could lend\ndirectly to another person?"}
         lead="With Rang De, you can. Lend to people building businesses across India. Your money helps them access credit and build a formal credit history, while you earn returns."
         compact
+        bigTitle
+        mobileLead={MOBILE_LEAD}
         // No buttons here (they jumped past the rest of the page): the people being funded, and by how many, instead.
         strip={<V4HeroCards />}
         glow={false}
@@ -41,16 +58,16 @@ export default async function V2() {
       <ReelsWheel
         tight
         heading={
+          // Each line fills in letter by letter as it scrolls up: grey 24 → 100, then green dark 24% → green dark.
           <>
-            Meet the Other Startup India.
-            <br />
-            <span className="text-green-dark">No pitch decks. No valuations. Just people building Bharat.</span>
+            <ScrollInk as="span" tone="grey" text="Meet the Other Startup India." className="block" />
+            <ScrollInk as="span" tone="green" text="No pitch decks. No valuations. Just people building Bharat." className="block" />
           </>
         }
       />
       <HowItWorksTabs refined inked bare visual="journey" eyebrow={null} heading="You decide who you back." />
       {/* The live figures, then the infrastructure behind them in the same green section (white text, animated icons). */}
-      <SeeWhereMoneyGoes stats={stats} after={<InfrastructureRow badge="#fff" onDark />} />
+      <SeeWhereMoneyGoes stats={stats} inked after={<InfrastructureRow badge="#fff" onDark inked />} />
       {/* Why aren't returns higher: what one loan returns, beyond the interest (no comparison with other investments). */}
       <V4Returns />
       {/* Photos only: the Ashoka Fellow card (from 14 years ago) and the quote card are out. */}
@@ -67,8 +84,8 @@ export default async function V2() {
         }
       />
       {/* From Version 1: the live opportunities (with "See more") right after the founders, then its questions. */}
-      <OpportunitiesSection />
-      <PlainQuestionCards count={4} flip large phoneHeading="Questions we get often" autoHighlight />
+      <OpportunitiesSection inked />
+      <PlainQuestionCards count={4} flip large phoneHeading="Questions we get often" autoHighlight fadeIn />
     </div>
   );
 }

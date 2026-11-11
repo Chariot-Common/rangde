@@ -43,12 +43,19 @@ const EDGE_CLASS = "bg-clip-text";
  * `plain` (Version 1.1): the same fill with no coloured edge: each letter simply darkens from pale ink to ink,
  *   softly over about a letter and a half.
  * `blue` (Version 1.1's "Every Saturday, 11 am IST"): the plain fill, from primary blue 64 to primary blue 100.
+ * Version 2's headings, all the plain fill (as its "Why it matters" heading):
+ *   `grey` text grey 24 → text grey 100; `green` green dark at 24% → green dark; `white` white at 24% → white (on dark);
+ *   `grey80` text grey 16 → text grey 80 (the opportunities count).
  */
-type Tone = "rgb" | "plain" | "blue";
+type Tone = "rgb" | "plain" | "blue" | "grey" | "green" | "white" | "grey80";
 const TONES: Record<Tone, { ink: string; pale: string; inkColour: string; paleColour: string }> = {
   rgb: { ink: "text-ink", pale: "text-ink/32", inkColour: "var(--color-ink)", paleColour: "color-mix(in srgb, var(--color-ink) 32%, transparent)" },
   plain: { ink: "text-ink", pale: "text-ink/32", inkColour: "var(--color-ink)", paleColour: "color-mix(in srgb, var(--color-ink) 32%, transparent)" },
   blue: { ink: "text-primary-100", pale: "text-primary-64", inkColour: "var(--color-primary-100)", paleColour: "var(--color-primary-64)" },
+  grey: { ink: "text-text-grey-100", pale: "text-text-grey-24", inkColour: "var(--color-text-grey-100)", paleColour: "var(--color-text-grey-24)" },
+  green: { ink: "text-green-dark", pale: "text-green-dark/24", inkColour: "var(--color-green-dark)", paleColour: "color-mix(in srgb, var(--color-green-dark) 24%, transparent)" },
+  white: { ink: "text-white", pale: "text-white/24", inkColour: "#fff", paleColour: "rgba(255, 255, 255, 0.24)" },
+  grey80: { ink: "text-text-grey-80", pale: "text-text-grey-16", inkColour: "var(--color-text-grey-80)", paleColour: "var(--color-text-grey-16)" },
 };
 const SOFT = 1.5; // plain/blue: how many letters the darkening takes
 

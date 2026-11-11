@@ -1,13 +1,15 @@
 import { FUNDS_OPEN, FUND_OPPORTUNITIES, STATE_OPPORTUNITIES, getIndividualOpportunities, uniqueBorrowers } from "@/lib/opportunities";
 import { OpportunitiesTabs } from "./OpportunitiesTabs";
 import { LiveSignal } from "./LiveSignal";
+import { ScrollInk } from "@/components/versions/ScrollInk";
 
 /**
  * "Investment opportunities live now" — the live listings from rangde.in, tabbed by
  * Individuals / States / Funds like rangde.in/invest. Server component: the listings are
  * fetched (and revalidated) on the server, only the tab + scroll behaviour ships as JS.
+ * `inked` (Version 2): the count line fills in letter by letter as it scrolls up, text grey 16 → text grey 80.
  */
-export async function OpportunitiesSection() {
+export async function OpportunitiesSection({ inked = false }: { inked?: boolean } = {}) {
   // One card (and one in the count) per person, the same rule India After Dark uses, so both
   // sites say the same number of people are waiting.
   const individuals = uniqueBorrowers(await getIndividualOpportunities());
@@ -20,7 +22,11 @@ export async function OpportunitiesSection() {
       <div className="flex flex-col items-center gap-3 px-4 text-center">
         {/* Figma "Section 9": the count in grey, then "Live now" on its own line in ink. */}
         <h2 className="font-display text-h3 font-bold text-ink">
-          <span className="block text-ink/72">{individuals.length} investment opportunities</span>
+          {inked ? (
+            <ScrollInk as="span" tone="grey80" text={`${individuals.length} investment opportunities`} className="block" />
+          ) : (
+            <span className="block text-ink/72">{individuals.length} investment opportunities</span>
+          )}
           <span className="inline-flex items-center gap-3">
             <LiveSignal className="size-[0.85em] shrink-0" />
             Live now

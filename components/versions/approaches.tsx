@@ -97,7 +97,7 @@ function PhoneStats() {
                 <Fragment key={label}>
                   {ri > 0 && <hr className="w-full border-0 border-t border-ink/8" />}
                   <div className="flex flex-col items-center gap-1">
-                    <StatNumber target={s.target} format={FIG_FORMAT[label] ?? s.format} index={ci * 2 + ri} inView={open} className="font-display text-h3 font-bold text-text-grey-80" />
+                    <StatNumber target={s.target} format={FIG_FORMAT[label] ?? s.format} index={ci * 2 + ri} inView={open} className="whitespace-nowrap font-display text-h3 font-bold text-text-grey-80" />
                     <p className="font-display text-[10px] font-semibold uppercase leading-[15px] tracking-[1.2px] text-text-grey-64">{FIG_LABEL[label] ?? label}</p>
                   </div>
                 </Fragment>
@@ -112,8 +112,10 @@ function PhoneStats() {
 
 /** `mobileLead` (Version 1.1): on phones, this replaces `lead` (two short paragraphs split by a rule), the stats shrink to
  * the RBI seal with a chevron under it, and the headline is a little larger (Figma "Home - v1.1" mobile). */
-/** `compact` (Version 4): the headline one size smaller, so the visual under it carries more of the hero. */
-export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wide = false, glow = true, compact = false, eyebrow, actions, strip, below }: { title: string; lead?: string; mobileLead?: ReactNode; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; compact?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode }) {
+/** `compact` (Version 4): the headline one size smaller, so the visual under it carries more of the hero.
+ * `bigTitle` (Version 2): the ink headline at Version 1's size (H1, 56/64 from tablets up) in a wider block, for a title
+ * with its own line break. */
+export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wide = false, glow = true, compact = false, bigTitle = false, eyebrow, actions, strip, below }: { title: string; lead?: string; mobileLead?: ReactNode; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; compact?: boolean; bigTitle?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode }) {
   const ready = usePageReady();
   const reduce = useReducedMotion();
   const seq = heroSequence(title, lead);
@@ -158,8 +160,14 @@ export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wid
         className="pointer-events-none absolute left-1/2 top-[33px] -z-10 h-[1040px] w-[1040px] -translate-x-1/2 rounded-full bg-white shadow-[0_0_250px_rgba(254,199,0,0.64)] sm:top-[-95px] sm:h-[650px] sm:w-[650px] md:top-[-125px] md:h-[850px] md:w-[850px] lg:top-[-174px] lg:h-[1250px] lg:w-[1250px]"
       />
       )}
-      <div className={`flex w-full flex-col items-center gap-2 text-center ${wide ? "max-w-[930px]" : "max-w-[920px]"}`}>
-        {eyebrow && <Eyebrow className="mb-2 text-green-dark">{eyebrow}</Eyebrow>}
+      <div className={`flex w-full flex-col items-center gap-2 text-center ${bigTitle ? "max-w-[1040px]" : wide ? "max-w-[930px]" : "max-w-[920px]"}`}>
+        {eyebrow &&
+          (bigTitle ? (
+            // Version 2: the design system's H5 in Inter (not the Parkinsans eyebrow), phones and laptops alike.
+            <p className="mb-2 font-display text-h5 font-bold uppercase tracking-[0.88px] text-green-dark">{eyebrow}</p>
+          ) : (
+            <Eyebrow className="mb-2 text-green-dark">{eyebrow}</Eyebrow>
+          ))}
         <WordReveal
           as="h1"
           text={title}
@@ -169,7 +177,7 @@ export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wid
           play={ready}
           className={
             tone === "ink"
-              ? `font-display ${compact ? "text-h3" : "text-h2"} font-bold text-ink [text-wrap:balance]`
+              ? `font-display ${bigTitle ? `text-h1 md:leading-[64px] ${mobileLead ? "max-sm:text-[38px] max-sm:leading-[44px] max-sm:tracking-[-0.76px] sm:leading-[38px]" : "leading-[38px]"}` : compact ? "text-h3" : "text-h2"} font-bold text-ink [text-wrap:balance]`
               : `font-display text-h1 font-bold text-green-dark [text-wrap:balance] md:leading-[64px] ${mobileLead ? "max-sm:text-[38px] max-sm:leading-[44px] max-sm:tracking-[-0.76px] sm:leading-[38px]" : "leading-[38px]"}`
           }
         />
@@ -860,10 +868,16 @@ export function HowItWorksTabs({ children, tone = "cream", visual = "ui", typed 
 }
 
 /** "A new way of lending needs serious infrastructure." (Figma 2718:46885), under How it works in v1.2. */
-export function InfrastructureRow({ heading = "A new way of lending needs serious infrastructure.", badge = "#F1F2F5", onDark = false }: { heading?: string; badge?: string; onDark?: boolean }) {
+/** `inked` (Version 2): the heading fills in letter by letter as it scrolls up (white at 24% → white on dark; text grey
+ * 24 → 100 otherwise). */
+export function InfrastructureRow({ heading = "A new way of lending needs serious infrastructure.", badge = "#F1F2F5", onDark = false, inked = false }: { heading?: string; badge?: string; onDark?: boolean; inked?: boolean }) {
   return (
     <div className="flex w-full max-w-[1200px] flex-col items-center gap-10">
-      <AnimatedText as="h3" text={heading} className={`text-center font-display text-h4 font-bold ${onDark ? "text-white" : "text-ink"}`} />
+      {inked ? (
+        <ScrollInk as="h3" tone={onDark ? "white" : "grey"} text={heading} className="text-center font-display text-h4 font-bold" />
+      ) : (
+        <AnimatedText as="h3" text={heading} className={`text-center font-display text-h4 font-bold ${onDark ? "text-white" : "text-ink"}`} />
+      )}
       <PointsGrid points={INFRA_POINTS} size="sm" badge={badge} shapeOffset={1} onDark={onDark} />
     </div>
   );
@@ -1495,7 +1509,8 @@ function LiveFigure({ value, format, label, start, delay }: { value: number; for
  * public stats feed (lib/stats.ts, refreshed every 10 minutes), counting up when the section comes in.
  */
 /** `after` (v2): more of the section under the figures, past a divider (the infrastructure points). */
-export function SeeWhereMoneyGoes({ stats, after }: { stats: RangDeStats; after?: ReactNode }) {
+/** `inked` (Version 2): the heading fills in letter by letter as it scrolls up, white at 24% → white. */
+export function SeeWhereMoneyGoes({ stats, after, inked = false }: { stats: RangDeStats; after?: ReactNode; inked?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.3 });
   const whole = (n: number) => Math.round(n).toLocaleString("en-IN");
@@ -1518,7 +1533,11 @@ export function SeeWhereMoneyGoes({ stats, after }: { stats: RangDeStats; after?
             </span>
             Live from Rang De
           </span>
-          <AnimatedText as="h2" text="We think you should see where your money goes." className="max-w-[760px] font-display text-h3 font-bold text-white" />
+          {inked ? (
+            <ScrollInk as="h2" tone="white" text="We think you should see where your money goes." className="max-w-[760px] font-display text-h3 font-bold" />
+          ) : (
+            <AnimatedText as="h2" text="We think you should see where your money goes." className="max-w-[760px] font-display text-h3 font-bold text-white" />
+          )}
         </div>
         <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
           {figures.map((f, i) => (
