@@ -1,47 +1,46 @@
-import { existsSync } from "node:fs";
-import path from "node:path";
 import type { Metadata } from "next";
+import { PressRow } from "@/components/versions/approaches";
+import { CoinHero } from "@/components/versions/CoinHero";
+import { CollageStrip } from "@/components/versions/CollageStrip";
 import { FoundersCollage } from "@/components/versions/FoundersCollage";
 import { HowItWorksModalButton } from "@/components/versions/HowItWorksModal";
 import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
-import { LoopWheel } from "@/components/versions/WhyLoopWheel";
-import { CostCompare, ProblemBankSaysNo, ProblemHowMany, ProblemTrap, ProblemWhereTheyGo } from "@/components/versions/WhyProblem";
+import { WhyLoopStory } from "@/components/versions/WhyArcs";
+import { WhyBlocks, WhyBuilds } from "@/components/versions/WhyCraft";
+import { CostCompare } from "@/components/versions/WhyProblem";
 import { BePartOfIt, Sources } from "@/components/versions/WhyWeExist";
-import { ChapterPill, TheFix, WhyOpening } from "@/components/versions/WhyRealStory";
 import { getRangDeStats } from "@/lib/stats";
-import { NEW_ASSETS } from "@/lib/why-v4-assets";
 
 export const metadata: Metadata = {
   title: "Version 4 · Why we exist | Rang De",
-  description: "Homepage test version (draft): why Rang De exists, told like a public-interest campaign.",
+  description: "Homepage test version (draft): why Rang De exists.",
   robots: { index: false, follow: false },
 };
 
-// Version 4 (draft), reworked 12 Nov 2026 with realfood.gov as the reference. Each fact appears once:
-// the opening (one headline, a real borrower's photo turning from grey to colour) → the problem (WhyProblem.tsx: 86 in
-// 100; why the bank says no; where they go instead; the trap) → "Rang De exists to change that" → the loop that builds a
-// credit history (WhyLoopWheel: Version 2's loop as a turning wheel, after titanintake.com; the answer to the trap) → what ₹25,000 costs her (the only place 17.77% appears)
-// → your part: the live figures (once) → the founders, how it works, the questions, the sources.
-// A pill under the nav names the chapter in view. Earlier drafts: commit 010843a (Rekha and Arjun's story) and on.
+// Version 4 (draft), reworked after the 13 Nov 2026 review. It had come to look too much like realfood.gov (near-black, giant
+// tight type, a pinned chapter pill) and opened on the problem, which made it read like an information site. Now:
+// Version 3's hero (photo collage, new line, no figures row) → where India stands ("1 in 8", then India, the UK and the US as blocks rising from the card's edge; WhyCraft.tsx)
+// → why it happens, as a pinned scroll story, one step at a time: the loop she's in today, then the one Rang De opens (WhyArcs.tsx) → what your money does (real borrowers' photos fly in round one line; WhyCraft.tsx) → what
+// ₹25,000 for a year costs her → your part (the live figures, once) → the founders, how it works, the questions, the sources.
+// Tone: honest without being alarming. Earlier drafts: commit 935e1fe (the realfood.gov rework) and before.
 export default async function WhyWeExistPage() {
   const stats = await getRangDeStats();
-  // The illustrations still to be made (docs/why-v4-asset-prompts.md): a dashed slot until the file is in place.
-  const have = NEW_ASSETS.filter((f) => existsSync(path.join(process.cwd(), "public/images/why-v4", f)));
   return (
-    <div className="flex w-full flex-col gap-2 pb-2 pt-2">
-      <WhyOpening />
-      <div className="relative flex flex-col gap-2">
-        <ChapterPill />
-        <ProblemHowMany />
-        <ProblemBankSaysNo />
-        <ProblemWhereTheyGo have={have} />
-        <ProblemTrap />
-        <TheFix />
-        <LoopWheel />
-        <CostCompare />
-        <div id="ch-you" className="scroll-mt-[var(--navbar-bottom,0px)]">
-          <BePartOfIt stats={stats} />
-        </div>
+    <div className="flex w-full flex-col gap-2 pb-2">
+      {/* Version 3's hero (the photo collage and the press row), with this page's line and no figures row. */}
+      <CoinHero
+        line1="Banks look at land. Rang De looks at people."
+        line2="Lend to them, build their credit, earn returns."
+        noStats
+        strip={<CollageStrip />}
+        below={<PressRow big />}
+      />
+      <WhyBlocks />
+      <WhyLoopStory />
+      <WhyBuilds />
+      <CostCompare />
+      <div id="ch-you" className="scroll-mt-[var(--navbar-bottom,0px)]">
+        <BePartOfIt stats={stats} />
       </div>
       <FoundersCollage
         thinFrame

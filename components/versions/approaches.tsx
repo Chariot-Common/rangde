@@ -116,7 +116,7 @@ export function PhoneStats() {
 /** `compact` (Version 4): the headline one size smaller, so the visual under it carries more of the hero.
  * `bigTitle` (Version 2): the ink headline at Version 1's size (H1, 56/64 from tablets up) in a wider block, for a title
  * with its own line break. */
-export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wide = false, glow = true, compact = false, bigTitle = false, eyebrow, actions, strip, below }: { title: string; lead?: string; mobileLead?: ReactNode; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; compact?: boolean; bigTitle?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode }) {
+export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wide = false, glow = true, compact = false, bigTitle = false, eyebrow, actions, strip, below, noStats = false }: { title: string; lead?: string; mobileLead?: ReactNode; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; compact?: boolean; bigTitle?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode; noStats?: boolean }) {
   const ready = usePageReady();
   const reduce = useReducedMotion();
   const seq = heroSequence(title, lead);
@@ -208,10 +208,13 @@ export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wid
           {actions}
         </motion.div>
       )}
-      <motion.div className="w-full max-w-[1200px]" {...after()}>
-        <HeroStats start={statsStart} sealOnlyMobile={!!mobileLead} />
-        {mobileLead && <PhoneStats />}
-      </motion.div>
+      {/* `noStats` (/v/why, 13 Nov 2026): the hero without the figures row. */}
+      {!noStats && (
+        <motion.div className="w-full max-w-[1200px]" {...after()}>
+          <HeroStats start={statsStart} sealOnlyMobile={!!mobileLead} />
+          {mobileLead && <PhoneStats />}
+        </motion.div>
+      )}
       {/* `strip={false}`: no strip (Version 4 meets the people further down instead). */}
       {strip !== false && (
         <motion.div className="relative -mx-4 w-[calc(100%+32px)] sm:-mx-2 sm:w-[calc(100%+16px)]" {...after(0.2)}>

@@ -31,7 +31,8 @@ const LINE_2 = { delay: 0.25, duration: 0.2 };
 const STATS = { delay: 0.4, duration: 0.2 };
 const GALLERY = { delay: 0.55, duration: 0.25, rise: 32 };
 
-export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode }) {
+/** `line1` / `line2` replace the headline (/v/why, 13 Nov 2026); `noStats` drops the figures row and the phone seal. */
+export function CoinHero({ strip, below, line1: text1 = LINE_1, line2: text2 = LINE_2_TEXT, noStats = false }: { strip: ReactNode; below?: ReactNode; line1?: string; line2?: string; noStats?: boolean }) {
   const ready = usePageReady();
   const reduce = useReducedMotion();
   const stats = heroStatsFrom(useRangDeStats());
@@ -51,7 +52,7 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
       <div className="flex w-full flex-col items-center gap-8 sm:gap-12">
         {/* Each sentence on its own line from lg up. */}
         <h1 className="w-full max-w-[1280px] text-center font-display text-h1 font-bold text-ink">
-          <ScrollInk as="span" text={LINE_1} drive={line1} className="lg:block lg:whitespace-nowrap" />{" "}
+          <ScrollInk as="span" text={text1} drive={line1} className="lg:block lg:whitespace-nowrap" />{" "}
           {/* The second sentence stays still in text grey 64: no fill, no red-green-blue edge. */}
           <motion.span
             className="text-text-grey-64 lg:block lg:whitespace-nowrap"
@@ -59,9 +60,10 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
             animate={{ opacity: play ? 1 : 0 }}
             transition={{ ...LINE_2, ease: "easeOut" }}
           >
-            {LINE_2_TEXT}
+            {text2}
           </motion.span>
         </h1>
+        {!noStats && (
         <motion.div
           className="w-full max-w-[1200px]"
           initial={reduce ? false : { opacity: 0 }}
@@ -73,6 +75,7 @@ export function CoinHero({ strip, below }: { strip: ReactNode; below?: ReactNode
               figures in its place (two columns, a rule between the rows). */}
           <PhoneStats />
         </motion.div>
+        )}
       </div>
 
       {/* 24px under the gallery before the press row. */}

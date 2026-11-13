@@ -392,15 +392,12 @@ export function Sources() {
   return (
     <section className="mx-2 rounded-[16px] bg-white px-4 py-10 sm:px-8">
       <ol className="mx-auto flex max-w-[1100px] flex-col gap-1 font-display text-[13px] font-medium leading-[20px] text-ink/56">
-        <li>86% of India’s eligible adults without a bank loan; 12% who borrowed from a bank or formal lender and 31% from family or friends in 2021: World Bank, Global Findex Database 2021.</li>
-        <li>Nearly half of rural households relying on informal lenders, and informal loans averaging 17.77% a year: NABARD Rural Economic Conditions &amp; Sentiments Survey, July 2026.</li>
-        <li>Self-help groups’ group liability and savings-linked loans: RBI, SHG–bank linkage circular.</li>
-        <li>Rang De’s interest of up to 8.5% a year, the live figures and the repayment rate: rangde.in.</li>
         <li>
-          <Tbc>
-            Source for the share of people government schemes reach (about 15%, from the 11 Nov call): to come from Rang De.
-          </Tbc>
+          Adults who borrowed from a bank or similar institution in 2021 (India 12%, United Kingdom 55%, United States 66%): World Bank, Global Findex
+          Database 2021, indicator fin22a.
         </li>
+        <li>Informal loans in rural India averaging 17.77% a year: NABARD Rural Economic Conditions &amp; Sentiments Survey, July 2026.</li>
+        <li>Rang De’s interest of up to 8.5% a year, the live figures and the repayment rate: rangde.in.</li>
       </ol>
     </section>
   );

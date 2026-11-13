@@ -476,7 +476,7 @@ export function CostCompare() {
     <section className="mx-2 rounded-[16px] bg-white px-4 py-20 sm:px-8 md:py-28">
       <Rise className="mx-auto flex max-w-[860px] flex-col items-center gap-4 text-center">
         <Label className="text-green-dark">What it costs her</Label>
-        <h2 className="font-display text-[32px] font-extrabold leading-[1.05] tracking-[-0.03em] text-ink [text-wrap:balance] md:text-[52px]">
+        <h2 className="font-display text-[32px] font-bold leading-[38px] text-ink [text-wrap:balance] md:text-[48px] md:leading-[56px]">
           The same ₹25,000 for a year. <span style={{ color: GREEN }}>Less than half the interest.</span>
         </h2>
       </Rise>
