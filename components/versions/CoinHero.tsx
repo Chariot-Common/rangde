@@ -37,6 +37,7 @@ export function CoinHero({ strip, below, line1: text1 = LINE_1, line2: text2 = L
   const reduce = useReducedMotion();
   const stats = heroStatsFrom(useRangDeStats());
   const play = reduce || ready;
+  const oneLine = text1 === LINE_1 ? "lg:block lg:whitespace-nowrap" : "xl:block xl:whitespace-nowrap";
 
   // How far the first line's fill has run, 0–1, started once the page is ready.
   const line1 = useMotionValue(reduce ? 1 : 0);
@@ -52,10 +53,11 @@ export function CoinHero({ strip, below, line1: text1 = LINE_1, line2: text2 = L
       <div className="flex w-full flex-col items-center gap-8 sm:gap-12">
         {/* Each sentence on its own line from lg up. */}
         <h1 className="w-full max-w-[1280px] text-center font-display text-h1 font-bold text-ink">
-          <ScrollInk as="span" text={text1} drive={line1} className="lg:block lg:whitespace-nowrap" />{" "}
+          {/* A longer custom line (/v/why) only goes onto one line from xl up, where it fits. */}
+          <ScrollInk as="span" text={text1} drive={line1} className={oneLine} />{" "}
           {/* The second sentence stays still in text grey 64: no fill, no red-green-blue edge. */}
           <motion.span
-            className="text-text-grey-64 lg:block lg:whitespace-nowrap"
+            className={`text-text-grey-64 ${oneLine}`}
             initial={reduce ? false : { opacity: 0 }}
             animate={{ opacity: play ? 1 : 0 }}
             transition={{ ...LINE_2, ease: "easeOut" }}
