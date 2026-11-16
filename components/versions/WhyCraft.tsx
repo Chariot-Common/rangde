@@ -1,8 +1,9 @@
 "use client";
 
-import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
+import { motion, useInView, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRangDeStats } from "@/components/providers/StatsProvider";
 import { Label, Rise } from "./WhyRealStory";
 
 /*
@@ -19,26 +20,31 @@ const GREEN_DARK = "#3a6e0c";
 const PAPER = "#F7F3ED";
 const INK = "#292D36";
 
-/* ── WhyBlocks ──────────────────────────────────────────────────────────────────────────────────────────────── */
+/* ── WhyBlocks: "1 in 8", then the three countries as solid blocks rising from the card's edge (bolder, 17 Nov 2026:
+      full-strength colour and very large figures, after realfood.gov's stat blocks). ───────────────────────────── */
 
-// World Bank, Global Findex 2021, indicator fin22a: borrowed from a formal bank or similar financial institution (% age 15+).
+// World Bank, Global Findex Database 2021: fin22a (borrowed from a bank or similar institution) and fin22b (borrowed from
+// family or friends), adults 15+.
 const COUNTRIES = [
-  { name: "India", pct: 12, fill: GREEN, text: "#fff" },
-  { name: "United Kingdom", pct: 55, fill: "#e4ded3", text: INK },
-  { name: "United States", pct: 66, fill: "#d6cfc2", text: INK },
+  { name: "India", pct: 12, fill: GREEN, text: "#fff", note: "about 1 in 8" },
+  { name: "United Kingdom", pct: 55, fill: INK, text: "#fbf8ef", note: "more than half" },
+  { name: "United States", pct: 66, fill: INK, text: "#fbf8ef", note: "two in three" },
 ];
 
 function Block({ c, i, p, reduce }: { c: (typeof COUNTRIES)[number]; i: number; p: MotionValue<number>; reduce: boolean }) {
   // Each block rises in turn; heights are shares of the tallest (66%).
-  const h = useTransform(p, [0.1 + i * 0.08, 0.55 + i * 0.08], ["0%", `${(c.pct / 66) * 100}%`]);
+  const h = useTransform(p, (v) => `${Math.min(1, Math.max(0, (v - (0.1 + i * 0.08)) / 0.45)) * (c.pct / 66) * 100}%`);
   return (
     <div className="flex h-full flex-1 flex-col justify-end">
-      <p className="mb-3 font-display text-[13px] font-bold uppercase leading-[16px] tracking-[1.2px] text-ink/64 md:text-[14px]">{c.name}</p>
       <motion.div
-        className="flex items-start rounded-t-[14px] px-4 pt-3 md:px-6 md:pt-5"
+        className="flex min-h-[104px] flex-col justify-between overflow-hidden rounded-t-[16px] px-3 pb-4 pt-3 md:min-h-[216px] md:px-7 md:pb-7 md:pt-6"
         style={{ height: reduce ? `${(c.pct / 66) * 100}%` : h, backgroundColor: c.fill, color: c.text }}
       >
-        <span className="font-display text-[36px] font-extrabold leading-none tracking-[-0.03em] tabular-nums md:text-[72px]">{c.pct}%</span>
+        <span className="font-display text-[36px] font-extrabold leading-[0.9] tracking-[-0.05em] tabular-nums md:text-[128px]">{c.pct}%</span>
+        <span className="font-display text-[12px] font-bold leading-[16px] md:text-[20px] md:leading-[26px]">
+          {c.name}
+          <span className="block font-medium opacity-70 max-md:hidden">{c.note}</span>
+        </span>
       </motion.div>
     </div>
   );
@@ -50,33 +56,99 @@ export function WhyBlocks() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end end"] });
   return (
     <section id="ch-gap" className="mx-2 overflow-hidden rounded-[16px]" style={{ backgroundColor: PAPER }}>
-      <div className="mx-auto flex max-w-[1200px] flex-col items-center px-4 pt-24 text-center sm:px-8 md:pt-36">
+      <div className="mx-auto flex max-w-[1240px] flex-col items-center px-4 pt-24 text-center sm:px-8 md:pt-32">
         <Rise>
-          <Label className="text-green-dark">Where India stands</Label>
+          <Label className="text-green-dark">Who gets a bank loan</Label>
         </Rise>
         <Rise delay={0.05}>
           <p className="mt-6 font-display text-[112px] font-extrabold leading-[0.9] tracking-[-0.05em] text-green-dark md:text-[220px]">1 in 8</p>
         </Rise>
         <Rise delay={0.12}>
-          <p className="mt-6 max-w-[760px] font-display text-[24px] font-bold leading-[32px] text-ink [text-wrap:balance] md:text-[36px] md:leading-[46px]">
-            adults in India borrowed from a bank in 2021. In the UK and the US, most people do.
+          <p className="mt-6 max-w-[1080px] font-display text-[24px] font-bold leading-[32px] text-ink [text-wrap:balance] md:text-[40px] md:leading-[50px]">
+            adults in India get a loan from a bank. In the UK it’s more than half, and in the US two in three.
           </p>
         </Rise>
         <Rise delay={0.18}>
-          <p className="mt-5 max-w-[560px] font-display text-p1 font-medium text-ink/64 [text-wrap:balance]">
-            It isn’t that people here work less or repay less. Most of them have simply never been given the chance to show it.
+          <p className="mt-5 max-w-[760px] font-display text-p1 font-medium text-ink/64 [text-wrap:balance] md:text-[20px] md:leading-[30px]">
+            It isn’t for lack of need. Indians borrow anyway: 31% of adults turned to family or friends that year. What most of them can’t get is a loan
+            from a bank.
           </p>
         </Rise>
       </div>
       {/* The blocks sit on the card's bottom edge. */}
-      <div ref={ref} className="mx-auto mt-16 flex h-[52svh] max-w-[1200px] items-end gap-2 px-2 md:mt-24 md:h-[62svh] md:gap-3 md:px-8" role="img" aria-label="Adults who borrowed from a bank in 2021: India 12%, United Kingdom 55%, United States 66%">
+      <div
+        ref={ref}
+        className="mx-auto mt-14 flex h-[56svh] max-w-[1240px] items-end gap-2 px-2 md:mt-20 md:h-[68svh] md:gap-3 md:px-8"
+        role="img"
+        aria-label="Adults who got a loan from a bank or similar lender in 2021: India 12%, United Kingdom 55%, United States 66%"
+      >
         {COUNTRIES.map((c, i) => (
           <Block key={c.name} c={c} i={i} p={scrollYProgress} reduce={reduce} />
         ))}
       </div>
-      <p className="bg-white/0 px-4 py-4 text-center font-display text-[12px] font-medium leading-[16px] text-ink/48">
-        Adults who borrowed from a bank or similar institution, 2021 · World Bank, Global Findex Database 2021
+      <p className="px-4 py-4 text-center font-display text-[12px] font-medium leading-[16px] text-ink/48">
+        Adults (15+) who got a loan from a bank or similar lender in 2021 · World Bank, Global Findex Database 2021
       </p>
+    </section>
+  );
+}
+
+/* ── WhyProof: Rang De's own live figures, said big (the figures row of Versions 1 to 3, as a band of its own). ── */
+
+function CountUp({ to, decimals = 0, run }: { to: number; decimals?: number; run: boolean }) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    if (!run) return;
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - t0) / 1400);
+      setV(to * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [run, to]);
+  const shown = run ? v : 0;
+  return <span className="tabular-nums">{decimals ? shown.toFixed(decimals) : Math.round(shown).toLocaleString("en-IN")}</span>;
+}
+
+export function WhyProof() {
+  const stats = useRangDeStats();
+  const reduce = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const seen = useInView(ref, { once: true, amount: 0.4 });
+  const run = !!reduce || seen;
+  const figures = [
+    { to: stats.states, label: "states with Rang De entrepreneurs" },
+    { to: stats.disbursedCr, decimals: 2, prefix: "₹", suffix: " Cr", label: "lent to them, in loans" },
+    { to: stats.investors, label: "people investing, in India and abroad" },
+    { to: stats.principalRepaidPct, decimals: 2, suffix: "%", label: "of the money lent has been repaid" },
+  ];
+  return (
+    <section className="mx-2 rounded-[16px] px-4 py-20 sm:px-8 md:py-28" style={{ backgroundColor: GREEN_DARK }}>
+      <div ref={ref} className="mx-auto flex max-w-[1240px] flex-col gap-12 md:gap-16">
+        <Rise className="flex flex-col gap-4">
+          <Label className="text-[#c6e87a]">It’s already working</Label>
+          <h2 className="max-w-[900px] font-display text-[36px] font-extrabold leading-[1.02] tracking-[-0.035em] text-white [text-wrap:balance] md:text-[64px]">
+            Since 2019, this loop has been completed {stats.entrepreneurs.toLocaleString("en-IN")} times.
+          </h2>
+        </Rise>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:gap-x-10 lg:grid-cols-4 lg:gap-x-12">
+          {figures.slice(1).concat(figures.slice(0, 1)).map((f) => (
+            <div key={f.label} className="flex min-w-0 flex-col gap-3 border-t border-white/24 pt-5">
+              {/* The unit (₹, Cr, %) is set smaller than the digits, so the widest figure still fits its column. */}
+              <p className="whitespace-nowrap font-display text-[30px] font-extrabold leading-none tracking-[-0.035em] text-white md:text-[48px] lg:text-[42px] xl:text-[60px]">
+                {f.prefix && <span className="mr-[0.04em] text-[0.62em] align-[0.28em]">{f.prefix}</span>}
+                <CountUp to={f.to} decimals={f.decimals} run={run} />
+                {f.suffix && <span className="ml-[0.06em] text-[0.5em] font-bold tracking-[-0.01em]">{f.suffix.trim()}</span>}
+              </p>
+              <p className="font-display text-[13px] font-medium leading-[18px] text-white/72 md:text-[16px] md:leading-[22px]">{f.label}</p>
+            </div>
+          ))}
+        </div>
+        <p className="font-display text-[12px] font-medium leading-[16px] text-white/48">Live figures from rangde.in. Rang De is an RBI-registered NBFC-P2P.</p>
+      </div>
     </section>
   );
 }
@@ -128,17 +200,17 @@ export function WhyBuilds() {
 
   const Headline = (
     <>
-      <Label className="text-[#c6e87a]">What your money does</Label>
+      <Label className="text-[#c6e87a]">Where your money goes</Label>
       <h2 className="mt-5 font-display text-[56px] font-extrabold leading-[0.95] tracking-[-0.045em] text-white [text-wrap:balance] md:text-[104px] lg:text-[120px]">
-        Lend to people,
+        A small loan
         <br />
-        not paperwork.
+        goes a long way.
       </h2>
     </>
   );
   const Sub = (
     <p className="mt-6 max-w-[520px] font-display text-[18px] font-bold leading-[26px] text-white/72 [text-wrap:balance] md:text-[20px] md:leading-[30px]">
-      A sewing machine, a loom, a buffalo, a stocked shelf. Your loan buys what keeps a small business growing, and every repayment builds her record.
+      A sewing machine, a loom, a buffalo, a stocked shelf. Every loan has a signed agreement behind it, and every repayment goes on her credit record.
     </p>
   );
 

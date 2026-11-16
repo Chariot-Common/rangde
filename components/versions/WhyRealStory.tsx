@@ -84,13 +84,16 @@ export function ScrollWords({ text, lead = 0, className, dim = 0.18 }: { text: s
 
 /* ── Chapter pill: sticks under the nav and names the chapter in view. ──────────────────────────────────────── */
 
+// The chapters of /v/why as it stands (16 Nov 2026); each id is a section on the page.
 export const CHAPTERS = [
-  { id: "ch-problem", label: "The problem" },
-  { id: "ch-bank", label: "Why banks say no" },
-  { id: "ch-where", label: "Where they go" },
-  { id: "ch-trap", label: "The trap" },
-  { id: "ch-fix", label: "The fix" },
-  { id: "ch-you", label: "Your part" },
+  { id: "ch-gap", label: "Who can get a loan" },
+  // The loop is one pinned section told in two halves: before (the loop broken) and after (Rang De completes it).
+  { id: "ch-loop", label: "Why it happens" },
+  { id: "ch-rangde", label: "Why Rang De" },
+  { id: "ch-close", label: "Up close" },
+  { id: "ch-builds", label: "Where your money goes" },
+  { id: "ch-stories", label: "Their stories" },
+  { id: "ch-investors", label: "Our investors" },
 ] as const;
 
 export function ChapterPill() {
@@ -117,6 +120,9 @@ export function ChapterPill() {
     };
   }, []);
 
+  // As on realfood.gov: the chapter in view shows its name, the others a dot. Nothing is scaled, so nothing stretches: the
+  // name's box opens from 0 to the text's own width while the text fades in, and the dot shrinks evenly to nothing.
+  const t = { duration: 0.45, ease: EASE };
   return (
     <div className="pointer-events-none sticky top-[calc(var(--navbar-bottom,0px)+12px)] z-30 flex h-0 justify-center">
       <AnimatePresence>
@@ -127,30 +133,37 @@ export function ChapterPill() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.3, ease: EASE }}
-            className="pointer-events-auto mt-3 flex h-[40px] items-center gap-2 rounded-full bg-[#2a2620]/88 px-4 text-[#fbf8ef] shadow-[0_6px_24px_rgba(0,0,0,0.25)] backdrop-blur-md"
+            className="pointer-events-auto mt-3 flex h-[42px] items-center rounded-full bg-[#2a2620]/88 px-[14px] text-[#fbf8ef] shadow-[0_6px_24px_rgba(0,0,0,0.25)] backdrop-blur-md"
           >
-            {CHAPTERS.map((c, i) =>
-              i === active ? (
-                <motion.a
+            {CHAPTERS.map((c, i) => {
+              const on = i === active;
+              return (
+                <a
                   key={c.id}
-                  layout
-                  href={`#${c.id}`}
-                  className="whitespace-nowrap px-1 font-display text-[13px] font-bold leading-[16px]"
-                >
-                  {c.label}
-                </motion.a>
-              ) : (
-                <motion.a
-                  key={c.id}
-                  layout
                   href={`#${c.id}`}
                   aria-label={c.label}
-                  className="grid size-[16px] place-items-center"
+                  aria-current={on ? "true" : undefined}
+                  className="flex h-full items-center px-[6px]"
                 >
-                  <span className="size-[6px] rounded-full bg-[#fbf8ef]/50" />
-                </motion.a>
-              ),
-            )}
+                  <motion.span className="block overflow-hidden" initial={false} animate={{ width: on ? "auto" : 0 }} transition={t}>
+                    <motion.span
+                      className="block whitespace-nowrap font-display text-[14px] font-bold leading-[18px] md:text-[15px]"
+                      initial={false}
+                      animate={{ opacity: on ? 1 : 0 }}
+                      transition={{ duration: on ? 0.35 : 0.15, delay: on ? 0.12 : 0 }}
+                    >
+                      {c.label}
+                    </motion.span>
+                  </motion.span>
+                  <motion.span
+                    className="block shrink-0 rounded-full bg-[#fbf8ef]/50"
+                    initial={false}
+                    animate={{ width: on ? 0 : 8, height: on ? 0 : 8, opacity: on ? 0 : 1 }}
+                    transition={t}
+                  />
+                </a>
+              );
+            })}
           </motion.nav>
         )}
       </AnimatePresence>

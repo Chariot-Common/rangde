@@ -302,7 +302,8 @@ export function TheProblem() {
 }
 
 /* 4. Be part of the solution: one featured entrepreneur, one featured social investor, both as links onward. */
-export function BePartOfIt({ stats }: { stats: RangDeStats }) {
+/** `figuresShown` (/v/why direction A): the entrepreneurs and lenders counts were just given above, so only the repayment rate is said here. */
+export function BePartOfIt({ stats, figuresShown = false }: { stats: RangDeStats; figuresShown?: boolean }) {
   const borrower = heroIntroStories[0];
   const investor = testimonialsRow1[1];
   const quote =
@@ -319,10 +320,19 @@ export function BePartOfIt({ stats }: { stats: RangDeStats }) {
           You can be part of the solution.
         </h2>
         <p className="font-display text-p1 font-medium text-ink/72 [text-wrap:balance] md:text-[20px] md:leading-[30px]">
-          {stats.investors.toLocaleString("en-IN")} people already are. Together
-          they’ve funded {stats.entrepreneurs.toLocaleString("en-IN")}{" "}
-          entrepreneurs, and {stats.principalRepaidPct.toFixed(1)}% of what they
-          lent has been repaid.
+          {figuresShown ? (
+            <>
+              Choose an entrepreneur, choose how much to lend, and get it back with interest as they repay. So far,{" "}
+              {stats.principalRepaidPct.toFixed(1)}% of what’s been lent on Rang De has been repaid.
+            </>
+          ) : (
+            <>
+              {stats.investors.toLocaleString("en-IN")} people already are. Together
+              they’ve funded {stats.entrepreneurs.toLocaleString("en-IN")}{" "}
+              entrepreneurs, and {stats.principalRepaidPct.toFixed(1)}% of what they
+              lent has been repaid.
+            </>
+          )}
         </p>
       </Rise>
       <div className="grid w-full max-w-[1000px] gap-2 md:grid-cols-2">
@@ -393,8 +403,8 @@ export function Sources() {
     <section className="mx-2 rounded-[16px] bg-white px-4 py-10 sm:px-8">
       <ol className="mx-auto flex max-w-[1100px] flex-col gap-1 font-display text-[13px] font-medium leading-[20px] text-ink/56">
         <li>
-          Adults who borrowed from a bank or similar institution in 2021 (India 12%, United Kingdom 55%, United States 66%): World Bank, Global Findex
-          Database 2021, indicator fin22a.
+          Adults who borrowed from a bank or similar institution in 2021 (India 12%, United Kingdom 55%, United States 66%), and the 31% of Indian adults
+          who borrowed from family or friends: World Bank, Global Findex Database 2021.
         </li>
         <li>Informal loans in rural India averaging 17.77% a year: NABARD Rural Economic Conditions &amp; Sentiments Survey, July 2026.</li>
         <li>Rang De’s interest of up to 8.5% a year, the live figures and the repayment rate: rangde.in.</li>
