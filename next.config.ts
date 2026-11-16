@@ -31,6 +31,13 @@ const nextConfig: NextConfig = {
       { source: "/", has: [{ type: "host", value: "rangde-v2.vercel.app" }], destination: "/v/v3", permanent: false },
     ];
   },
+  async rewrites() {
+    return [
+      // Stark contrast approach (teardrop concept, Figma 3041:185): a standalone scroll prototype,
+      // a plain HTML file in public/, served at a clean /v/ URL.
+      { source: "/v/stark-contrast-approach", destination: "/v/stark-contrast-approach/teardrop-concept.html" },
+    ];
+  },
 };
 
 export default nextConfig;
