@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rang De – Village vs city debt card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Parkinsans:wght@700&display=swap">
+<style>
+  /* ---- Settings (Rang De Design System v3) ---- */
+  :root {
+    color-scheme: light;
+    --page-bg: #E9E7E1;
+    --card-bg: #FFFFFF;
+    --card-border: #E4E1DA;
+    --visual-bg: #F1F2F5;
+    --ink: #292D36;                     /* Text Grey/100 */
+    --bar-empty: rgba(41, 45, 54, 0.08); /* Text Grey/8 */
+    --red: #E32642;                     /* Red/100 */
+    --muted: #5F6370;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; --page-bg: #1B1D23; } /* the card keeps its light design */
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+    background: var(--page-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+  }
+  .card {
+    width: 400px;
+    max-width: calc(100vw - 32px);
+    height: 600px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    color: var(--ink);
+  }
+  .visual {
+    height: 400px;
+    flex: none;
+    background: var(--visual-bg);
+    padding: 0 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 36px;
+  }
+  .group { display: flex; flex-direction: column; gap: 10px; }
+  .group h3 {                       /* H5/Bold */
+    margin: 0;
+    font-family: Parkinsans, Inter, "Helvetica Neue", Arial, sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+  .bar {
+    position: relative;
+    height: 72px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bar-empty);
+  }
+  .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--red); }
+  .stat { position: absolute; top: 0; bottom: 0; left: 12px; display: flex; align-items: center; }
+  .stat-row { display: flex; align-items: flex-end; white-space: nowrap; }
+  .pct {
+    display: flex;
+    align-items: flex-start;
+    font-size: 32px;
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .col { display: block; flex: none; height: 1.1em; overflow: hidden; }
+  .strip { display: flex; flex-direction: column; }
+  .strip span { display: block; height: 1.1em; }
+  .tens { max-width: 0; }
+  .unit {
+    display: block;
+    flex: none;
+    padding: 0 0 2px 6px;
+    font-size: 13.5px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .copy {
+    height: 200px;
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .copy h2 { margin: 0; font-size: 22px; line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; }
+  .copy p { margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+</style>
+<style>
+  /* Added when copied into the teardrop page: the card sits in a 400 x 600 iframe there */
+  :root { color-scheme: light !important; }
+  html, body { background: transparent !important; }
+  .card { max-width: none !important; }
+</style>
+</head>
+<body>
+
+<article class="card">
+  <div class="visual" role="img" aria-label="Share of household debt owed to informal sources: city households 13%, village households 34%.">
+      <div class="group">
+        <h3>City household</h3>
+        <div class="bar">
+          <div class="fill" id="cityFill"></div>
+          <div class="stat" id="cityStat" aria-hidden="true">
+            <div class="stat-row">
+            <div class="pct">
+              <span class="col tens" id="cityTensCol"><span class="strip" id="cityTens"><span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
+              <span class="col"><span class="strip" id="cityOnes"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>0</span></span></span>
+              <span class="col">%</span>
+            </div>
+              <span class="unit">informal debt owed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="group">
+        <h3>Village household</h3>
+        <div class="bar">
+          <div class="fill" id="villageFill"></div>
+          <div class="stat" id="villageStat" aria-hidden="true">
+            <div class="stat-row">
+            <div class="pct">
+              <span class="col tens" id="villageTensCol"><span class="strip" id="villageTens"><span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>
+              <span class="col"><span class="strip" id="villageOnes"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>0</span></span></span>
+              <span class="col">%</span>
+            </div>
+              <span class="unit">informal debt owed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+  <div class="copy">
+    <h2>In villages, 34% of household debt is owed to informal sources. In cities, it’s 13%.</h2>
+    <p>Source: National Statistical Office, All India Debt &amp; Investment Survey (2019)</p>
+  </div>
+</article>
+
+<script>
+(function () {
+  // ---- Settings ----
+  var LOOP = true;            // false = play once and hold the final frame
+  var CITY = 13, VILLAGE = 34; // NSO AIDIS 2019: share of household debt owed to informal sources
+  var C0 = 0.4, C1 = C0 + 1.6; // city fills first
+  var V0 = C1 + 0.3, V1 = V0 + 1.8; // then village
+  var END = V1 + 0.1, CYCLE = V1 + 3.5;
+
+  function clamp(x) { return x < 0 ? 0 : (x > 1 ? 1 : x); }
+  function easeOut(p) { return 1 - Math.pow(1 - p, 3); }
+
+  function bar(id) {
+    return {
+      fill: document.getElementById(id + 'Fill'),
+      stat: document.getElementById(id + 'Stat'),
+      tensCol: document.getElementById(id + 'TensCol'),
+      tens: document.getElementById(id + 'Tens'),
+      ones: document.getElementById(id + 'Ones')
+    };
+  }
+  var city = bar('city'), village = bar('village');
+
+  function set(b, v) {
+    // Slot-machine roll: the tens column rolls as the ones pass 9 → 0
+    var o = v - 10 * Math.floor(v / 10);
+    var tn = Math.floor(v / 10) + clamp(o - 9);
+    b.fill.style.width = v + '%';
+    b.stat.style.left = 'calc(' + v + '% + 12px)'; // the figure rides just right of the red
+    b.ones.style.transform = 'translateY(' + (-o * 1.1) + 'em)';
+    b.tens.style.transform = 'translateY(' + (-tn * 1.1) + 'em)';
+    b.tensCol.style.maxWidth = (0.7 * clamp(tn)) + 'em';
+  }
+
+  function render(t) {
+    var back = LOOP ? 1 - clamp((t - (CYCLE - 0.45)) / 0.4) : 1; // bars roll back before the loop restarts
+    set(city, CITY * easeOut(clamp((t - C0) / (C1 - C0))) * back);
+    set(village, VILLAGE * easeOut(clamp((t - V0) / (V1 - V0))) * back);
+  }
+
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    render(END);
+    return;
+  }
+
+  var start = null;
+  function tick(now) {
+    if (start === null) start = now;
+    var t = (now - start) / 1000;
+    if (LOOP && t > CYCLE) { start = now; t = 0; }
+    else if (!LOOP && t > END) t = END;
+    render(t);
+    requestAnimationFrame(tick);
+  }
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
+    .then(function () { requestAnimationFrame(tick); });
+})();
+</script>
+</body>
+</html>

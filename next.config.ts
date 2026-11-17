@@ -36,6 +36,8 @@ const nextConfig: NextConfig = {
       // Stark contrast approach (teardrop concept, Figma 3041:185): a standalone scroll prototype,
       // a plain HTML file in public/, served at a clean /v/ URL.
       { source: "/v/stark-contrast-approach", destination: "/v/stark-contrast-approach/teardrop-concept.html" },
+      // Same concept with a photo of an elderly man instead of the vector portrait.
+      { source: "/v/stark-contrast-approach-2", destination: "/v/stark-contrast-approach-2/teardrop-concept.html" },
     ];
   },
 };

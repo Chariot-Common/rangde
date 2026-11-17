@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teardrop concept 2 · Rang De</title>
+<!--
+  TEARDROP CONCEPT 2 (homepage hero, problem-first): the photo version.
+  Same scroll, copy and tear as /v/stark-contrast-approach (public/v/stark-contrast-approach/),
+  with the vector woman swapped for a photo of an elderly man in a cream turban
+  (portrait.webp, 3000 x 3100, transparent background). The photo is scaled so his eyes are
+  as far apart as hers were, so the tear has the same weight on his face and every
+  landmark-driven rule (first frame, mouth never shown) carries over. Landmarks: PHOTO below.
+  Figma: Rang De Master Design III, frame "Emphasis Dark to White Concept" (node 3041:185)
+  https://www.figma.com/design/OOGgv2xrymOeuLapDwdZMV/Rang-De-Master-Design-III?node-id=3041-185
+
+  Layout: two rounded frames, inset --frame-inset from the page edges on the background grey.
+    1. The pinned stage (.stage): hero -> tear -> white -> the paragraph. The script works in its
+       size (W x H). As the last line comes up, the frame's bottom edge rises with it (clip-path)
+       so the frame ends CONFIG.endPad below "stuck"; then the stage unpins.
+    2. .next (Primary/4): the three statistics cards. While the stage is pinned it is held
+       --frame-inset below that rising edge, then it scrolls normally.
+
+  One continuous camera move, scrubbed by scroll (CONFIG.moveVh of scrolling, then the reading):
+    - Hero: "India's Rural Businesses / Faces a silent epidemic", portrait cropped just below his eyes.
+    - The camera glides straight from the hero into the tear under her eye while zooming in.
+      His face slides bottom -> top behind the tear; the mouth never enters the frame.
+    - The tear is a glass layer in front of the face (Figma "Glass" effect: frost 4,
+      refraction 1, dispersion 0.85, white fill 12%). It shows early, and the glass gets
+      stronger as you scroll. The tear grows faster than the face (parallax), then fills
+      the screen and turns pure white.
+    - On the white screen, the outro paragraph (H2 bold, 878px, centred) appears with its first
+      line in the middle of the screen. Over CONFIG.readVh of scrolling each character fills from
+      grey-24 to grey-100 and the paragraph glides up at the pace of the fill, so the line being
+      filled stays in the middle. The frame ends CONFIG.endPad below the last line, and the
+      cards frame follows. The cards (cards/, in iframes) only load once they come into view, so
+      their animations start there.
+
+  Performance: the portrait is pre-drawn into a few bitmaps (one per 2x zoom band, capped at the
+  photo's own resolution) and each frame only scales the right one into a canvas. See "Face
+  bitmaps" in the script.
+
+  Serve it through the site (the photo loads from /v/stark-contrast-approach-2/). Add ?debug to the URL to see scroll progress.
+  Tune it in the CONFIG object in the script below.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Copied from Rang De Claude Code/styles/tokens.css */
+    --color-text-grey-100: #292d36;
+    --color-bg-grey: #f1f2f5;                   /* Other / Background grey */
+    --radius-4: 8px;
+    --color-text-grey-64: #292d36a3;
+    --color-text-grey-24: #292d363d;
+    --color-white-100: #ffffff;
+    --color-white-64: #ffffffa3;
+    --color-red-100: #e32642;
+    --font-family-base: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+    --font-weight-black: 900;
+    --font-size-h2: 48px;
+    --line-height-h2: 56px;
+    --letter-spacing-h2: 0;
+    --font-size-h3: 40px;
+    --line-height-h3: 48px;
+    --letter-spacing-h3: 0;
+    --font-size-p1: 24px;
+    --line-height-p1: 32px;
+    --letter-spacing-p1: 0;
+    --font-size-p2: 18px;
+    --font-size-h6: 10px;
+
+    /* Hero title: exact values from the Figma frame (Inter Black 92 / 94), not the design system */
+    --hero-title-size: 92px;
+    --hero-title-line: 94px;
+    --hero-copy-width: 810px;                   /* the title's and body copy's parent frame (Figma) */
+    --space-4: 16px;
+    --space-responsive-9: 120px;
+    --outro-width: 878px;                       /* the outro paragraph's frame (Figma) */
+    --frame-inset: 8px;                         /* gap between the page edges and the frames */
+    --color-primary-4: #0daade0a;
+  }
+  @media (max-width: 767px) {
+    :root {
+      --font-size-h2: 34px;
+      --line-height-h2: 36px;
+      --font-size-h3: 32px;
+      --line-height-h3: 36px;
+      --font-size-p1: 18px;
+      --line-height-p1: 24px;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--color-bg-grey); }
+  /* Two rounded frames (the pinned stage, then the cards), inset from the page edges */
+  body { padding: var(--frame-inset); }
+  .track { margin-bottom: var(--frame-inset); }
+  body { font-family: var(--font-family-base); -webkit-font-smoothing: antialiased; }
+
+  /* Scroll track: the pinned stage + the move + a hold on the white screen.
+     The script sets the exact height from CONFIG.moveVh and readVh. */
+  .track { position: relative; height: 230vh; }
+
+  .stage {
+    position: sticky; top: var(--frame-inset);
+    height: calc(100vh - 2 * var(--frame-inset)); height: calc(100svh - 2 * var(--frame-inset));
+    overflow: hidden;
+    border-radius: var(--radius-4);
+    background: var(--color-text-grey-100);
+  }
+
+  .face {
+    position: absolute; left: 0; top: 0;
+    width: 865.2px; height: 894.1px;           /* the photo in design units (PHOTO.k x 3000 x 3100) */
+    transform-origin: 0 0;
+    pointer-events: none; user-select: none;
+    max-width: none;
+  }
+  .face { display: block; }
+  /* The face is drawn into this canvas from pre-rendered bitmaps (see "Face bitmaps" in the script).
+     Until the first bitmap is ready, the vector <img> above is shown instead. */
+  .face-canvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    display: none;
+  }
+  .stage.bitmaps .face-canvas { display: block; }
+  .stage.bitmaps .face { display: none; }
+
+  /* The tear, drawn at 10x (140 x 282) so it stays crisp when scaled up */
+  .tear {
+    position: absolute; left: 0; top: 0;
+    width: 140px; height: 282px;
+    transform-origin: 0 0;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .tear > svg { position: absolute; inset: 0; width: 140px; height: 282px; overflow: visible; }
+  /* The tear's soft shadow and its glass lens (a magnified, frosted view of the face) are drawn
+     into the face canvas by the script: a CSS clip-path at this size re-rasterised every frame. */
+
+  /* Hero copy (screen space so it wraps on small screens) */
+  .copy {
+    position: absolute; left: 0; right: 0; top: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0 16px;
+    text-align: center;
+    pointer-events: none;
+  }
+  .copy h1,
+  .copy p {
+    width: var(--hero-copy-width);
+    max-width: 100%;
+  }
+  .copy h1 {
+    margin: 0;
+    color: var(--color-white-100);
+    font-weight: var(--font-weight-black);
+    font-size: min(var(--hero-title-size), 12vw);   /* 92px; smaller only on narrow screens */
+    line-height: calc(var(--hero-title-line) / var(--hero-title-size)); /* 94 / 92 */
+    letter-spacing: 0;
+    font-feature-settings: "dlig" 1, "lnum" 1, "pnum" 1;
+  }
+  .copy p {
+    margin: 0.4em 0 0;
+    color: var(--color-white-64);
+    font-weight: var(--font-weight-bold);         /* P1 bold */
+    font-size: var(--font-size-p1);
+    line-height: var(--line-height-p1);
+    letter-spacing: var(--letter-spacing-p1);
+  }
+
+  /* Outro: an H2 bold paragraph in a fixed 878px frame on the white screen. Its first line
+     starts in the middle of the screen; scrolling fills each character grey-24 -> grey-100 and
+     the paragraph glides up with the fill (see "Reading" in the script). */
+  .outro {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+  }
+  /* The paragraph; the script sets the transform */
+  .outro-block {
+    position: absolute; left: 0; right: 0; top: 50%;
+    display: flex; flex-direction: column; align-items: center;
+    transform: translate3d(0, calc(var(--line-height-h2) / -2), 0);
+    will-change: transform;
+  }
+  .outro p {
+    width: var(--outro-width);
+    max-width: calc(100% - 32px);
+    margin: 0;
+    text-align: center;
+    color: var(--color-text-grey-24);
+    font-weight: var(--font-weight-bold);         /* H2 bold */
+    font-size: var(--font-size-h2);
+    line-height: var(--line-height-h2);
+    letter-spacing: var(--letter-spacing-h2);
+  }
+  .outro .word { white-space: nowrap; }
+
+  /* Second frame: the three statistics cards (cards/*.html, 400 x 600 each), 16px apart. The
+     script scales the row to fit narrow screens, stacks the cards below 900px, and while the stage
+     is pinned holds this frame just below the stage's rising bottom edge (margin-top + transform). */
+  .next {
+    position: relative;
+    display: flex; justify-content: center;
+    padding: var(--space-responsive-9) var(--space-4);
+    border-radius: var(--radius-4);
+    background: var(--color-primary-4);
+  }
+  .stat-cards-wrap { flex: none; }
+  .stat-cards {
+    display: flex; gap: var(--space-4);
+    transform-origin: 0 0;
+  }
+  .stat-cards iframe {
+    display: block; flex: none;
+    width: 400px; height: 600px;
+    border: 0;
+    background: transparent;
+    color-scheme: light;
+  }
+  .outro .ch {
+    color: color-mix(in srgb, var(--color-text-grey-100) calc(var(--f, 0) * 100%), var(--color-text-grey-24));
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
+  .flash {
+    position: absolute; inset: 0;
+    background: var(--color-white-100);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .debug {
+    position: fixed; right: 12px; bottom: 12px; z-index: 10;
+    padding: 6px 10px; border-radius: 6px;
+    background: var(--color-text-grey-100); color: var(--color-white-64);
+    font: var(--font-weight-medium) var(--font-size-h6)/1.4 ui-monospace, Consolas, monospace;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="track" id="track">
+  <div class="stage" id="stage">
+    <img class="face" id="face" alt="Portrait of an elderly man in a cream turban with a tear forming in his eye" decoding="async"
+      src="/v/stark-contrast-approach-2/portrait.webp">
+
+    <canvas class="face-canvas" id="faceCanvas" role="img" aria-label="Portrait of an elderly man in a cream turban with a tear forming in his eye"></canvas>
+
+    <div class="tear" id="tear" aria-hidden="true">
+      <!-- 1 + 2. the soft shadow on her skin and the lens (refracted, frosted face) are drawn
+           into the face canvas underneath this element; see paintGlass() in the script -->
+
+      <!-- 3. glass surface: white fill, rim light, dispersion, highlights -->
+      <svg viewBox="0 0 14 28.2">
+        <defs>
+          <path id="dropPath" d="M7 0C10.9907 9.02228 13.9558 14.9417 14 19.8213C14 30.768 0 30.6843 0 19.8213C0.101863 15.0157 3.15112 9.05526 7 0Z" />
+          <clipPath id="dropClip"><use href="#dropPath" /></clipPath>
+          <!-- light angle 255 in Figma: light comes from the upper left -->
+          <linearGradient id="rimLight" x1="0.1" y1="0.15" x2="0.9" y2="0.95">
+            <stop offset="0" stop-color="#fff" stop-opacity="0.95" />
+            <stop offset="0.45" stop-color="#fff" stop-opacity="0.15" />
+            <stop offset="1" stop-color="#fff" stop-opacity="0.75" />
+          </linearGradient>
+          <radialGradient id="edgeDepth" cx="0.5" cy="0.7" r="0.62">
+            <stop offset="0.55" stop-color="#000" stop-opacity="0" />
+            <stop offset="1" stop-color="#000" stop-opacity="0.28" />
+          </radialGradient>
+        </defs>
+        <g clip-path="url(#dropClip)">
+          <rect id="glassDepth" width="14" height="28.2" fill="url(#edgeDepth)" opacity="0.6" />
+          <!-- dispersion: colour fringes along the inside edge -->
+          <g id="glassDispersion" opacity="0.4" style="mix-blend-mode: screen">
+            <use href="#dropPath" fill="none" stroke="#ff3d6e" stroke-width="0.5" transform="translate(-0.2 0.1)" />
+            <use href="#dropPath" fill="none" stroke="#38d6ff" stroke-width="0.5" transform="translate(0.2 -0.1)" />
+          </g>
+          <use id="glassRim" href="#dropPath" fill="none" stroke="url(#rimLight)" stroke-width="0.45" opacity="0.6" />
+          <use id="glassWhite" href="#dropPath" fill="#fff" opacity="0.12" />
+        </g>
+        <ellipse id="glassGlint" cx="4.3" cy="17.6" rx="1.05" ry="2.7" fill="#fff" opacity="0.7" transform="rotate(16 4.3 17.6)" />
+        <circle id="glassGlint2" cx="9.6" cy="24.2" r="0.45" fill="#fff" opacity="0.45" />
+      </svg>
+    </div>
+
+    <div class="copy" id="copy">
+      <h1>Credit access in rural India is bad</h1>
+      <p>As you read this, thousands of our nation’s rural entrepreneurs are facing difficulty in getting a loan to support their livelihoods</p>
+    </div>
+
+    <div class="flash" id="flash"></div>
+
+    <div class="outro" id="outro">
+      <div class="outro-block" id="outroBlock">
+      <p id="outroText">They’re restricted from growing, and even from surviving. Formal credit asks for paperwork, collateral and a credit history their owners have never had the chance to build. So they turn to informal lenders, on terms that keep them stuck.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="next" id="next">
+  <div class="stat-cards-wrap" id="cardsWrap">
+    <div class="stat-cards" id="cardsRow">
+      <iframe title="India’s small businesses face a ₹20–25 lakh crore gap in formal credit" data-src="/v/stark-contrast-approach-2/cards/card1-credit-gap.html"></iframe>
+      <iframe title="Fewer than half of farming households have a Kisan Credit Card" data-src="/v/stark-contrast-approach-2/cards/card2-kisan-credit-card.html"></iframe>
+      <iframe title="In villages, 34% of household debt is owed to informal sources; in cities, 13%" data-src="/v/stark-contrast-approach-2/cards/card3-village-city-debt.html"></iframe>
+    </div>
+  </div>
+</section>
+
+<div class="debug" id="debug"></div>
+
+<script>
+(() => {
+  // ---------------------------------------------------------------------------
+  // Portrait landmarks. Measured on the photo in photo px, then converted to the design units
+  // the rest of the script uses (same units as the vector version: her eyes were ~152 apart).
+  // ---------------------------------------------------------------------------
+  const PHOTO = {
+    w: 3000, h: 3100,
+    pupils: [{ x: 1233, y: 1187 }, { x: 1760, y: 1171 }],   // his right eye is on the viewer's left
+    lowerLid: { x: 1233, y: 1230 },  // lash line under the viewer's-left pupil: where the tear starts
+    firstFrameBottom: 1395,          // below the eye bags (~1330), above the nose wings (~1440)
+    mouthSafe: 1665,                 // the frame never goes below this (mustache ~1575, upper lip ~1700)
+  };
+  PHOTO.k = 152 / (PHOTO.pupils[1].x - PHOTO.pupils[0].x);   // design units per photo px
+  const PORTRAIT_W = PHOTO.w * PHOTO.k, PORTRAIT_H = PHOTO.h * PHOTO.k;
+  const TEAR_TIP = { x: PHOTO.lowerLid.x * PHOTO.k, y: PHOTO.lowerLid.y * PHOTO.k };
+  const BULGE = { x: 7, y: 20.6 };      // centre of the round part, in tear units (14 x 28.2)
+  const NOSE_HIDE_Y = PHOTO.firstFrameBottom * PHOTO.k;  // first frame: his eyes sit at the bottom
+  const MOUTH_SAFE_Y = PHOTO.mouthSafe * PHOTO.k;
+
+  const CONFIG = {
+    portraitScale: 1.4,   // the lady, relative to the previous build
+    fall: 45,             // design units the tear runs down her cheek (stays above the mouth)
+    zoom: 8,              // how far the camera pushes into the face by the end
+    moveVh: 60,           // scroll distance (% of a screen height) for the whole move into the tear
+    readVh: 240,          // then the paragraph fills in, character by character, over this much scroll
+    readSoft: 8,          // characters in the soft edge of the fill (the gradient)
+    endPad: 80,           // the first frame ends this far (px) below the last line ("stuck")
+    copyOutBy: 0.25,      // the hero copy has faded out by this point of the move
+    tearShowBy: 0.15,     // the tear is fully visible by this point of the move
+    milkFrom: 0.72,       // the glass starts turning white here...
+    whiteBy: 0.97,        // ...and the whole screen is white here
+    outroFrom: 0.9,       // the paragraph starts fading in here (fully in at the end of the move)
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const track = $("track"), stage = $("stage"), face = $("face"), tear = $("tear");
+  const copy = $("copy"), flash = $("flash"), outro = $("outro"), debug = $("debug");
+  const gWhite = $("glassWhite"), gRim = $("glassRim"),
+        gDisp = $("glassDispersion"), gDepth = $("glassDepth"), gGlint = $("glassGlint"), gGlint2 = $("glassGlint2");
+  // The lens shows a frosted copy of the face: a 2x bitmap with the frost blur baked in once.
+  // (The frost works out to ~0.3-0.9 portrait units across the whole move, so a fixed blur
+  // reads the same, and re-blurring a screen-sized layer every frame made the zoom stutter.)
+  let lensBmp = null;
+  const faceDecoded = face.decode ? face.decode() : Promise.resolve();
+  faceDecoded.then(() => {
+    const c = document.createElement("canvas");
+    c.width = Math.round(PORTRAIT_W * 2); c.height = Math.round(PORTRAIT_H * 2);
+    const ctx = c.getContext("2d");
+    ctx.filter = "blur(1.1px)";                                   // ~0.55 portrait units at 2x
+    ctx.drawImage(face, 0, 0, c.width, c.height);
+    return window.createImageBitmap ? createImageBitmap(c) : c;
+  }).then((bmp) => { lensBmp = bmp; rendered = -1; }).catch(() => {});
+
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, p) => a + (b - a) * p;
+  const smooth = (a, b, t) => { const p = clamp((t - a) / (b - a)); return p * p * (3 - 2 * p); };
+  // one curve for the whole move, no stops in between
+  const ease = (p) => 0.7 * p + 0.3 * (0.5 - 0.5 * Math.cos(Math.PI * p)); // responds from the first pixel of scroll
+
+  let W = 0, H = 0, base = 1;
+
+  let pinTop = 0, pinLen = 0, cutEnd = 0;
+  function measure() {
+    pinTop = parseFloat(getComputedStyle(stage).top) || 0;
+    W = stage.clientWidth;
+    H = stage.clientHeight;
+    measureLines();
+    layoutCards();
+    pinLen = H * (CONFIG.moveVh + CONFIG.readVh) / 100;     // the stage unpins as the reading ends
+    track.style.height = `${H + pinLen}px`;
+    // where the frame's bottom edge ends up (stage px): endPad below the last line, which the
+    // reading leaves just above the middle. The cards frame is pulled up by the difference.
+    cutEnd = H - Math.min(H, H / 2 + CONFIG.endPad);
+    next.style.marginTop = `${-cutEnd}px`;
+    base = CONFIG.portraitScale * Math.min((0.55 * H) / 560, W / 460);
+    // the copy sits in the space above the portrait in the first frame
+    const portraitTop = H - NOSE_HIDE_Y * base;
+    copy.style.height = `${Math.max(portraitTop, 0.4 * H)}px`;
+    scheduleBitmaps();
+  }
+
+  // Camera for a point of the move. Pure, so it also plans the face bitmaps below.
+  function camera(t) {
+    const e = ease(t);
+    const form = smooth(0, CONFIG.tearShowBy, t);
+
+    // tear (bulge centre) in portrait units: emerges from under the lid, then runs down
+    const tearX = TEAR_TIP.x + 2 * e;
+    const tearY = TEAR_TIP.y + BULGE.y - 6 * (1 - form) + CONFIG.fall * e;
+    const tearYEnd = TEAR_TIP.y + BULGE.y + CONFIG.fall;
+
+    // zoom: geometric, so it feels even; push far enough that the mouth stays out at the end
+    const zoomEnd = Math.max(CONFIG.zoom, (H / 2) / (base * (MOUTH_SAFE_Y - tearYEnd)));
+    const S = Math.pow(zoomEnd, e);
+    const fs = base * S;
+
+    // camera: the tear glides in a straight line from where it starts on screen to the
+    // centre while the camera zooms (zoom-toward-point). The face slides up behind it.
+    const c0x = PORTRAIT_W / 2;
+    const c0y = NOSE_HIDE_Y - (H / 2) / base;
+    const k0 = (1 - e) / S;
+    let cx = tearX - (tearX - c0x) * k0;
+    let cy = tearY - (tearY - c0y) * k0;
+    cy = Math.min(cy, MOUTH_SAFE_Y - (H / 2) / fs);   // the mouth never enters the frame
+
+    return { e, form, tearX, tearY, zoomEnd, S, fs, cx, cy, fx: W / 2 - cx * fs, fy: H / 2 - cy * fs };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Face bitmaps. Re-rasterising ~1,500 vector paths at a new size every frame is what
+  // made the zoom lag. Instead the portrait is drawn once per zoom band (each band covers
+  // a 2x range of sizes, cropped to what the camera sees during that band) and every
+  // frame just scales the matching bitmap into a canvas, which the GPU does cheaply.
+  // ---------------------------------------------------------------------------
+  const faceCanvas = $("faceCanvas"), fctx = faceCanvas.getContext("2d", { alpha: false });
+  const BG = getComputedStyle(document.documentElement).getPropertyValue("--color-text-grey-100").trim() || "#292d36";
+  let levels = [], dpr = 1, buildId = 0, builtFor = "", buildTimer = 0;
+
+  function scheduleBitmaps() {
+    const d = Math.min(window.devicePixelRatio || 1, 2);
+    const key = W + "x" + H + "@" + d;
+    if (key === builtFor) return;
+    builtFor = key;
+    clearTimeout(buildTimer);
+    buildTimer = setTimeout(buildBitmaps, levels.length ? 200 : 0); // debounce resizes
+  }
+
+  async function buildBitmaps() {
+    const id = ++buildId;
+    const d = Math.min(window.devicePixelRatio || 1, 2);
+    // plan: sample the camera path, group the frames into 2x size bands
+    const N = 240, samples = [];
+    for (let i = 0; i <= N; i++) {
+      const c = camera(i / N);
+      samples.push({ r: c.fs * d, x0: -c.fx / c.fs, y0: -c.fy / c.fs, x1: (W - c.fx) / c.fs, y1: (H - c.fy) / c.fs });
+    }
+    const rMin = Math.min(...samples.map((q) => q.r)), rMax = Math.max(...samples.map((q) => q.r));
+    const bands = Math.max(1, Math.ceil(Math.log2(rMax / rMin) - 1e-6));
+    const plan = [];
+    for (let b = 0; b < bands; b++) {
+      const lo = rMin * 2 ** b, hi = rMin * 2 ** (b + 1);
+      const inBand = samples.filter((q) => q.r >= lo * 0.999 && q.r <= hi * 1.001);
+      if (!inBand.length) continue;
+      let x0 = Math.min(...inBand.map((q) => q.x0)), y0 = Math.min(...inBand.map((q) => q.y0));
+      let x1 = Math.max(...inBand.map((q) => q.x1)), y1 = Math.max(...inBand.map((q) => q.y1));
+      const mx = (x1 - x0) * 0.04, my = (y1 - y0) * 0.04;         // slack for the scroll smoothing
+      x0 = Math.max(0, x0 - mx); y0 = Math.max(0, y0 - my);
+      x1 = Math.min(PORTRAIT_W, x1 + mx); y1 = Math.min(PORTRAIT_H, y1 + my);
+      if (x1 <= x0 || y1 <= y0) continue;
+      let r = Math.min(lo * Math.SQRT2, rMax, 1 / PHOTO.k);        // middle of the band, never past the photo's own pixels
+      const fit = Math.min(1, 8192 / ((x1 - x0) * r), 8192 / ((y1 - y0) * r), Math.sqrt(36e6 / ((x1 - x0) * (y1 - y0) * r * r)));
+      r *= fit;
+      plan.push({ lo, hi, r, x0, y0, w: Math.ceil((x1 - x0) * r), h: Math.ceil((y1 - y0) * r), bmp: null });
+    }
+
+    await faceDecoded.catch(() => {});
+    const fresh = [];
+    for (const L of plan) {
+      if (id !== buildId) break;
+      const c = document.createElement("canvas");
+      c.width = L.w; c.height = L.h;
+      const ctx = c.getContext("2d", { alpha: false });
+      ctx.fillStyle = BG;
+      ctx.fillRect(0, 0, L.w, L.h);
+      ctx.setTransform(L.r, 0, 0, L.r, -L.x0 * L.r, -L.y0 * L.r);
+      ctx.drawImage(face, 0, 0, PORTRAIT_W, PORTRAIT_H);
+      L.bmp = window.createImageBitmap ? await createImageBitmap(c) : c;
+      if (id !== buildId) { if (L.bmp.close) L.bmp.close(); break; }
+      fresh.push(L);
+      if (fresh.length === 1) {                                     // swap in as soon as one band exists
+        levels.forEach((o) => o.bmp && o.bmp.close && o.bmp.close());
+        levels = fresh;
+        dpr = d;
+        faceCanvas.width = Math.round(W * dpr);
+        faceCanvas.height = Math.round(H * dpr);
+        stage.classList.add("bitmaps");
+      }
+      rendered = -1;                                                // redraw with the new band
+      await new Promise((res) => setTimeout(res, 16));              // let a frame through between bands
+    }
+  }
+
+  function drawFace(fs, fx, fy) {
+    const r = fs * dpr;
+    let L = null, best = Infinity;
+    for (const o of levels) {
+      const d = r >= o.lo && r <= o.hi ? 0 : Math.abs(Math.log(r / o.r));
+      if (d < best) { best = d; L = o; }
+    }
+    fctx.setTransform(1, 0, 0, 1, 0, 0);
+    fctx.fillStyle = BG;
+    fctx.fillRect(0, 0, faceCanvas.width, faceCanvas.height);
+    fctx.imageSmoothingEnabled = true;
+    fctx.imageSmoothingQuality = "high";
+    const k = r / L.r;                                              // device px per bitmap px
+    fctx.drawImage(L.bmp, (L.x0 * fs + fx) * dpr, (L.y0 * fs + fy) * dpr, L.w * k, L.h * k);
+  }
+
+  // The tear outline in tear-element px (the element is the 14 x 28.2 drop drawn at 10x)
+  const DROP = new Path2D("M70 0C109.907 90.2228 139.558 149.417 140 198.213C140 307.68 0 306.843 0 198.213C1.01863 150.157 31.5112 90.5526 70 0Z");
+
+  // Shadow + lens, drawn into the face canvas in the tear element's coordinates
+  function paintGlass({ tx, ty, s, lx, ly, ls, form, shadowOp, lensFilter }) {
+    if (form <= 0.001) return;
+    const a = s * dpr, ox = tx * dpr, oy = ty * dpr;
+    // 1. soft shadow on her skin: offset (0.7, 1.5) and blur 0.7 tear units. The shape itself
+    //    is drawn off-canvas so only its shadow lands on the face.
+    const shadowA = shadowOp * form;
+    if (shadowA > 0.005) {
+      const off = faceCanvas.width + 140 * a + 1000;
+      fctx.save();
+      fctx.setTransform(a, 0, 0, a, ox + off, oy);
+      fctx.shadowColor = `rgba(0, 0, 0, ${shadowA.toFixed(3)})`;
+      fctx.shadowBlur = 2 * 7 * a;
+      fctx.shadowOffsetX = -off + 7 * a;
+      fctx.shadowOffsetY = 15 * a;
+      fctx.fillStyle = "#000";
+      fctx.fill(DROP);
+      fctx.restore();
+    }
+    // 2. the lens: the frosted bitmap, magnified around the bulge, clipped to the drop
+    if (lensBmp) {
+      fctx.save();
+      fctx.setTransform(a, 0, 0, a, ox, oy);
+      fctx.clip(DROP);
+      fctx.globalAlpha = form;
+      fctx.filter = lensFilter;
+      fctx.drawImage(lensBmp, lx, ly, PORTRAIT_W * ls, PORTRAIT_H * ls);
+      fctx.restore();
+    }
+  }
+
+  function render(t) {
+    const { e, form, tearX, tearY, zoomEnd, S, fs, cx, cy, fx, fy } = camera(t);
+    if (!levels.length) face.style.transform = `translate3d(${fx}px, ${fy}px, 0) scale(${fs})`;
+
+    // tear layer in front: grows faster than the face (parallax), then fills the screen
+    const fillScale = (1.3 * Math.hypot(W, H)) / 14;          // px per tear unit to cover the screen
+    const kEnd = Math.max(1, fillScale / (base * zoomEnd));
+    const k = Math.pow(kEnd, e * e * e);
+    const tearScale = fs * k * lerp(0.45, 1, form);           // px per tear unit
+    const sx = W / 2 + (tearX - cx) * fs, sy = H / 2 + (tearY - cy) * fs;
+    const s = tearScale / 10;                                 // the element is drawn at 10x
+    const tx = sx - BULGE.x * 10 * s, ty = sy - BULGE.y * 10 * s;
+    tear.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(${s})`;
+    tear.style.opacity = form.toFixed(3);
+
+    // --- glass: refraction (magnified face), frost, rim, dispersion; all build with scroll ---
+    const g = e;                                              // glass prominence
+    const m = lerp(1.18, 1.65, g);                            // refraction magnification
+    const lc = { x: 70, y: 206 };                             // lens centre (bulge) in tear px
+    const ls = (m * fs) / s;
+    const lx = lc.x * (1 - m) + (m * (fx - tx)) / s;
+    const ly = lc.y * (1 - m) + (m * (fy - ty)) / s;
+    const lensFilter = `brightness(${lerp(1.12, 1.3, g).toFixed(3)}) saturate(${lerp(1.0, 1.1, g).toFixed(3)})`;
+
+    const milk = smooth(CONFIG.milkFrom, CONFIG.whiteBy, t);
+    gWhite.setAttribute("opacity", lerp(0.24, 1, milk).toFixed(3));   // Figma fill is white 12%; a little more reads as glass on skin
+    gRim.setAttribute("opacity", lerp(0.55, 1, g).toFixed(3));
+    gDisp.setAttribute("opacity", (lerp(0.2, 0.55, g) * (1 - milk)).toFixed(3)); // Figma dispersion 0.85
+    gDepth.setAttribute("opacity", (lerp(0.45, 0.9, g) * (1 - milk)).toFixed(3));
+    gGlint.setAttribute("opacity", lerp(0.6, 0.95, g).toFixed(3));
+    gGlint2.setAttribute("opacity", lerp(0.35, 0.8, g).toFixed(3));
+    const shadowOp = 0.28 * form * (1 - smooth(0.55, 0.8, t));
+    if (levels.length) {
+      drawFace(fs, fx, fy);
+      paintGlass({ tx, ty, s, lx, ly, ls, form, shadowOp, lensFilter });
+    }
+
+    // --- copy rides up with the face and fades, final white ---
+    const lift = (H - NOSE_HIDE_Y * base) - (fy);              // how far the portrait top has moved up
+    const copyOut = smooth(0, CONFIG.copyOutBy, t);
+    copy.style.opacity = (1 - copyOut).toFixed(3);
+    copy.style.transform = `translate3d(0, ${-Math.max(0, lift) * 0.6}px, 0)`;
+    copy.style.visibility = copyOut >= 1 ? "hidden" : "visible";
+    const white = smooth(CONFIG.whiteBy - 0.04, CONFIG.whiteBy, t);
+    flash.style.opacity = white.toFixed(3);
+    const outroIn = smooth(CONFIG.outroFrom, 1, t);
+    outro.style.opacity = outroIn.toFixed(3);
+    outro.style.transform = `translate3d(0, ${(1 - outroIn) * 24}px, 0)`;
+    outro.style.visibility = outroIn <= 0 ? "hidden" : "visible";
+
+    if (debugOn) debug.textContent = `t ${t.toFixed(3)}  zoom ${S.toFixed(2)}  tear ${(form * 100).toFixed(0)}%  glass ${(g * 100).toFixed(0)}%  white ${(milk * 100).toFixed(0)}%`;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Reading. The paragraph is split into one span per character (screen readers get the
+  // plain text). Reading progress r (0..1) fills the characters in order with a soft edge
+  // CONFIG.readSoft characters wide, and moves the paragraph up so the line being filled
+  // sits in the middle of the screen: the text only scrolls as fast as it is being filled.
+  // ---------------------------------------------------------------------------
+  const outroText = $("outroText"), outroBlock = $("outroBlock");
+  const next = $("next"), cardsWrap = $("cardsWrap"), cardsRow = $("cardsRow");
+  const cardFrames = [...cardsRow.querySelectorAll("iframe")];
+  let cardsLoaded = false, cut = 0;               // cut: px clipped off the stage's bottom
+  const chars = [];
+  {
+    const text = outroText.textContent.trim().replace(/\s+/g, " ");
+    const sr = document.createElement("span");
+    sr.className = "sr-only";
+    sr.textContent = text;
+    const vis = document.createElement("span");
+    vis.setAttribute("aria-hidden", "true");
+    text.split(" ").forEach((w, i) => {
+      if (i) vis.append(" ");
+      const word = document.createElement("span");
+      word.className = "word";
+      for (const ch of w) {
+        const c = document.createElement("span");
+        c.className = "ch";
+        c.textContent = ch;
+        word.append(c);
+        chars.push(c);
+      }
+      vis.append(word);
+    });
+    outroText.replaceChildren(sr, vis);
+  }
+  const fills = new Float32Array(chars.length).fill(-1);
+  let lineStarts = [0], lineH = 56;                   // index of each line's first character
+
+  function measureLines() {
+    lineH = parseFloat(getComputedStyle(outroText).lineHeight) || lineH;
+    lineStarts = [0];
+    let top = chars.length ? chars[0].offsetTop : 0;
+    for (let i = 1; i < chars.length; i++) {
+      const t = chars[i].offsetTop;
+      if (t > top + lineH / 2) { lineStarts.push(i); top = t; }
+    }
+    readRendered = -1;
+  }
+  if (document.fonts) document.fonts.ready.then(() => { measure(); readScroll(); });
+
+  // Three cards side by side, scaled down to fit; stacked on narrow screens
+  function layoutCards() {
+    const stacked = W < 900;
+    const rowW = stacked ? 400 : 3 * 400 + 2 * 16, rowH = stacked ? 3 * 600 + 2 * 16 : 600;
+    const sc = Math.min(1, (W - 32) / rowW);
+    cardsRow.style.flexDirection = stacked ? "column" : "row";
+    cardsRow.style.transform = `scale(${sc})`;
+    cardsWrap.style.width = `${rowW * sc}px`;
+    cardsWrap.style.height = `${rowH * sc}px`;
+  }
+
+  // The cards load as they come into view, so their animations start there, and unload when
+  // you're back in the hero so they don't run behind the zoom (see frame()).
+  let cardsVisible = !window.IntersectionObserver;
+  if (window.IntersectionObserver) {
+    new IntersectionObserver((entries) => {
+      cardsVisible = entries[entries.length - 1].isIntersecting;
+    }).observe(cardsWrap);
+  }
+
+  // While the stage is pinned, hold the cards frame --frame-inset below the stage's bottom edge.
+  // Its margin-top already puts it there for the moment the stage unpins; before that it would sit
+  // lower by the pinned scroll still to go, and higher by how much less the edge has risen.
+  function placeNext(scrolled) {
+    const togo = Math.max(0, pinLen - scrolled);
+    const dy = (cutEnd - cut) - togo;
+    next.style.transform = Math.abs(dy) < 0.05 ? "" : `translate3d(0, ${dy.toFixed(2)}px, 0)`;
+  }
+
+  function renderRead(u) {
+    const readLen = H * CONFIG.readVh / 100;
+    const r = clamp(u / readLen);
+    const N = chars.length, soft = CONFIG.readSoft;
+    const head = r * (N + soft);                      // characters below head - soft are full
+    for (let i = 0; i < N; i++) {
+      const f = Math.round(clamp((head - i) / soft) * 100) / 100;
+      if (f !== fills[i]) { fills[i] = f; chars[i].style.setProperty("--f", f); }
+    }
+    // the middle of the soft edge, as a line + how far along that line
+    const c = clamp(head - soft / 2, 0, N);
+    let k = 0;
+    while (k + 1 < lineStarts.length && lineStarts[k + 1] <= c) k++;
+    const end = k + 1 < lineStarts.length ? lineStarts[k + 1] : N;
+    const along = clamp((c - lineStarts[k]) / Math.max(1, end - lineStarts[k]));
+    const y = (k + along * (k + 1 < lineStarts.length ? 1 : 0.5)) * lineH + lineH / 2;
+    outroBlock.style.transform = `translate3d(0, ${(-y).toFixed(2)}px, 0)`;
+
+    // the frame's bottom edge: endPad below the last line once that line comes up
+    const lastLineBottom = H / 2 - y + lineStarts.length * lineH;
+    const newCut = u > 0 ? Math.max(0, H - (lastLineBottom + CONFIG.endPad)) : 0;
+    if (Math.abs(newCut - cut) > 0.05 || (newCut === 0) !== (cut === 0)) {
+      cut = newCut;
+      stage.style.clipPath = cut > 0 ? `inset(0 0 ${cut.toFixed(2)}px 0 round var(--radius-4))` : "";
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Scroll -> progress, smoothed so the camera glides instead of stepping
+  // ---------------------------------------------------------------------------
+  const debugOn = new URLSearchParams(location.search).has("debug");
+  if (debugOn) debug.style.display = "block";
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let target = 0, current = 0, last = performance.now(), rendered = -1;
+  let uTarget = 0, uCurrent = 0, readRendered = -1;  // px scrolled past the move (the reading), smoothed
+  let scrolled = 0, nextPlaced = NaN;
+
+  function readScroll() {
+    const rect = track.getBoundingClientRect();
+    scrolled = pinTop - rect.top;                             // px scrolled since the stage pinned
+    const total = H * CONFIG.moveVh / 100;                   // the move ends here; then the reading
+    target = clamp(scrolled / total);
+    uTarget = clamp(scrolled - total, 0, H * CONFIG.readVh / 100);
+  }
+
+  function frame(now) {
+    const dt = Math.min(0.1, (now - last) / 1000);
+    last = now;
+    current = reduceMotion ? target : lerp(current, target, 1 - Math.exp(-dt * 9));
+    if (Math.abs(current - target) < 0.0002) current = target;
+    if (current !== rendered) { render(current); rendered = current; }
+    uCurrent = reduceMotion ? uTarget : lerp(uCurrent, uTarget, 1 - Math.exp(-dt * 7));
+    if (Math.abs(uCurrent - uTarget) < 0.05) uCurrent = uTarget;
+    if (uCurrent !== readRendered) {
+      renderRead(uCurrent); readRendered = uCurrent;
+      if (debugOn) debug.textContent = `read ${clamp(uCurrent / (H * CONFIG.readVh / 100)) * 100 | 0}%  edge cut ${cut | 0}px`;
+    }
+    const key = Math.min(scrolled, pinLen) * 1e4 + cut;     // re-place the cards frame when either moves
+    if (key !== nextPlaced) { placeNext(scrolled); nextPlaced = key; }
+    // load the cards when they're in view; unload them back in the hero (they replay later)
+    if (!cardsLoaded && cardsVisible && current >= 0.9) {
+      cardsLoaded = true;
+      cardFrames.forEach((f) => { f.src = f.dataset.src; });
+    } else if (cardsLoaded && current < 0.9) {
+      cardsLoaded = false;
+      cardFrames.forEach((f) => f.removeAttribute("src"));
+    }
+    requestAnimationFrame(frame);
+  }
+
+  addEventListener("scroll", readScroll, { passive: true });
+  addEventListener("resize", () => { measure(); readScroll(); render(current); nextPlaced = NaN; });
+  measure();
+  readScroll();
+  current = target;
+  render(current);
+  uCurrent = uTarget;
+  renderRead(uCurrent);
+  placeNext(scrolled);
+  requestAnimationFrame(frame);
+
+  // console helpers: teardrop.go(0.5) scrolls there, teardrop.render(0.5) jumps there,
+  // teardrop.read(0.5) scrolls to half way through the reading
+  window.teardrop = {
+    read: (p) => { scrollTo(0, H * (CONFIG.moveVh + clamp(p) * CONFIG.readVh) / 100); },
+    cards: () => { next.scrollIntoView({ block: "center" }); },
+    go: (p) => { scrollTo(0, clamp(p) * H * CONFIG.moveVh / 100); },
+    render: (p) => { target = current = rendered = p; render(p); },
+  };
+})();
+</script>
+</body>
+</html>

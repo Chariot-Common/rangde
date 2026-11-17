@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rang De – Credit gap card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+<style>
+  /* ---- Settings ---- */
+  :root {
+    color-scheme: light;
+    --page-bg: #E9E7E1;
+    --card-bg: #FFFFFF;
+    --card-border: #E4E1DA;
+    --visual-bg: #F1F2F5;
+    --ink: #2A2D37;
+    --muted: #5F6370;
+    --accent: #3A6E0C;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page-bg: #1B1D23; /* the card itself keeps its light design */
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+    background: var(--page-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .card {
+    width: 400px;
+    max-width: calc(100vw - 32px);
+    height: 600px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    color: var(--ink);
+  }
+
+  .visual {
+    position: relative;
+    height: 400px;
+    flex: none;
+    background: var(--visual-bg);
+    overflow: hidden;
+  }
+
+  .block {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform-origin: 0 0;
+    will-change: transform, opacity;
+  }
+
+  .line {
+    display: flex;
+    align-items: baseline;
+    white-space: nowrap;
+    font-size: 100px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+  }
+  .line > span { flex: none; }
+  .char { display: block; opacity: 0; }
+
+  .grow { display: flex; max-width: 0; opacity: 0; }
+  .grow > span { display: block; flex: none; width: max-content; }
+  .dash { justify-content: center; }
+  .dash-inner { padding: 0 0.04em; transform-origin: center 65%; }
+  .lakh-inner {
+    font-size: 0.42em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    padding-left: 0.28em;
+    color: var(--ink);
+    transform-origin: 0 70%;
+  }
+
+  .copy {
+    height: 200px;
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .copy h2 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .copy p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+</style>
+<style>
+  /* Added when copied into the teardrop page: the card sits in a 400 x 600 iframe there */
+  :root { color-scheme: light !important; }
+  html, body { background: transparent !important; }
+  .card { max-width: none !important; }
+</style>
+</head>
+<body>
+
+<article class="card">
+  <div class="visual" id="visual" role="img" aria-label="₹20–25 lakh crore: the credit gap faced by India’s small businesses.">
+    <div class="block" id="block" aria-hidden="true">
+      <div class="line" id="line1">
+        <!-- characters are inserted here -->
+        <span class="grow dash" id="dash"><span class="dash-inner" id="dashInner">–25</span></span>
+        <span class="grow lakh" id="lakh"><span class="lakh-inner" id="lakhInner">lakh crore</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="copy">
+    <h2>India’s small businesses face a ₹20–25 lakh crore gap in formal credit.</h2>
+    <p>Source: Reserve Bank of India, Report of the Expert Committee on MSMEs (2019)</p>
+  </div>
+</article>
+
+<script>
+(function () {
+  // ---- Settings ----
+  var LOOP = true;            // false = play once and hold the final frame
+  var D_MAX = 0.85;           // seconds per step for the first character (₹)
+  var D_MIN = 0.08;           // seconds per step at full speed
+  var COMMA_FACTOR = 0.55;    // commas move faster than digits
+  var MAX_SCALE = 3.2;        // how large the ₹ starts
+  var CAMERA_SMOOTH = 0.16;   // how much the zoom-out is smoothed (seconds); higher = smoother, starts earlier
+  var MARGIN_X = 32;          // side margin inside the frame
+
+  // ₹20 lakh crore in Indian digit grouping: ₹2,00,00,00,00,00,000
+  var CHARS = ['₹','2',',','0','0',',','0','0',',','0','0',',','0','0',',','0','0',',','0','0','0'];
+  var KEEP = { 0: true, 1: true, 3: true }; // ₹, 2 and the first 0 stay to form ₹20
+
+  var visual = document.getElementById('visual');
+  var block = document.getElementById('block');
+  var line1 = document.getElementById('line1');
+  var dash = document.getElementById('dash');
+  var dashInner = document.getElementById('dashInner');
+  var lakh = document.getElementById('lakh');
+  var lakhInner = document.getElementById('lakhInner');
+
+  function clamp(x) { return x < 0 ? 0 : (x > 1 ? 1 : x); }
+  function easeOut(p) { return 1 - Math.pow(1 - p, 3); }
+  function easeInOut(p) { return p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2; }
+  function easeOutBack(p) { var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); }
+
+  // ---- Character timing ----
+  var n = CHARS.length;
+  var sMin = 1 / D_MAX, sMax = 1 / D_MIN;
+  var t0 = 0.2, endDigits = 0;
+  var sched = CHARS.map(function (ch, i) {
+    var p = i / (n - 1);
+    var d = 1 / (sMin + (sMax - sMin) * easeOut(p)); // speed rises on an ease-out curve
+    if (ch === ',') d *= COMMA_FACTOR;
+    var rd = Math.max(d * 1.6, 0.14);                // each fade overlaps the next
+    var el = document.createElement('span');
+    el.className = 'char';
+    el.textContent = ch;
+    line1.insertBefore(el, dash);
+    var item = { el: el, start: t0, rd: rd, keep: !!KEEP[i] };
+    endDigits = Math.max(endDigits, t0 + rd);
+    t0 += d;
+    return item;
+  });
+
+  var Tc = endDigits + 0.6;   // collapse into "₹20 lakh crore"
+  var TZ = 1.0;               // length of the zoom back in
+  var Tp = Tc + 1.2;          // "–25" pops in between ₹20 and lakh crore
+  var endT = Tp + 0.6;
+  var cycleT = endT + 2.6;
+
+  // ---- Camera ----
+  // The characters never move relative to each other. A smooth camera pans and zooms over them.
+  var camTable = null, camDt = 1 / 120, wAll = 0, wFinal = 0, charW = [];
+
+  function buildCamera() {
+    // Width the frame must show from the moment each character starts to appear (a staircase)
+    var starts = [], widths = [], acc = 0, w = [];
+    for (var i = 0; i < sched.length; i++) {
+      w.push(sched[i].el.offsetWidth);
+      acc += w[i];
+      starts.push(sched[i].start);
+      widths.push(acc);
+    }
+    wAll = acc;
+    charW = w;
+    wFinal = w[0] + w[1] + w[3] + dashInner.offsetWidth + lakhInner.offsetWidth;
+    function needLog(t) {
+      var v = widths[0];
+      for (var k = 0; k < starts.length && starts[k] <= t; k++) v = widths[k];
+      return Math.log(v);
+    }
+    // Blur the staircase (in log space, so the zoom rate is even) into one continuous curve
+    var reach = Math.ceil(3 * CAMERA_SMOOTH / camDt), kern = [], ksum = 0, j;
+    for (j = -reach; j <= reach; j++) {
+      var v = Math.exp(-Math.pow(j * camDt, 2) / (2 * CAMERA_SMOOTH * CAMERA_SMOOTH));
+      kern.push(v); ksum += v;
+    }
+    var N = Math.ceil((Tc + 2) / camDt) + 2, smooth = new Float64Array(N);
+    for (var s = 0; s < N; s++) {
+      var sum = 0;
+      for (j = -reach; j <= reach; j++) sum += kern[j + reach] * needLog(s * camDt + j * camDt);
+      smooth[s] = sum / ksum;
+    }
+    // Shift the curve earlier just enough that every character is in frame as it starts to appear
+    var lead = 0, idx = 0;
+    for (var k = 0; k < starts.length; k++) {
+      var goal = Math.log(widths[k]) - 1e-4;
+      while (idx < N - 1 && smooth[idx] < goal) idx++;
+      lead = Math.max(lead, idx * camDt - starts[k]);
+    }
+    var shift = Math.round(lead / camDt);
+    camTable = new Float64Array(N);
+    for (s = 0; s < N; s++) camTable[s] = Math.exp(smooth[Math.min(N - 1, s + shift)]);
+  }
+
+  function visibleWidth(t) {
+    if (t >= Tc) return wAll + (wFinal - wAll) * easeInOut(clamp((t - Tc) / TZ));
+    if (t < 0) t = 0;
+    var f = t / camDt, i = Math.floor(f);
+    if (i >= camTable.length - 1) return camTable[camTable.length - 1];
+    return camTable[i] + (camTable[i + 1] - camTable[i]) * (f - i);
+  }
+
+  // Width actually on screen, which the camera centres
+  function onScreenWidth(t) {
+    if (t < Tc) return visibleWidth(t);
+    var k = easeInOut(clamp((t - Tc) / 0.8));
+    var L = easeOut(clamp((t - Tc - 0.25) / 0.7));
+    var P = clamp((t - Tp) / 0.55);
+    var C = dashInner.offsetWidth * easeOut(clamp(P / 0.7)) + lakhInner.offsetWidth * L;
+    for (var i = 0; i < charW.length; i++) C += sched[i].keep ? charW[i] : charW[i] * (1 - k);
+    return C;
+  }
+
+  function applyCamera(t) {
+    var fw = visual.clientWidth, fh = visual.clientHeight;
+    var V = visibleWidth(t); // sets the zoom (sized for the final "₹20–25 lakh crore" after the collapse)
+    var a = (fw - 2 * MARGIN_X) / V, b = MAX_SCALE;
+    var s = Math.pow(Math.pow(a, -4) + Math.pow(b, -4), -0.25); // smooth minimum
+    var tx = fw / 2 - s * onScreenWidth(t) / 2;
+    var ty = fh / 2 - s * line1.offsetHeight / 2;
+    block.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')';
+  }
+
+  // ---- Characters ----
+  function render(t) {
+    var k = easeInOut(clamp((t - Tc) / 0.8));
+    for (var i = 0; i < sched.length; i++) {
+      var c = sched[i];
+      var q = easeOut(clamp((t - c.start) / c.rd));
+      var fs = 1, op = q;
+      if (!c.keep) { fs = 1 - k; op = q * (1 - clamp(k * 1.6)); }
+      c.el.style.fontSize = fs + 'em';
+      c.el.style.opacity = op;
+    }
+    var L = easeOut(clamp((t - Tc - 0.25) / 0.7));
+    lakh.style.maxWidth = (lakhInner.offsetWidth * L) + 'px';
+    lakh.style.opacity = L;
+    lakhInner.style.transform = 'scale(' + (0.3 + 0.7 * L) + ')';
+
+    var P = clamp((t - Tp) / 0.55);
+    dash.style.maxWidth = (dashInner.offsetWidth * easeOut(clamp(P / 0.7))) + 'px';
+    dash.style.opacity = clamp(P * 2.5);
+    dashInner.style.transform = 'scale(' + (0.4 + 0.6 * easeOutBack(P)) + ')';
+
+    block.style.opacity = LOOP ? 1 - clamp((t - (cycleT - 0.45)) / 0.4) : 1;
+  }
+
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var start = null;
+  function tick(now) {
+    if (start === null) start = now;
+    var t = (now - start) / 1000;
+    if (LOOP && t > cycleT) { start = now; t = 0; }
+    else if (!LOOP && t > endT) t = endT;
+    render(t);
+    applyCamera(t);
+    requestAnimationFrame(tick);
+  }
+
+  // Start once fonts are ready so the measurements are right
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
+    .then(function () {
+      buildCamera();
+      if (reduce) { render(endT); applyCamera(endT); return; }
+      requestAnimationFrame(tick);
+    });
+})();
+</script>
+</body>
+</html>
