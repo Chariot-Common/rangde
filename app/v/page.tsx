@@ -59,6 +59,14 @@ const VERSIONS = [
     measure: "Scroll depth, sign-ups vs. Version 1",
   },
   {
+    key: "SC",
+    name: "Stark contrast (concept)",
+    href: "/v/stark-contrast-approach",
+    audience: "First-time visitors, problem first",
+    idea: "Hero only, as a scroll prototype: “65% of India’s Population faces a silent epidemic” over a portrait cropped at her eyes; one scroll glides the camera into a glass tear under her eye while her face slides up behind it, until the screen turns white (Figma 3041:185).",
+    measure: "Scroll depth past the hero",
+  },
+  {
     key: "3",
     name: "Less said",
     href: "/v/v3",
