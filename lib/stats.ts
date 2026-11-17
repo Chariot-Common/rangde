@@ -12,6 +12,14 @@ export interface RangDeStats {
   principalRepaidPct: number;
   /** States with active loans. */
   states: number;
+  /** Share of borrowers who are women, %. */
+  womenPct: number;
+  /** Field partners. */
+  partners: number;
+  /** Jobs created, as rangde.in reports it. */
+  jobs: number;
+  /** Total repaid to investors, in crore rupees. */
+  repaidCr: number;
 }
 
 /** Captured from rangde.in/stats/v2 on 14 Oct 2026 — only used if the live request fails. */
@@ -22,6 +30,10 @@ export const STATS_SNAPSHOT: RangDeStats = {
   investorsAbroad: 1_320,
   principalRepaidPct: 99.71,
   states: 29,
+  womenPct: 70.93,
+  partners: 228,
+  jobs: 33_903,
+  repaidCr: 110.49,
 };
 
 const STATS_URL = "https://rangde.in/stats/v2";
@@ -39,6 +51,10 @@ export async function getRangDeStats(): Promise<RangDeStats> {
       investorsAbroad: num(d.totalNoOfNRIandOCIs),
       principalRepaidPct: Math.round((100 - num(d.writtenOffPrincipalPct)) * 100) / 100,
       states: num(d.activeLoanStatesCount),
+      womenPct: num(d.femaleBorrowerPercentage),
+      partners: num(d.totalPartnersCnt),
+      jobs: num(d.noOfJobCreated),
+      repaidCr: Math.round((num(d.totalRepaidAmount) / 1e7) * 100) / 100,
     };
     // Any field that didn't parse falls back to the snapshot rather than showing NaN.
     for (const k of Object.keys(stats) as (keyof RangDeStats)[]) {

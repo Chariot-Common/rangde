@@ -113,7 +113,8 @@ function CountUp({ to, decimals = 0, run }: { to: number; decimals?: number; run
   return <span className="tabular-nums">{decimals ? shown.toFixed(decimals) : Math.round(shown).toLocaleString("en-IN")}</span>;
 }
 
-export function WhyProof() {
+/** `title`: the heading, given the live count (defaults to the loop wording used on /v/why). */
+export function WhyProof({ title }: { title?: (entrepreneurs: string) => string } = {}) {
   const stats = useRangDeStats();
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
@@ -131,7 +132,7 @@ export function WhyProof() {
         <Rise className="flex flex-col gap-4">
           <Label className="text-[#c6e87a]">It’s already working</Label>
           <h2 className="max-w-[900px] font-display text-[36px] font-extrabold leading-[1.02] tracking-[-0.035em] text-white [text-wrap:balance] md:text-[64px]">
-            Since 2019, this loop has been completed {stats.entrepreneurs.toLocaleString("en-IN")} times.
+            {title ? title(stats.entrepreneurs.toLocaleString("en-IN")) : `Since 2019, this loop has been completed ${stats.entrepreneurs.toLocaleString("en-IN")} times.`}
           </h2>
         </Rise>
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:gap-x-10 lg:grid-cols-4 lg:gap-x-12">

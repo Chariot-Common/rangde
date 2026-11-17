@@ -96,10 +96,11 @@ export const CHAPTERS = [
   { id: "ch-investors", label: "Our investors" },
 ] as const;
 
-export function ChapterPill() {
+/** `chapters`: the page's own list (defaults to /v/why's). */
+export function ChapterPill({ chapters = CHAPTERS }: { chapters?: readonly { id: string; label: string }[] } = {}) {
   const [active, setActive] = useState(-1);
   useEffect(() => {
-    const els = CHAPTERS.map((c) => document.getElementById(c.id));
+    const els = chapters.map((c) => document.getElementById(c.id));
     const onScroll = () => {
       const mid = window.innerHeight * 0.4;
       let cur = -1;
@@ -118,7 +119,7 @@ export function ChapterPill() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
+  }, [chapters]);
 
   // As on realfood.gov: the chapter in view shows its name, the others a dot. Nothing is scaled, so nothing stretches: the
   // name's box opens from 0 to the text's own width while the text fades in, and the dot shrinks evenly to nothing.
@@ -135,7 +136,7 @@ export function ChapterPill() {
             transition={{ duration: 0.3, ease: EASE }}
             className="pointer-events-auto mt-3 flex h-[42px] items-center rounded-full bg-[#2a2620]/88 px-[14px] text-[#fbf8ef] shadow-[0_6px_24px_rgba(0,0,0,0.25)] backdrop-blur-md"
           >
-            {CHAPTERS.map((c, i) => {
+            {chapters.map((c, i) => {
               const on = i === active;
               return (
                 <a
