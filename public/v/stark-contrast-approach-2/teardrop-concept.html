@@ -146,8 +146,10 @@
   /* Hero copy (screen space so it wraps on small screens) */
   .copy {
     position: absolute; left: 0; right: 0; top: 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 0 16px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center;
+    justify-content: safe center;   /* on very short screens overflow goes down, never off the top */
+    padding: 0 var(--space-4);
     text-align: center;
     pointer-events: none;
   }
@@ -160,7 +162,10 @@
     margin: 0;
     color: var(--color-white-100);
     font-weight: var(--font-weight-black);
-    font-size: min(var(--hero-title-size), 12vw);   /* 92px; smaller only on narrow screens */
+    /* 92px in the 810px frame; below that the size scales with the frame so the title keeps
+       its two lines instead of wrapping to a third and running into the portrait */
+    font-size: min(var(--hero-title-size),
+      calc((100vw - 2 * var(--frame-inset) - 2 * var(--space-4)) * 92 / 810));
     line-height: calc(var(--hero-title-line) / var(--hero-title-size)); /* 94 / 92 */
     letter-spacing: 0;
     font-feature-settings: "dlig" 1, "lnum" 1, "pnum" 1;
