@@ -1,0 +1,14 @@
+/*
+ * Global rules for /v/fourth-wall-approach only. They key off the page's own marker ([data-fw-page] on its <main>), so
+ * they stop applying the moment you leave the page, even though Next keeps this stylesheet loaded.
+ */
+
+/* No "Live Q&A with our founders" band above the nav on this page (the layout renders it just before the <header>). */
+body:has([data-fw-page]) div:has(+ header.sticky) {
+  display: none;
+}
+
+/* The whole page on white. */
+body:has([data-fw-page]) {
+  background: var(--color-white-100);
+}
