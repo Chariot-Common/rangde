@@ -60,7 +60,10 @@
 .problem { position: sticky; padding: 120px 160px; --pill-gap: 456px; }
 .inkLine { display: block; }
 .problem .display { font-size: clamp(36px, 5vw, 72px); }
-.problemCopy { position: relative; display: flex; flex-direction: column; gap: 24px; align-items: center; width: 100%; max-width: 1040px; }
+.problemCopy { position: relative; display: flex; flex-direction: column; gap: 24px; align-items: center; width: 100%; max-width: 1200px; }
+/* Each headline line stays whole (the copy is wide enough for it at every laptop size), so the breaks never jump as the
+   note opens and the heading's width changes. */
+.problem .inkLine { white-space: nowrap; }
 .morph {
   position: relative; display: inline-block; vertical-align: bottom;
   height: var(--text-p1--line-height); white-space: nowrap;
@@ -129,7 +132,7 @@
 .lineR img { left: 0; }
 .lineL img { right: 0; }
 
-.catchPin { position: relative; height: 420vh; }
+.catchPin { position: relative; height: 520vh; }
 .catchStage {
   position: sticky;
   top: calc(var(--navbar-bottom) + 8px); /* refined by CatchSequence.tsx */
@@ -138,14 +141,17 @@
   justify-content: flex-start;
   --delta: 140px;
 }
-/* As the strip comes in, the two lines part (up / down), shrink to 60%, blur and fade to 8%, leaving room above and below. */
+/* As the strip comes in, the two lines part (up / down), shrink to 60%, blur fully and fade to 8%, leaving room above and below. */
 .catchTop, .catchBottom {
   position: absolute; left: 50%; top: 50%;
   width: min(1120px, 100% - 48px);
   opacity: calc(1 - var(--open, 0) * 0.92);
-  filter: blur(calc(var(--open, 0) * 5px));
+  filter: blur(calc(var(--open, 0) * 24px));
   will-change: transform, opacity, filter;
 }
+/* The second line is primary blue: primary blue 24 until it fills in to primary blue 100. */
+.catchBottom :global(.text-primary-64) { color: var(--color-primary-24); }
+.catchBlue { color: var(--color-primary-100); }
 .catchTop { transform-origin: 50% 100%; transform: translate(-50%, calc(-100% - 16px - var(--open, 0) * var(--delta))) scale(calc(1 - var(--open, 0) * 0.4)); }
 .catchBottom { transform-origin: 50% 0%; transform: translate(-50%, calc(16px + var(--open, 0) * var(--delta))) scale(calc(1 - var(--open, 0) * 0.4)); }
 .catchMiddle { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 32px; }
@@ -156,6 +162,10 @@
 .swapLabel { display: inline-grid; justify-items: center; }
 .swapLabel > span { grid-area: 1 / 1; white-space: nowrap; }
 .catchStatic { display: none; flex-direction: column; gap: 8px; }
+
+/* ---------- 06 Solution + 07 Miscellaneous: one bg grey section, 8px corners ---------- */
+.solutionGroup { display: flex; flex-direction: column; width: 100%; background: var(--color-bg-grey); border-radius: var(--radius-4); overflow: hidden; }
+.solutionGroup .card { background: var(--color-white-100); }
 
 /* ---------- 06 Solution (Version 2's How it works) ---------- */
 .solution { display: flex; flex-direction: column; align-items: center; gap: 80px; padding: 80px 24px; }
@@ -180,7 +190,7 @@
 
 /* Narrower laptops: a slightly smaller note and gap, so the opened line still fits the screen (note stays on two lines). */
 @media (max-width: 1300px) {
-  .problem { --pill-gap: 400px; }
+  .problem { --pill-gap: 400px; padding-left: 80px; padding-right: 80px; }
   .pill { width: 380px; font-size: 14px; line-height: 20px; }
 }
 
@@ -204,6 +214,7 @@
   .problem { --pill-gap: 0px; }
   .deskBreak { display: none; }
   .openLine { display: block; white-space: normal; }
+  .problem .inkLine { white-space: normal; }
   .pillGap { display: block; width: auto !important; height: auto; margin-top: 16px; }
   .pill { position: static; translate: none; display: block; width: auto; max-width: 343px; margin: 0 auto; }
   .problemPin::after { display: none; }

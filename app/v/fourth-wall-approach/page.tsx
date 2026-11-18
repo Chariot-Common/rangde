@@ -11,7 +11,6 @@ import { HowItWorks } from "./HowItWorks";
 import { InkLines } from "./ink";
 import { Problem } from "./Problem";
 import { ProofJourney } from "./ProofJourney";
-import { ScrollSteps } from "./ScrollSteps";
 import s from "./page.module.css";
 // Page-only rules (no announcement band, white page), scoped to this page's marker: see the file.
 import "./fourth-wall.css";
@@ -39,12 +38,13 @@ export default function FourthWallApproach() {
   return (
     <>
       <main className={s.page} data-fw-page="">
-        <ScrollSteps />
         <Hero />
         <Problem />
         <ProofJourney />
         <CatchSequence />
 
+        {/* 06 Solution and 07 Miscellaneous, with the divider between them, as one bg grey section. */}
+        <div className={s.solutionGroup}>
         {/* 06 Solution: Version 2's How it works (a private copy, ./HowItWorks), under this page's heading. */}
         <HowItWorks
           swipe
@@ -75,6 +75,7 @@ export default function FourthWallApproach() {
             </div>
           </div>
         </section>
+        </div>
       </main>
 
       {/* From Version 2, as it is there (they bring their own 8px side margins), headings at this page's size. */}

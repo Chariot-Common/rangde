@@ -37,7 +37,8 @@ export function Hero() {
   const rowRef = useRef<HTMLDivElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | null>(null);
-  const [tip, setTip] = useState<{ i: number; x: number; y: number; on: boolean } | null>(null);
+  // Which photo's caption shows (re-renders only when that changes); its position is set straight on the element.
+  const [tip, setTip] = useState<{ i: number; on: boolean } | null>(null);
 
   // The hero fills the screen below the header (measured once, and again only when the width changes, so the
   // phone's collapsing address bar doesn't make the photos jump while scrolling).
@@ -69,7 +70,8 @@ export function Hero() {
     let y = e.clientY - r.top + TIP_GAP;
     if (y + th > r.height - 8) y = e.clientY - r.top - TIP_GAP - th;
     y = Math.max(8, y);
-    setTip({ i, x, y, on: true });
+    if (tipRef.current) tipRef.current.style.transform = `translate(${x}px, ${y}px)`;
+    setTip((t) => (t && t.i === i && t.on ? t : { i, on: true }));
   };
 
   return (
@@ -82,7 +84,7 @@ export function Hero() {
       <div ref={rowRef} className={s.heroPhotos} onPointerLeave={() => setTip((t) => (t ? { ...t, on: false } : t))}>
         {PHOTOS.map((p, i) => (
           <div key={p.file} className={s.heroPhoto} onPointerMove={move(i)} onPointerEnter={move(i)}>
-            <img src={`${A}/${p.file}.webp`} alt={p.alt} />
+            <img src={`${A}/${p.file}.webp`} alt={p.alt} width={1000} height={1000} fetchPriority="high" decoding="async" />
           </div>
         ))}
         <div
@@ -91,7 +93,7 @@ export function Hero() {
           aria-hidden={!tip?.on}
           className={s.heroTip}
           data-on={tip?.on ? "" : undefined}
-          style={{ transform: `translate(${tip?.x ?? 0}px, ${tip?.y ?? 0}px)`, maxWidth: TIP_W }}
+          style={{ maxWidth: TIP_W }}
         >
           {tip ? PHOTOS[tip.i].text : ""}
         </div>

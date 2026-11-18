@@ -50,12 +50,8 @@ function MorphSlot({ value, options }: { value: string; options: string[] }) {
 
 const LINES = ["In rural India, it’s extremely", "difficult for business owners", "to get a formal", "loan."];
 
-/**
- * 02 Problem. The section pins in the middle of the screen. Arriving, it reads as one sentence ("…to get a formal
- * loan."); scrolling on while it's pinned, "to get a formal" slides left, "loan." slides right, and the note grows out
- * of the gap between them.
- */
-export function Problem() {
+/** "Our country has a(n) ___ problem": its own component, so the word changing every 2s re-renders only this line. */
+function MorphingLine() {
   const [i, setI] = useState(0);
   const reduce = useReducedMotion();
   useEffect(() => {
@@ -64,7 +60,19 @@ export function Problem() {
     return () => clearInterval(id);
   }, [reduce]);
   const word = WORDS[i];
+  return (
+    <p className={`${s.p1} ${s.onDarkMuted}`}>
+      Our country has <MorphSlot value={article(word)} options={["a", "an"]} /> <MorphSlot value={word} options={WORDS} /> problem
+    </p>
+  );
+}
 
+/**
+ * 02 Problem. The section pins in the middle of the screen. Arriving, it reads as one sentence ("…to get a formal
+ * loan."); scrolling on while it's pinned, "to get a formal" slides left, "loan." slides right, and the note grows out
+ * of the gap between them.
+ */
+export function Problem() {
   const pinRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLHeadingElement>(null);
   const progress = useMotionValue(0);
@@ -99,12 +107,10 @@ export function Problem() {
   const parts = shares(LINES);
 
   return (
-    <div ref={pinRef} className={s.problemPin} data-fw-pin="0,1">
+    <div ref={pinRef} className={s.problemPin}>
       <section className={`${s.section} ${s.dark} ${s.problem}`}>
         <div className={s.problemCopy}>
-          <p className={`${s.p1} ${s.onDarkMuted}`}>
-            Our country has <MorphSlot value={article(word)} options={["a", "an"]} /> <MorphSlot value={word} options={WORDS} /> problem
-          </p>
+          <MorphingLine />
           <h2 ref={headRef} className={`${s.display} ${s.onDark}`}>
             <InkPiece text={LINES[0]} drive={ink} from={parts[0][0]} to={parts[0][1]} tone="white" className={s.inkLine} />
             <InkPiece text={LINES[1]} drive={ink} from={parts[1][0]} to={parts[1][1]} tone="white" className={s.inkLine} />

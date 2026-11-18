@@ -1,14 +1,16 @@
 "use client";
+import { useMotionValue, useSpring, useTransform } from "motion/react";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { InkLines } from "./ink";
 import { CATCH_BOTTOM, CATCH_TOP, HistoryVisual, Line, PenStack, ProofStack, Step } from "./parts";
-import { pinProgress, pinTop } from "./pin";
+import { pinProgress, pinScrollAt, pinTop } from "./pin";
 import s from "./page.module.css";
 
 /*
  * 05 Catch sequence, pinned to the screen while it scrolls (laptops; phones and tablets get the three states stacked).
- *   Stage 0  "You need credit…" / "You need a credit history…" together, then, scrubbed by the scroll, the two lines
- *            part (up and down) and fade to 8%.
+ *   Stage 0  "You need credit…" fills in white, letter by letter, as it arrives; only once it is full does "You need a
+ *            credit history…" fill in (primary blue 24 → 100), while the section is pinned. Then, scrubbed by the scroll,
+ *            the two lines part (up and down), blur fully and fade to 8%.
  *   Stage 1  "It's easier for people in urban areas", then the urban strip, left to right, quickly.
  *   Stage 2  The strip slides right; everything after "Valid Proof" fades out on the way, "Valid Proof" lands where the
  *            rural strip ends and becomes "No Valid Proof"; the rural strip then builds right to left.
@@ -42,10 +44,11 @@ const TRAVEL = 3 * P + 4 * P; // Valid Proof: from -4P to +3P (the rural strip i
 const STRIP_W = 9 * P + 24; // urban strip, outer edge to outer edge
 
 // Scroll thresholds through the pinned stretch (0 → 1).
-const OPEN_FROM = 0.06;
-const OPEN_TO = 0.28;
-const URBAN_AT = 0.3;
-const RURAL_AT = 0.62;
+const FILL_END = 0.2; // the second line is full
+const OPEN_FROM = 0.24;
+const OPEN_TO = 0.42;
+const URBAN_AT = 0.44;
+const RURAL_AT = 0.7;
 
 function piece(x: number, opacity: number, ms: { t: number; o: number; d: number; od?: number }): CSSProperties {
   return {
@@ -59,6 +62,12 @@ export function CatchSequence() {
   const outerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [stage, setStage] = useState(0);
+  // The two lines' fill, 0 → 1: from the section's top 60% of the way down the screen until FILL_END of the pin.
+  // The first line takes the first half, the second line the second half, so it only starts once the first is full.
+  const fillRaw = useMotionValue(0);
+  const fill = useSpring(fillRaw, { stiffness: 70, damping: 22, restDelta: 0.0005 });
+  const fillTop = useTransform(fill, [0, 0.5], [0, 1], { clamp: true });
+  const fillBottom = useTransform(fill, [0.5, 1], [0, 1], { clamp: true });
 
   useEffect(() => {
     const outer = outerRef.current;
@@ -69,6 +78,9 @@ export function CatchSequence() {
       raf = 0;
       panel.style.top = `${pinTop(panel)}px`;
       const p = pinProgress(outer);
+      const from = outer.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.6;
+      const to = pinScrollAt(outer, FILL_END);
+      fillRaw.set(Math.min(1, Math.max(0, (window.scrollY - from) / Math.max(1, to - from))));
       const open = Math.min(1, Math.max(0, (p - OPEN_FROM) / (OPEN_TO - OPEN_FROM)));
       panel.style.setProperty("--open", String(open));
       // The urban strip is 1176px; scale it down to fit narrower laptops.
@@ -86,15 +98,15 @@ export function CatchSequence() {
       window.removeEventListener("scroll", kick);
       window.removeEventListener("resize", kick);
     };
-  }, []);
+  }, [fillRaw]);
 
   return (
     <>
-      <div ref={outerRef} className={s.catchPin} data-fw-pin="0,0.45,0.8">
+      <div ref={outerRef} className={s.catchPin}>
         <section ref={stageRef} className={`${s.section} ${s.dark} ${s.catchStage}`} data-stage={stage}>
-          {/* Filled in white as they arrive; as the strip comes in they part, shrink, blur and fade to 8%. */}
-          <InkLines lines={CATCH_TOP} tone="white" className={`${s.display} ${s.catchTop}`} />
-          <InkLines lines={CATCH_BOTTOM} tone="white" className={`${s.display} ${s.catchBottom}`} />
+          {/* Filled in one after the other (white, then primary blue); as the strip comes in they part, shrink, blur and fade to 8%. */}
+          <InkLines lines={CATCH_TOP} tone="white" drive={fillTop} className={`${s.display} ${s.catchTop}`} />
+          <InkLines lines={CATCH_BOTTOM} tone="blue" drive={fillBottom} className={`${s.display} ${s.catchBottom}`} />
 
           <div className={s.catchMiddle}>
             <div className={s.catchHeads}>
@@ -159,7 +171,7 @@ export function CatchSequence() {
         <section className={`${s.section} ${s.dark} ${s.catch}`}>
           <div className={s.catchCopy}>
             <h2 className={`${s.display} ${s.onDark}`}>{CATCH_TOP.join(" ")}</h2>
-            <h2 className={`${s.display} ${s.onDark}`}>{CATCH_BOTTOM.join(" ")}</h2>
+            <h2 className={`${s.display} ${s.catchBlue}`}>{CATCH_BOTTOM.join(" ")}</h2>
           </div>
         </section>
         <section className={`${s.section} ${s.dark} ${s.catch}`}>

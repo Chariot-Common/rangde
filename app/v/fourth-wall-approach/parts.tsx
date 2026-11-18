@@ -21,7 +21,7 @@ export const CROPS = {
 export function Thumb({ src, crop, h = 72, className = "" }: { src: string; crop?: Crop; h?: number; className?: string }) {
   return (
     <div className={`${s.thumb} ${className}`} style={{ height: h }}>
-      <img
+      <img loading="lazy" decoding="async"
         src={src}
         alt=""
         style={crop ? { height: crop.h, width: crop.w, left: crop.left, top: crop.top } : { inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
@@ -50,11 +50,11 @@ export function PenStack() {
   return (
     <div className={s.stack} style={{ width: 131, height: 117 }}>
       <div style={{ left: 0, top: 0, width: 59.028, height: 100.285, overflow: "hidden" }}>
-        <img src={`${A}/pen.webp`} alt="" style={{ position: "absolute", height: "99.6%", width: "169.21%", left: "-34.41%", top: "0.13%", maxWidth: "none" }} />
+        <img loading="lazy" decoding="async" src={`${A}/pen.webp`} alt="" style={{ position: "absolute", height: "99.6%", width: "169.21%", left: "-34.41%", top: "0.13%", maxWidth: "none" }} />
       </div>
       <div style={{ left: 26.6, top: 2.8, width: 104.398, height: 114.416, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ transform: "rotate(-55.85deg)", width: 97.586, height: 59.955, position: "relative", overflow: "hidden" }}>
-          <img src={`${A}/pen-2.webp`} alt="" style={{ position: "absolute", height: "166.59%", width: "102.35%", left: "-1.18%", top: "-33.79%", maxWidth: "none" }} />
+          <img loading="lazy" decoding="async" src={`${A}/pen-2.webp`} alt="" style={{ position: "absolute", height: "166.59%", width: "102.35%", left: "-1.18%", top: "-33.79%", maxWidth: "none" }} />
         </div>
       </div>
     </div>
@@ -64,7 +64,7 @@ export function PenStack() {
 export function HistoryVisual() {
   return (
     <div className={s.thumb} style={{ width: 131, height: 102 }}>
-      <img src={PASSBOOK} alt="" style={{ height: "136.99%", width: "100%", left: 0, top: "-20.86%" }} />
+      <img loading="lazy" decoding="async" src={PASSBOOK} alt="" style={{ height: "136.99%", width: "100%", left: 0, top: "-20.86%" }} />
     </div>
   );
 }
@@ -82,7 +82,7 @@ export function Step({ label, children }: { label: ReactNode; children: ReactNod
 export function Line({ dir }: { dir: "r" | "l" }) {
   return (
     <div className={`${s.line} ${dir === "r" ? s.lineR : s.lineL}`}>
-      <img src={`${A}/${dir === "r" ? "line-2" : "line-3"}.svg`} alt="" />
+      <img loading="lazy" decoding="async" src={`${A}/${dir === "r" ? "line-2" : "line-3"}.svg`} alt="" />
     </div>
   );
 }

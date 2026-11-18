@@ -9,7 +9,7 @@ import { ScrollInk } from "@/components/versions/ScrollInk";
  * so a heading broken into parts still fills as one sentence, left to right.
  */
 
-type Tone = "grey" | "white";
+type Tone = "grey" | "white" | "blue";
 
 /** 0 → 1 as the element's top rises from the bottom of the screen to just above the middle, smoothed like ScrollInk's own. */
 export function useInkDrive(ref: RefObject<HTMLElement | null>, offset: [`start ${number}`, `start ${number}`] = ["start 1", "start 0.55"]) {

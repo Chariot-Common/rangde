@@ -1,6 +1,5 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
-import { animate, useMotionValue } from "motion/react";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { InkLines } from "./ink";
 import { centreScrollFor } from "./pin";
@@ -10,9 +9,10 @@ import s from "./page.module.css";
 /*
  * 03 Why and 04 Contrast, which share the three proof objects (salary slip, ID card, passbook).
  * In Why they bob gently on their own, lean a little towards the pointer, and hovering one turns its phrase green.
- * Scrolling on, they float down on a loose, wobbly path into the left column of the Contrast table (scrubbed by the
- * scroll, easing out), shrinking to icon size. Contrast waits as a loading skeleton until the third row's bottom is on
- * screen, the moment they land; then its words fade in quickly, left column first, then the rural column.
+ * Scrolling on, they float down on a loose, wobbly path into the left column of the Contrast table (following the
+ * scroll, but trailing it smoothly so a quick scroll doesn't fling them), shrinking to icon size. The table's words wait
+ * in text grey 24 until they land, then turn text grey 100 quickly, left column first. The Contrast heading fills in
+ * with the scroll like every other heading.
  */
 
 type Obj = {
@@ -58,8 +58,6 @@ export function ProofJourney() {
   const endRef = useRef<HTMLDivElement>(null);
   const scatterRef = useRef<HTMLDivElement>(null);
   const blockRef = useRef<HTMLDivElement>(null);
-  // The Contrast heading fills in (text grey 24 → 100, letter by letter) once the objects have landed.
-  const headInk = useMotionValue(0);
   const whySlots = useRef<(HTMLDivElement | null)[]>([]);
   const iconSlots = useRef<(HTMLDivElement | null)[]>([]);
   const flyers = useRef<(HTMLDivElement | null)[]>([]);
@@ -68,11 +66,6 @@ export function ProofJourney() {
   const [hover, setHover] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   useEffect(() => {
-    const a = animate(headInk, revealed ? 1 : 0, { duration: revealed ? 0.7 : 0.3, ease: "easeOut" });
-    return () => a.stop();
-  }, [revealed, headInk]);
-
-  useEffect(() => {
     const wrap = wrapRef.current;
     if (!wrap) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -80,6 +73,10 @@ export function ProofJourney() {
     let raf = 0;
     let visible = false;
     let shown = false;
+    // The flight trails the scroll: `smooth` eases towards where the scroll says it should be (time constant TRAIL s).
+    let smooth = -1;
+    let last = 0;
+    const TRAIL = 0.45;
 
     const measure = () => {
       const w = wrap.getBoundingClientRect();
@@ -105,15 +102,29 @@ export function ProofJourney() {
       });
     };
 
-    /** Where the flight is (0–1). Start and end are read fresh each time: anything above (the Problem pin, fonts,
-     * images) can move them. Also flips the table to full colour once they've landed (back to grey 24 well above). */
+    /** Where the scroll says the flight should be (0–1). Start and end are read fresh each time: anything above (the
+     * Problem pin, fonts, images) can move them. */
     const flight = (g: Geo) => {
       if (scatterRef.current && blockRef.current) {
         g.start = centreScrollFor(scatterRef.current);
         g.end = Math.max(centreScrollFor(blockRef.current), g.start + 200);
       }
-      const p = clamp01((window.scrollY - g.start) / (g.end - g.start));
+      return clamp01((window.scrollY - g.start) / (g.end - g.start));
+    };
+
+    const frame = (t: number) => {
+      raf = 0;
+      const g = geo.current;
+      if (!g) return;
+      const target = flight(g);
+      const dt = last ? Math.min(0.1, (t - last) / 1000) : 0;
+      last = t;
+      if (smooth < 0 || reduce) smooth = target;
+      else smooth += (target - smooth) * (1 - Math.exp(-dt / TRAIL));
+      if (Math.abs(target - smooth) < 0.0005) smooth = target;
+      const p = smooth;
       progress.current = p;
+      // The table turns full colour once they've actually landed (back to grey 24 well above).
       if (p >= 0.98 && !shown) {
         shown = true;
         setRevealed(true);
@@ -121,14 +132,6 @@ export function ProofJourney() {
         shown = false;
         setRevealed(false);
       }
-      return p;
-    };
-
-    const frame = (t: number) => {
-      raf = 0;
-      const g = geo.current;
-      if (!g) return;
-      const p = flight(g);
       // Ease out: most of the travel early, settling softly into the table.
       const e = 1 - Math.pow(1 - p, 2);
       const settle = 1 - e;
@@ -160,10 +163,10 @@ export function ProofJourney() {
         el.style.pointerEvents = p < 0.12 ? "auto" : "none";
       });
       if (visible) raf = requestAnimationFrame(frame);
+      else last = 0;
     };
 
     const kick = () => {
-      if (geo.current) flight(geo.current);
       if (!raf) raf = requestAnimationFrame(frame);
     };
     const io = new IntersectionObserver(([entry]) => {
@@ -213,7 +216,7 @@ export function ProofJourney() {
     <div ref={wrapRef} className={s.journey}>
       {/* 03 Why */}
       <section className={`${s.section} ${s.why}`}>
-        <div className={s.whyCopy} data-fw-snap="center">
+        <div className={s.whyCopy}>
           <InkLines lines={["A bank needs proof", "before it lends."]} className={s.display} />
           <p className={`${s.p1} ${s.muted}`} style={{ width: "100%" }}>
             {PHRASES.map((ph, i) => (
@@ -246,9 +249,9 @@ export function ProofJourney() {
 
       {/* 04 Contrast */}
       <section ref={contrastRef} className={`${s.section} ${s.contrast}`} data-revealed={revealed ? "" : undefined}>
-        <div ref={blockRef} className={s.contrastBlock} data-fw-snap="center">
+        <div ref={blockRef} className={s.contrastBlock}>
         <div className={s.copy}>
-          <InkLines lines={["You probably have all three,", "without even trying."]} className={s.display} drive={headInk} />
+          <InkLines lines={["You probably have all three,", "without even trying."]} className={s.display} />
         </div>
         <div className={s.table}>
           <div className={s.tableHead}>
@@ -289,7 +292,7 @@ export function ProofJourney() {
             onPointerEnter={onEnter(i)}
             onPointerLeave={() => setHover(null)}
           >
-            <img src={o.src} alt={o.label} draggable={false} />
+            <img src={o.src} alt={o.label} draggable={false} decoding="async" />
           </div>
         ))}
       </div>
