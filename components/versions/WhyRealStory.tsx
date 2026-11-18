@@ -97,7 +97,9 @@ export const CHAPTERS = [
 ] as const;
 
 /** `chapters`: the page's own list (defaults to /v/why's). */
-export function ChapterPill({ chapters = CHAPTERS }: { chapters?: readonly { id: string; label: string }[] } = {}) {
+/** `even` (/v/why): the pill sits as far into the first chapter before it sticks (24px) as it sits under the navigation once
+ * stuck, instead of 12px then 24px. */
+export function ChapterPill({ chapters = CHAPTERS, even = false }: { chapters?: readonly { id: string; label: string }[]; even?: boolean } = {}) {
   const [active, setActive] = useState(-1);
   useEffect(() => {
     const els = chapters.map((c) => document.getElementById(c.id));
@@ -125,7 +127,7 @@ export function ChapterPill({ chapters = CHAPTERS }: { chapters?: readonly { id:
   // name's box opens from 0 to the text's own width while the text fades in, and the dot shrinks evenly to nothing.
   const t = { duration: 0.45, ease: EASE };
   return (
-    <div className="pointer-events-none sticky top-[calc(var(--navbar-bottom,0px)+12px)] z-30 flex h-0 justify-center">
+    <div className={`pointer-events-none sticky z-30 flex h-0 justify-center ${even ? "top-[var(--navbar-bottom,0px)]" : "top-[calc(var(--navbar-bottom,0px)+12px)]"}`}>
       <AnimatePresence>
         {active >= 0 && (
           <motion.nav
@@ -134,7 +136,7 @@ export function ChapterPill({ chapters = CHAPTERS }: { chapters?: readonly { id:
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.3, ease: EASE }}
-            className="pointer-events-auto mt-3 flex h-[42px] items-center rounded-full bg-[#2a2620]/88 px-[14px] text-[#fbf8ef] shadow-[0_6px_24px_rgba(0,0,0,0.25)] backdrop-blur-md"
+            className={`pointer-events-auto ${even ? "mt-6" : "mt-3"} flex h-[42px] items-center rounded-full bg-[#2a2620]/88 px-[14px] text-[#fbf8ef] shadow-[0_6px_24px_rgba(0,0,0,0.25)] backdrop-blur-md`}
           >
             {chapters.map((c, i) => {
               const on = i === active;
