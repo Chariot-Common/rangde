@@ -219,9 +219,9 @@ export function ThreadProblem() {
 
 const DARK = "#1B1D22";
 const FIGURES = [
-  { pct: 49, lead: "of rural households that borrow ", key: "take informal loans", tail: ", from moneylenders, friends or family.", src: "NABARD rural survey, July 2026", bg: "#8F1528" },
-  { pct: 24, lead: "of the finance small businesses need ", key: "isn’t met by banks and other formal lenders", tail: ": about ₹30 lakh crore.", src: "SIDBI & Crisil, 2025 (an estimate)", bg: "#B81C33" },
-  { pct: 17.77, lead: "a year is the ", key: "average interest on informal loans", tail: ", and none of it builds a credit record.", src: "NABARD rural survey, July 2026", bg: RED },
+  { pct: 49, lead: "of rural families who borrow ", key: "go outside the banks", tail: ", to moneylenders, relatives or friends.", src: "NABARD rural survey, July 2026", bg: "#8F1528" },
+  { pct: 24, lead: "of the credit small businesses need, ", key: "banks and formal lenders don’t provide", tail: ". That’s about ₹30 lakh crore.", src: "SIDBI & Crisil, 2025 (an estimate)", bg: "#B81C33" },
+  { pct: 17.77, lead: "a year is the ", key: "average interest on informal loans", tail: ". And repaying on time still builds no credit history.", src: "NABARD rural survey, July 2026", bg: RED },
 ];
 const KEY = "#FF7A8C"; // the key words in each caption: a lighter red that reads on the dark ground
 
@@ -283,7 +283,7 @@ export function ThreadEvidence() {
   return (
     <section id="c-evidence" className="mx-2 rounded-[24px] px-4 py-16 sm:px-6 md:py-24 lg:px-10" style={{ backgroundColor: DARK }}>
       <div className={`${WIDE} flex flex-col gap-10 md:gap-8`}>
-        <Lines className={`${HEAD} text-center text-[36px] text-white md:text-[56px] lg:text-[72px]`} a="The need is there." b="Formal loans don’t cover it." grey="text-white/48" />
+        <Lines className={`${HEAD} text-center text-[36px] text-white md:text-[56px] lg:text-[72px]`} a="It isn’t just one shop." b="Across India, the loans fall short." grey="text-white/48" />
         <ol ref={bars} className="grid gap-10 md:grid-cols-3 md:gap-4 lg:gap-6">
           {FIGURES.map((f, i) => (
             <FigureBar key={f.pct} f={f} i={i} p={p} />
@@ -299,7 +299,7 @@ export function ThreadEvidence() {
       word by word as you scroll. ─────────────────────────────────────────────────────────────────────────────── */
 
 const TURN = "This is why Rang De exists.";
-const TURN_TEXT = "Rang De connects rural businesses that need loans with people across India who want to lend. It’s called peer-to-peer lending, and Rang De is registered with the RBI to run it.";
+const TURN_TEXT = "Rang De connects rural businesses that need a loan with people who want to lend. Each repayment builds the borrower’s credit history, so the next loan is easier to get. It’s called peer-to-peer lending, and Rang De is registered with the RBI.";
 
 function FillWord({ w, p, at }: { w: string; p: MotionValue<number>; at: number }) {
   const opacity = useTransform(p, (v) => 0.22 + 0.78 * span(v, at, at + 0.04));
@@ -340,11 +340,11 @@ export function ThreadTurn() {
       a five-part progress bar, the open step, then the animation. Each step can be clicked to jump to it. ─────────── */
 
 const HOW = [
-  { t: "Rang De checks every borrower", s: "Partners on the ground meet them and check their business before a loan is listed." },
+  { t: "Rang De checks every borrower", s: "Local partner organisations meet every borrower and check their business before the loan is listed." },
   { t: "You choose who to lend to", s: "Each profile says who they are, what the loan is for and how they plan to repay it." },
-  { t: "Your money reaches them", s: "We collect your money on the 1st or 15th, and it reaches their bank account within 24 hours." },
-  { t: "Repayments come back to you", s: "See every loan, every repayment and what you’ve earned, in one place." },
-  { t: "Their credit history grows", s: "Each repayment is reported to the credit bureaus, so their next loan is easier to get." },
+  { t: "Your money reaches them", s: "Rang De collects your money on the 1st or 15th. Within 24 hours, it’s in their bank account." },
+  { t: "Repayments come back to you", s: "They repay every month, and you see each repayment and what you’ve earned in one place." },
+  { t: "Their credit history grows", s: "Each repayment is reported to the credit bureaus that banks check." },
 ];
 
 export function ThreadHow() {
@@ -375,7 +375,7 @@ export function ThreadHow() {
         <div className={`${reduce ? "py-10" : STICKY} grid w-full gap-4 p-3 md:grid-cols-[minmax(0,5fr)_minmax(0,8fr)] md:gap-3`}>
           {/* Left: heading and the steps. */}
           <div className="flex min-h-0 flex-col justify-between gap-4 px-2 pt-4 md:px-6 md:py-8">
-            <Lines className={`${H2} text-ink`} a="How it works." b="In five steps." grey="text-ink/48" />
+            <Lines className={`${H2} text-ink`} a="How it works." b={"You choose. Rang\u00a0De does the rest."} grey="text-ink/48" />
 
             <ol className="relative hidden flex-col pl-7 md:flex">
               <span className="absolute bottom-3 left-[5px] top-3 w-[2px] rounded-full bg-ink/10" aria-hidden />
@@ -438,8 +438,8 @@ export function ThreadHow() {
 
 const DOES = [
   { t: "It funds a business.", s: "Your money becomes part of a rural business owner’s loan.", img: "/images/collage/collage-10.webp", chip: "Loan funded" },
-  { t: "It can earn interest.", s: "As the loan is repaid, it comes back to you with interest.", img: "/images/collage/collage-13.webp", chip: "Repayment received" },
-  { t: "It builds their credit.", s: "Each loan repaid on time adds to the borrower’s credit history, so the next loan is easier to get.", img: "/images/collage/collage-07.webp", chip: "Credit history building" },
+  { t: "It can earn you interest.", s: "Your money comes back as they repay, with interest on top.", img: "/images/collage/collage-13.webp", chip: "Repayment received" },
+  { t: "It builds their credit.", s: "Each loan repaid on time adds to their credit history. Next time a bank asks, the answer isn’t “None yet.”", img: "/images/collage/collage-07.webp", chip: "Credit history building" },
 ];
 
 export function ThreadMoney() {
@@ -487,9 +487,9 @@ export function ThreadMoney() {
           <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {[
               { big: "Up to 8.5%", line: "a year in interest, depending on the loan" },
-              { big: "6–18 months", line: "how long loans listed now run, repaid monthly" },
-              { big: "From ₹500", line: "per loan, up to ₹50,000 per borrower" },
-              { big: "Up to 4%", line: "fee on what you lend; a yearly plan of up to ₹999 may apply" },
+              { big: "6–18 months", line: "how long today’s loans run, repaid monthly" },
+              { big: "From ₹500", line: "to start; up to ₹50,000 with any one borrower" },
+              { big: "Up to 4%", line: "fee on loans you choose yourself. Yearly plans: up to ₹999." },
             ].map((t) => (
               <li key={t.big} className="flex flex-col gap-1 rounded-[16px] p-4 md:p-5" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
                 <p className="font-display text-[22px] font-bold leading-[1.1] tracking-[-0.02em] text-white md:text-[28px]">{t.big}</p>
@@ -540,8 +540,8 @@ export function ThreadProof() {
     <section id="c-proof" className={`${SECTION} bg-white`}>
       <div className={`${WIDE} grid gap-8 md:grid-cols-[5fr_7fr] md:gap-12`}>
         <div className="flex flex-col items-start gap-4 self-start md:sticky md:top-[calc(var(--navbar-bottom,0px)+48px)]">
-          <Lines className={`${H2} text-ink`} a="It’s already working." b="With real people, since 2019." grey="text-ink/48" />
-          <p className={`${SUB} text-ink/64`}>Live figures, across {s.states} states.</p>
+          <Lines className={`${H2} text-ink`} a="It’s already working." b="You wouldn’t be lending alone." grey="text-ink/48" />
+          <p className={`${SUB} text-ink/64`}>Live figures. Rang De is registered with the RBI.</p>
           <div className="mt-2 max-sm:hidden">
             <LinkButton href={SIGNUP_URL}>Start lending</LinkButton>
           </div>
@@ -755,7 +755,7 @@ export function ThreadSources() {
             i={2}
             q="What do informal loans cost?"
             big={(on) => <CountUp to={17.77} decimals={2} suffix="%" on={on} />}
-            line="a year on average, and none of it builds a credit record."
+            line="a year on average. Repaying on time still builds no credit history."
             chart={(p) => <Stacked p={p} segs={[{ v: 17.77, c: RED, label: "Average a year" }]} />}
             note="The average includes interest-free loans from family and friends."
             by="NABARD rural survey, July 2026"
@@ -782,6 +782,20 @@ export function ThreadSources() {
             linkText="Annual report 2024–25 (PDF)"
           />
         </ol>
+      </div>
+    </section>
+  );
+}
+
+/* ── The close (25 Nov 2026): the page ends where it began. The problem section's line, "The business is ready. The loan
+      isn't.", comes back on the same deep green, now answered, with the one button. ─────────────────────────────── */
+
+export function ThreadClose() {
+  return (
+    <section id="c-close" className={`${SECTION} text-center`} style={{ backgroundColor: DEEP, color: CREAM }}>
+      <div className={`${WIDE} flex flex-col items-center gap-8`}>
+        <Lines className={H2} a="The business is ready." b={<span style={{ color: LIME }}>Now the loan can be.</span>} grey="" />
+        <LinkButton href={SIGNUP_URL}>Start lending</LinkButton>
       </div>
     </section>
   );

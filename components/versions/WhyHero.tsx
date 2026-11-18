@@ -94,7 +94,7 @@ const CYCLE = [
   { src: "/images/collage/collage-06.webp", tag: "Nursery", pos: "72% 40%" },
 ];
 const CYCLE_MS = 2600;
-const LINE_2 = "Affordable ones are hard to get.";
+const LINE_2 = "But affordable loans are hard to get.";
 
 function HeroChar({ ch, p, at }: { ch: string; p: MotionValue<number>; at: number }) {
   const t = useTransform(p, (v) => Math.min(1, Math.max(0, (v - at) / 0.08)));
@@ -155,7 +155,7 @@ export function ClearHeroGrow() {
             </motion.div>
           ))}
 
-          <h1 aria-label="Rural businesses need loans to grow. Affordable ones are hard to get. Rang De lets you lend to them directly." className="absolute inset-0">
+          <h1 aria-label="Rural businesses need loans to grow. But affordable loans are hard to get. Rang De lets you lend to them yourself." className="absolute inset-0">
             {/* The first half, scattered around the photo. */}
             <motion.span aria-hidden className={`${WORD} left-[5%] top-[7%] md:top-[10%]`} style={{ opacity: words, x: spreadL }}>
               Rural businesses
@@ -169,7 +169,7 @@ export function ClearHeroGrow() {
 
             {/* The second half, over the full photo: two lines at one size, together in the middle. The first comes in
                 letter by letter from a blur; the second, about Rang De, rises in once the first is complete. */}
-            <span aria-hidden className="absolute inset-x-4 top-1/2 flex -translate-y-1/2 flex-col items-center gap-[0.12em] text-center font-display text-[30px] font-medium leading-[1.05] tracking-[-0.03em] min-[400px]:text-[34px] md:text-[52px] lg:text-[64px] xl:text-[68px]">
+            <span aria-hidden className="absolute inset-x-4 top-1/2 flex -translate-y-1/2 flex-col items-center gap-[0.12em] text-center font-display text-[30px] font-medium leading-[1.05] tracking-[-0.03em] min-[400px]:text-[34px] md:text-[52px] lg:text-[52px] xl:text-[64px] 2xl:text-[68px]">
               <span className="text-white lg:whitespace-nowrap">
                 {(() => {
                   let n = 0;
@@ -185,7 +185,7 @@ export function ClearHeroGrow() {
                 })()}
               </span>
               <motion.span className="lg:whitespace-nowrap" style={{ opacity: subOpacity, y: subY, color: LIME }}>
-                Rang De lets you lend to them directly.
+                Rang De lets you lend to them yourself.
               </motion.span>
             </span>
           </h1>

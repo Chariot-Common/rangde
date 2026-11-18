@@ -3,7 +3,7 @@ import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
 import { ClearStories } from "@/components/versions/WhyClear";
 import { ClearHeroGrow } from "@/components/versions/WhyHero";
 import { ChapterPill } from "@/components/versions/WhyRealStory";
-import { ThreadEvidence, ThreadHow, ThreadTurn, ThreadMoney, ThreadProblem, ThreadProof, ThreadSources } from "@/components/versions/WhyThread";
+import { ThreadEvidence, ThreadHow, ThreadTurn, ThreadMoney, ThreadProblem, ThreadProof, ThreadSources, ThreadClose } from "@/components/versions/WhyThread";
 import { Testimonials } from "@/components/sections/testimonials/Testimonials";
 
 export const metadata: Metadata = {
@@ -39,9 +39,10 @@ export default function WhyPage() {
         <ThreadMoney />
         <ThreadProof />
         <ClearStories met />
-        <Testimonials refined inked evenRows heading="In their words." />
-        <PlainQuestionCards count={4} flip navyLink large foundersCall />
+        <Testimonials refined inked evenRows heading="Why they lend." />
+        <PlainQuestionCards heading="Before you lend." count={4} flip navyLink large foundersCall />
         <ThreadSources />
+        <ThreadClose />
       </div>
     </div>
   );

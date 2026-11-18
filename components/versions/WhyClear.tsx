@@ -325,7 +325,7 @@ export function ClearSteps() {
 /* ── It's already happened: four real loans from rangde.in's success stories, each with what was funded and the return
       lenders got. The row drifts on its own and stops under the pointer. ─────────────────────────────────────────── */
 
-/** `met`: the short heading used after the proof section on /v/why ("Meet a few of them."). */
+/** `met`: the short heading used after the proof section on /v/why ("Meet the people they lent to."). */
 export function ClearStories({ met = false }: { met?: boolean } = {}) {
   const s = useRangDeStats();
   const card = (st: (typeof stories)[number], k: string, hidden?: boolean) => (
@@ -348,7 +348,7 @@ export function ClearStories({ met = false }: { met?: boolean } = {}) {
           </div>
           <div className="border-l border-white/16 pl-5">
             <p className="whitespace-nowrap font-display text-[19px] font-extrabold tracking-[-0.02em] tabular-nums md:text-[26px]" style={{ color: LIME }}>{st.returns}</p>
-            <p className="font-display text-[12px] font-medium text-white/64 md:text-[13px]">Returns provided</p>
+            <p className="font-display text-[12px] font-medium text-white/64 md:text-[13px]">Interest earned</p>
           </div>
         </div>
       </div>
@@ -359,7 +359,7 @@ export function ClearStories({ met = false }: { met?: boolean } = {}) {
       <div className="px-4">
         {met ? (
           <Rise>
-            <Head sub="On Rang De, lenders are called social investors.">Meet a few of them.</Head>
+            <Head sub="On Rang De, lenders are called social investors.">Meet the people they lent to.</Head>
           </Rise>
         ) : (
           <>
