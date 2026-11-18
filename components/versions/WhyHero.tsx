@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
+import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRangDeStats } from "@/components/providers/StatsProvider";
@@ -19,15 +19,6 @@ const GREEN_DEEP = "#1F3F0B";
 const LIME = "#D9E89A";
 const PAPER = "#F7F3ED";
 
-const SCENES = [
-  { src: "/images/collage/collage-01.webp", alt: "A woman smiling at her sewing machine in her tailoring unit.", tag: "A tailoring unit", pos: "50% 40%" },
-  { src: "/images/collage/collage-05.webp", alt: "A farmer standing in her field of yellow mustard flowers.", tag: "A mustard farm", pos: "55% 45%" },
-  { src: "/images/collage/collage-16.webp", alt: "A weaver smiling at her handloom.", tag: "A handloom", pos: "60% 40%" },
-  { src: "/images/collage/collage-10.webp", alt: "A shopkeeper sitting in her small general store.", tag: "A village shop", pos: "50% 50%" },
-  { src: "/images/collage/collage-13.webp", alt: "A woman with her buffalo outside her home.", tag: "A dairy", pos: "50% 35%" },
-  { src: "/images/collage/collage-03.webp", alt: "Men lifting a large fish out of a net at their fish farm.", tag: "A fish farm", pos: "50% 45%" },
-];
-const SCENE_MS = 3200;
 
 /* ── The map. Longitude/latitude outline, clockwise from the north. ─────────────────────────────────────────────── */
 
@@ -89,98 +80,200 @@ function makeDots(): Dot[] {
 
 const DOTS = makeDots();
 
-/* ── The hero: headline left, what Rang De is and the button right, then one wide photo with the live figures on it. ── */
+/* ── The hero (21 Nov 2026, after dwell.au and sereinwealth.com). A field at dawn fills the card; the first half of the
+      headline sits around a small photo in the middle, as scattered words (Dwell). Real businesses cycle in that photo.
+      Scrolling grows the photo until it fills the card (Serein), the words drift out, and the second half of the headline
+      comes in from a blur with the line on what Rang De does. Pinned for about one extra screen. ───────────────────── */
 
-export function ClearHero() {
+const CYCLE = [
+  { src: "/images/collage/collage-01.webp", tag: "Tailoring", pos: "45% 40%" },
+  { src: "/images/collage/collage-13.webp", tag: "Dairy", pos: "40% 40%" },
+  { src: "/images/collage/collage-10.webp", tag: "Village shop", pos: "50% 55%" },
+  { src: "/images/collage/collage-16.webp", tag: "Handloom", pos: "55% 40%" },
+  { src: "/images/collage/collage-03.webp", tag: "Fish farm", pos: "50% 40%" },
+  { src: "/images/collage/collage-06.webp", tag: "Nursery", pos: "72% 40%" },
+];
+const CYCLE_MS = 2600;
+const LINE_2 = "But affordable loans are hard to get.";
+
+function HeroChar({ ch, p, at }: { ch: string; p: MotionValue<number>; at: number }) {
+  const t = useTransform(p, (v) => Math.min(1, Math.max(0, (v - at) / 0.08)));
+  const filter = useTransform(t, (v) => `blur(${(1 - v) * 14}px)`);
+  return (
+    <motion.span className="inline-block whitespace-pre" style={{ filter, opacity: t }}>
+      {ch}
+    </motion.span>
+  );
+}
+
+export function ClearHeroGrow() {
   const reduce = useReducedMotion();
-  const s = useRangDeStats();
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const still = useTransform(scrollYProgress, () => 1);
+  const p = reduce ? still : scrollYProgress;
   const [scene, setScene] = useState(0);
   useEffect(() => {
     if (reduce) return;
-    const t = setInterval(() => setScene((n) => (n + 1) % SCENES.length), SCENE_MS);
+    const t = setInterval(() => setScene((n) => (n + 1) % CYCLE.length), CYCLE_MS);
+    return () => clearInterval(t);
+  }, [reduce]);
+
+  const grow = useTransform(p, (v) => Math.min(1, Math.max(0, (v - 0.04) / 0.5)));
+  const eased = useTransform(grow, (g) => 1 - Math.pow(1 - g, 3));
+  // The photo is the full card, clipped to a small window that opens up. Laptops: 34% × 50%; phones: 84% × 40%.
+  const clipLg = useTransform(eased, (g) => `inset(${25 * (1 - g)}% ${33 * (1 - g)}% ${25 * (1 - g)}% ${33 * (1 - g)}% round ${16 + 4 * g}px)`);
+  const clipSm = useTransform(eased, (g) => `inset(${34 * (1 - g)}% ${8 * (1 - g)}% ${26 * (1 - g)}% ${8 * (1 - g)}% round ${16 + 4 * g}px)`);
+  const words = useTransform(p, (v) => 1 - Math.min(1, Math.max(0, (v - 0.08) / 0.24)));
+  const spread = useTransform(p, (v) => Math.min(1, Math.max(0, (v - 0.04) / 0.4)) * 120);
+  const spreadL = useTransform(spread, (v) => -v);
+  const shade = useTransform(p, (v) => 0.2 + 0.4 * Math.min(1, Math.max(0, (v - 0.4) / 0.2)));
+  const subOpacity = useTransform(p, (v) => Math.min(1, Math.max(0, (v - 0.8) / 0.1)));
+  const subY = useTransform(p, (v) => 24 * (1 - Math.min(1, Math.max(0, (v - 0.8) / 0.1))));
+  const WORD = "absolute font-display font-medium leading-[0.95] tracking-[-0.035em] text-white text-[44px] md:text-[80px] lg:text-[104px] xl:text-[120px]";
+
+  return (
+    <section aria-label="Rang De" className="mx-2">
+      <div ref={ref} className={reduce ? "" : "relative h-[190svh]"}>
+        <div
+          className={`${reduce ? "relative h-[calc(100svh-var(--navbar-bottom,0px)-8px)]" : "sticky top-[calc(var(--navbar-bottom,0px)+0px)] h-[calc(100svh-var(--navbar-bottom,0px)-8px)]"} min-h-[560px] overflow-hidden rounded-[20px]`}
+          style={{ backgroundColor: GREEN_DEEP }}
+        >
+          {/* The field behind everything. */}
+          <Image src="/images/collage/collage-05.webp" alt="" fill priority sizes="100vw" className="object-cover opacity-60" style={{ objectPosition: "50% 70%" }} />
+          <div className="absolute inset-0" style={{ backgroundColor: "rgba(31,63,11,0.55)" }} />
+
+          {/* The photo window that grows to fill the card. Every business stays mounted; only the current one shows. */}
+          {[clipLg, clipSm].map((clip, k) => (
+            <motion.div key={k} className={`absolute inset-0 ${k === 0 ? "hidden md:block" : "md:hidden"}`} style={{ clipPath: clip }}>
+              {CYCLE.map((sc, i) => (
+                <motion.div key={sc.src} className="absolute inset-0" initial={false} animate={{ opacity: i === scene ? 1 : 0, scale: i === scene ? 1 : 1.06 }} transition={{ opacity: { duration: 0.9 }, scale: { duration: CYCLE_MS / 1000 + 0.9, ease: "linear" } }}>
+                  <Image src={sc.src} alt="" fill priority={i === 0} sizes="100vw" className="object-cover" style={{ objectPosition: sc.pos }} />
+                </motion.div>
+              ))}
+              <motion.div className="absolute inset-0 bg-black" style={{ opacity: shade }} />
+            </motion.div>
+          ))}
+
+          <h1 aria-label="Rural businesses need loans to grow. But affordable loans are hard to get. Rang De lets you lend to them yourself." className="absolute inset-0">
+            {/* The first half, scattered around the photo. */}
+            <motion.span aria-hidden className={`${WORD} left-[5%] top-[7%] md:top-[10%]`} style={{ opacity: words, x: spreadL }}>
+              Rural businesses
+            </motion.span>
+            <motion.span aria-hidden className={`${WORD} right-[5%] top-[46%] max-md:hidden`} style={{ opacity: words, x: spread }}>
+              need loans
+            </motion.span>
+            <motion.span aria-hidden className={`${WORD} bottom-[8%] left-[5%] md:bottom-[10%] md:left-[18%]`} style={{ opacity: words, x: spreadL }}>
+              <span className="md:hidden">need loans </span>to grow.
+            </motion.span>
+
+            {/* The second half, over the full photo: two lines at one size, together in the middle. The first comes in
+                letter by letter from a blur; the second, about Rang De, rises in once the first is complete. */}
+            <span aria-hidden className="absolute inset-x-4 top-1/2 flex -translate-y-1/2 flex-col items-center gap-[0.12em] text-center font-display text-[30px] font-medium leading-[1.05] tracking-[-0.03em] min-[400px]:text-[34px] md:text-[52px] lg:text-[52px] xl:text-[64px] 2xl:text-[68px]">
+              <span className="text-white lg:whitespace-nowrap">
+                {(() => {
+                  let n = 0;
+                  return LINE_2.split(" ").map((word, w, all) => (
+                    <span key={w} className="inline-block whitespace-nowrap">
+                      {word.split("").map((ch) => {
+                        const i = n++;
+                        return <HeroChar key={i} ch={ch} p={p} at={0.58 + i * 0.006} />;
+                      })}
+                      {w < all.length - 1 && <HeroChar ch=" " p={p} at={0.58 + n++ * 0.006} />}
+                    </span>
+                  ));
+                })()}
+              </span>
+              <motion.span className="lg:whitespace-nowrap" style={{ opacity: subOpacity, y: subY, color: LIME }}>
+                Rang De lets you lend to them yourself.
+              </motion.span>
+            </span>
+          </h1>
+
+          {/* What's in the photo. */}
+          <motion.span className="absolute right-4 top-4 rounded-full bg-black/40 px-3 py-1.5 font-display text-[12px] font-bold text-white backdrop-blur-md md:right-6 md:top-6 md:text-[13px]" style={{ opacity: words }}>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span key={scene} className="inline-block" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }}>
+                {CYCLE[scene].tag}
+              </motion.span>
+            </AnimatePresence>
+          </motion.span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── The hero (22 Nov 2026): the whole headline in one glance, at a calmer size, saying both the need and what Rang De
+      does. A real business fills the card and changes every few seconds (slow push-in, crossfade); a strip of the
+      other businesses sits at the bottom right and marks which one you're looking at (after sereinwealth.com's
+      full-bleed hero and cruise.money's centred line). Archived at /v/archive/why-hero-glance;
+      /v/why uses ClearHeroGrow. ──────────────────────────────────────────────────────────────────────────────── */
+
+export function ClearHero() {
+  const reduce = useReducedMotion();
+  const [scene, setScene] = useState(0);
+  useEffect(() => {
+    if (reduce) return;
+    const t = setInterval(() => setScene((n) => (n + 1) % CYCLE.length), CYCLE_MS + 1400);
     return () => clearInterval(t);
   }, [reduce]);
   const rise = (delay: number) => ({
-    initial: reduce ? false : ({ opacity: 0, y: 28 } as const),
+    initial: reduce ? false : ({ opacity: 0, y: 24 } as const),
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.8, delay, ease: EASE },
   });
 
   return (
-    <section aria-label="Rang De" className="mx-2 overflow-hidden rounded-[20px] px-3 pb-3 pt-10 text-white sm:px-6 sm:pb-6 md:px-10 md:pb-10 md:pt-16" style={{ backgroundColor: GREEN_DEEP }}>
-      <div className="mx-auto flex max-w-[1320px] flex-col gap-8 md:gap-12">
-        <div className="flex flex-col gap-6 px-1 md:gap-8">
-          <motion.h1
-            initial={reduce ? false : { clipPath: "inset(0% 0% 100% 0%)", y: 40 }}
-            animate={{ clipPath: "inset(-5% 0% -12% 0%)", y: 0 }}
-            transition={{ duration: 0.9, ease: EASE }}
-            className="font-display text-[42px] font-extrabold leading-[0.98] tracking-[-0.045em] min-[400px]:text-[46px] md:text-[60px] lg:text-[76px] xl:text-[88px]">
-            Lend to rural entrepreneurs.
+    <section aria-label="Rang De" className="relative mx-2 h-[calc(100svh-var(--navbar-bottom,0px)-8px)] min-h-[560px] overflow-hidden rounded-[20px] text-white" style={{ backgroundColor: GREEN_DEEP }}>
+      {CYCLE.map((sc, i) => (
+        <motion.div key={sc.src} className="absolute inset-0" initial={false} animate={{ opacity: i === scene ? 1 : 0, scale: i === scene ? 1.06 : 1 }} transition={{ opacity: { duration: 1.2 }, scale: { duration: (CYCLE_MS + 2600) / 1000, ease: "linear" } }} aria-hidden={i !== scene}>
+          <Image src={sc.src} alt={i === scene ? `${sc.tag}, a rural business.` : ""} fill priority={i === 0} sizes="100vw" className="object-cover" style={{ objectPosition: sc.pos }} />
+        </motion.div>
+      ))}
+      {/* Darker at the bottom left, where the words sit. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/10" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+
+      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-6 p-5 md:flex-row md:items-end md:justify-between md:gap-10 md:p-10 lg:p-12">
+        <div className="flex max-w-[760px] flex-col gap-4 md:gap-5">
+          <motion.h1 {...rise(0.1)} className="font-display text-[34px] font-bold leading-[1.06] tracking-[-0.025em] [text-wrap:balance] md:text-[48px] lg:text-[60px]">
+            Rural businesses need loans to grow.
             <span className="block" style={{ color: LIME }}>
-              Get repaid with interest.
+              Rang De connects them with people who lend.
             </span>
           </motion.h1>
-          <motion.div {...rise(0.12)} className="flex flex-col items-start gap-5 md:flex-row md:items-center md:justify-between md:gap-10">
-            <p className="max-w-[560px] font-display text-[16px] font-medium leading-[24px] text-white/80 md:text-[19px] md:leading-[29px]">
-              Rang De is an RBI-registered lending platform. You lend to a small business in rural India, and she repays you every month.
-            </p>
-          </motion.div>
+          <motion.p {...rise(0.25)} className="max-w-[520px] font-display text-[16px] font-medium leading-[24px] text-white/80 md:text-[18px] md:leading-[27px]">
+            Choose a small business in rural India and lend to it directly.
+          </motion.p>
         </div>
 
-        <motion.div
-          className="relative h-[56svh] min-h-[400px] overflow-hidden rounded-[16px] md:h-[62svh]"
-          initial={reduce ? false : { opacity: 0, y: 48, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 1, delay: 0.25, ease: EASE }}
-        >
-          {/* All the photos stay mounted (so each is loaded before its turn); only the one in view is opaque. */}
-          {SCENES.map((sc, i) => (
-            <motion.div key={sc.src} className="absolute inset-0" initial={false} animate={{ opacity: i === scene ? 1 : 0 }} transition={{ duration: 1.1, ease: "easeInOut" }} aria-hidden={i !== scene}>
-              <motion.div
-                className="absolute inset-0"
-                initial={false}
-                animate={{ scale: i === scene ? 1 : 1.08 }}
-                transition={{ duration: i === scene ? SCENE_MS / 1000 + 1.2 : 0, delay: i === scene ? 0 : 1.1, ease: "linear" }}
+        {/* The other businesses, in a strip; the one on screen is outlined. */}
+        <motion.ul {...rise(0.4)} className="flex shrink-0 gap-2" aria-label="Businesses shown">
+          {CYCLE.map((sc, i) => (
+            <li key={sc.src}>
+              <button
+                type="button"
+                onClick={() => setScene(i)}
+                aria-label={sc.tag}
+                aria-pressed={i === scene}
+                className="relative block h-[52px] w-[40px] overflow-hidden rounded-[8px] outline-offset-2 transition-[transform,opacity] duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white md:h-[72px] md:w-[56px]"
+                style={{ opacity: i === scene ? 1 : 0.55, transform: i === scene ? "translateY(-6px)" : "none", boxShadow: i === scene ? `0 0 0 2px ${LIME}` : "none" }}
               >
-                <Image src={sc.src} alt={i === scene ? sc.alt : ""} fill priority={i === 0} sizes="100vw" className="object-cover" style={{ objectPosition: sc.pos }} />
-              </motion.div>
-            </motion.div>
+                <Image src={sc.src} alt="" fill sizes="56px" className="object-cover" style={{ objectPosition: sc.pos }} />
+              </button>
+            </li>
           ))}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-
-          {/* What's in the photo: always a small business. */}
-          <div className="absolute right-3 top-3 flex items-center gap-2 rounded-full bg-black/35 px-3.5 py-2 font-display text-[12px] font-bold text-white backdrop-blur-md md:right-5 md:top-5 md:text-[14px]">
-            <span className="size-[7px] rounded-full" style={{ backgroundColor: LIME }} />
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span key={scene} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.3 }}>
-                {SCENES[scene].tag}, funded on Rang De
-              </motion.span>
-            </AnimatePresence>
-          </div>
-
-          {/* The live figures, on the photo, each one saying what it counts. */}
-          <motion.div
-            {...rise(0.5)}
-            className="absolute inset-x-3 bottom-3 flex flex-col gap-3 rounded-[14px] border border-white/16 bg-black/40 p-4 backdrop-blur-xl md:inset-x-auto md:bottom-5 md:left-5 md:w-[360px] md:gap-4 md:p-5"
-          >
-            <p className="font-display text-[13px] font-bold text-white/80 md:text-[14px]">Lent on Rang De since 2019</p>
-            <p className="font-display text-[36px] font-extrabold leading-[0.95] tracking-[-0.04em] tabular-nums md:text-[44px]">₹{s.disbursedCr.toFixed(0)} Cr</p>
-            <div className="h-[5px] overflow-hidden rounded-full bg-white/24">
-              <motion.div
-                className="h-full rounded-full"
-                style={{ backgroundColor: LIME }}
-                initial={reduce ? false : { width: "0%" }}
-                animate={{ width: `${s.principalRepaidPct}%` }}
-                transition={{ duration: 1.4, delay: 0.9, ease: EASE }}
-              />
-            </div>
-            <div className="flex items-center justify-between font-display text-[13px] font-bold md:text-[14px]">
-              <span>{s.investors.toLocaleString("en-IN")} people lending</span>
-              <span style={{ color: LIME }}>{s.principalRepaidPct.toFixed(1)}% principal repaid</span>
-            </div>
-          </motion.div>
-        </motion.div>
+        </motion.ul>
       </div>
+
+      <span className="absolute left-5 top-5 rounded-full bg-black/40 px-3 py-1.5 font-display text-[12px] font-bold backdrop-blur-md md:left-10 md:top-8 md:text-[13px]">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span key={scene} className="inline-block" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }}>
+            {CYCLE[scene].tag}
+          </motion.span>
+        </AnimatePresence>
+      </span>
     </section>
   );
 }

@@ -10,12 +10,11 @@ import { LinkButton, SIGNUP_URL } from "./ui";
 import { EASE, Rise } from "./WhyRealStory";
 
 /*
- * /v/why, second pass (16 Nov 2026 review). Read only the headings and you have the story:
- *   (hero) Lend to rural entrepreneurs. Get repaid with interest. → Since 2019, across 29 states (map)
- *   → Small businesses keep India running. Most have never had a loan. → So they borrow from moneylenders… Rang De gives them
- *   their first loan. → Where your money goes (3 steps) → A first loan that works for her (two rate cards) → See what your
- *   money does → Join N people lending on Rang De → Read the numbers yourself (report cards, one per scroll).
- * Every section opens the same way: a small green label, then a centred heading.
+ * /v/why, copy pass (19 Nov 2026). Read only the headings and you have the story:
+ *   problem (hero + "The need is there. The loan often isn't.") → evidence (one figure, two separate facts) → Rang De's role
+ *   (P2P in plain words) → "You can be one of the lenders" (3 steps) → "Your money does two jobs" (cause, return, risk) →
+ *   the calculator → proof (stories, people lending, testimonials) → questions → sources.
+ * Lines still needing a source or Rang De's confirmation carry a yellow tag.
  */
 
 const GREEN_DARK = "#3a6e0c";
@@ -48,89 +47,138 @@ function Head({ children, sub, dark }: { children: ReactNode; sub?: ReactNode; d
   );
 }
 
-/* ── The problem: three figures as a bar chart (columns on laptops, bars on phones). ─────────────────────────────── */
+/** A short line that hands one section over to the next, so the page reads as one story. */
+function Bridge({ children, dark }: { children: ReactNode; dark?: boolean }) {
+  return (
+    <Rise>
+      <p className={`mx-auto mb-4 max-w-[640px] text-center font-display text-[17px] font-bold leading-[24px] md:mb-6 md:text-[22px] md:leading-[30px] ${dark ? "text-white/72" : "text-ink/56"}`}>{children}</p>
+    </Rise>
+  );
+}
 
-const PROBLEM = [
-  { big: "6 in 10", line: "small businesses in India have never had a formal loan", size: 0.78, bg: INK },
-  { big: "~1 in 2", line: "rural households borrow from informal lenders", size: 0.64, bg: INK },
-  { big: "17.77%", line: "a year: what those lenders charge, on average", size: 1, bg: RED },
+/** Marks a line we still need a source or Rang De's confirmation for. Draft page only. */
+function ToConfirm({ children = "Source needed" }: { children?: ReactNode }) {
+  return <span className="ml-1.5 inline-block rounded-full bg-[#FFE9A8] px-2 py-0.5 align-middle font-display text-[11px] font-bold leading-[16px] text-ink">{children}</span>;
+}
+
+/* ── The problem (19 Nov 2026 copy pass): the need is real, and the barrier is access, not need. Plain words, no chart.
+      The three needs are what real Rang De borrowers used their loans for (rangde.in success stories). ──────────────── */
+
+const NEEDS = [
+  { what: "Feed for a fish farm", who: "so Gita Devi could work more ponds" },
+  { what: "Stock for a new shop", who: "so Sitara Devi could open her cosmetics store" },
+  { what: "Working capital", who: "for Sivakumar’s lantana-weed sculptures" },
 ];
 
 export function ClearProblem() {
-  const reduce = useReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const seen = useInView(ref, { once: true, amount: 0.3 });
-  const on = !!reduce || seen;
-  const grow = (i: number) => ({ duration: 0.9, delay: on ? 0.1 + i * 0.14 : 0, ease: EASE });
   return (
-    <section id="c-problem" className="mx-2 rounded-[16px] bg-white px-4 pb-10 pt-20 sm:px-8 md:pt-28">
+    <section id="c-problem" className="mx-2 rounded-[16px] bg-white px-4 py-20 sm:px-8 md:py-28">
       <Rise>
-        <Head>
-          Small businesses keep India running.
-          <span className="block text-ink/40">Most have never had a loan.</span>
+        <Head sub="A small business needs money at the right moment: before a season, for stock, or for the next piece of work.">
+          The need is there.
+          <span className="block text-ink/40">The loan often isn’t.</span>
         </Head>
       </Rise>
 
-      <div ref={ref} className="mx-auto mt-12 max-w-[1240px] md:mt-16">
-        {/* Phones: bars growing from the left, each wide enough to hold its figure. */}
-        <div className="flex flex-col gap-2 md:hidden">
-          {PROBLEM.map((p, i) => (
-            <motion.div
-              key={p.big}
-              className="overflow-hidden rounded-[14px] text-white"
-              style={{ backgroundColor: p.bg }}
-              initial={reduce ? false : { width: "0%" }}
-              animate={{ width: on ? `${Math.max(0.7, p.size) * 100}%` : "0%" }}
-              transition={grow(i)}
-            >
-              <div className="flex w-[260px] flex-col gap-2 px-5 py-5 min-[400px]:w-[280px]">
-                <span className="whitespace-nowrap font-display text-[34px] font-extrabold leading-[0.95] tracking-[-0.04em] tabular-nums">{p.big}</span>
-                <span className="font-display text-[14px] font-bold leading-[19px] text-white/88">{p.line}</span>
+      <ul className="mx-auto mt-10 grid max-w-[1080px] gap-3 md:mt-14 md:grid-cols-3 md:gap-4">
+        {NEEDS.map((n, i) => (
+          <li key={n.what}>
+            <Rise delay={i * 0.08} className="h-full">
+              <div className="flex h-full flex-col gap-2 rounded-[16px] p-6 md:p-7" style={{ backgroundColor: PAPER }}>
+                <p className="font-display text-[22px] font-extrabold leading-[1.1] tracking-[-0.02em] text-ink md:text-[26px]">{n.what}</p>
+                <p className="font-display text-[15px] font-medium leading-[22px] text-ink/64 md:text-[16px]">{n.who}</p>
               </div>
-            </motion.div>
-          ))}
-        </div>
+            </Rise>
+          </li>
+        ))}
+      </ul>
 
-        {/* Laptops: columns rising from a baseline, each as wide as its figure needs. */}
-        <div className="hidden h-[56svh] max-h-[560px] items-end gap-3 md:flex">
-          {PROBLEM.map((p, i) => (
-            <motion.div
-              key={p.big}
-              className="flex min-w-fit flex-auto flex-col justify-between overflow-hidden rounded-t-[20px] px-7 pb-7 pt-6 text-white lg:px-9 lg:pt-8"
-              style={{ backgroundColor: p.bg }}
-              initial={reduce ? false : { height: "0%" }}
-              animate={{ height: on ? `${p.size * 100}%` : "0%" }}
-              transition={grow(i)}
-            >
-              <span className="whitespace-nowrap font-display text-[56px] font-extrabold leading-[0.95] tracking-[-0.045em] tabular-nums lg:text-[80px] xl:text-[96px]">{p.big}</span>
-              <span className="max-w-[300px] font-display text-[17px] font-bold leading-[24px] text-white/88 lg:text-[20px] lg:leading-[28px]">{p.line}</span>
-            </motion.div>
-          ))}
-        </div>
-        <div className="hidden h-px bg-ink/16 md:block" />
-      </div>
-      <p className="mx-auto mt-5 max-w-[760px] text-center font-display text-[12px] font-medium leading-[17px] text-ink/48">
-        TransUnion CIBIL &amp; SIDBI, MSME Pulse, July 2026 · NABARD Rural Economic Conditions &amp; Sentiments Survey, July 2026
-      </p>
+      <Rise className="mx-auto mt-10 max-w-[720px] text-center md:mt-14">
+        <p className="font-display text-[18px] font-bold leading-[27px] text-ink md:text-[22px] md:leading-[32px] [text-wrap:balance]">
+          Banks often ask for collateral, a credit history or paperwork that many rural business owners don’t have.
+          <ToConfirm />
+        </p>
+        <p className="mt-3 font-display text-[16px] font-medium leading-[24px] text-ink/64 md:text-[18px] md:leading-[28px] [text-wrap:balance]">
+          Without a formal loan, the choice is often an informal lender, some at high interest, or waiting and missing the season.
+        </p>
+      </Rise>
+      <p className="mx-auto mt-6 max-w-[760px] text-center font-display text-[12px] font-medium leading-[17px] text-ink/48">Examples from published Rang De borrower stories.</p>
     </section>
   );
 }
 
-/* ── The turn: the problem hands over to Rang De, in one short band (no pinned scroll). ─────────────────────────── */
+/* ── The evidence: one main figure, then two separate facts. They measure different things, so they are never drawn on
+      one scale, and each carries its own source. ─────────────────────────────────────────────────────────────────── */
+
+const SUPPORT: { big: string; line: string; source: string; confirm?: string }[] = [
+  {
+    big: "About 4 in 10",
+    line: "registered small businesses in India have ever had formal credit.",
+    source: "TransUnion CIBIL & SIDBI, MSME Pulse, July 2026",
+    confirm: "Check base in report",
+  },
+  {
+    big: "About half",
+    line: "of rural households in NABARD’s survey took some informal loans, from family and friends as well as moneylenders.",
+    source: "NABARD Rural Economic Conditions & Sentiments Survey, July 2026",
+    confirm: "Check denominator",
+  },
+];
+
+export function ClearEvidence() {
+  return (
+    <section id="c-evidence" className="mx-2 rounded-[16px] px-4 py-20 sm:px-8 md:py-28" style={{ backgroundColor: PAPER }}>
+      <Bridge>This gap shows up in the numbers too.</Bridge>
+      <Rise className="mx-auto flex max-w-[900px] flex-col items-center gap-4 text-center">
+        <p className={`${H} text-[56px] leading-[0.92] min-[400px]:text-[64px] md:whitespace-nowrap md:text-[96px] lg:text-[128px]`} style={{ color: GREEN_DARK }}>
+          ₹30 lakh crore
+        </p>
+        <p className="max-w-[620px] font-display text-[18px] font-bold leading-[26px] text-ink md:text-[24px] md:leading-[33px] [text-wrap:balance]">
+          of the credit small businesses in India could use isn’t met by formal lenders.
+        </p>
+        <p className="font-display text-[12px] font-medium leading-[17px] text-ink/48">
+          An estimate. SIDBI &amp; Crisil, Understanding Indian MSME Sector: Progress and Challenges, May 2025
+        </p>
+      </Rise>
+
+      <ul className="mx-auto mt-14 grid max-w-[1080px] gap-8 border-t border-ink/12 pt-10 md:mt-20 md:grid-cols-2 md:gap-12">
+        {SUPPORT.map((f, i) => (
+          <li key={f.big}>
+            <Rise delay={i * 0.08} className="flex flex-col gap-2">
+              <p className="font-display text-[15px] font-medium leading-[24px] text-ink/72 md:text-[17px] md:leading-[27px]">
+                <span className="font-extrabold text-ink">{f.big}</span> {f.line}
+              </p>
+              <p className="font-display text-[12px] font-medium leading-[17px] text-ink/48">
+                {f.source}
+                {f.confirm && <ToConfirm>{f.confirm}</ToConfirm>}
+              </p>
+            </Rise>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/* ── Rang De's role, in plain words, with P2P explained where it's first used. ───────────────────────────────────── */
 
 export function ClearTurn() {
   return (
-    <section id="f-rangde" className="mx-2 flex min-h-[52svh] flex-col items-center justify-center gap-5 rounded-[16px] px-4 py-20 text-center md:gap-8 md:py-28" style={{ backgroundColor: GREEN_DARK }}>
-      <Rise>
-        <p className="font-display text-[17px] font-bold leading-[24px] text-white/72 md:text-[24px] md:leading-[32px]">
-          So they borrow from moneylenders, at <span className="text-white">17.77%</span> a year.
+    <section id="f-rangde" className="mx-2 flex flex-col items-center gap-8 rounded-[16px] px-4 py-20 text-center md:gap-10 md:py-28" style={{ backgroundColor: GREEN_DARK }}>
+      <Bridge dark>Rang De was set up to close part of that gap.</Bridge>
+      <Head dark>
+        Rang De connects people who need a loan with <span style={{ color: LIME }}>people who can lend.</span>
+      </Head>
+      <Rise className="flex max-w-[680px] flex-col gap-4 font-display text-[16px] font-medium leading-[25px] text-white/80 md:text-[19px] md:leading-[30px] [text-wrap:balance]">
+        <p>
+          A local partner checks each rural business owner before their loan is listed. People like you choose who to lend to, and several lenders
+          together fund one loan. The borrower repays over time, and the repayments come back to the lenders.
+        </p>
+        <p className="text-white/64">
+          This is called <span className="font-bold text-white">peer-to-peer (P2P) lending</span>: people lend to people, and Rang De runs the process
+          in between. Rang De is registered with the Reserve Bank of India as a P2P lending platform.
         </p>
       </Rise>
-      <Head dark>
-        <span className="block text-[44px] leading-[0.98] md:text-[88px] lg:text-[112px]">
-          Rang De gives them their <span style={{ color: LIME }}>first</span> loan.
-        </span>
-      </Head>
     </section>
   );
 }
@@ -140,9 +188,9 @@ export function ClearTurn() {
       back to you, while the amount returned counts up. One step's words show at a time. ──────────────────────────── */
 
 const STEPS = [
-  { title: "Pick an entrepreneur.", line: "Every profile is met and verified by a local partner before it’s listed." },
-  { title: "Your money goes straight to her loan.", line: "It reaches her bank account within 24 hours of collection, as RBI rules require." },
-  { title: "She repays monthly. You get it back, with interest.", line: "Every repayment shows up in your dashboard." },
+  { title: "Choose a business to lend to.", line: "A local partner has checked every borrower before they’re listed." },
+  { title: "Your money funds their loan.", line: "Several lenders together make up the full amount." },
+  { title: "They repay over time. You get it back, with interest.", line: "Every repayment shows up in your dashboard." },
 ];
 const LENT = 5000;
 const BACK = 5425; // a year at 8.5%, as the calculator works it out
@@ -175,7 +223,7 @@ export function ClearSteps() {
   });
   const out = useTransform(p, (v) => clamp((v - 0.3) / 0.26));
   const back = useTransform(p, (v) => clamp((v - 0.62) / 0.34));
-  const head = <Head>Where your money goes.</Head>;
+  const head = <Head>You can be one of the lenders.</Head>;
 
   if (reduce) {
     return (
@@ -228,7 +276,7 @@ export function ClearSteps() {
               </span>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span key={at === 0 ? "v" : "b"} className={chip} style={{ backgroundColor: GREEN_DARK, color: "#fff" }} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
-                  {at === 0 ? "✓ Met in person, verified" : "Her bank account"}
+                  {at === 0 ? "✓ Checked by a local partner" : "Their loan"}
                 </motion.span>
               </AnimatePresence>
             </div>
@@ -241,7 +289,7 @@ export function ClearSteps() {
                     ₹{Math.round((BACK * paid) / 12).toLocaleString("en-IN")} back<span className="max-md:hidden"> · {paid}/12</span>
                   </>
                 ) : (
-                  "Repaid monthly"
+                  "Repaid over time"
                 )}
               </span>
             </div>
@@ -277,7 +325,8 @@ export function ClearSteps() {
 /* ── It's already happened: four real loans from rangde.in's success stories, each with what was funded and the return
       lenders got. The row drifts on its own and stops under the pointer. ─────────────────────────────────────────── */
 
-export function ClearStories() {
+/** `met`: the short heading used after the proof section on /v/why ("Meet the people they lent to."). */
+export function ClearStories({ met = false }: { met?: boolean } = {}) {
   const s = useRangDeStats();
   const card = (st: (typeof stories)[number], k: string, hidden?: boolean) => (
     <li key={k} aria-hidden={hidden} className="flex w-[300px] shrink-0 flex-col overflow-hidden rounded-[20px] text-white md:w-[400px]" style={{ backgroundColor: "#1F3F0B" }}>
@@ -299,7 +348,7 @@ export function ClearStories() {
           </div>
           <div className="border-l border-white/16 pl-5">
             <p className="whitespace-nowrap font-display text-[19px] font-extrabold tracking-[-0.02em] tabular-nums md:text-[26px]" style={{ color: LIME }}>{st.returns}</p>
-            <p className="font-display text-[12px] font-medium text-white/64 md:text-[13px]">Returns provided</p>
+            <p className="font-display text-[12px] font-medium text-white/64 md:text-[13px]">Interest earned</p>
           </div>
         </div>
       </div>
@@ -308,11 +357,20 @@ export function ClearStories() {
   return (
     <section id="c-stories" className="mx-2 overflow-hidden rounded-[16px] bg-white py-20 md:py-28">
       <div className="px-4">
-        <Rise>
-          <Head>
-            It has already happened <span style={{ color: GREEN_DARK }}>{s.entrepreneurs.toLocaleString("en-IN")}</span> times.
-          </Head>
-        </Rise>
+        {met ? (
+          <Rise>
+            <Head sub="On Rang De, lenders are called social investors.">Meet the people they lent to.</Head>
+          </Rise>
+        ) : (
+          <>
+            <Bridge>It has worked before.</Bridge>
+            <Rise>
+              <Head>
+                It has already happened <span style={{ color: GREEN_DARK }}>{s.entrepreneurs.toLocaleString("en-IN")}</span> times.
+              </Head>
+            </Rise>
+          </>
+        )}
       </div>
       <ul className="mt-10 flex w-max gap-3 hover:[animation-play-state:paused] motion-safe:animate-[marquee_60s_linear_infinite] md:mt-16 md:gap-4">
         {stories.map((st) => card(st, `a${st.image}`))}
@@ -322,72 +380,41 @@ export function ClearStories() {
   );
 }
 
-/* ── A first loan that works for her: two rate cards, side by side. ─────────────────────────────────────────────── */
+/* ── Social investment, explained: the cause and the possible return side by side, and the risk at the same size
+      as both (not a footnote). Replaces the two rate cards, which set a lender's return against a borrower's rate. ── */
 
-const POINTS = ["Met and vetted in person", "Clear repayment dates", "Builds her credit history", "Next loan can come from a bank"];
-
-function RateCard({ rd, on }: { rd: boolean; on: boolean }) {
-  const rate = rd ? 8.5 : 17.77;
-  return (
-    <div className="flex flex-col gap-6 rounded-[20px] p-6 md:gap-8 md:p-10" style={{ backgroundColor: rd ? GREEN_DARK : PAPER, color: rd ? "#fff" : INK }}>
-      <p className="font-display text-[14px] font-bold uppercase tracking-[0.12em] md:text-[15px]" style={{ color: rd ? LIME : "rgba(41,45,54,0.56)" }}>
-        {rd ? "With Rang De" : "With a moneylender"}
-      </p>
-      <div className="flex flex-col gap-3">
-        <p className="flex items-baseline gap-2 font-display font-extrabold tracking-[-0.045em]">
-          {rd && <span className="text-[20px] tracking-[-0.02em] md:text-[24px]">up to</span>}
-          <span className="text-[64px] leading-[0.9] tabular-nums md:text-[96px]" style={{ color: rd ? "#fff" : RED }}>
-            {rate}%
-          </span>
-        </p>
-        <p className="font-display text-[15px] font-medium md:text-[17px]" style={{ color: rd ? "rgba(255,255,255,0.72)" : "rgba(41,45,54,0.64)" }}>
-          interest a year{rd ? "" : ", on average"}
-        </p>
-        {/* The two rates on one scale: 17.77% fills the bar. */}
-        <div className="mt-2 h-[10px] overflow-hidden rounded-full" style={{ backgroundColor: rd ? "rgba(255,255,255,0.16)" : "rgba(41,45,54,0.08)" }}>
-          <motion.div
-            className="h-full rounded-full"
-            style={{ backgroundColor: rd ? LIME : RED }}
-            initial={{ width: "0%" }}
-            animate={{ width: on ? `${(rate / 17.77) * 100}%` : "0%" }}
-            transition={{ duration: 1, delay: 0.2, ease: EASE }}
-          />
-        </div>
-      </div>
-      <ul className="flex flex-col border-t" style={{ borderColor: rd ? "rgba(255,255,255,0.16)" : "rgba(41,45,54,0.1)" }}>
-        {POINTS.map((pt) => (
-          <li key={pt} className="flex items-center gap-3 border-b py-3 font-display text-[15px] font-bold md:py-4 md:text-[17px]" style={{ borderColor: rd ? "rgba(255,255,255,0.16)" : "rgba(41,45,54,0.1)", color: rd ? "#fff" : "rgba(41,45,54,0.4)" }}>
-            <span className="flex size-[24px] shrink-0 items-center justify-center rounded-full text-[13px]" style={{ backgroundColor: rd ? LIME : "rgba(41,45,54,0.08)", color: rd ? GREEN_DARK : "rgba(41,45,54,0.4)" }} aria-label={rd ? "Yes" : "No"}>
-              {rd ? "✓" : "–"}
-            </span>
-            <span className={rd ? "" : "line-through decoration-ink/24"}>{pt}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+const JOBS = [
+  { n: "1", title: "It funds a real business.", line: "Your money becomes part of a loan a rural business owner uses for their work." },
+  { n: "2", title: "It can earn you interest.", line: "As the borrower repays, your money comes back to you, with interest." },
+];
 
 export function ClearCompare() {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  const seen = useInView(ref, { once: true, amount: 0.3 });
   return (
     <section id="c-compare" className="mx-2 rounded-[16px] bg-white px-4 py-20 sm:px-8 md:py-28">
       <Rise>
-        <Head>A first loan that works for her.</Head>
+        <Head sub="Rang De calls lending here a social investment. It means your money does both of these.">Your money does two jobs.</Head>
       </Rise>
-      <div ref={ref} className="mx-auto mt-10 grid max-w-[1080px] gap-3 md:mt-16 md:grid-cols-2 md:gap-4">
-        <Rise>
-          <RateCard rd on={!!reduce || seen} />
-        </Rise>
-        <Rise delay={0.08}>
-          <RateCard rd={false} on={!!reduce || seen} />
-        </Rise>
-      </div>
-      <p className="mx-auto mt-5 max-w-[1080px] text-center font-display text-[12px] font-medium leading-[17px] text-ink/48">
-        Moneylender rate: NABARD Rural Economic Conditions &amp; Sentiments Survey, July 2026.
-      </p>
+      <ul className="mx-auto mt-10 grid max-w-[1080px] gap-3 md:mt-14 md:grid-cols-2 md:gap-4">
+        {JOBS.map((j, i) => (
+          <li key={j.n}>
+            <Rise delay={i * 0.08} className="h-full">
+              <div className="flex h-full flex-col gap-3 rounded-[20px] p-6 md:p-10" style={{ backgroundColor: GREEN_DARK }}>
+                <span className="flex size-[32px] items-center justify-center rounded-full font-display text-[15px] font-extrabold" style={{ backgroundColor: LIME, color: GREEN_DARK }}>{j.n}</span>
+                <p className="font-display text-[26px] font-extrabold leading-[1.08] tracking-[-0.03em] text-white md:text-[36px]">{j.title}</p>
+                <p className="font-display text-[15px] font-medium leading-[23px] text-white/72 md:text-[18px] md:leading-[27px]">{j.line}</p>
+              </div>
+            </Rise>
+          </li>
+        ))}
+      </ul>
+      <Rise className="mx-auto mt-3 max-w-[1080px] md:mt-4">
+        <div className="flex flex-col gap-3 rounded-[20px] p-6 md:p-10" style={{ backgroundColor: PAPER }}>
+          <p className="font-display text-[26px] font-extrabold leading-[1.08] tracking-[-0.03em] text-ink md:text-[36px]">It isn’t a donation, and it isn’t guaranteed.</p>
+          <p className="max-w-[760px] font-display text-[15px] font-medium leading-[23px] text-ink/72 md:text-[18px] md:leading-[27px]">
+            RBI rules don’t allow P2P platforms to guarantee repayment. If a borrower can’t repay, you can lose part of what you lent.
+          </p>
+        </div>
+      </Rise>
     </section>
   );
 }
@@ -438,6 +465,9 @@ export function ClearProofHeading() {
         Join <span style={{ color: GREEN_DARK }}>{s.investors.toLocaleString("en-IN")}</span> people
         <br className="max-md:hidden" /> lending on Rang De.
       </span>
+      <span className="font-display text-[14px] font-bold leading-[21px] tracking-normal text-ink/56 md:text-[17px]">
+        ₹{s.disbursedCr.toFixed(0)} Cr lent since 2019 · {s.entrepreneurs.toLocaleString("en-IN")} loans · {s.states} states
+      </span>
     </span>
   );
 }
@@ -451,9 +481,9 @@ const REPORTS = [
     by: "TransUnion CIBIL & SIDBI",
     title: "MSME Pulse",
     date: "July 2026",
-    big: "6 in 10",
-    line: "small businesses have never had a formal loan",
-    finding: "Only 3.6 crore of India’s 8.7 crore registered small businesses have ever had formal credit.",
+    big: "4 in 10",
+    line: "registered small businesses have ever had formal credit",
+    finding: "Reported as 3.6 crore of 8.7 crore registered small businesses. Ever having formal credit isn’t the same as being refused it.",
     href: "https://www.transunioncibil.com/lp/msme-pulse-jul-2026",
     bg: INK,
     fg: "#fff",
@@ -464,8 +494,8 @@ const REPORTS = [
     title: "Rural Economic Conditions & Sentiments Survey",
     date: "July 2026",
     big: "17.77%",
-    line: "a year, on informal loans",
-    finding: "That’s the average rate on informal loans, and nearly half of rural households take them.",
+    line: "a year, average across informal loans",
+    finding: "The average includes interest-free loans from family and friends, so some informal lenders charge far more and some charge nothing.",
     href: null,
     bg: RED,
     fg: "#fff",
@@ -477,7 +507,7 @@ const REPORTS = [
     date: "2021",
     big: "12%",
     line: "of Indian adults borrowed from a bank",
-    finding: "Against 55% in the UK and 66% in the US. Almost a third borrowed from family or friends instead.",
+    finding: "Almost a third borrowed from family or friends instead. A newer edition (2025) is out and should replace this one.",
     href: "https://www.worldbank.org/en/publication/globalfindex",
     bg: PAPER,
     fg: INK,

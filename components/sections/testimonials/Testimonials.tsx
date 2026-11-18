@@ -24,7 +24,8 @@ const allTestimonials = [...testimonialsRow1, ...testimonialsRow2];
  * `inked` (with `refined`, Version 1.1): the heading fills in as it is read (plain, no coloured edge).
  * `evenRows` (Version 1): both rows as tall as the taller one. Each row is as tall as its longest quote, so the second
  * row came out shorter than the first; measured on load and on resize, since quote lengths and card widths vary. */
-export function Testimonials({ withStories = false, typed = false, refined = false, inked = false, evenRows = false }: { withStories?: boolean; typed?: boolean; refined?: boolean; inked?: boolean; evenRows?: boolean }) {
+/** `heading` (Version 4, /v/why) replaces the "Trusted by N social investors" heading, so the count isn't repeated right after a section that leads with it. */
+export function Testimonials({ withStories = false, typed = false, refined = false, inked = false, evenRows = false, heading }: { withStories?: boolean; typed?: boolean; refined?: boolean; inked?: boolean; evenRows?: boolean; heading?: string }) {
   const { investors } = useRangDeStats();
   const rowsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -53,10 +54,10 @@ export function Testimonials({ withStories = false, typed = false, refined = fal
         {refined && inked ? (
           // Keyed on the text so it starts afresh if the live investor count arrives after it has rendered.
           <ScrollInk
-            key={investors}
+            key={heading ?? investors}
             as="h2"
             tone="plain"
-            text={`Trusted by ${investors.toLocaleString("en-IN")} social investors across the world.`}
+            text={heading ?? `Trusted by ${investors.toLocaleString("en-IN")} social investors across the world.`}
             className="font-display text-h3 font-bold"
           />
         ) : refined && typed ? (
