@@ -471,7 +471,7 @@ function DriftRow({ photos, reverse, seconds }: { photos: { src: string; alt: st
       <ul className={`flex h-full w-max gap-2 ${reverse ? "animate-marquee-reverse" : "animate-marquee"}`} style={{ animationDuration: `${seconds}s` }}>
         {[...photos, ...photos].map((ph, i) => (
           <li key={i} aria-hidden={i >= photos.length || undefined} className="relative h-full w-[clamp(170px,26svh,320px)] shrink-0 overflow-hidden rounded-4">
-            <Image src={ph.src} alt={i >= photos.length ? "" : ph.alt} fill priority={i < 4} sizes="320px" className="object-cover" />
+            <Image src={ph.src} alt={i >= photos.length ? "" : ph.alt} fill priority={i < 4} loading={i < 4 ? undefined : "eager"} sizes="320px" className="object-cover" />
           </li>
         ))}
       </ul>
