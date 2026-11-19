@@ -1,12 +1,11 @@
 "use client";
 
-import { AnimatePresence, animate, motion, useInView, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionStyle, type MotionValue } from "motion/react";
+import { AnimatePresence, animate, motion, useInView, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "motion/react";
 import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/ui";
 import { useRangDeStats } from "@/components/providers/StatsProvider";
 import { LinkButton, SIGNUP_URL } from "./ui";
-import { SHOP, type LineArtPaths } from "@/lib/why-thread-art";
 import { HowItWorksStage } from "@/components/how-it-works/HowItWorksStage";
 import { HOW_IT_WORKS_STEPS } from "@/components/how-it-works/steps";
 import { CreditGrowsScene } from "./CreditGrowsScene";
@@ -67,27 +66,6 @@ function usePin() {
 const STICKY = "sticky top-[var(--navbar-bottom,0px)] flex h-[calc(100svh-var(--navbar-bottom,0px))] flex-col";
 const CREAM = "#F3EFD8";
 
-function DrawnPath({ d, p, a, b, color, width }: { d: string; p: MotionValue<number>; a: number; b: number; color: string; width: number }) {
-  const pathLength = useTransform(p, (v) => span(v, a, b));
-  const opacity = useTransform(pathLength, (v) => (v > 0.001 ? 1 : 0));
-  return <motion.path d={d} fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" style={{ pathLength, opacity }} />;
-}
-
-/** A traced line drawing whose lines draw themselves one after another, from the ground up, as `p` runs from `from` to
- * `to` (after deltacafes.com). Each line takes about a third of the run; they start in order. */
-function DrawnArt({ art, p, from, to, color, width = 1.6, className, style }: { art: LineArtPaths; p: MotionValue<number>; from: number; to: number; color: string; width?: number; className?: string; style?: MotionStyle }) {
-  const n = art.paths.length;
-  const run = to - from;
-  return (
-    <motion.svg viewBox={`0 0 ${art.w} ${art.h}`} className={className} style={style} aria-hidden>
-      {art.paths.map((d, i) => {
-        const a = from + (i / n) * run * 0.7;
-        return <DrawnPath key={i} d={d} p={p} a={a} b={a + run * 0.3} color={color} width={width} />;
-      })}
-    </motion.svg>
-  );
-}
-
 /** One letter of a heading that comes in from a blur as `p` passes its slot (after realfood.gov's "can solve this crisis"). */
 /** Splits a line into words (kept whole, so a line never breaks inside a word) and the words into letters. */
 function byWord(text: string, render: (ch: string, index: number) => ReactNode) {
@@ -111,93 +89,47 @@ function BlurChar({ ch, p, at }: { ch: string; p: MotionValue<number>; at: numbe
   );
 }
 
-/** A photo at the edge, tilted, in black and white, drifting against the scroll (after deltacafes.com). */
-function DriftPhoto({ src, p, className, tilt, from, to }: { src: string; p: MotionValue<number>; className: string; tilt: number; from: number; to: number }) {
-  const y = useTransform(p, [0, 1], [from, to]);
-  return (
-    <motion.span className={`absolute hidden overflow-hidden rounded-[6px] shadow-[0_16px_40px_rgba(0,0,0,0.35)] lg:block ${className}`} style={{ y, rotate: tilt }} aria-hidden>
-      <Image src={src} alt="" fill sizes="220px" className="object-cover grayscale" />
-    </motion.span>
-  );
-}
+/* ── 1 The problem (19 Nov 2026 review: one big centred statement, no layers of headings). Pinned for a little over a
+      screen; the words brighten one by one as you scroll, like the turn further down. The first line is in Rang De's own
+      words (from their LinkedIn post "Be someone's first yes"); the second is the loop that keeps the bank saying no. ── */
 
-const BARRIERS = [
-  { k: "Collateral", v: "Not enough" },
-  { k: "Credit history", v: "None yet" },
+const PROBLEM = [
+  { text: "For millions of rural entrepreneurs, the bank never says yes.", color: "#FFFFFF" },
+  { text: "No credit history, so no loan. No loan, so no credit history.", color: LIME },
 ];
-
-/* ── 1 The problem (after deltacafes.com's sustainability section): deep green, the shop drawn in one cream line, photos
-      drifting at the edges. Beat one: the shop draws itself in, "The business is ready." Beat two: the shop dims, a bank
-      loan application slides in and fails on the two things banks ask for, and "The loan isn't." comes in from a blur. ── */
-
-const LOAN_ISNT = "The loan isn’t.";
+const PROBLEM_TEXT = PROBLEM.map((l) => l.text).join(" ");
 
 export function ThreadProblem() {
   const reduce = useReducedMotion();
   const { ref, p: scroll } = usePin();
   const still = useTransform(scroll, () => 1);
   const p = reduce ? still : scroll;
-  const shopOpacity = useTransform(p, (v) => 1 - 0.55 * span(v, 0.5, 0.62));
-  const cardX = useTransform(p, (v) => `${(1 - span(v, 0.48, 0.62)) * 40}px`);
-  const cardOpacity = useTransform(p, (v) => span(v, 0.48, 0.6));
-  const [failed, setFailed] = useState(!!reduce);
-  useMotionValueEvent(p, "change", (v) => setFailed(v > 0.66));
-
+  const total = PROBLEM_TEXT.split(" ").length;
+  let n = 0;
   return (
-    <section id="c-problem" className="mx-2 overflow-clip rounded-[16px]" style={{ backgroundColor: DEEP, color: CREAM }}>
-      <div ref={ref} className={reduce ? "" : "relative h-[190svh]"}>
-        <div className={`${reduce ? "relative flex flex-col py-16" : STICKY} items-center justify-center gap-6 px-4 md:gap-8`}>
-          <DriftPhoto src="/images/collage/collage-01.webp" p={p} className="left-[5%] top-[14%] h-[230px] w-[180px]" tilt={-6} from={60} to={-80} />
-          <DriftPhoto src="/images/collage/collage-16.webp" p={p} className="bottom-[10%] right-[5%] h-[210px] w-[170px]" tilt={5} from={-40} to={90} />
-
-          <h2 className={`${H2} relative text-center`}>
-            The business is ready.
-            <span className="block" style={{ color: LIME }} aria-label={LOAN_ISNT}>
-              {byWord(LOAN_ISNT, (ch, i) => <BlurChar key={i} ch={ch} p={p} at={0.55 + i * 0.012} />)}
-            </span>
+    <section id="c-problem" className="mx-2 overflow-clip rounded-[24px]" style={{ backgroundColor: DARK }}>
+      <div ref={ref} className={reduce ? "" : "relative h-[180svh]"}>
+        <div className={`${reduce ? "flex flex-col py-24" : STICKY} items-center justify-center gap-10 px-4 text-center md:gap-14`}>
+          <h2 className={`${HEAD} max-w-[1120px] text-[34px] leading-[1.15] md:text-[56px] lg:text-[64px]`} aria-label={PROBLEM_TEXT}>
+            {PROBLEM.map((line) => (
+              <span key={line.text} className="block" style={{ color: line.color }}>
+                {line.text.split(" ").map((w) => {
+                  const i = n++;
+                  return <FillWord key={i} w={w} p={p} at={0.08 + (i / total) * 0.6} />;
+                })}
+              </span>
+            ))}
           </h2>
-
-          <div className="relative flex items-end justify-center">
-            <DrawnArt art={SHOP} p={p} from={0.02} to={0.44} color={CREAM} className="w-[230px] md:w-[320px] lg:w-[380px]" style={{ opacity: shopOpacity }} />
-
-            {/* The bank's answer: a loan application that fails on the two things banks ask for. */}
-            <motion.div
-              className="absolute bottom-[-8px] left-1/2 w-[230px] -translate-x-1/2 rounded-[14px] bg-white p-4 text-ink shadow-[0_20px_50px_rgba(0,0,0,0.35)] md:bottom-[18%] md:left-[78%] md:w-[260px] md:translate-x-0"
-              style={{ x: cardX, opacity: cardOpacity }}
-            >
-              <p className="font-display text-[13px] font-bold text-ink/56">Bank loan application</p>
-              <ul className="mt-2 flex flex-col">
-                {BARRIERS.map((b) => (
-                  <li key={b.k} className="flex items-center justify-between border-b border-ink/8 py-2 font-display text-[14px] font-medium">
-                    {b.k}
-                    <span className="font-bold" style={{ color: RED }}>{b.v}</span>
-                  </li>
-                ))}
-              </ul>
-              <motion.p
-                className="mt-3 inline-flex rounded-full px-2.5 py-1 font-display text-[12px] font-bold"
-                initial={false}
-                animate={{ backgroundColor: failed ? "rgba(227,38,66,0.12)" : "rgba(41,45,54,0.06)", color: failed ? RED : "rgba(41,45,54,0.56)" }}
-              >
-                {failed ? "Not approved" : "Under review"}
-              </motion.p>
-            </motion.div>
-          </div>
-
-          <p className="relative mt-16 max-w-[460px] text-center font-display text-[13px] font-medium leading-[19px] md:mt-0 md:text-[14px]" style={{ color: "rgba(243,239,216,0.64)" }}>
-            No credit history, so no bank loan. No bank loan, so no credit history.
-          </p>
           {/* Source: SIDBI's 2025 survey of 2,097 small businesses (SIDBI & Crisil), as SIDBI reports it: respondents "named
-              inadequate documents, limited credit history and the inability to offer collateral" as the main barriers, and a
-              first-time applicant "has no repayment history for the lender to examine". */}
+              inadequate documents, limited credit history and the inability to offer collateral" as the main barriers. */}
           <a
             href="https://www.sidbi.in/blog/the-msme-credit-gap-in-india-what-does-the-data-say"
             target="_blank"
             rel="noreferrer"
-            className="relative -mt-3 font-display text-[12px] font-medium underline decoration-current/30 underline-offset-4 hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 md:-mt-5"
-            style={{ color: "rgba(243,239,216,0.56)" }}
+            className="max-w-[560px] font-display text-[14px] font-medium leading-[21px] underline decoration-current/30 underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{ color: "rgba(243,239,216,0.64)" }}
           >
-            Small businesses name limited credit history and no collateral among the main barriers. SIDBI survey, 2025
+            Small businesses name limited credit history and no collateral among the main barriers to a loan. SIDBI &amp; Crisil, 2025
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
         </div>
@@ -206,90 +138,145 @@ export function ThreadProblem() {
   );
 }
 
-/* ── 2 The evidence (after realfood.gov's "America is sick. The data is clear."): a two-line headline, then three real
-      figures as bars rising from one baseline as the section scrolls in. Each bar is its own share of its own group (so
-      each is read against 100%, not against the others), in a red ramp that ends brightest; the number sits in the bar,
-      the caption underneath with the key words in red, and the source under that.
-      Checked 22 Nov 2026:
-        24%: SIDBI & Crisil (May 2025): the credit gap is about 24% of MSMEs' overall finance demand, ~₹30 lakh crore.
-        49%: NABARD RECSS Round 12 (July 2026): 23.6% informal only + 25.3% both = 48.9%. The three borrowing groups add
-             up to 100%, so the base is rural households that borrow.
-        17.77%: NABARD RECSS Round 12: the average interest rate on informal loans (nearly 20% of informal borrowers paid none).
-      (The 59% "never had a formal loan" figure was dropped on 22 Nov: it reads as "never needed one".) ── */
+/* ── 2 The numbers (19 Nov 2026, option A). Two cards of equal size side by side, with the same gap between them as the
+      page's edge. Each answers the next question after "the bank never says yes": where do they borrow, and what does it
+      cost them. Each has its own heading, its own kind of picture and one large number, so the two never read as one
+      chart:
+        Left, lime: "Half of them borrow outside the banks." 100 dots, 49 lit in red (people), 49%.
+        Right, light: "It costs more, and builds nothing." ₹100 borrowed against about ₹118 to repay (money), ₹18.
+      The pictures play and the numbers count up once each card is on screen. The section stays put once its end reaches
+      the bottom of the screen, so "This is why Rang De exists" slides up over it (useStayAtBottom).
+      Checked 22 Nov 2026 (NABARD RECSS Round 12, July 2026):
+        49%: 23.6% informal only + 25.3% both = 48.9%, of rural households that borrow.
+        ₹18: the average interest rate on informal loans is 17.77% a year, so about ₹18 on ₹100 over a year (nearly 20% of
+             informal borrowers paid none, which pulls the average down).
+      The ₹30 lakh crore credit gap (SIDBI & Crisil) stays in Read the numbers yourself. ─────────────────────────────── */
 
 const DARK = "#1B1D22";
-const FIGURES = [
-  { pct: 49, lead: "of rural families who borrow ", key: "go outside the banks", tail: ", to moneylenders, relatives or friends.", src: "NABARD rural survey, July 2026", bg: "#8F1528" },
-  { pct: 24, lead: "of the credit small businesses need, ", key: "banks and formal lenders don’t provide", tail: ". That’s about ₹30 lakh crore.", src: "SIDBI & Crisil, 2025 (an estimate)", bg: "#B81C33" },
-  { pct: 17.77, lead: "a year is the ", key: "average interest on informal loans", tail: ". And repaying on time still builds no credit history.", src: "NABARD rural survey, July 2026", bg: RED },
-];
-const KEY = "#FF7A8C"; // the key words in each caption: a lighter red that reads on the dark ground
 
-function FigureBar({ f, i, p }: { f: (typeof FIGURES)[number]; i: number; p: MotionValue<number> }) {
-  const grow = useTransform(p, (v) => 1 - Math.pow(1 - span(v, i * 0.22, 0.5 + i * 0.22), 3));
-  const h = useTransform(grow, (g) => `${g * f.pct}%`);
-  const w = useTransform(grow, (g) => `${g * f.pct}%`);
-  const shown = useTransform(grow, (g) => `${(g * f.pct).toFixed(f.pct % 1 ? 2 : 0)}%`);
-  const capOpacity = useTransform(grow, (g) => span(g, 0.6, 1));
-  const capY = useTransform(grow, (g) => 12 * (1 - span(g, 0.6, 1)));
+/** 49 of 100 dots light up in red, one after another. */
+function DotsPicture({ on }: { on: boolean }) {
+  const reduce = useReducedMotion();
   return (
-    <li className="flex flex-col gap-4 md:gap-5">
-      {/* Laptops: a column rising from the baseline; its full height is 100%. */}
-      <div className="relative hidden h-[min(420px,44svh)] items-end md:flex">
-        <motion.div className="flex w-full items-start rounded-t-[6px] px-4 pt-3 lg:px-5" style={{ height: h, backgroundColor: f.bg }}>
-          <motion.span className="font-display text-[44px] font-bold leading-none tracking-[-0.03em] tabular-nums lg:text-[56px]" style={{ color: DARK }}>
-            {shown}
-          </motion.span>
-        </motion.div>
-      </div>
-      {/* Phones: the number, then a track that stands for 100% with the share filled in. */}
-      <div className="flex flex-col gap-3 md:hidden">
-        <motion.span className="font-display text-[48px] font-bold leading-none tracking-[-0.03em] tabular-nums" style={{ color: KEY }}>
-          {shown}
-        </motion.span>
-        <div className="h-[14px] overflow-hidden rounded-full bg-white/10">
-          <motion.div className="h-full rounded-full" style={{ width: w, backgroundColor: f.bg }} />
+    <div className="grid w-[200px] grid-cols-10 gap-[6px] md:w-[240px]" role="img" aria-label="49 of every 100 dots are lit.">
+      {Array.from({ length: 100 }, (_, i) => (
+        <span
+          key={i}
+          className="aspect-square rounded-full transition-colors duration-300"
+          style={{ backgroundColor: on && i < 49 ? RED : "rgba(31,63,11,0.16)", transitionDelay: reduce ? "0ms" : `${i * 14}ms` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** ₹100 borrowed, then the same bar with about ₹18 of interest added on the end. */
+function CostPicture({ on }: { on: boolean }) {
+  const reduce = useReducedMotion();
+  const grow = (delay: number) => ({ initial: reduce ? false : { scaleX: 0 }, animate: on || reduce ? { scaleX: 1 } : undefined, transition: { duration: 0.9, delay, ease: EASE } });
+  const LABEL = "font-display text-[15px] font-bold text-ink/64";
+  const BASE = "rgba(41,45,54,0.18)";
+  return (
+    <div className="flex w-[260px] flex-col gap-4 md:w-[320px]" role="img" aria-label="Borrow ₹100 informally and repay about ₹118 a year later.">
+      <div className="flex flex-col gap-2">
+        <p className={LABEL}>Borrow ₹100</p>
+        <div className="flex h-[32px] w-full">
+          <motion.span className="block h-full origin-left rounded-[6px]" style={{ width: "84.9%", backgroundColor: BASE }} {...grow(0)} />
         </div>
       </div>
-      <motion.div className="flex flex-col gap-2" style={{ opacity: capOpacity, y: capY }}>
-        <p className="font-display text-[17px] font-bold leading-[24px] text-white md:text-[20px] md:leading-[27px] lg:text-[22px] lg:leading-[29px]">
-          {f.pct}% {f.lead}
-          <span style={{ color: KEY }}>{f.key}</span>
-          {f.tail}
+      <div className="flex flex-col gap-2">
+        <p className={LABEL}>Repay about ₹118 a year later</p>
+        <div className="flex h-[32px] w-full gap-[3px]">
+          <motion.span className="block h-full origin-left rounded-l-[6px]" style={{ width: "84.9%", backgroundColor: BASE }} {...grow(0.2)} />
+          <motion.span className="flex h-full origin-left items-center justify-center rounded-r-[6px] font-display text-[12px] font-bold text-white" style={{ width: "15.1%", backgroundColor: RED }} {...grow(0.9)}>
+            ₹18
+          </motion.span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const CARDS: { id: string; bg: string; fg: string; sub: string; heading: string; picture: (on: boolean) => ReactNode; to: number; prefix?: string; suffix?: string; line: string }[] = [
+  {
+    id: "informal",
+    bg: LIME,
+    fg: DEEP,
+    sub: "rgba(31,63,11,0.72)",
+    heading: "Half of them borrow outside the banks.",
+    picture: (on) => <DotsPicture on={on} />,
+    to: 49,
+    suffix: "%",
+    line: "of rural families who borrow go to moneylenders, relatives or friends.",
+  },
+  {
+    id: "cost",
+    bg: PAPER,
+    fg: INK,
+    sub: "rgba(41,45,54,0.64)",
+    heading: "It costs more, and builds nothing.",
+    picture: (on) => <CostPicture on={on} />,
+    to: 18,
+    prefix: "₹",
+    line: "a year on every ₹100 borrowed informally (17.77% on average). Repaying on time still builds no credit history.",
+  },
+];
+
+function NumberCard({ c }: { c: (typeof CARDS)[number] }) {
+  const reduce = useReducedMotion();
+  const ref = useRef<HTMLLIElement>(null);
+  const on = useInView(ref, { once: true, amount: 0.45 }) || !!reduce;
+  return (
+    <li ref={ref} className="flex min-h-[560px] flex-col gap-8 rounded-[24px] p-6 md:min-h-[min(760px,calc(100svh-var(--navbar-bottom,0px)-24px))] md:p-10 lg:p-14" style={{ backgroundColor: c.bg, color: c.fg }}>
+      <h3 className={`${HEAD} max-w-[520px] text-[28px] md:text-[36px] lg:text-[44px]`}>{c.heading}</h3>
+      <div className="flex items-center">{c.picture(on)}</div>
+      <div className="mt-auto flex flex-col gap-3">
+        <p className="font-display text-[96px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums md:text-[120px] lg:text-[168px]">
+          <CountUp to={c.to} prefix={c.prefix} suffix={c.suffix} on={on} />
         </p>
-        <p className="font-display text-[12px] font-medium leading-[17px] text-white/48">{f.src}</p>
-      </motion.div>
+        <p className="max-w-[480px] font-display text-[17px] font-bold leading-[25px] md:text-[19px] md:leading-[28px]">{c.line}</p>
+        <p className="font-display text-[14px] font-medium" style={{ color: c.sub }}>
+          NABARD rural survey, July 2026
+        </p>
+      </div>
     </li>
   );
 }
 
-export function ThreadEvidence() {
-  const reduce = useReducedMotion();
-  // The bars play once they're on screen (not tied to the scroll, which finished them before you got there): 0 → 1 over
-  // about two and a half seconds, each bar starting a beat after the one before. Leaving the section resets them, so
-  // they play again when you come back.
-  const bars = useRef<HTMLOListElement>(null);
-  const seen = useInView(bars, { amount: 0.5 });
-  const p = useMotionValue(reduce ? 1 : 0);
+/** Makes a section stay put (under the navigation bar, or with its end at the bottom of the screen if it's taller than the
+ * screen), so the next section slides up over it. */
+function useStayAtBottom() {
+  const ref = useRef<HTMLElement>(null);
+  const [top, setTop] = useState<number | undefined>(undefined);
   useEffect(() => {
-    if (reduce) return;
-    if (!seen) {
-      p.set(0);
-      return;
-    }
-    const a = animate(p, 1, { duration: 2.6, ease: "linear" });
-    return () => a.stop();
-  }, [seen, reduce, p]);
+    const el = ref.current;
+    if (!el) return;
+    // Just under the navigation bar when the section fits on screen; otherwise with its end at the bottom of the screen.
+    const set = () => {
+      const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navbar-bottom")) || 0;
+      setTop(Math.min(nav, window.innerHeight - el.offsetHeight));
+    };
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    window.addEventListener("resize", set);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", set);
+    };
+  }, []);
+  return { ref, top };
+}
+
+export function ThreadEvidence() {
+  const { ref, top } = useStayAtBottom();
   return (
-    <section id="c-evidence" className="mx-2 rounded-[24px] px-4 py-16 sm:px-6 md:py-24 lg:px-10" style={{ backgroundColor: DARK }}>
-      <div className={`${WIDE} flex flex-col gap-10 md:gap-8`}>
-        <Lines className={`${HEAD} text-center text-[36px] text-white md:text-[56px] lg:text-[72px]`} a="It isn’t just one shop." b="Across India, the loans fall short." grey="text-white/48" />
-        <ol ref={bars} className="grid gap-10 md:grid-cols-3 md:gap-4 lg:gap-6">
-          {FIGURES.map((f, i) => (
-            <FigureBar key={f.pct} f={f} i={i} p={p} />
-          ))}
-        </ol>
-      </div>
+    <section ref={ref} id="c-evidence" aria-label="The numbers" className="sticky z-0 mx-2" style={{ top }}>
+      <ul className="grid gap-2 md:grid-cols-2">
+        {CARDS.map((c) => (
+          <NumberCard key={c.id} c={c} />
+        ))}
+      </ul>
     </section>
   );
 }
@@ -347,6 +334,46 @@ const HOW = [
   { t: "Their credit history grows", s: "Each repayment is reported to the credit bureaus that banks check." },
 ];
 
+/** The five step animations (Version 2's app screens, then the credit-growth scene) stacked edge to edge in one tall
+ * strip inside a plain white card, with no frame around it. Scrolling glides the strip from one animation to the next:
+ * each holds while its step is open and slides on as the step changes, eased by a spring so it never jumps. Only the
+ * animations next to the one in view are mounted, so each starts playing as it slides in. (19 Nov 2026, after a
+ * Pinterest reference.) */
+function HowStrip({ p, at }: { p: MotionValue<number>; at: number }) {
+  const reduce = useReducedMotion();
+  const n = HOW.length;
+  const target = useTransform(p, (v) => {
+    const x = Math.min(n - 1, Math.max(0, v * n - 0.5));
+    const k = Math.floor(x);
+    const f = x - k;
+    const e = f < 0.2 ? 0 : f > 0.8 ? 1 : (1 - Math.cos(((f - 0.2) / 0.6) * Math.PI)) / 2;
+    return k + e;
+  });
+  const pos = useSpring(target, { stiffness: 140, damping: 28, mass: 0.6 });
+  const [near, setNear] = useState(0);
+  useMotionValueEvent(pos, "change", (v) => setNear(Math.round(v)));
+  const y = useTransform(pos, (v) => `${(-v / n) * 100}%`);
+  const shown = reduce ? at : near;
+  return (
+    <div className="relative mx-auto aspect-[374/342] w-[84%] self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:w-[min(100%,calc((100svh-var(--navbar-bottom,0px)-96px)*1.0936))]">
+      <motion.ul className="absolute inset-x-0 top-0 flex flex-col" style={{ height: `${n * 100}%`, y: reduce ? `${(-at / n) * 100}%` : y }}>
+        {HOW.map((h, i) => (
+          <li key={h.t} className="relative flex-1 border-b border-ink/8 last:border-b-0" aria-hidden={i !== at || undefined}>
+            {Math.abs(i - shown) <= 1 &&
+              (i < HOW_IT_WORKS_STEPS.length ? (
+                <HowItWorksStage stepIndex={i} label={HOW_IT_WORKS_STEPS[i].illustrationLabel} />
+              ) : (
+                <div role="img" aria-label="A borrower's repayments tick in month by month and her credit score rises; then new possibilities open up: a bigger loan, new machinery, more clients." className="size-full">
+                  <CreditGrowsScene />
+                </div>
+              ))}
+          </li>
+        ))}
+      </motion.ul>
+    </div>
+  );
+}
+
 export function ThreadHow() {
   const reduce = useReducedMotion();
   const { ref, p } = usePin();
@@ -359,15 +386,6 @@ export function ThreadHow() {
     const top = el.getBoundingClientRect().top + window.scrollY;
     window.scrollTo({ top: top + ((i + 0.5) / HOW.length) * (el.offsetHeight - window.innerHeight), behavior: "smooth" });
   };
-
-  const stage =
-    at < HOW_IT_WORKS_STEPS.length ? (
-      <HowItWorksStage wide stepIndex={at} label={HOW_IT_WORKS_STEPS[at].illustrationLabel} />
-    ) : (
-      <div role="img" aria-label="A borrower's repayments tick in month by month and her credit score rises; then new possibilities open up: a bigger loan, new machinery, more clients." className="size-full">
-        <CreditGrowsScene />
-      </div>
-    );
 
   return (
     <section id="c-how" className="mx-2 overflow-clip rounded-[24px]" style={{ backgroundColor: PAPER }}>
@@ -413,20 +431,8 @@ export function ThreadHow() {
             </div>
           </div>
 
-          {/* Right: the step's animation, on a deep-green panel the height of the screen. */}
-          <div className="flex min-h-0 flex-col gap-4 rounded-[24px] p-3 md:gap-5 md:p-6" style={{ backgroundColor: DEEP }}>
-            <div className="hidden items-center justify-between gap-4 px-1 md:order-2 md:flex">
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.p key={at} className="font-display text-[20px] font-bold text-white lg:text-[24px]" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                  {HOW[at].t}
-                </motion.p>
-              </AnimatePresence>
-              <span className="shrink-0 rounded-full px-3 py-1 font-display text-[13px] font-bold tabular-nums" style={{ backgroundColor: LIME, color: DEEP }}>
-                Step {at + 1} of {HOW.length}
-              </span>
-            </div>
-            <div className="relative mx-auto aspect-[374/342] w-[84%] overflow-hidden rounded-[16px] bg-white md:order-1 md:w-full md:aspect-auto md:min-h-0 md:flex-1">{stage}</div>
-          </div>
+          {/* Right: the step animations in one strip that glides on as you scroll (see HowStrip). */}
+          <HowStrip p={p} at={at} />
         </div>
       </div>
     </section>
