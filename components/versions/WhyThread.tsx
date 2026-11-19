@@ -142,8 +142,10 @@ export function ThreadProblem() {
       page's edge. Each answers the next question after "the bank never says yes": where do they borrow, and what does it
       cost them. Each has its own heading, its own kind of picture and one large number, so the two never read as one
       chart:
-        Left, lime: "Half of them borrow outside the banks." 100 dots, 49 lit in red (people), 49%.
-        Right, light: "It costs more, and builds nothing." ₹100 borrowed against about ₹118 to repay (money), ₹18.
+        Left, lime: half of rural families who borrow turn to moneylenders, relatives or friends. 49% beside 100 dots,
+          49 lit in red (people).
+        Right, light: those loans cost about ₹18 a year on every ₹100 and build no credit history. ₹18 beside ₹100
+          borrowed against about ₹118 to repay (money).
       The pictures play and the numbers count up once each card is on screen. The section stays put once its end reaches
       the bottom of the screen, so "This is why Rang De exists" slides up over it (useStayAtBottom).
       Checked 22 Nov 2026 (NABARD RECSS Round 12, July 2026):
@@ -177,7 +179,7 @@ function CostPicture({ on }: { on: boolean }) {
   const LABEL = "font-display text-[15px] font-bold text-ink/64";
   const BASE = "rgba(41,45,54,0.18)";
   return (
-    <div className="flex w-[260px] flex-col gap-4 md:w-[320px]" role="img" aria-label="Borrow ₹100 informally and repay about ₹118 a year later.">
+    <div className="flex w-[260px] flex-col gap-4 lg:w-[280px]" role="img" aria-label="Borrow ₹100 informally and repay about ₹118 a year later.">
       <div className="flex flex-col gap-2">
         <p className={LABEL}>Borrow ₹100</p>
         <div className="flex h-[32px] w-full">
@@ -197,28 +199,30 @@ function CostPicture({ on }: { on: boolean }) {
   );
 }
 
-const CARDS: { id: string; bg: string; fg: string; sub: string; heading: string; picture: (on: boolean) => ReactNode; to: number; prefix?: string; suffix?: string; line: string }[] = [
+/* 19 Nov 2026 review: each card is three things only. One bold heading that says the point in a sentence, then the
+   number large beside its picture (one block, so the picture is the number's explanation), then a small source line. */
+const CARDS: { id: string; bg: string; fg: string; sub: string; heading: string; picture: (on: boolean) => ReactNode; to: number; prefix?: string; suffix?: string; source: string }[] = [
   {
     id: "informal",
     bg: LIME,
     fg: DEEP,
     sub: "rgba(31,63,11,0.72)",
-    heading: "Half of them borrow outside the banks.",
+    heading: "Half of rural families who borrow turn to moneylenders, relatives or friends.",
     picture: (on) => <DotsPicture on={on} />,
     to: 49,
     suffix: "%",
-    line: "of rural families who borrow go to moneylenders, relatives or friends.",
+    source: "NABARD rural survey, July 2026",
   },
   {
     id: "cost",
     bg: PAPER,
     fg: INK,
     sub: "rgba(41,45,54,0.64)",
-    heading: "It costs more, and builds nothing.",
+    heading: "Those loans cost about ₹18 a year on every ₹100, and build no credit history.",
     picture: (on) => <CostPicture on={on} />,
     to: 18,
     prefix: "₹",
-    line: "a year on every ₹100 borrowed informally (17.77% on average). Repaying on time still builds no credit history.",
+    source: "Average interest on informal loans: 17.77% a year. NABARD rural survey, July 2026",
   },
 ];
 
@@ -227,16 +231,17 @@ function NumberCard({ c }: { c: (typeof CARDS)[number] }) {
   const ref = useRef<HTMLLIElement>(null);
   const on = useInView(ref, { once: true, amount: 0.45 }) || !!reduce;
   return (
-    <li ref={ref} className="flex min-h-[560px] flex-col gap-8 rounded-[24px] p-6 md:min-h-[min(760px,calc(100svh-var(--navbar-bottom,0px)-24px))] md:p-10 lg:p-14" style={{ backgroundColor: c.bg, color: c.fg }}>
-      <h3 className={`${HEAD} max-w-[520px] text-[28px] md:text-[36px] lg:text-[44px]`}>{c.heading}</h3>
-      <div className="flex items-center">{c.picture(on)}</div>
-      <div className="mt-auto flex flex-col gap-3">
-        <p className="font-display text-[96px] font-black leading-[0.85] tracking-[-0.05em] tabular-nums md:text-[120px] lg:text-[168px]">
-          <CountUp to={c.to} prefix={c.prefix} suffix={c.suffix} on={on} />
-        </p>
-        <p className="max-w-[480px] font-display text-[17px] font-bold leading-[25px] md:text-[19px] md:leading-[28px]">{c.line}</p>
-        <p className="font-display text-[14px] font-medium" style={{ color: c.sub }}>
-          NABARD rural survey, July 2026
+    <li ref={ref} className="flex min-h-[560px] flex-col gap-10 rounded-[24px] p-6 md:min-h-[min(760px,calc(100svh-var(--navbar-bottom,0px)-24px))] md:p-10 lg:p-14" style={{ backgroundColor: c.bg, color: c.fg }}>
+      <h3 className={`${HEAD} max-w-[560px] text-[30px] md:text-[34px] lg:text-[44px]`}>{c.heading}</h3>
+      <div className="mt-auto flex flex-col gap-5">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-6">
+          <p className="font-display text-[96px] font-black leading-[0.8] tracking-[-0.05em] tabular-nums md:text-[104px] lg:text-[144px]">
+            <CountUp to={c.to} prefix={c.prefix} suffix={c.suffix} on={on} />
+          </p>
+          {c.picture(on)}
+        </div>
+        <p className="font-display text-[14px] font-medium leading-[20px]" style={{ color: c.sub }}>
+          {c.source}
         </p>
       </div>
     </li>
