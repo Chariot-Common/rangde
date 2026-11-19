@@ -91,10 +91,12 @@ function BlurChar({ ch, p, at }: { ch: string; p: MotionValue<number>; at: numbe
 
 /* ── 1 The problem (19 Nov 2026 review: one big centred statement, no layers of headings). Pinned for a little over a
       screen; the words brighten one by one as you scroll, like the turn further down. The first line is in Rang De's own
-      words (from their LinkedIn post "Be someone's first yes"); the second is the loop that keeps the bank saying no. ── */
+      words (from their LinkedIn post "Be someone's first yes": "for millions of entrepreneurs in India, that yes never came").
+      19 Nov 2026: reworded so no one is blamed (not "the bank never says yes"): the entrepreneurs are ready, and the
+      loop is what stops them. ── */
 
 const PROBLEM = [
-  { text: "For millions of rural entrepreneurs, the bank never says yes.", color: "#FFFFFF" },
+  { text: "Millions of rural entrepreneurs are ready to grow, but struggle to get their first loan.", color: "#FFFFFF" },
   { text: "No credit history, so no loan. No loan, so no credit history.", color: LIME },
 ];
 const PROBLEM_TEXT = PROBLEM.map((l) => l.text).join(" ");
@@ -552,7 +554,20 @@ export function ThreadProof() {
       <div className={`${WIDE} grid gap-8 md:grid-cols-[5fr_7fr] md:gap-12`}>
         <div className="flex flex-col items-start gap-4 self-start md:sticky md:top-[calc(var(--navbar-bottom,0px)+48px)]">
           <Lines className={`${H2} text-ink`} a="It’s already working." b="You wouldn’t be lending alone." grey="text-ink/48" />
-          <p className={`${SUB} text-ink/64`}>Live figures. Rang De is registered with the RBI.</p>
+          {/* The three things people ask before lending on a peer-to-peer platform (19 Nov 2026 critique): is it
+              regulated, does it get repaid, and when does my money come back. All three are facts stated elsewhere on
+              the page (RBI registration; the live repaid and lent figures; 6–18 month loans repaid monthly). */}
+          <ul className="flex w-full max-w-[460px] flex-col">
+            {[
+              "Registered with the RBI as a peer-to-peer lending platform",
+              `₹${Math.round(s.repaidCr)} Cr repaid to lenders, of ₹${Math.round(s.disbursedCr)} Cr lent since 2019`,
+              "Your money comes back monthly as the loan is repaid, over 6 to 18 months",
+            ].map((fact) => (
+              <li key={fact} className="border-t border-ink/10 py-3 font-display text-[16px] font-bold leading-[23px] text-ink last:border-b md:text-[17px] md:leading-[25px]">
+                {fact}
+              </li>
+            ))}
+          </ul>
           <div className="mt-2 max-sm:hidden">
             <LinkButton href={SIGNUP_URL}>Start lending</LinkButton>
           </div>
