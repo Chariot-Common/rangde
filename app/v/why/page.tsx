@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
 import { ClearStories } from "@/components/versions/WhyClear";
-import { ClearHeroGrow } from "@/components/versions/WhyHero";
+import { PhotoRowHero } from "@/components/versions/WhyHero";
 import { ChapterPill } from "@/components/versions/WhyRealStory";
 import { ThreadEvidence, ThreadHow, ThreadTurn, ThreadMoney, ThreadProblem, ThreadProof, ThreadSources, ThreadClose } from "@/components/versions/WhyThread";
 import { Testimonials } from "@/components/sections/testimonials/Testimonials";
@@ -29,12 +29,18 @@ const CHAPTERS = [
 export default function WhyPage() {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
-      <ClearHeroGrow />
-      <div className="relative flex flex-col gap-2">
+      <PhotoRowHero />
+      {/* The sections slide up over the hero, which stays put behind them. */}
+      <div className="relative z-10 flex flex-col gap-2 bg-white">
         <ChapterPill chapters={CHAPTERS} even />
         <ThreadProblem />
-        <ThreadEvidence />
-        <ThreadTurn />
+        {/* The numbers stay put at the bottom of the screen while "This is why Rang De exists" slides up over them. */}
+        <div className="flex flex-col gap-2">
+          <ThreadEvidence />
+          <div className="relative z-10">
+            <ThreadTurn />
+          </div>
+        </div>
         <ThreadHow />
         <ThreadMoney />
         <ThreadProof />

@@ -440,3 +440,71 @@ export function ClearReach() {
     </section>
   );
 }
+
+/* ── The photo-row hero (19 Nov 2026, layout from Figma "Rang De Master Design III", node 3132:3; the copy is ours).
+      A centred sentence in three sizes over two rows of real photos that drift slowly in opposite directions. The hero
+      stays put while the next section slides up over it, and it settles back a little as it's covered. ─────────────── */
+
+const ROW_A = [
+  { src: "/images/why-hero/borrower-11.webp", alt: "A woman standing in her pineapple field." },
+  { src: "/images/collage/collage-02.webp", alt: "Three women smiling together at an event." },
+  { src: "/images/why-hero/field-visit-3.webp", alt: "A group photo taken on a field visit." },
+  { src: "/images/collage/collage-03.webp", alt: "Fish farmers holding up a large fish from their pond." },
+  { src: "/images/collage/collage-05.webp", alt: "A woman standing in a mustard field." },
+  { src: "/images/collage/collage-06.webp", alt: "A woman in her plant nursery holding seedlings." },
+  { src: "/images/collage/collage-07.webp", alt: "A woman walking along a village path." },
+];
+const ROW_B = [
+  { src: "/images/why-hero/borrower-12.webp", alt: "A shopkeeper smiling in the doorway of his shop." },
+  { src: "/images/collage/collage-08.webp", alt: "A woman in her poultry shed." },
+  { src: "/images/why-hero/field-visit-4.webp", alt: "People talking at a roadside food stall on a field visit." },
+  { src: "/images/collage/collage-09.webp", alt: "Visitors in a small shop selling packaged food." },
+  { src: "/images/collage/collage-11.webp", alt: "A woman standing in her field." },
+  { src: "/images/collage/collage-12.webp", alt: "A man at work at his desk." },
+  { src: "/images/collage/collage-14.webp", alt: "A woman harvesting in a green field." },
+];
+
+/** One row of photos, drawn twice so the loop is seamless; the copy is hidden from screen readers. */
+function DriftRow({ photos, reverse, seconds }: { photos: { src: string; alt: string }[]; reverse?: boolean; seconds: number }) {
+  return (
+    <div className="h-[clamp(120px,20svh,230px)] overflow-hidden">
+      <ul className={`flex h-full w-max gap-2 ${reverse ? "animate-marquee-reverse" : "animate-marquee"}`} style={{ animationDuration: `${seconds}s` }}>
+        {[...photos, ...photos].map((ph, i) => (
+          <li key={i} aria-hidden={i >= photos.length || undefined} className="relative h-full w-[clamp(170px,26svh,320px)] shrink-0 overflow-hidden rounded-4">
+            <Image src={ph.src} alt={i >= photos.length ? "" : ph.alt} fill priority={i < 4} sizes="320px" className="object-cover" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function PhotoRowHero() {
+  const reduce = useReducedMotion();
+  const { scrollY } = useScroll();
+  const [vh, setVh] = useState(900);
+  useEffect(() => {
+    const set = () => setVh(window.innerHeight);
+    set();
+    window.addEventListener("resize", set);
+    return () => window.removeEventListener("resize", set);
+  }, []);
+  const scale = useTransform(scrollY, (y) => (reduce ? 1 : 1 - 0.06 * Math.min(1, Math.max(0, y / vh))));
+  const fade = useTransform(scrollY, (y) => (reduce ? 1 : 1 - 0.5 * Math.min(1, Math.max(0, y / vh))));
+
+  return (
+    <section aria-labelledby="hero-heading" className="sticky top-[var(--navbar-bottom,0px)] z-0 mx-2 h-[calc(100svh-var(--navbar-bottom,0px)-8px)] min-h-[560px]">
+      <motion.div className="flex size-full origin-top flex-col justify-center gap-ds-8 overflow-hidden rounded-4 bg-white py-r6" style={{ scale, opacity: fade }}>
+        <h1 id="hero-heading" className="mx-auto flex w-full max-w-hero flex-col items-center gap-2 px-4 text-center font-display text-text-grey-100">
+          <span className="text-p1 font-bold [text-wrap:balance]">Rural businesses need loans to grow.</span>
+          <span className="text-[44px] font-black leading-[1.02] [text-wrap:balance] md:text-[72px] lg:text-[92px]">Affordable loans are hard to get.</span>
+          <span className="text-p1 font-bold [text-wrap:balance]">Rang De lets you lend to them yourself.</span>
+        </h1>
+        <div className="flex w-full flex-col gap-2">
+          <DriftRow photos={ROW_A} seconds={110} />
+          <DriftRow photos={ROW_B} seconds={130} reverse />
+        </div>
+      </motion.div>
+    </section>
+  );
+}
