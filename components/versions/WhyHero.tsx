@@ -498,8 +498,10 @@ export function PhotoRowHero() {
         <h1 id="hero-heading" className="mx-auto flex w-full max-w-hero flex-col items-center gap-2 px-4 text-center font-display text-text-grey-100">
           <span className="text-p1 font-bold [text-wrap:balance]">Rural businesses need loans to grow.</span>
           <span className="text-[44px] font-black leading-[1.02] [text-wrap:balance] md:text-[72px] lg:text-[92px]">Affordable loans are hard to get.</span>
-          <span className="text-p1 font-bold [text-wrap:balance]">Rang De lets you lend to them yourself.</span>
+          <span className="text-p1 font-bold [text-wrap:balance]">Rang De lets you lend to them yourself, and get repaid with interest.</span>
         </h1>
+        {/* "Get repaid with interest" is Rang De's own wording (their LinkedIn posts): it answers "is this a donation?" on
+            the first screen. The risk is spelled out further down. No button here: the header already has two. */}
         <div className="flex w-full flex-col gap-2">
           <DriftRow photos={ROW_A} seconds={110} />
           <DriftRow photos={ROW_B} seconds={130} reverse />
