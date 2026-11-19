@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, animate, motion, useInView, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "motion/react";
+import { AnimatePresence, animate, motion, useInView, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
 import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/ui";
@@ -97,7 +97,7 @@ function BlurChar({ ch, p, at }: { ch: string; p: MotionValue<number>; at: numbe
 
 const PROBLEM = [
   { text: "Millions of rural entrepreneurs are ready to grow, but struggle to get their first loan.", color: "#FFFFFF" },
-  { text: "No credit history, so no loan. No loan, so no credit history.", color: LIME },
+  { text: "The financial system asks for a credit history they don’t have yet.", color: LIME },
 ];
 const PROBLEM_TEXT = PROBLEM.map((l) => l.text).join(" ");
 
@@ -114,7 +114,7 @@ export function ThreadProblem() {
         <div className={`${reduce ? "flex flex-col py-24" : STICKY} items-center justify-center gap-10 px-4 text-center md:gap-14`}>
           <h2 className={`${HEAD} max-w-[1120px] text-[34px] leading-[1.15] md:text-[56px] lg:text-[64px]`} aria-label={PROBLEM_TEXT}>
             {PROBLEM.map((line) => (
-              <span key={line.text} className="block" style={{ color: line.color }}>
+              <span key={line.text} className="block [text-wrap:balance]" style={{ color: line.color }}>
                 {line.text.split(" ").map((w) => {
                   const i = n++;
                   return <FillWord key={i} w={w} p={p} at={0.08 + (i / total) * 0.6} />;
@@ -140,91 +140,46 @@ export function ThreadProblem() {
   );
 }
 
-/* ── 2 The numbers (19 Nov 2026, option A). Two cards of equal size side by side, with the same gap between them as the
-      page's edge. Each answers the next question after "the bank never says yes": where do they borrow, and what does it
-      cost them. Each has its own heading, its own kind of picture and one large number, so the two never read as one
-      chart:
-        Left, lime: half of rural families who borrow turn to moneylenders, relatives or friends. 49% beside 100 dots,
-          49 lit in red (people).
-        Right, light: those loans cost about ₹18 a year on every ₹100 and build no credit history. ₹18 beside ₹100
-          borrowed against about ₹118 to repay (money).
-      The pictures play and the numbers count up once each card is on screen. The section stays put once its end reaches
-      the bottom of the screen, so "This is why Rang De exists" slides up over it (useStayAtBottom).
+/* ── 2 The numbers (19 Nov 2026). Two cards of equal size side by side, with the same gap between them as the page's
+      edge. Each answers the next question after the problem: where do they borrow, and what does it cost them. Each is
+      a heading, one large number that counts up, and its source:
+        Left, lime: half of rural families who borrow turn to moneylenders, relatives or friends. 49%.
+        Right, peach (the Figma card's #F9E6CD): what a loan from outside the bank costs each year, on average. 17.77%.
+      The section stays put once its end reaches the bottom of the screen, so "This is why Rang De exists" slides up
+      over it (useStayAtBottom).
       Checked 22 Nov 2026 (NABARD RECSS Round 12, July 2026):
         49%: 23.6% informal only + 25.3% both = 48.9%, of rural households that borrow.
-        ₹18: the average interest rate on informal loans is 17.77% a year, so about ₹18 on ₹100 over a year (nearly 20% of
-             informal borrowers paid none, which pulls the average down).
-      The ₹30 lakh crore credit gap (SIDBI & Crisil) stays in Read the numbers yourself. ─────────────────────────────── */
+        17.77%: the average interest rate on informal loans (nearly 20% of informal borrowers paid none, which pulls
+                the average down; moneylender loans cost more).
+      Not used: 180% (RBI Occasional Paper citing a 2005 Kerala study) is the extreme case for unregistered lenders in
+      one state, not a typical rate. The ₹30 lakh crore credit gap (SIDBI & Crisil) stays in Read the numbers
+      yourself. ─────────────────────────────────────────────────────────────────────────────────────────────────── */
 
 const DARK = "#1B1D22";
 
-/** 49 of 100 dots light up in red, one after another. */
-function DotsPicture({ on }: { on: boolean }) {
-  const reduce = useReducedMotion();
-  return (
-    <div className="grid w-[200px] grid-cols-10 gap-[6px] md:w-[240px]" role="img" aria-label="49 of every 100 dots are lit.">
-      {Array.from({ length: 100 }, (_, i) => (
-        <span
-          key={i}
-          className="aspect-square rounded-full transition-colors duration-300"
-          style={{ backgroundColor: on && i < 49 ? RED : "rgba(31,63,11,0.16)", transitionDelay: reduce ? "0ms" : `${i * 14}ms` }}
-        />
-      ))}
-    </div>
-  );
-}
-
-/** ₹100 borrowed, then the same bar with about ₹18 of interest added on the end. */
-function CostPicture({ on }: { on: boolean }) {
-  const reduce = useReducedMotion();
-  const grow = (delay: number) => ({ initial: reduce ? false : { scaleX: 0 }, animate: on || reduce ? { scaleX: 1 } : undefined, transition: { duration: 0.9, delay, ease: EASE } });
-  const LABEL = "font-display text-[15px] font-bold text-ink/64";
-  const BASE = "rgba(41,45,54,0.18)";
-  return (
-    <div className="flex w-[260px] flex-col gap-4 lg:w-[280px]" role="img" aria-label="Borrow ₹100 informally and repay about ₹118 a year later.">
-      <div className="flex flex-col gap-2">
-        <p className={LABEL}>Borrow ₹100</p>
-        <div className="flex h-[32px] w-full">
-          <motion.span className="block h-full origin-left rounded-[6px]" style={{ width: "84.9%", backgroundColor: BASE }} {...grow(0)} />
-        </div>
-      </div>
-      <div className="flex flex-col gap-2">
-        <p className={LABEL}>Repay about ₹118 a year later</p>
-        <div className="flex h-[32px] w-full gap-[3px]">
-          <motion.span className="block h-full origin-left rounded-l-[6px]" style={{ width: "84.9%", backgroundColor: BASE }} {...grow(0.2)} />
-          <motion.span className="flex h-full origin-left items-center justify-center rounded-r-[6px] font-display text-[12px] font-bold text-white" style={{ width: "15.1%", backgroundColor: RED }} {...grow(0.9)}>
-            ₹18
-          </motion.span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* 19 Nov 2026 review: each card is three things only. One bold heading that says the point in a sentence, then the
-   number large beside its picture (one block, so the picture is the number's explanation), then a small source line. */
-const CARDS: { id: string; bg: string; fg: string; sub: string; heading: string; picture: (on: boolean) => ReactNode; to: number; prefix?: string; suffix?: string; source: string }[] = [
+/* 19 Nov 2026 (from the mockup): each card is a heading, one large number and its source. No pictures.
+   Numbers as NABARD gives them: 48.9% rounds to 49% ("half"), and the informal-loan average is 17.77%. */
+const CARDS: { id: string; bg: string; fg: string; sub: string; heading: string; to: number; decimals?: number; suffix: string; source: string }[] = [
   {
     id: "informal",
     bg: LIME,
     fg: DEEP,
     sub: "rgba(31,63,11,0.72)",
     heading: "Half of rural families who borrow turn to moneylenders, relatives or friends.",
-    picture: (on) => <DotsPicture on={on} />,
     to: 49,
     suffix: "%",
     source: "NABARD rural survey, July 2026",
   },
   {
     id: "cost",
-    bg: PAPER,
+    bg: "#F9E6CD",
     fg: INK,
     sub: "rgba(41,45,54,0.64)",
-    heading: "Those loans cost about ₹18 a year on every ₹100, and build no credit history.",
-    picture: (on) => <CostPicture on={on} />,
-    to: 18,
-    prefix: "₹",
-    source: "Average interest on informal loans: 17.77% a year. NABARD rural survey, July 2026",
+    heading: "What a loan from outside the bank costs, each year, on average.",
+    to: 17.77,
+    decimals: 2,
+    suffix: "%",
+    source: "NABARD rural survey, July 2026",
   },
 ];
 
@@ -233,16 +188,13 @@ function NumberCard({ c }: { c: (typeof CARDS)[number] }) {
   const ref = useRef<HTMLLIElement>(null);
   const on = useInView(ref, { once: true, amount: 0.45 }) || !!reduce;
   return (
-    <li ref={ref} className="flex min-h-[560px] flex-col gap-10 rounded-[24px] p-6 md:min-h-[min(760px,calc(100svh-var(--navbar-bottom,0px)-24px))] md:p-10 lg:p-14" style={{ backgroundColor: c.bg, color: c.fg }}>
+    <li ref={ref} className="flex min-h-[480px] flex-col gap-10 rounded-[24px] p-6 md:min-h-[min(640px,calc(100svh-var(--navbar-bottom,0px)-24px))] md:p-10 lg:p-14" style={{ backgroundColor: c.bg, color: c.fg }}>
       <h3 className={`${HEAD} max-w-[560px] text-[30px] md:text-[34px] lg:text-[44px]`}>{c.heading}</h3>
-      <div className="mt-auto flex flex-col gap-5">
-        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-6">
-          <p className="font-display text-[96px] font-black leading-[0.8] tracking-[-0.05em] tabular-nums md:text-[104px] lg:text-[144px]">
-            <CountUp to={c.to} prefix={c.prefix} suffix={c.suffix} on={on} />
-          </p>
-          {c.picture(on)}
-        </div>
-        <p className="font-display text-[14px] font-medium leading-[20px]" style={{ color: c.sub }}>
+      <div className="mt-auto flex flex-col gap-4">
+        <p className="whitespace-nowrap font-display text-[72px] font-black leading-[0.8] tracking-[-0.05em] tabular-nums sm:text-[96px] lg:text-[144px]">
+          <CountUp to={c.to} decimals={c.decimals} suffix={c.suffix} on={on} />
+        </p>
+        <p className="font-display text-[14px] font-bold leading-[20px] md:text-[16px]" style={{ color: c.sub }}>
           {c.source}
         </p>
       </div>
@@ -342,31 +294,25 @@ const HOW = [
 ];
 
 /** The five step animations (Version 2's app screens, then the credit-growth scene) stacked edge to edge in one tall
- * strip inside a plain white card, with no frame around it. Scrolling glides the strip from one animation to the next:
- * each holds while its step is open and slides on as the step changes, eased by a spring so it never jumps. Only the
- * animations next to the one in view are mounted, so each starts playing as it slides in. (19 Nov 2026, after a
- * Pinterest reference.) */
-function HowStrip({ p, at }: { p: MotionValue<number>; at: number }) {
+ * strip inside a plain white card, with no frame around it (after a Pinterest reference). The strip follows the open
+ * step, not the raw scroll position: it rests on one whole animation and glides to the next whenever the step on the
+ * left changes, so it can never stop halfway between two (19 Nov 2026: it used to, when you stopped scrolling
+ * mid-change). Only the open animation and its neighbours are mounted, so each starts playing as it slides in. */
+function HowStrip({ at }: { at: number }) {
   const reduce = useReducedMotion();
   const n = HOW.length;
-  const target = useTransform(p, (v) => {
-    const x = Math.min(n - 1, Math.max(0, v * n - 0.5));
-    const k = Math.floor(x);
-    const f = x - k;
-    const e = f < 0.2 ? 0 : f > 0.8 ? 1 : (1 - Math.cos(((f - 0.2) / 0.6) * Math.PI)) / 2;
-    return k + e;
-  });
-  const pos = useSpring(target, { stiffness: 140, damping: 28, mass: 0.6 });
-  const [near, setNear] = useState(0);
-  useMotionValueEvent(pos, "change", (v) => setNear(Math.round(v)));
-  const y = useTransform(pos, (v) => `${(-v / n) * 100}%`);
-  const shown = reduce ? at : near;
   return (
     <div className="relative mx-auto aspect-[374/342] w-[84%] self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:w-[min(100%,calc((100svh-var(--navbar-bottom,0px)-96px)*1.0936))]">
-      <motion.ul className="absolute inset-x-0 top-0 flex flex-col" style={{ height: `${n * 100}%`, y: reduce ? `${(-at / n) * 100}%` : y }}>
+      <motion.ul
+        className="absolute inset-x-0 top-0 flex flex-col"
+        style={{ height: `${n * 100}%` }}
+        initial={false}
+        animate={{ y: `${(-at / n) * 100}%` }}
+        transition={reduce ? { duration: 0 } : { duration: 0.7, ease: EASE }}
+      >
         {HOW.map((h, i) => (
           <li key={h.t} className="relative flex-1 border-b border-ink/8 last:border-b-0" aria-hidden={i !== at || undefined}>
-            {Math.abs(i - shown) <= 1 &&
+            {Math.abs(i - at) <= 1 &&
               (i < HOW_IT_WORKS_STEPS.length ? (
                 <HowItWorksStage stepIndex={i} label={HOW_IT_WORKS_STEPS[i].illustrationLabel} />
               ) : (
@@ -439,7 +385,7 @@ export function ThreadHow() {
           </div>
 
           {/* Right: the step animations in one strip that glides on as you scroll (see HowStrip). */}
-          <HowStrip p={p} at={at} />
+          <HowStrip at={at} />
         </div>
       </div>
     </section>
