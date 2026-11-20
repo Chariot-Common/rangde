@@ -17,7 +17,12 @@ export type IconName =
   | "faq-secure"
   | "faq-nri"
   | "faq-warning"
-  | "faq-plus";
+  | "faq-plus"
+  // Where borrowers turn for a loan (/v/why2 "What are their options?"), solid, in text grey 80
+  | "bank"
+  | "money-bag"
+  | "avatars-group"
+  | "house-avatar";
 
 /** Native size of each exported SVG, in px. [width, height] for non-square SVGs. */
 const NATIVE_SIZE: Record<IconName, number | [number, number]> = {
@@ -36,6 +41,10 @@ const NATIVE_SIZE: Record<IconName, number | [number, number]> = {
   "faq-nri": 33.7529,
   "faq-warning": 33.7529,
   "faq-plus": 33.7529,
+  bank: 24,
+  "money-bag": 24,
+  "avatars-group": 24,
+  "house-avatar": 24,
 };
 
 type IconProps = {
