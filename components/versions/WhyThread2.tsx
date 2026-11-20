@@ -170,83 +170,110 @@ const OPTIONS: { icon: IconName; t: string; s: string; h: string }[] = [
 ];
 
 /** One option card. The list item is a fixed-height slot (so nothing on the page moves); the white card inside it fills
- * the slot. On hover (desktop, with a mouse) the card turns the founders button's navy (nav-navy), its icon and title go
- * white and its body white 80, and its bottom edge rises to just under the body, which sits right under the title.
- * The card's top stays at the top of its slot, like the other cards. Its height follows the scroll: the title stays
- * stuck on the same line as the other titles, and the card ends just under it, until the title would normally leave
- * (when the body, at the slot's bottom, reaches it), where the card is back to full height. The shrink eases in over
- * 500ms; after that the height tracks the scroll directly, so the bottom doesn't lag. Moving off the column returns it to
- * normal. The hover is on the slot, not the card, so the card shrinking away from under the pointer doesn't undo it. */
+ * the slot, and its icon and title stick under the navigation bar until the body (at the card's bottom) reaches them.
+ *
+ * Hover (desktop, with a mouse; 21 Nov 2026 rebuild): the card turns the founders button's navy (nav-navy), the icon and
+ * title go white and the body white 80, and the card's bottom rises to just under the body, which sits under the title.
+ * Nothing here runs on scroll. While hovered, the divider and body move inside the title's sticky box, so the browser
+ * carries title and body together exactly as it carries the other cards' titles (no lag, no wobble). The navy is a
+ * panel drawn behind that body, reaching from the card's top (where the card's rounded clip cuts it) down to the body's
+ * bottom plus the card's padding; the card itself turns transparent. Because the body has left the card's flow, the
+ * sticky box's limit is the card's bottom, so the hovered title leaves at exactly the scroll point an unhovered one does.
+ * The collapse: the body starts where it normally sits (measured once on hover) and glides up to the title over 500ms,
+ * taking the panel's bottom edge with it. Moving off reverses it, then swaps back to the normal card in the same place.
+ * The hover is on the slot, not the card, so the card shrinking away from under the pointer doesn't undo it. */
+type Phase = "off" | "start" | "in" | "out";
 function OptionCard({ o }: { o: (typeof OPTIONS)[number] }) {
-  const slotRef = useRef<HTMLLIElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const [on, setOn] = useState(false);
-  const [px, setPx] = useState<number | null>(null);
-  const [settled, setSettled] = useState(false);
-
-  // The shrunk card's height: down to where the title sits now (its sticky line, kept within the card's normal range),
-  // then the title, the gap, the divider and body, and the bottom padding.
-  const measure = () => {
-    const slot = slotRef.current;
-    const card = cardRef.current;
-    const title = titleRef.current;
-    const body = bodyRef.current;
-    if (!slot || !card || !title || !body) return null;
-    const cs = getComputedStyle(card);
-    const pt = parseFloat(cs.paddingTop) || 0;
-    const pb = parseFloat(cs.paddingBottom) || 0;
-    const gap = parseFloat(cs.rowGap) || 24;
-    const line = parseFloat(getComputedStyle(title).top) || 0;
-    const slotH = slot.offsetHeight;
-    const rest = title.offsetHeight + gap + body.offsetHeight + pb;
-    const titleTop = Math.min(Math.max(pt, line - slot.getBoundingClientRect().top), slotH - rest);
-    return Math.ceil(titleTop + rest);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const flowRef = useRef<HTMLDivElement>(null);
+  const hoverRef = useRef<HTMLDivElement>(null);
+  const [phase, setPhase] = useState<Phase>("off");
+  const [lift, setLift] = useState(0); // how far below its hover place the body is drawn
+  const timers = useRef<number[]>([]);
+  const clear = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
   };
+  useEffect(() => clear, []);
+
   const enter = () => {
     if (!window.matchMedia("(min-width: 768px) and (hover: hover)").matches) return;
-    setSettled(false);
-    setOn(true);
-    setPx(measure());
+    clear();
+    if (phase === "out" || phase === "in") {
+      // Came back before the card had returned: glide straight back up from wherever it is.
+      setLift(0);
+      setPhase("in");
+      return;
+    }
+    const flow = flowRef.current;
+    const box = boxRef.current;
+    // From under the title (24px gap) down to where the body sits now.
+    const d = flow && box ? Math.max(0, flow.getBoundingClientRect().top - (box.getBoundingClientRect().bottom + 24)) : 0;
+    setLift(d);
+    setPhase("start");
+    // Next moment: let it glide up (the first frame has to be drawn in the start position for the glide to run).
+    timers.current.push(window.setTimeout(() => {
+      setLift(0);
+      setPhase("in");
+    }, 30));
   };
   const leave = () => {
-    setOn(false);
-    setSettled(false);
-    setPx(null);
+    clear();
+    if (phase === "off") return;
+    if (phase === "start") return setPhase("off");
+    const card = cardRef.current;
+    const hb = hoverRef.current;
+    let d = 0;
+    if (card && hb) {
+      // Back down to the body's normal place: the card's bottom, less its bottom padding and the body's height.
+      const pb = parseFloat(getComputedStyle(card).paddingBottom) || 0;
+      d = Math.max(0, card.getBoundingClientRect().bottom - pb - hb.offsetHeight - hb.getBoundingClientRect().top);
+    }
+    setLift(d);
+    setPhase("out");
+    timers.current.push(window.setTimeout(() => {
+      setPhase("off");
+      setLift(0);
+    }, 500));
   };
-  useEffect(() => {
-    if (!on) return;
-    const t = setTimeout(() => setSettled(true), 500);
-    const follow = () => setPx(measure());
-    window.addEventListener("scroll", follow, { passive: true });
-    window.addEventListener("resize", follow);
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener("scroll", follow);
-      window.removeEventListener("resize", follow);
-    };
-  }, [on]);
 
+  const hovering = phase !== "off";
+  const navy = phase === "in";
   const EASE_CSS = "duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]";
   return (
-    <li ref={slotRef} className={`relative ${o.h}`} onMouseEnter={enter} onMouseLeave={leave}>
+    <li className={`relative ${o.h}`} onMouseEnter={enter} onMouseLeave={leave}>
       <div
         ref={cardRef}
-        className={`flex flex-col gap-6 rounded-[24px] p-6 pt-8 text-center md:h-full lg:p-8 lg:pt-10 ${settled ? "transition-[background-color]" : "transition-[height,background-color]"} ${EASE_CSS} ${on ? "bg-nav-navy" : "bg-white"}`}
-        style={on && px !== null ? { height: px } : undefined}
+        // overflow-clip (not hidden) so the rounded corners trim the navy panel without breaking the sticky title.
+        className={`flex flex-col gap-6 overflow-clip rounded-[24px] p-6 pt-8 text-center transition-colors md:h-full lg:p-8 lg:pt-10 ${EASE_CSS} ${navy ? "bg-transparent" : "bg-white"}`}
       >
         {/* The title's sticky box: it fills the card down to the body, so the body pushes the title up when it arrives. */}
         <div className="md:flex-1">
-          <div ref={titleRef} className="flex flex-col items-center gap-6 md:sticky md:top-[calc(var(--navbar-bottom,0px)+104px)]">
-            <Icon name={o.icon} size={40} className={`transition-[filter] ${EASE_CSS} ${on ? "brightness-0 invert" : ""}`} />
-            <h3 className={`${HEAD} text-[28px] leading-[1.12] transition-colors lg:text-[34px] ${EASE_CSS} ${on ? "text-white" : "text-ink"}`}>{o.t}</h3>
+          <div ref={boxRef} className="flex flex-col items-center gap-6 md:sticky md:top-[calc(var(--navbar-bottom,0px)+104px)]">
+            {/* relative z-[1]: the hovered body below is moved with a transform, which gives it (and the navy panel
+                reaching up behind the title) its own layer; this keeps the icon and title painted above that layer. */}
+            <Icon name={o.icon} size={40} className={`relative z-[1] transition-[filter] ${EASE_CSS} ${navy ? "brightness-0 invert" : ""}`} />
+            <h3 className={`${HEAD} relative z-[1] text-[28px] leading-[1.12] transition-colors lg:text-[34px] ${EASE_CSS} ${navy ? "text-white" : "text-ink"}`}>{o.t}</h3>
+            {hovering && (
+              // The hovered body, carried with the title. The ::before is the navy panel behind it (to the card's top
+              // and sides, and the card's padding below), so the panel's bottom edge is always the card's bottom.
+              <div
+                ref={hoverRef}
+                className={`relative flex flex-col gap-6 self-stretch before:absolute before:-top-[4000px] before:-right-6 before:-bottom-6 before:-left-6 before:-z-10 before:rounded-b-[24px] before:bg-nav-navy before:content-[''] before:transition-opacity before:duration-500 before:ease-[cubic-bezier(0.22,1,0.36,1)] lg:before:-right-8 lg:before:-bottom-8 lg:before:-left-8 ${navy ? "before:opacity-100" : "before:opacity-0"} ${phase === "start" ? "" : `transition-transform ${EASE_CSS}`}`}
+                style={{ transform: `translateY(${lift}px)` }}
+              >
+                <span className={`block h-[1.8px] w-full rounded-full transition-colors ${EASE_CSS} ${navy ? "bg-white/24" : "bg-ink/16"}`} aria-hidden />
+                <p className={`${SUB} mx-auto max-w-[300px] transition-colors ${EASE_CSS} ${navy ? "text-white/80" : "text-ink/64"}`}>{o.s}</p>
+              </div>
+            )}
           </div>
         </div>
-        {/* 24px above the divider (the card's gap) and 24px below it, so title, rule and body meet evenly. */}
-        <div ref={bodyRef} className="flex flex-col gap-6">
-          <span className={`block h-[1.8px] w-full rounded-full transition-colors ${EASE_CSS} ${on ? "bg-white/24" : "bg-ink/16"}`} aria-hidden />
-          <p className={`${SUB} mx-auto max-w-[300px] transition-colors ${EASE_CSS} ${on ? "text-white/80" : "text-ink/64"}`}>{o.s}</p>
+        {/* The normal body, at the card's bottom: 24px above the divider (the card's gap) and 24px below it. While
+            hovered it leaves the flow (its copy rides with the title instead), so the title's box reaches the card's bottom. */}
+        <div ref={flowRef} className={`flex flex-col gap-6 ${hovering ? "hidden" : ""}`}>
+          <span className="block h-[1.8px] w-full rounded-full bg-ink/16" aria-hidden />
+          <p className={`${SUB} mx-auto max-w-[300px] text-ink/64`}>{o.s}</p>
         </div>
       </div>
     </li>
@@ -321,7 +348,7 @@ const CARDS: { id: string; bg: string; fg: string; sub: string; heading: string;
     heading: "Half of rural families who borrow turn to moneylenders, relatives or friends.",
     to: 49,
     suffix: "%",
-    source: "NABARD rural survey, July 2026",
+    // 21 Nov 2026: no source line on the page (NABARD rural survey, July 2026).
   },
 ];
 
