@@ -21,25 +21,25 @@ import { EASE } from "./WhyRealStory";
  * docs/why-thread-line-art-prompts.md arrive.
  */
 
-const DEEP = "#1F3F0B";
-const GREEN = "#3a6e0c";
-const LIME = "#D9E89A";
-const PAPER = "#F7F3ED";
-const INK = "#292D36";
+export const DEEP = "#1F3F0B";
+export const GREEN = "#3a6e0c";
+export const LIME = "#D9E89A";
+export const PAPER = "#F7F3ED";
+export const INK = "#292D36";
 const RED = "#E32642";
 
-const HEAD = "font-display font-bold tracking-[-0.02em] leading-[1.06] [text-wrap:balance]";
-const H2 = `${HEAD} text-[32px] md:text-[48px] lg:text-[56px]`;
-const SUB = "font-display text-[15px] font-medium leading-[22px] md:text-[17px] md:leading-[26px]";
-const SECTION = "mx-2 rounded-[24px] px-4 py-16 sm:px-6 md:py-24 lg:px-8";
-const WIDE = "mx-auto w-full max-w-[1400px]";
+export const HEAD = "font-display font-bold tracking-[-0.02em] leading-[1.06] [text-wrap:balance]";
+export const H2 = `${HEAD} text-[32px] md:text-[48px] lg:text-[56px]`;
+export const SUB = "font-display text-[15px] font-medium leading-[22px] md:text-[17px] md:leading-[26px]";
+export const SECTION = "mx-2 rounded-[24px] px-4 py-16 sm:px-6 md:py-24 lg:px-8";
+export const WIDE = "mx-auto w-full max-w-[1400px]";
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
-const span = (v: number, a: number, b: number) => clamp((v - a) / (b - a));
+export const span = (v: number, a: number, b: number) => clamp((v - a) / (b - a));
 
 
 /** A two-line heading (first line ink or white, second greyed) whose lines rise out of a mask one after the other as it
  * comes into view (after rangde.org's and dwell.au's headings). */
-function Lines({ a, b, className, grey }: { a: ReactNode; b?: ReactNode; className: string; grey: string }) {
+export function Lines({ a, b, className, grey }: { a: ReactNode; b?: ReactNode; className: string; grey: string }) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLHeadingElement>(null);
   const on = useInView(ref, { once: true, amount: 0.6 });
@@ -58,17 +58,17 @@ function Lines({ a, b, className, grey }: { a: ReactNode; b?: ReactNode; classNa
   );
 }
 
-function usePin() {
+export function usePin() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   return { ref, p: scrollYProgress };
 }
-const STICKY = "sticky top-[var(--navbar-bottom,0px)] flex h-[calc(100svh-var(--navbar-bottom,0px))] flex-col";
-const CREAM = "#F3EFD8";
+export const STICKY = "sticky top-[var(--navbar-bottom,0px)] flex h-[calc(100svh-var(--navbar-bottom,0px))] flex-col";
+export const CREAM = "#F3EFD8";
 
 /** One letter of a heading that comes in from a blur as `p` passes its slot (after realfood.gov's "can solve this crisis"). */
 /** Splits a line into words (kept whole, so a line never breaks inside a word) and the words into letters. */
-function byWord(text: string, render: (ch: string, index: number) => ReactNode) {
+export function byWord(text: string, render: (ch: string, index: number) => ReactNode) {
   let n = 0;
   return text.split(" ").map((word, w, all) => (
     <span key={w} className="inline-block whitespace-nowrap">
@@ -78,7 +78,7 @@ function byWord(text: string, render: (ch: string, index: number) => ReactNode) 
   ));
 }
 
-function BlurChar({ ch, p, at }: { ch: string; p: MotionValue<number>; at: number }) {
+export function BlurChar({ ch, p, at }: { ch: string; p: MotionValue<number>; at: number }) {
   const t = useTransform(p, (v) => span(v, at, at + 0.06));
   const filter = useTransform(t, (v) => `blur(${(1 - v) * 12}px)`);
   const opacity = useTransform(t, (v) => 0.08 + 0.92 * v);
@@ -247,7 +247,7 @@ export function ThreadEvidence() {
 const TURN = "This is why Rang De exists.";
 const TURN_TEXT = "Rang De connects rural businesses that need a loan with people who want to lend. Each repayment builds the borrower’s credit history, so the next loan is easier to get. It’s called peer-to-peer lending, and Rang De is registered with the RBI.";
 
-function FillWord({ w, p, at }: { w: string; p: MotionValue<number>; at: number }) {
+export function FillWord({ w, p, at }: { w: string; p: MotionValue<number>; at: number }) {
   const opacity = useTransform(p, (v) => 0.22 + 0.78 * span(v, at, at + 0.04));
   return <motion.span style={{ opacity }}>{w} </motion.span>;
 }
@@ -285,7 +285,7 @@ export function ThreadTurn() {
       panel filling the screen's height, the step's name on it, and the animation in a white frame. Phones: the heading,
       a five-part progress bar, the open step, then the animation. Each step can be clicked to jump to it. ─────────── */
 
-const HOW = [
+export const HOW = [
   { t: "Rang De checks every borrower", s: "Local partner organisations meet every borrower and check their business before the loan is listed." },
   { t: "You choose who to lend to", s: "Each profile says who they are, what the loan is for and how they plan to repay it." },
   { t: "Your money reaches them", s: "Rang De collects your money on the 1st or 15th. Within 24 hours, it’s in their bank account." },
@@ -298,7 +298,7 @@ const HOW = [
  * step, not the raw scroll position: it rests on one whole animation and glides to the next whenever the step on the
  * left changes, so it can never stop halfway between two (19 Nov 2026: it used to, when you stopped scrolling
  * mid-change). Only the open animation and its neighbours are mounted, so each starts playing as it slides in. */
-function HowStrip({ at }: { at: number }) {
+export function HowStrip({ at }: { at: number }) {
   const reduce = useReducedMotion();
   const n = HOW.length;
   return (
@@ -395,7 +395,7 @@ export function ThreadHow() {
 /* ── 4 One loan, three good things: three white cards that stack as you scroll (the second slides over the first), each with a
       photo, then the risk as a calm note at reading size. ────────────────────────────────────────────────────────── */
 
-const DOES = [
+export const DOES = [
   { t: "It funds a business.", s: "Your money becomes part of a rural business owner’s loan.", img: "/images/collage/collage-10.webp", chip: "Loan funded" },
   { t: "It can earn you interest.", s: "Your money comes back as they repay, with interest on top.", img: "/images/collage/collage-13.webp", chip: "Repayment received" },
   { t: "It builds their credit.", s: "Each loan repaid on time adds to their credit history. Next time a bank asks, the answer isn’t “None yet.”", img: "/images/collage/collage-07.webp", chip: "Credit history building" },
@@ -472,7 +472,7 @@ export function ThreadMoney() {
 /* ── 5 Proof: the heading stays on the left with the button; cards scroll up on the right. ─────────────────────── */
 
 /** One proof figure: the card rises in, and its number counts up from zero while it does. */
-function ProofCard({ to, prefix = "", suffix = "", line, bg, fg }: { to: number; prefix?: string; suffix?: string; line: string; bg: string; fg: string }) {
+export function ProofCard({ to, prefix = "", suffix = "", line, bg, fg }: { to: number; prefix?: string; suffix?: string; line: string; bg: string; fg: string }) {
   const ref = useRef<HTMLLIElement>(null);
   const on = useInView(ref, { once: true, amount: 0.4 });
   const reduce = useReducedMotion();
@@ -608,7 +608,7 @@ function Stacked({ segs, p }: { segs: Seg[]; p: MotionValue<number> }) {
   );
 }
 
-function CountUp({ to, decimals = 0, on, prefix = "", suffix = "" }: { to: number; decimals?: number; on: boolean; prefix?: string; suffix?: string }) {
+export function CountUp({ to, decimals = 0, on, prefix = "", suffix = "" }: { to: number; decimals?: number; on: boolean; prefix?: string; suffix?: string }) {
   const reduce = useReducedMotion();
   const mv = useMotionValue(0);
   const [v, setV] = useState(0);

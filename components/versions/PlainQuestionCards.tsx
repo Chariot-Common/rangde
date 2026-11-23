@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { FAQS_URL } from "@/data/faqs";
 import { Icon, type IconName } from "@/components/ui";
-import { FactChip, QUESTION_CARDS } from "./approaches";
+import { FactChip, QUESTION_CARDS, type QuestionCard } from "./approaches";
 import { ScrollInk } from "./ScrollInk";
 
 // Each question's own icon on the coin's face (Figma "FAQ assets", node 2917:86), in QUESTION_CARDS order.
@@ -46,8 +46,8 @@ function FlipCoin({ icon, auto = false }: { icon: IconName; auto?: boolean }) {
 /** `fadeIn` (Version 2): the cards fade in, one after another and rising a little, as they come into view (ease-out). */
 /** `foundersCall` (Version 3): "Talk to our founders" beside "Read more FAQs", with when under both buttons (the weekly
  * live call with Ram and Smita). */
-export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false, foundersCall = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean; foundersCall?: boolean }) {
-  const cards = QUESTION_CARDS.slice(0, count);
+export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false, foundersCall = false, cards: own, icons = COIN_ICONS }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean; foundersCall?: boolean; cards?: QuestionCard[]; icons?: IconName[] }) {
+  const cards = own ?? QUESTION_CARDS.slice(0, count);
   const reduce = useReducedMotion();
   const fade = fadeIn && !reduce;
   const [open, setOpen] = useState<number | null>(null);
@@ -113,7 +113,7 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
             className={`group flex cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey text-left ${large ? "min-h-[300px] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[500px] lg:rounded-[20px] lg:p-10" : "min-h-[220px] p-6 sm:min-h-[260px]"} ${flip ? `transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8 ${auto === i ? "max-md:scale-[1.025] max-md:bg-primary-8" : ""}` : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100`}
           >
             <span className={`font-display font-bold text-text-grey-100 [text-wrap:balance] ${large ? "text-[24px] leading-[30px] md:text-h4 xl:text-[36px] xl:leading-[44px]" : "text-p1"}`}>{c.question}</span>
-            {flip && COIN_ICONS[i] ? <span className={`flex self-end ${large ? "lg:scale-125 lg:origin-bottom-right" : ""}`}><FlipCoin icon={COIN_ICONS[i]} auto={auto === i} /></span> : <span aria-hidden className="flex size-[48px] items-center justify-center self-end rounded-full bg-text-grey-64 text-white transition-transform duration-200 group-hover:scale-105">
+            {flip && icons[i] ? <span className={`flex self-end ${large ? "lg:scale-125 lg:origin-bottom-right" : ""}`}><FlipCoin icon={icons[i]} auto={auto === i} /></span> : <span aria-hidden className="flex size-[48px] items-center justify-center self-end rounded-full bg-text-grey-64 text-white transition-transform duration-200 group-hover:scale-105">
               <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
                 <path d="M12 5v14M5 12h14" />
               </svg>
