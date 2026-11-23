@@ -10,6 +10,9 @@ import { HowItWorksStage } from "@/components/how-it-works/HowItWorksStage";
 import { HOW_IT_WORKS_STEPS } from "@/components/how-it-works/steps";
 import { CreditGrowsScene } from "./CreditGrowsScene";
 import { EASE } from "./WhyRealStory";
+import { PlainQuestionCards } from "./PlainQuestionCards";
+import { TRUST_QUESTIONS } from "./WhyTrust";
+import type { QuestionCard } from "./approaches";
 
 /*
  * /v/why, "One thread", second pass (20 Nov 2026 review: lighter headings, tighter spacing, a real-looking how-it-works,
@@ -66,28 +69,6 @@ function usePin() {
 const STICKY = "sticky top-[var(--navbar-bottom,0px)] flex h-[calc(100svh-var(--navbar-bottom,0px))] flex-col";
 const CREAM = "#F3EFD8";
 
-/** One letter of a heading that comes in from a blur as `p` passes its slot (after realfood.gov's "can solve this crisis"). */
-/** Splits a line into words (kept whole, so a line never breaks inside a word) and the words into letters. */
-function byWord(text: string, render: (ch: string, index: number) => ReactNode) {
-  let n = 0;
-  return text.split(" ").map((word, w, all) => (
-    <span key={w} className="inline-block whitespace-nowrap">
-      {word.split("").map((ch) => render(ch, n++))}
-      {w < all.length - 1 && render(" ", n++)}
-    </span>
-  ));
-}
-
-function BlurChar({ ch, p, at }: { ch: string; p: MotionValue<number>; at: number }) {
-  const t = useTransform(p, (v) => span(v, at, at + 0.06));
-  const filter = useTransform(t, (v) => `blur(${(1 - v) * 12}px)`);
-  const opacity = useTransform(t, (v) => 0.08 + 0.92 * v);
-  return (
-    <motion.span className="inline-block whitespace-pre" style={{ filter, opacity }}>
-      {ch}
-    </motion.span>
-  );
-}
 
 /* ── 1 The problem (19 Nov 2026 review: one big centred statement, no layers of headings). Pinned for a little over a
       screen; the words brighten one by one as you scroll, like the turn further down. The first line is in Rang De's own
@@ -97,7 +78,7 @@ function BlurChar({ ch, p, at }: { ch: string; p: MotionValue<number>; at: numbe
 
 // 20 Nov 2026 (/v/why2): the opening line for the four options that follow, no "rural" and no source under it.
 const PROBLEM = [
-  { text: "Millions of Indians struggle to grow their business. Some struggle just to survive.", color: "#FFFFFF" },
+  { text: "Millions in rural India find it difficult to grow their business. Some struggle just to survive.", color: "#FFFFFF" },
   { text: "A simple loan can help them.", color: LIME },
 ];
 const PROBLEM_TEXT = PROBLEM.map((l) => l.text).join(" ");
@@ -142,28 +123,33 @@ export function ThreadProblem() {
    scrolls, the title stays stuck under the chapter pill and the body rises to meet it; once they touch, the title
    leaves with the body and the card. (The title's sticky box ends where the body starts, which is what makes the
    body push it up.) */
-const OPTIONS: { icon: IconName; t: string; s: string; h: string }[] = [
+// 23 Nov 2026: each card names its option in an H5 bold label (k) above the title, and the title reads on from it.
+const OPTIONS: { icon: IconName; k: string; t: string; s: string; h: string }[] = [
   {
     icon: "bank",
-    t: "Banks rarely say yes to a first loan.",
+    k: "Banks",
+    t: "Rarely say yes to a first loan.",
     s: "They ask for collateral and a credit history. A first-time borrower has neither.",
     h: "md:h-[150svh]",
   },
   {
     icon: "money-bag",
-    t: "Moneylenders say yes, at a cost.",
-    s: "Many are predatory, with unfair terms. Their interest can reach 120–180% a year.",
+    k: "Moneylenders",
+    t: "Easily say yes, but at a cost.",
+    s: "Many are predatory, with unfair terms. Their interest can reach up to 120–180% a year.",
     h: "md:h-[125svh]",
   },
   {
     icon: "avatars-group",
-    t: "Self-help groups can’t always lend.",
+    k: "Self-Help Groups",
+    t: "Consensus makes it hard.",
     s: "The members decide who borrows, and only when the group has money to give.",
     h: "md:h-[100svh]",
   },
   {
     icon: "house-avatar",
-    t: "Family and friends can’t always help.",
+    k: "Family / Friends",
+    t: "Often aren’t in a position to help.",
     s: "Relatives often have little to spare, and rarely enough to start or grow a business.",
     h: "md:h-[80svh]",
   },
@@ -253,7 +239,9 @@ function OptionCard({ o }: { o: (typeof OPTIONS)[number] }) {
           <div ref={boxRef} className="flex flex-col items-center gap-6 md:sticky md:top-[calc(var(--navbar-bottom,0px)+104px)]">
             {/* relative z-[1]: the hovered body below is moved with a transform, which gives it (and the navy panel
                 reaching up behind the title) its own layer; this keeps the icon and title painted above that layer. */}
-            <Icon name={o.icon} size={40} className={`relative z-[1] transition-[filter] ${EASE_CSS} ${navy ? "brightness-0 invert" : ""}`} />
+            <Icon name={o.icon} size={40} className={`relative z-[1] -mb-3 transition-[filter] ${EASE_CSS} ${navy ? "brightness-0 invert" : ""}`} />
+            {/* The option's name (H5 bold), 12px under the icon and 24px above the title (the title, divider and body keep 24px). */}
+            <p className={`relative z-[1] font-display text-h5 font-bold uppercase tracking-[0.08em] transition-colors ${EASE_CSS} ${navy ? "text-white/80" : "text-text-grey-80"}`}>{o.k}</p>
             <h3 className={`${HEAD} relative z-[1] text-[28px] leading-[1.12] transition-colors lg:text-[34px] ${EASE_CSS} ${navy ? "text-white" : "text-ink"}`}>{o.t}</h3>
             {hovering && (
               // The hovered body, carried with the title. The ::before is the navy panel behind it (to the card's top
@@ -296,10 +284,10 @@ export function ThreadOptions() {
               is 75% − 34px), and the size steps down (100cqw / 17.2; the long line is about 16.95em wide) when the line wouldn't fit. */}
           <div className="mt-10 md:absolute md:bottom-0 md:right-0 md:mt-0 md:w-[calc(75%-34px)] md:[container-type:inline-size]">
             <p className="flex flex-col items-end gap-3 text-right">
-              <span className="font-display text-[20px] font-medium leading-[1.3] text-ink/56 md:text-[24px]">Every option is shut, slow or too costly.</span>
+              <span className="font-display text-[20px] font-medium leading-[1.3] text-ink/56 md:text-[24px]">Every option is shut, too costly, or unreliable.</span>
               <span className={`${HEAD} text-[32px] text-ink md:text-[min(48px,calc(100cqw/17.2))] lg:text-[min(56px,calc(100cqw/17.2))]`}>
-                <span className="block">So a good rural business</span>
-                <span className="block md:whitespace-nowrap">stays small, or doesn’t survive at all.</span>
+                <span className="block">Good rural businesses</span>
+                <span className="block md:whitespace-nowrap">stay small, or don’t survive at all.</span>
               </span>
             </p>
           </div>
@@ -416,7 +404,7 @@ export function ThreadEvidence() {
       word by word as you scroll. ─────────────────────────────────────────────────────────────────────────────── */
 
 const TURN = "This is why Rang De exists.";
-const TURN_TEXT = "Rang De connects rural businesses that need a loan with people who want to lend. Each repayment builds the borrower’s credit history, so the next loan is easier to get. It’s called peer-to-peer lending, and Rang De is registered with the RBI.";
+const TURN_TEXT = "Rang De connects rural businesses that need a loan with people who want to lend. Each repayment builds the borrower’s credit history, so the next loan is easier to get.";
 
 function FillWord({ w, p, at }: { w: string; p: MotionValue<number>; at: number }) {
   const opacity = useTransform(p, (v) => 0.22 + 0.78 * span(v, at, at + 0.04));
@@ -434,9 +422,14 @@ export function ThreadTurn() {
   return (
     <section id="c-turn" className="mx-2 overflow-clip rounded-[24px]" style={{ backgroundColor: DEEP }}>
       <div ref={ref} className={reduce ? "" : "relative h-[220svh]"}>
-        <div className={`${reduce ? "flex flex-col py-20" : STICKY} items-center justify-center gap-8 px-4 text-center md:gap-12`}>
+        {/* 23 Nov 2026: 32px (24px on phones) between the line and the paragraph, down from 48px. */}
+        <div className={`${reduce ? "flex flex-col py-20" : STICKY} items-center justify-center gap-6 px-4 text-center md:gap-8`}>
+          {/* 23 Nov 2026: no blur. The words fill from faint to full one by one as you scroll, like "A simple loan can
+              help them." in the problem. */}
           <h2 className={`${HEAD} max-w-[1100px] text-[40px] md:text-[72px] lg:text-[88px]`} style={{ color: LIME }} aria-label={TURN}>
-            {byWord(TURN, (ch, i) => <BlurChar key={i} ch={ch} p={p} at={0.04 + i * 0.008} />)}
+            {TURN.split(" ").map((w, i, all) => (
+              <FillWord key={i} w={w} p={p} at={0.04 + (i / all.length) * 0.24} />
+            ))}
           </h2>
           {/* Only once the line above has fully come in: the sentence rises in, faint, then fills word by word. */}
           <motion.p className="max-w-[880px] font-display text-[20px] font-bold leading-[1.35] text-white md:text-[32px] lg:text-[36px] [text-wrap:balance]" aria-label={TURN_TEXT} style={{ opacity: paraIn, y: paraY }}>
@@ -942,4 +935,31 @@ export function ThreadClose() {
       </div>
     </section>
   );
+}
+
+/* ── Before you lend (23 Nov 2026): the four cards from /v/why-trust (the questions lenders asked in the feedback
+      sessions), with the questions worded as a lender would ask them. The first card is new: how to get started. Its
+      answer only uses facts stated elsewhere on the site (the KYC FAQ, who can invest, the borrower checks, T-Day). ── */
+
+const GET_STARTED: QuestionCard = {
+  question: "How do I get started with investing on Rang De?",
+  image: "/images/how-it-works/opp-1.webp",
+  facts: [
+    { text: "Sign up and complete your KYC", tone: "ok" },
+    { text: "Choose who to lend to", tone: "ok" },
+    { text: "Your money goes out on the 1st or 15th", tone: "ok" },
+  ],
+  answer:
+    "Sign up on Rang De and complete your KYC. The RBI requires it before any of your money can reach a borrower, and it’s how the platform makes sure every lender is verified. Resident Indians, NRIs and OCI/PIO holders with an Indian bank account can invest.\n\nThen browse the borrowers. Each profile says who they are, what the loan is for and how they plan to repay it, and every one has passed five checks before it’s listed. Pick one, or several, and choose how much to lend.\n\nYour money waits in escrow until the next T-Day, the 1st or 15th of the month, and reaches the borrower’s bank account within 24 hours. From then on, repayments come back every month, with interest, into your Rang De balance.",
+};
+
+const WHY2_QUESTIONS: QuestionCard[] = [
+  GET_STARTED,
+  { ...TRUST_QUESTIONS[1], question: "After I invest, where exactly does my money go?" },
+  { ...TRUST_QUESTIONS[2], question: "What happens if a borrower doesn’t repay?" },
+  TRUST_QUESTIONS[3],
+];
+
+export function Why2Questions() {
+  return <PlainQuestionCards heading="Before you lend." cards={WHY2_QUESTIONS} icons={["faq-plus", "faq-secure", "faq-warning", "faq-returns"]} flip navyLink large foundersCall />;
 }

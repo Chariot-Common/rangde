@@ -557,10 +557,9 @@ function FadeRows() {
   );
 }
 
-// 20 Nov 2026: the header, on the three lines Rang De chose (kept from tablets up; phones wrap freely), and the payoff
-// under it as body copy.
-const HERO_LINES = ["On Rang De, everyday Indians", "invest in rural business owners who", "are guided every step of the way."];
-const HERO_BODY = "The business grows, the money comes back with interest.";
+// 23 Nov 2026: the header, on three lines (kept from tablets up; phones wrap freely), and the subline under it.
+const HERO_LINES = ["On Rang De, everyday Indians", "invest in rural business owners who are", "in need of funds but can’t get them."];
+const HERO_BODY = "Your money helps them build credit, while you earn returns.";
 const FILL_MS = 600; // the whole header has filled by then
 const CHAR_MS = 150; // how long each letter takes to darken
 
@@ -633,15 +632,15 @@ export function PhotoRowHero() {
       style={{ height: "calc(100svh - var(--navbar-bottom, 0px) + var(--row))", top: "calc(var(--navbar-bottom, 0px) - var(--row) - 8px)" }}
     >
       <motion.div className="flex size-full origin-top flex-col overflow-hidden rounded-4 bg-white" style={{ scale, opacity: fade }}>
-        {/* The copy takes all the height above the photos. Its size follows the screen’s width (so the three lines fit; 72px at most, where the longest line fills the page width)
-            and height (so it never runs under the navigation bar); the body copy is 0.52 of the header, which makes it
+        {/* The copy takes all the height above the photos. Its size follows the screen’s width (so the three lines fit; 64px at most, where the longest line, about 19.5em, fills the page width)
+            and height (so it never runs under the navigation bar); the body copy is 0.54 of the header, which makes it
             run just short of the header's last line. justify-center-safe: if it's ever too tall it starts at the top. */}
-        <div className="mx-auto flex min-h-0 w-full max-w-page flex-1 flex-col items-center justify-center-safe gap-[0.32em] px-4 py-8 text-[34px] md:text-[min(4.9vw,9svh,72px)]">
+        <div className="mx-auto flex min-h-0 w-full max-w-page flex-1 flex-col items-center justify-center-safe gap-[0.32em] px-4 py-8 text-[30px] md:text-[min(4.4vw,9svh,64px)]">
           {/* One direct header that says what Rang De does. It fills from text grey 24 to full ink, letter by letter,
               left to right, within 600ms of the page loading (like the problem's line). */}
           <FillHeading id="hero-heading" lines={HERO_LINES} />
-          <p className="text-center font-display text-[0.52em] font-bold leading-[1.2] text-text-grey-80 [text-wrap:balance] md:whitespace-nowrap">{HERO_BODY}</p>
-          <p className="mt-4 text-center font-display text-h5 font-bold uppercase tracking-[0.08em] text-text-grey-80">
+          <p className="text-center font-display text-[0.54em] font-bold leading-[1.2] text-text-grey-80 [text-wrap:balance] md:whitespace-nowrap">{HERO_BODY}</p>
+          <p className="text-center font-display text-h5 font-bold uppercase tracking-[0.08em] text-text-grey-80">
             Peer-to-peer lending <span aria-hidden>·</span> Registered with the RBI
           </p>
         </div>

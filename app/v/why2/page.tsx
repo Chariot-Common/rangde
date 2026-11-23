@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import { PlainQuestionCards } from "@/components/versions/PlainQuestionCards";
 import { ClearStories } from "@/components/versions/WhyClear";
 import { PhotoRowHero } from "@/components/versions/WhyHero2";
 import { ChapterPill } from "@/components/versions/WhyRealStory";
-import { ThreadEvidence, ThreadHow, ThreadTurn, ThreadMoney, ThreadOptions, ThreadProblem, ThreadProof, ThreadSources, ThreadClose } from "@/components/versions/WhyThread2";
+import { ThreadEvidence, ThreadHow, ThreadTurn, ThreadMoney, ThreadOptions, ThreadProblem, ThreadProof, ThreadSources, ThreadClose, Why2Questions } from "@/components/versions/WhyThread2";
 import { Testimonials } from "@/components/sections/testimonials/Testimonials";
 
 export const metadata: Metadata = {
@@ -32,7 +31,7 @@ export default function WhyPage() {
       <PhotoRowHero />
       {/* The sections slide up over the hero, which stays put behind them. */}
       <div className="relative z-10 flex flex-col gap-2 bg-white">
-        <ChapterPill chapters={CHAPTERS} even />
+        <ChapterPill chapters={CHAPTERS} even compact />
         <ThreadProblem />
         <ThreadOptions />
         {/* The numbers stay put at the bottom of the screen while "This is why Rang De exists" slides up over them. */}
@@ -47,7 +46,7 @@ export default function WhyPage() {
         <ThreadProof />
         <ClearStories met />
         <Testimonials refined inked evenRows heading="Why they lend." />
-        <PlainQuestionCards heading="Before you lend." count={4} flip navyLink large foundersCall />
+        <Why2Questions />
         <ThreadSources />
         <ThreadClose />
       </div>

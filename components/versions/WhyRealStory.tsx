@@ -99,7 +99,10 @@ export const CHAPTERS = [
 /** `chapters`: the page's own list (defaults to /v/why's). */
 /** `even` (/v/why): the pill sits as far into the first chapter before it sticks (24px) as it sits under the navigation once
  * stuck, instead of 12px then 24px. */
-export function ChapterPill({ chapters = CHAPTERS, even = false }: { chapters?: readonly { id: string; label: string }[]; even?: boolean } = {}) {
+/** `compact` (/v/why2, 23 Nov 2026): the label in the design system's H5 bold (11px capitals, 8% tracking), 8px from
+ * the pill's top and bottom and 12px at the sides (8px of pill padding plus each item's 4px), smaller dots and a much lighter
+ * shadow. */
+export function ChapterPill({ chapters = CHAPTERS, even = false, compact = false }: { chapters?: readonly { id: string; label: string }[]; even?: boolean; compact?: boolean } = {}) {
   const [active, setActive] = useState(-1);
   useEffect(() => {
     const els = chapters.map((c) => document.getElementById(c.id));
@@ -136,7 +139,7 @@ export function ChapterPill({ chapters = CHAPTERS, even = false }: { chapters?: 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.3, ease: EASE }}
-            className={`pointer-events-auto ${even ? "mt-6" : "mt-3"} flex h-[42px] items-center rounded-full bg-[#2a2620]/88 px-[14px] text-[#fbf8ef] shadow-[0_6px_24px_rgba(0,0,0,0.25)] backdrop-blur-md`}
+            className={`pointer-events-auto ${even ? "mt-6" : "mt-3"} flex items-center rounded-full bg-[#2a2620]/88 text-[#fbf8ef] backdrop-blur-md ${compact ? "self-start px-2 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.1)]" : "h-[42px] px-[14px] shadow-[0_6px_24px_rgba(0,0,0,0.25)]"}`}
           >
             {chapters.map((c, i) => {
               const on = i === active;
@@ -146,11 +149,11 @@ export function ChapterPill({ chapters = CHAPTERS, even = false }: { chapters?: 
                   href={`#${c.id}`}
                   aria-label={c.label}
                   aria-current={on ? "true" : undefined}
-                  className="flex h-full items-center px-[6px]"
+                  className={`flex h-full items-center ${compact ? "px-[4px]" : "px-[6px]"}`}
                 >
                   <motion.span className="block overflow-hidden" initial={false} animate={{ width: on ? "auto" : 0 }} transition={t}>
                     <motion.span
-                      className="block whitespace-nowrap font-display text-[14px] font-bold leading-[18px] md:text-[15px]"
+                      className={`block whitespace-nowrap font-display font-bold ${compact ? "text-h5 uppercase tracking-[0.08em]" : "text-[14px] leading-[18px] md:text-[15px]"}`}
                       initial={false}
                       animate={{ opacity: on ? 1 : 0 }}
                       transition={{ duration: on ? 0.35 : 0.15, delay: on ? 0.12 : 0 }}
@@ -161,7 +164,7 @@ export function ChapterPill({ chapters = CHAPTERS, even = false }: { chapters?: 
                   <motion.span
                     className="block shrink-0 rounded-full bg-[#fbf8ef]/50"
                     initial={false}
-                    animate={{ width: on ? 0 : 8, height: on ? 0 : 8, opacity: on ? 0 : 1 }}
+                    animate={{ width: on ? 0 : compact ? 6 : 8, height: on ? 0 : compact ? 6 : 8, opacity: on ? 0 : 1 }}
                     transition={t}
                   />
                 </a>
