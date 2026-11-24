@@ -360,13 +360,13 @@ export function ThreadOptions() {
 // extreme for unregistered moneylenders (RBI paper citing a Kerala study), now a card of its own.
 const OPTION_STATS: { to: number; decimals?: number; line: string }[] = [
   { to: 86, line: "of India’s eligible adults can’t get a loan from a bank." },
-  { to: 49, line: "of rural families who borrow turn to moneylenders, relatives or friends." },
+  { to: 49, line: "of rural borrowers turn to moneylenders, family or friends." },
   { to: 17.77, decimals: 2, line: "is what informal loans in India cost a year, on average." },
   { to: 180, line: "is what predatory moneylenders can charge up to." },
 ];
-// One row of four from 1280px. The columns are weighted by how long each card's line is (the 49% line is the longest),
-// so every line fits in three lines.
-const STAT_COLS = "xl:grid-cols-[1fr_1.25fr_1fr_0.85fr]";
+// One row of four from 1280px. 25 Nov 2026: the columns are equal (they were weighted by line length); the cards in
+// a row stretch to the tallest, so they share one height too.
+const STAT_COLS = "xl:grid-cols-4";
 
 /** One number card, animated like the proof cards ("It’s already working"): the card rises in as it comes into view and
  * its number counts up from zero. With `drive` (tablets up), the count waits for the number’s turn in the section’s
