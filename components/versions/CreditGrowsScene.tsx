@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 /*
  * Version 2's How it works, step 5, "Their credit grows" (from the review call): the borrower's side of the loop. Rekha Bai
@@ -55,6 +55,51 @@ const POSSIBILITIES = [
   { label: "A bigger loan next time", icon: "M3 17l6-6l4 4l8-8M14 7h7v7" },
 ];
 
+/** The gauge itself: the banded half ring, the needle at `score`, and in the middle the score (unless `hideScore`) over
+ * its band's name. Shared with "One loan, three good things" (25 Nov 2026), which shows only the band. */
+export function GaugeSvg({ score, hideScore = false, label }: { score: number; hideScore?: boolean; label?: string }) {
+  const gradient = `cg-poor-${useId().replace(/[^a-zA-Z0-9-]/g, "")}`;
+  const band = bandOf(score);
+  // The needle points straight up at 0°, so it turns by the score's angle less 90.
+  const needle = angleOf(score) - 90;
+  return (
+    <svg viewBox="0 0 220 132" className="block w-full overflow-visible" aria-hidden>
+      <defs>
+        <linearGradient id={gradient} gradientUnits="userSpaceOnUse" x1={CX - R} y1="0" x2={CX} y2="0">
+          <stop offset="0" stopColor="#D9443F" />
+          <stop offset="1" stopColor="#E8A23D" />
+        </linearGradient>
+      </defs>
+      {BANDS.map((b, i) => (
+        <path
+          key={b.label}
+          d={arc(angleOf(b.from) + (i === 0 ? 0 : GAP / 2), angleOf(b.to) - (i === BANDS.length - 1 ? 0 : GAP / 2))}
+          fill="none"
+          stroke={i === 0 ? `url(#${gradient})` : b.color}
+          strokeWidth={RING}
+          strokeLinecap="round"
+        />
+      ))}
+      {/* A tapered needle, turned round its pivot by attribute (a CSS origin is unreliable inside SVG). */}
+      <g transform={`rotate(${needle.toFixed(2)} ${CX} ${CY})`}>
+        <path d={`M ${CX - 4.5} ${CY + 6} L ${CX - 0.6} ${CY - R + 14} L ${CX + 0.6} ${CY - R + 14} L ${CX + 4.5} ${CY + 6} Z`} fill="#292D36" />
+      </g>
+      {/* The score and its band, over the needle, with a white halo so it stays readable as the needle passes. */}
+      <g fontFamily="var(--font-inter), Inter, sans-serif" fontWeight="700" textAnchor="middle" stroke="#fff" strokeWidth="6" strokeLinejoin="round" paintOrder="stroke">
+        {!hideScore && (
+          <text x={CX} y={CY - 38} fontSize="26" fill={band.text} style={{ fontVariantNumeric: "tabular-nums" }}>
+            {score}
+          </text>
+        )}
+        {/* On its own the band sits higher, clear of the needle (which leans right of it for a good score). */}
+        <text x={CX} y={hideScore ? CY - 46 : CY - 14} fontSize={hideScore ? 22 : 20} fill={hideScore ? band.text : "#4B4F57"}>
+          {label ?? band.label}
+        </text>
+      </g>
+    </svg>
+  );
+}
+
 export function CreditGrowsScene() {
   const reduce = useReducedMotion();
   // 0 → 1: the repayments and the needle.
@@ -77,9 +122,6 @@ export function CreditGrowsScene() {
     setPaid(Math.min(MONTHS, Math.floor(v * MONTHS + 0.0001)));
     setScore(Math.round(SCORE_FROM + (SCORE_TO - SCORE_FROM) * v));
   });
-  const band = bandOf(score);
-  // The needle points straight up at 0°, so it turns by the score's angle less 90.
-  const needle = angleOf(score) - 90;
   const open = phase === "open";
 
   // Scaled down to fit when the frame is shorter than the scene (phones: the frame is about 300px tall and the rating card
@@ -133,37 +175,7 @@ export function CreditGrowsScene() {
 
           {/* The gauge. */}
           <div className="relative mx-auto w-full max-w-[260px]">
-            <svg viewBox="0 0 220 132" className="block w-full overflow-visible" aria-hidden>
-              <defs>
-                <linearGradient id="cg-poor" gradientUnits="userSpaceOnUse" x1={CX - R} y1="0" x2={CX} y2="0">
-                  <stop offset="0" stopColor="#D9443F" />
-                  <stop offset="1" stopColor="#E8A23D" />
-                </linearGradient>
-              </defs>
-              {BANDS.map((b, i) => (
-                <path
-                  key={b.label}
-                  d={arc(angleOf(b.from) + (i === 0 ? 0 : GAP / 2), angleOf(b.to) - (i === BANDS.length - 1 ? 0 : GAP / 2))}
-                  fill="none"
-                  stroke={i === 0 ? "url(#cg-poor)" : b.color}
-                  strokeWidth={RING}
-                  strokeLinecap="round"
-                />
-              ))}
-              {/* A tapered needle, turned round its pivot by attribute (a CSS origin is unreliable inside SVG). */}
-              <g transform={`rotate(${needle.toFixed(2)} ${CX} ${CY})`}>
-                <path d={`M ${CX - 4.5} ${CY + 6} L ${CX - 0.6} ${CY - R + 14} L ${CX + 0.6} ${CY - R + 14} L ${CX + 4.5} ${CY + 6} Z`} fill="#292D36" />
-              </g>
-              {/* The score and its band, over the needle, with a white halo so it stays readable as the needle passes. */}
-              <g fontFamily="var(--font-inter), Inter, sans-serif" fontWeight="700" textAnchor="middle" stroke="#fff" strokeWidth="6" strokeLinejoin="round" paintOrder="stroke">
-                <text x={CX} y={CY - 38} fontSize="26" fill={band.text} style={{ fontVariantNumeric: "tabular-nums" }}>
-                  {score}
-                </text>
-                <text x={CX} y={CY - 14} fontSize="20" fill="#4B4F57">
-                  {band.label}
-                </text>
-              </g>
-            </svg>
+            <GaugeSvg score={score} />
             <p className="mt-1 text-center font-display text-[11px] font-bold uppercase leading-[14px] tracking-[0.88px] text-ink/48">Credit score</p>
           </div>
 

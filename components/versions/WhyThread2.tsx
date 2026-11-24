@@ -9,10 +9,10 @@ import { useRangDeStats } from "@/components/providers/StatsProvider";
 import { LinkButton, SIGNUP_URL } from "./ui";
 import { HowItWorksStage } from "@/components/how-it-works/HowItWorksStage";
 import { HOW_IT_WORKS_STEPS } from "@/components/how-it-works/steps";
-import { CreditGrowsScene } from "./CreditGrowsScene";
+import { CreditGrowsScene, GaugeSvg } from "./CreditGrowsScene";
 import { EASE } from "./WhyRealStory";
 import { PlainQuestionCards } from "./PlainQuestionCards";
-import { GetStartedAnim, NoRepayAnim, NriAnim } from "./FaqAnimations";
+import { GetStartedAnim, NoRepayAnim, NriAnim, ReachAnim } from "./FaqAnimations";
 import { Testimonials } from "@/components/sections/testimonials/Testimonials";
 import { TRUST_QUESTIONS } from "./WhyTrust";
 import { QUESTION_CARDS, type QuestionCard } from "./approaches";
@@ -733,8 +733,76 @@ const DOES = [
   { t: "It builds their credit.", s: "Each loan repaid on time adds to their credit history. Next time a bank asks, the answer isn’t “None yet.”", img: "/images/collage/collage-07.webp", chip: "Credit history building" },
 ];
 
-/** `row` (Version 4, 24 Nov 2026 review): the three cards side by side and shown together (photo on top, words under it),
- * not stacking one by one as you scroll. Phones stack them. */
+/* 25 Nov 2026 (Version 4): the row's cards lose their photos, chips and "1 of 3" counts. Each is centred: the heading,
+   one line of context, then a small, simplified piece of UI that shows the good thing (structure after the Discord Nitro
+   perks grid the team shared: heading, line, UI piece; nothing else taken from it). */
+
+/** A white UI piece, as it'd sit in the app. */
+const UNIT = "w-full rounded-[16px] bg-white p-4 text-left shadow-[0_1px_2px_rgba(41,45,54,0.06),0_8px_24px_rgba(41,45,54,0.08)]";
+const UNIT_LABEL = "font-display text-[11px] font-bold uppercase leading-[14px] tracking-[0.08em]";
+
+/** 1 · The borrower's photo (no name), then "Entrepreneur Funded" over a full funding bar, then a green tick on the
+ * right. */
+function FundedUnit() {
+  return (
+    <div className={`${UNIT} flex max-w-[300px] items-center gap-3`}>
+      <span className="relative size-[48px] shrink-0 overflow-hidden rounded-full" style={{ backgroundColor: "#A8D8F0" }}>
+        <Image src="/how-it-works/s1-av3.webp" alt="" fill sizes="48px" className="object-cover" />
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+        <span className="font-display text-[15px] font-bold leading-[20px] text-ink">Entrepreneur Funded</span>
+        <span className="block h-[8px] w-full rounded-full" style={{ backgroundColor: "#62AF1D" }} />
+      </div>
+      <span className="flex size-[24px] shrink-0 items-center justify-center rounded-full text-white" style={{ backgroundColor: "#62AF1D" }}>
+        <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M5 12.5l4.5 4.5L19 7.5" />
+        </svg>
+      </span>
+    </div>
+  );
+}
+
+/** 2 · The repayments row from the lender's portfolio (Rekha Bai's), with the name and amount taken out: "Repayment
+ * Status", a green "Completed" pill and "8.5% interest repaid". */
+function RepaidUnit() {
+  return (
+    <div className={`${UNIT} flex max-w-[300px] items-center gap-4`}>
+      <span className="relative size-[64px] shrink-0 overflow-hidden rounded-[12px]" style={{ backgroundColor: "#A8D8F0" }}>
+        <Image src="/how-it-works/s1-av7.webp" alt="" fill sizes="64px" className="object-cover" />
+      </span>
+      <div className="flex min-w-0 flex-col items-start gap-1.5">
+        <span className="font-display text-[16px] font-bold leading-[22px] text-ink">Repayment Status</span>
+        <span className={`${UNIT_LABEL} rounded-[6px] px-2 py-1`} style={{ backgroundColor: "#EEF6E6", color: GREEN }}>
+          Completed
+        </span>
+        <span className={`${UNIT_LABEL} flex items-center gap-1.5 text-ink/48`}>
+          <Icon name="money-rupee-circle" size={14} />
+          8.5% interest repaid
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** 3 · How it works' credit score meter (step 5), sized to the other two pieces, the needle in the darkest green band
+ * and "High" in the middle, with "Credit score" under it. */
+function CreditUnit() {
+  return (
+    <div className={`${UNIT} max-w-[176px]`}>
+      <GaugeSvg score={860} hideScore label="High" />
+      <p className={`${UNIT_LABEL} mt-1.5 text-center text-ink/48`}>Credit score</p>
+    </div>
+  );
+}
+
+const DOES_ROW: { t: string; s: string; unit: ReactNode }[] = [
+  { t: "It funds a business.", s: "Your money helps fund a rural business.", unit: <FundedUnit /> },
+  { t: "It can earn you interest.", s: "You earn interest as they repay.", unit: <RepaidUnit /> },
+  { t: "It builds their credit.", s: "Each repayment builds their credit history.", unit: <CreditUnit /> },
+];
+
+/** `row` (Version 4, 24 Nov 2026 review): the three cards side by side and shown together, not stacking one by one as
+ * you scroll. Phones stack them. */
 export function ThreadMoney({ row = false }: { row?: boolean } = {}) {
   return (
     <section id="c-compare" className={SECTION} style={{ backgroundColor: DEEP }}>
@@ -744,25 +812,19 @@ export function ThreadMoney({ row = false }: { row?: boolean } = {}) {
           <p className={`${SUB} max-w-[520px] text-white/64`}>Rang De calls this social investment: lending that does good and can earn you interest.</p>
         </div>
         {row ? (
-          <ul className="grid gap-3 md:grid-cols-3">
-            {DOES.map((d, i) => (
-              <li key={d.t} className="flex flex-col overflow-hidden rounded-[24px] bg-white">
-                <div className="relative aspect-[4/3]">
-                  <Image src={d.img} alt="" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" />
-                  <span className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-white px-3 py-1.5 font-display text-[13px] font-bold text-ink shadow-[0_6px_16px_rgba(41,45,54,0.16)]">
-                    <span className="flex size-[18px] items-center justify-center rounded-full text-[10px]" style={{ backgroundColor: LIME, color: DEEP }}>
-                      ✓
-                    </span>
-                    {d.chip}
-                  </span>
-                </div>
-                <div className="flex flex-1 flex-col gap-3 p-6 lg:p-8">
-                  <span className="font-display text-h5 font-bold uppercase tabular-nums tracking-[0.08em]" style={{ color: GREEN }}>
-                    {i + 1} of {DOES.length}
-                  </span>
-                  <p className={`${HEAD} text-[28px] lg:text-[34px]`}>{d.t}</p>
-                  <p className={`${SUB} text-ink/64`}>{d.s}</p>
-                </div>
+          // From tablets up the cards share their rows (subgrid): the numbers, headings and lines line up across the three
+          // cards, and the UI pieces sit centred in one shared row, so their vertical centres line up too.
+          <ul className="grid gap-3 md:grid-cols-3 md:grid-rows-[repeat(4,auto)] md:gap-y-0">
+            {DOES_ROW.map((d, i) => (
+              <li key={d.t} className="flex flex-col items-center rounded-[24px] px-6 pb-8 pt-8 text-center md:row-span-4 md:grid md:grid-rows-subgrid md:items-stretch md:justify-items-center lg:px-8 lg:pt-10" style={{ backgroundColor: PAPER }}>
+                {/* The number: P1 bold, white, in a small green circle. */}
+                <span className="mb-3 flex size-[28px] shrink-0 items-center justify-center rounded-full font-display text-p1 font-bold tabular-nums text-white" style={{ backgroundColor: GREEN }} aria-hidden>
+                  {i + 1}
+                </span>
+                <p className={`${HEAD} mb-3 text-[26px] lg:text-[32px]`}>{d.t}</p>
+                <p className={`${SUB} text-ink/64`}>{d.s}</p>
+                {/* The UI piece, centred under the words (after the Discord Nitro perks grid, for structure only). */}
+                <div className="mt-8 flex w-full items-center justify-center">{d.unit}</div>
               </li>
             ))}
           </ul>
@@ -1199,17 +1261,31 @@ const GET_STARTED: QuestionCard = {
     "Sign up on Rang De and complete your KYC. The RBI requires it before any of your money can reach a borrower, and it’s how the platform makes sure every lender is verified. Resident Indians, NRIs and OCI/PIO holders with an Indian bank account can invest.\n\nThen browse the borrowers. Each profile says who they are, what the loan is for and how they plan to repay it, and every one has passed five checks before it’s listed. Pick one, or several, and choose how much to lend.",
 };
 
+// 24 Nov 2026: the fourth card, in place of "Why aren't Rang De returns higher?". The answer is the wording agreed in
+// review (since 2008, over 100 partner organisations).
+const PAN_INDIA: QuestionCard = {
+  question: "How does Rang De have such a wide pan-India reach?",
+  image: "/images/how-it-works/opp-1.webp",
+  facts: [
+    { text: "Over 100 impact partners", tone: "ok" },
+    { text: "Partnering since 2008", tone: "ok" },
+    { text: "Borrowers across India", tone: "ok" },
+  ],
+  answer:
+    "Rang De works with impact partners: local grassroots organisations already running livelihood programmes in their own communities, across many states. Rang De and the partner identify the borrowers, mentor them and stay with them through repayment.\n\nEach new partner brings a new region and a new community onto the platform, so the reach keeps growing. Since 2008, Rang De has partnered with organisations across India, and today works with over 100 of them. Through them, as a pan-India organisation, we can connect you with people who need funds to grow their business.",
+};
+
 const WHY2_QUESTIONS: QuestionCard[] = [
   GET_STARTED,
   // 24 Nov 2026: the NRI/OCI question (the site’s own card: valid KYC, pay from an NRO account in India) in place of
   // "where does my money go".
   QUESTION_CARDS.find((q) => q.question.startsWith("I’m an NRI"))!,
   { ...TRUST_QUESTIONS[2], question: "What happens if a borrower doesn’t repay?" },
-  TRUST_QUESTIONS[3],
+  PAN_INDIA,
 ];
 
 export function Why2Questions() {
-  return <PlainQuestionCards heading="Before you invest." headingClass={H2} inkHeading questionClass="text-[28px] leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]" cards={WHY2_QUESTIONS} icons={["faq-plus", "faq-nri", "faq-warning", "faq-returns"]} visuals={[<GetStartedAnim key="start" />, <NriAnim key="nri" />, <NoRepayAnim key="norepay" />]} flip navyLink large foundersCall />;
+  return <PlainQuestionCards heading="Before you invest." headingClass={H2} inkHeading questionClass="text-[28px] leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]" cards={WHY2_QUESTIONS} icons={["faq-plus", "faq-nri", "faq-warning", "avatars-group"]} visuals={[<GetStartedAnim key="start" />, <NriAnim key="nri" />, <NoRepayAnim key="norepay" />, <ReachAnim key="reach" />]} flip navyLink large foundersCall />;
 }
 
 /** The shared testimonials, with their heading at this page’s section size (24 Nov 2026). */

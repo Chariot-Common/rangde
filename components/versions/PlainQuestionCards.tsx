@@ -21,7 +21,9 @@ function FlipCoin({ icon, auto = false }: { icon: IconName; auto?: boolean }) {
     <span aria-hidden className="relative size-16 self-end perspective-near">
       <span className={`relative block size-full transition-transform duration-600 ease-out transform-3d ${auto ? "max-md:rotate-y-180" : ""} md:group-hover:rotate-y-180 md:group-focus-visible:rotate-y-180 motion-reduce:duration-0`}>
         <span className="absolute inset-zero flex items-center justify-center rounded-full bg-text-grey-48 shadow-popup backface-hidden">
-          <Icon name={icon} />
+          {/* The faq-* icons are drawn white at coin size; any other design-system icon (e.g. Version 4's
+              "avatars-group", 25 Nov 2026) is turned white and scaled up to match them. */}
+          {icon.startsWith("faq-") ? <Icon name={icon} /> : <Icon name={icon} size={38} className="brightness-0 invert" />}
         </span>
         <span className="absolute inset-zero flex rotate-y-180 items-center justify-center rounded-full bg-nav-navy shadow-popup backface-hidden">
           <Icon name="faq-plus" className="opacity-80" />
