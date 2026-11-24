@@ -42,7 +42,6 @@ export default function V4() {
         <ThreadProof bare />
         <ClearStories met revisedType />
         <Why2Testimonials />
-        <Why2Questions />
         {/* 25 Nov 2026: Version 1's founders section, just before the close (out of "It's already working"). */}
         <FoundersCollage
           thinFrame
@@ -55,6 +54,8 @@ export default function V4() {
           }
         />
         <V4Close />
+        {/* 25 Nov 2026: the questions after the close. */}
+        <Why2Questions />
       </div>
     </div>
   );
