@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { ClearStories } from "@/components/versions/WhyClear";
-import { FoundersCollage } from "@/components/versions/FoundersCollage";
 import { PhotoRowHero } from "@/components/versions/WhyHero2";
 import { ChapterPill } from "@/components/versions/WhyRealStory";
 import { V4Close, V4ProblemOptions } from "@/components/versions/WhyV4";
@@ -42,18 +41,8 @@ export default function V4() {
         <ThreadProof bare />
         <ClearStories met revisedType />
         <Why2Testimonials />
-        {/* 25 Nov 2026: Version 1's founders section, just before the close (out of "It's already working"). */}
-        <FoundersCollage
-          thinFrame
-          eyebrow="Why Rang De exists?"
-          story={
-            <>
-              They started Rang De in 2008 with a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow. The idea was to
-              let anyone lend a little to the people banks overlook, and see exactly where every rupee goes.
-            </>
-          }
-        />
-        <V4Close />
+        {/* 25 Nov 2026: the close and the founders in one bento grid (Version 1's full founders section was too big). */}
+        <V4Close bento />
         {/* 25 Nov 2026: the questions after the close. */}
         <Why2Questions />
       </div>
