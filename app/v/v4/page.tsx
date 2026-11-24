@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { OpportunitiesSection } from "@/components/sections/opportunities/OpportunitiesSection";
 import { ClearStories } from "@/components/versions/WhyClear";
+import { FoundersCollage } from "@/components/versions/FoundersCollage";
 import { PhotoRowHero } from "@/components/versions/WhyHero2";
 import { ChapterPill } from "@/components/versions/WhyRealStory";
 import { V4Close, V4ProblemOptions } from "@/components/versions/WhyV4";
@@ -26,7 +27,7 @@ const CHAPTERS = [
 //   then five option cards rising over it (government schemes added), each leading with its point, the numbers folded in;
 // - How it works with just that heading, text and animation half and half, the steps bigger;
 // - One loan, three good things as three cards in one row;
-// - It's working with the founders ("left Oxford for India") in place of the list of facts;
+// - It's working: just the heading, the button and the figures; Version 1's founders section before the close;
 // - a simpler close (the line, then the Invest button), then the businesses raising a loan right now.
 export default function V4() {
   return (
@@ -39,10 +40,21 @@ export default function V4() {
         <ThreadTurn photos />
         <ThreadHow plain />
         <ThreadMoney row />
-        <ThreadProof founders />
+        <ThreadProof bare />
         <ClearStories met revisedType />
         <Why2Testimonials />
         <Why2Questions />
+        {/* 25 Nov 2026: Version 1's founders section, just before the close (out of "It's already working"). */}
+        <FoundersCollage
+          thinFrame
+          eyebrow="Why Rang De exists?"
+          story={
+            <>
+              They started Rang De in 2008 with a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow. The idea was to
+              let anyone lend a little to the people banks overlook, and see exactly where every rupee goes.
+            </>
+          }
+        />
         <V4Close />
         <OpportunitiesSection roomy />
       </div>

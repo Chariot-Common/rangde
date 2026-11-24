@@ -853,10 +853,8 @@ function ProofCard({ to, prefix = "", suffix = "", line, bg, fg }: { to: number;
   );
 }
 
-/** `founders` (Version 4, 24 Nov 2026 review): the left side was too much text. The three-fact list gives way to Ram and
- * Smita's photos and one line, "born when two people left Oxford for India" (the founders' story the review asked to
- * bring back; wording from the site's own founders section). */
-export function ThreadProof({ founders = false }: { founders?: boolean } = {}) {
+/** `bare` (Version 4, 25 Nov 2026): no list beside the heading; the founders are in their own section before the close. */
+export function ThreadProof({ bare = false }: { bare?: boolean } = {}) {
   const s = useRangDeStats();
   return (
     <section id="c-proof" className={`${SECTION} bg-white`}>
@@ -866,22 +864,7 @@ export function ThreadProof({ founders = false }: { founders?: boolean } = {}) {
           {/* The three things people ask before lending on a peer-to-peer platform (19 Nov 2026 critique): is it
               regulated, does it get repaid, and when does my money come back. All three are facts stated elsewhere on
               the page (RBI registration; the live repaid and lent figures; 6–18 month loans repaid monthly). */}
-          {founders ? (
-            <div className="flex w-full max-w-[460px] flex-col gap-4 rounded-[20px] p-5 md:p-6" style={{ backgroundColor: PAPER }}>
-              <div className="flex gap-2">
-                {[
-                  { src: "/images/founders/ram-v3.webp", alt: "Ram, co-founder of Rang De" },
-                  { src: "/images/founders/smita-v3.webp", alt: "Smita, co-founder of Rang De" },
-                ].map((f) => (
-                  <div key={f.src} className="relative aspect-[4/5] flex-1 overflow-hidden rounded-[14px] bg-ink/8">
-                    <Image src={f.src} alt={f.alt} fill sizes="220px" className="object-cover" />
-                  </div>
-                ))}
-              </div>
-              <p className="font-display text-[20px] font-bold leading-[1.3] text-ink md:text-[24px]">Rang De was born when two people left Oxford for India.</p>
-              <p className="font-display text-[15px] font-medium leading-[22px] text-ink/64">Ram and Smita came back to build it in 2008. Rang De is registered with the RBI as a peer-to-peer lending platform.</p>
-            </div>
-          ) : (
+          {bare ? null : (
           <ul className="flex w-full max-w-[460px] flex-col">
             {[
               "Registered with the RBI as a peer-to-peer lending platform",
