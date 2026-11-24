@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePageReady } from "@/lib/use-page-ready";
 import { useCtaLabel } from "@/lib/use-cta-label";
-import { useCtaHidesOnScrollUp, useNavHidden } from "@/lib/nav-intro";
+import { useCtaHidesOnScrollUp, useNavHidden, useNavyNavButtons } from "@/lib/nav-intro";
 
 const SIGNUP_URL = "https://rangde.in/account/signup";
 // How far the page has to move in one direction before the button reacts, so a finger's small wobble doesn't flicker it.
@@ -19,6 +19,7 @@ export function FloatingGetStarted() {
   // Held back, like the nav, while a hero intro (TypedHero) is playing.
   const ready = usePageReady();
   const hidden = useNavHidden();
+  const navy = useNavyNavButtons(); // /v/why2: navy, like the nav's Get started there
   const hidesOnScrollUp = useCtaHidesOnScrollUp();
   const [scrollingUp, setScrollingUp] = useState(false);
   const label = useCtaLabel();
@@ -50,7 +51,7 @@ export function FloatingGetStarted() {
       <a
         href={SIGNUP_URL}
         tabIndex={show ? 0 : -1}
-        className={`flex h-[52px] w-full items-center justify-center rounded-[8px] bg-primary font-display text-p2 font-bold text-white shadow-[0_8px_24px_rgba(41,45,54,0.18)] active:brightness-95 ${show ? "pointer-events-auto" : ""}`}
+        className={`flex h-[52px] w-full items-center justify-center rounded-[8px] ${navy ? "bg-nav-navy" : "bg-primary"} font-display text-p2 font-bold text-white shadow-[0_8px_24px_rgba(41,45,54,0.18)] active:brightness-95 ${show ? "pointer-events-auto" : ""}`}
       >
         {label}
       </a>

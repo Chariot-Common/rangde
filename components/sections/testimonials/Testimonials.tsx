@@ -24,8 +24,9 @@ const allTestimonials = [...testimonialsRow1, ...testimonialsRow2];
  * `inked` (with `refined`, Version 1.1): the heading fills in as it is read (plain, no coloured edge).
  * `evenRows` (Version 1): both rows as tall as the taller one. Each row is as tall as its longest quote, so the second
  * row came out shorter than the first; measured on load and on resize, since quote lengths and card widths vary. */
-/** `heading` (Version 4, /v/why) replaces the "Trusted by N social investors" heading, so the count isn't repeated right after a section that leads with it. */
-export function Testimonials({ withStories = false, typed = false, refined = false, inked = false, evenRows = false, heading }: { withStories?: boolean; typed?: boolean; refined?: boolean; inked?: boolean; evenRows?: boolean; heading?: string }) {
+/** `heading` (Version 4, /v/why) replaces the "Trusted by N social investors" heading, so the count isn't repeated right after a section that leads with it.
+ * `headingClass` (24 Nov 2026, /v/why2) sets that heading's type (with `refined` and `inked`), for pages with their own section sizes. */
+export function Testimonials({ withStories = false, typed = false, refined = false, inked = false, evenRows = false, heading, headingClass = "font-display text-h3 font-bold" }: { withStories?: boolean; typed?: boolean; refined?: boolean; inked?: boolean; evenRows?: boolean; heading?: string; headingClass?: string }) {
   const { investors } = useRangDeStats();
   const rowsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -58,7 +59,7 @@ export function Testimonials({ withStories = false, typed = false, refined = fal
             as="h2"
             tone="plain"
             text={heading ?? `Trusted by ${investors.toLocaleString("en-IN")} social investors across the world.`}
-            className="font-display text-h3 font-bold"
+            className={headingClass}
           />
         ) : refined && typed ? (
           <ScrollType text={`Trusted by ${investors.toLocaleString("en-IN")} social investors across the world.`} className="font-display text-h3 font-bold text-ink" />

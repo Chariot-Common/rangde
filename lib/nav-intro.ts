@@ -27,6 +27,14 @@ export function useRefreshedNav() {
   return REFRESHED_NAV_ROUTES.includes(usePathname());
 }
 
+/** Pages that keep the original nav but give its buttons the refreshed nav's colours: navy "Get started" (and the phone's
+ * floating one), and Login in nav sky with navy text. /v/why2 (24 Nov 2026), to match its "Talk to our founders" and
+ * "Read more FAQs" buttons. */
+export const NAVY_NAV_BUTTON_ROUTES = ["/v/why2"];
+export function useNavyNavButtons() {
+  return NAVY_NAV_BUTTON_ROUTES.includes(usePathname());
+}
+
 /** Versions whose phone "Get started" button steps aside (fades and drops) while the page is scrolled up, and comes
  * back as it is scrolled down. */
 // Empty: v2 had it, but the button dropping away while scrolling back up was distracting (review, 11 Nov 2026). On v2 it

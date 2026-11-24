@@ -7,7 +7,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { MobileMenu } from "@/components/MobileMenu";
 import { useCtaLabel } from "@/lib/use-cta-label";
-import { useNavHidden, useNavIntro, useNavStroke, useRefreshedNav } from "@/lib/nav-intro";
+import { useNavHidden, useNavIntro, useNavStroke, useNavyNavButtons, useRefreshedNav } from "@/lib/nav-intro";
 import { NavShine } from "./NavShine";
 
 const SCROLL_THRESHOLD = 24;
@@ -19,6 +19,9 @@ export function TopNav() {
   const hidden = useNavHidden();
   // v5 / v6 have the refreshed nav; every other page keeps the original look.
   const refreshed = useRefreshedNav();
+  // The refreshed nav's button colours, also on pages that keep the original nav otherwise (/v/why2).
+  const navyRoute = useNavyNavButtons();
+  const navyButtons = refreshed || navyRoute;
   // The refreshed nav's hairline, also on pages that keep the original nav (Version 2).
   const stroke = useNavStroke();
   // The shine sweeps Get started once: on v5 as its nav fades back in ("reveal"), on v6 as the logo lands
@@ -125,7 +128,7 @@ export function TopNav() {
         <div className="flex shrink-0 items-center gap-[6px]">
           {/* No Invest button on phones: a "Get started" button floats at the bottom once the
               hero has scrolled away (FloatingGetStarted). */}
-          <Button variant="secondary" size="sm" className={`relative !px-[12px] whitespace-nowrap ${refreshed ? "!bg-nav-sky !text-nav-navy" : ""}`}>
+          <Button variant="secondary" size="sm" className={`relative !px-[12px] whitespace-nowrap ${navyButtons ? "!bg-nav-sky !text-nav-navy" : ""}`}>
             Login
             <NavShine play={shine} />
           </Button>
@@ -148,13 +151,13 @@ export function TopNav() {
           <Button
             variant="primary"
             size="sm"
-            className={`relative !px-[16px] ${refreshed ? "!bg-nav-navy !text-white" : ""}`}
+            className={`relative !px-[16px] ${navyButtons ? "!bg-nav-navy !text-white" : ""}`}
             onClick={() => window.location.assign("https://rangde.in/account/signup")}
           >
             {ctaLabel}
             <NavShine play={shine} />
           </Button>
-          <Button variant="secondary" size="sm" className={`relative !px-[16px] ${refreshed ? "!bg-nav-sky !text-nav-navy" : ""}`}>
+          <Button variant="secondary" size="sm" className={`relative !px-[16px] ${navyButtons ? "!bg-nav-sky !text-nav-navy" : ""}`}>
             Login
             <NavShine play={shine} />
           </Button>

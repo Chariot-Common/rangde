@@ -18,7 +18,7 @@ export type IconName =
   | "faq-nri"
   | "faq-warning"
   | "faq-plus"
-  // Where borrowers turn for a loan (/v/why2 "What are their options?"), solid, in text grey 80
+  // Where borrowers turn for a loan (/v/why2 "What are their options?"), solid, in nav navy (#00517A)
   | "bank"
   | "money-bag"
   | "avatars-group"

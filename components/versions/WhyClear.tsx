@@ -8,6 +8,7 @@ import { stories } from "@/lib/content";
 import { InvestmentSlider } from "@/components/sections/investment-calculator/InvestmentSlider";
 import { LinkButton, SIGNUP_URL } from "./ui";
 import { EASE, Rise } from "./WhyRealStory";
+import { ScrollInk } from "./ScrollInk";
 
 /*
  * /v/why, copy pass (19 Nov 2026). Read only the headings and you have the story:
@@ -24,24 +25,33 @@ const INK = "#292D36";
 const PAPER = "#F7F3ED";
 
 const H = "font-display font-extrabold tracking-[-0.04em] [text-wrap:balance]";
+// /v/why2's headings (WhyThread2's HEAD): bold, not extrabold, with lighter tracking (24 Nov 2026).
+const WHY2_HEAD = "font-display font-bold tracking-[-0.02em] [text-wrap:balance]";
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
 
 /** The one way every section opens: a small label, then the heading, centred. */
-function Head({ children, sub, dark }: { children: ReactNode; sub?: ReactNode; dark?: boolean }) {
+/** `size` replaces the heading’s default font sizes (24 Nov 2026: /v/why2 sets its own). `ink` (24 Nov 2026, /v/why2):
+ * the heading is this text and fills in letter by letter as it’s scrolled into view (ScrollInk), instead of rising
+ * out of its mask. */
+function Head({ children, sub, dark, size = "text-[34px] md:text-[60px] lg:text-[72px]", ink, type = H }: { children?: ReactNode; sub?: ReactNode; dark?: boolean; size?: string; ink?: string; type?: string }) {
   const reduce = useReducedMotion();
   // Watch the wrapper, not the heading: a fully masked heading never counts as "in view".
   const ref = useRef<HTMLDivElement>(null);
   const seen = useInView(ref, { once: true, amount: 0.3 });
   return (
     <div ref={ref} className="mx-auto flex max-w-[1000px] flex-col items-center gap-3 text-center md:gap-4">
+      {ink ? (
+        <ScrollInk as="h2" tone={dark ? "white" : "plain"} text={ink} className={`${type} leading-[1.02] ${size}`} />
+      ) : (
       <motion.h2
-        className={`${H} text-[34px] leading-[1.02] md:text-[60px] lg:text-[72px] ${dark ? "text-white" : "text-ink"}`}
+        className={`${H} leading-[1.02] ${size} ${dark ? "text-white" : "text-ink"}`}
         initial={reduce ? false : { clipPath: "inset(0% 0% 100% 0%)", y: 36 }}
         animate={reduce || seen ? { clipPath: "inset(0% 0% -10% 0%)", y: 0 } : undefined}
         transition={{ duration: 0.9, ease: EASE }}
       >
         {children}
       </motion.h2>
+      )}
       {sub && <p className={`max-w-[560px] font-display text-[15px] font-medium leading-[22px] md:text-[18px] md:leading-[28px] ${dark ? "text-white/72" : "text-ink/64"}`}>{sub}</p>}
     </div>
   );
@@ -326,7 +336,10 @@ export function ClearSteps() {
       lenders got. The row drifts on its own and stops under the pointer. ─────────────────────────────────────────── */
 
 /** `met`: the short heading used after the proof section on /v/why ("Meet the people they lent to."). */
-export function ClearStories({ met = false }: { met?: boolean } = {}) {
+/** `revisedType` (/v/why2, 24 Nov 2026): the heading at the page’s section size (56px, 32px on phones), filling in letter by
+ * letter as it’s scrolled to, and the amounts at 24px (20px). */
+export function ClearStories({ met = false, revisedType = false }: { met?: boolean; revisedType?: boolean } = {}) {
+  const amount = revisedType ? "text-[20px] md:text-[24px]" : "text-[19px] md:text-[26px]";
   const s = useRangDeStats();
   const card = (st: (typeof stories)[number], k: string, hidden?: boolean) => (
     <li key={k} aria-hidden={hidden} className="flex w-[300px] shrink-0 flex-col overflow-hidden rounded-[20px] text-white md:w-[400px]" style={{ backgroundColor: "#1F3F0B" }}>
@@ -343,11 +356,11 @@ export function ClearStories({ met = false }: { met?: boolean } = {}) {
         </p>
         <div className="grid grid-cols-2 border-t border-white/16 pt-5">
           <div>
-            <p className="whitespace-nowrap font-display text-[19px] font-extrabold tracking-[-0.02em] tabular-nums md:text-[26px]">{st.totalFunded}</p>
+            <p className={`whitespace-nowrap font-display font-extrabold tracking-[-0.02em] tabular-nums ${amount}`}>{st.totalFunded}</p>
             <p className="font-display text-[12px] font-medium text-white/64 md:text-[13px]">Total funded</p>
           </div>
           <div className="border-l border-white/16 pl-5">
-            <p className="whitespace-nowrap font-display text-[19px] font-extrabold tracking-[-0.02em] tabular-nums md:text-[26px]" style={{ color: LIME }}>{st.returns}</p>
+            <p className={`whitespace-nowrap font-display font-extrabold tracking-[-0.02em] tabular-nums ${amount}`} style={{ color: LIME }}>{st.returns}</p>
             <p className="font-display text-[12px] font-medium text-white/64 md:text-[13px]">Interest earned</p>
           </div>
         </div>
@@ -358,9 +371,13 @@ export function ClearStories({ met = false }: { met?: boolean } = {}) {
     <section id="c-stories" className="mx-2 overflow-hidden rounded-[16px] bg-white py-20 md:py-28">
       <div className="px-4">
         {met ? (
-          <Rise>
-            <Head sub="On Rang De, lenders are called social investors.">Meet the people they lent to.</Head>
-          </Rise>
+          revisedType ? (
+            <Head sub="On Rang De, lenders are called social investors." size="text-[32px] md:text-[48px] lg:text-[56px]" ink="Meet the people they lent to." type={WHY2_HEAD} />
+          ) : (
+            <Rise>
+              <Head sub="On Rang De, lenders are called social investors.">Meet the people they lent to.</Head>
+            </Rise>
+          )
         ) : (
           <>
             <Bridge>It has worked before.</Bridge>

@@ -46,8 +46,10 @@ const EDGE_CLASS = "bg-clip-text";
  * Version 2's headings, all the plain fill (as its "Why it matters" heading):
  *   `grey` text grey 24 → text grey 100; `green` green dark at 24% → green dark; `white` white at 24% → white (on dark);
  *   `grey80` text grey 16 → text grey 80 (the opportunities count).
+ * /v/why2's closing line on deep green (24 Nov 2026), the plain fill: `cream` cream at 24% → cream; `lime` lime at 24% → lime.
+ * `navy` (25 Nov 2026, /v/why2's closing line on white): the nav's navy at 24% → navy.
  */
-type Tone = "rgb" | "plain" | "blue" | "grey" | "green" | "white" | "grey80";
+type Tone = "rgb" | "plain" | "blue" | "grey" | "green" | "white" | "grey80" | "cream" | "lime" | "navy";
 const TONES: Record<Tone, { ink: string; pale: string; inkColour: string; paleColour: string }> = {
   rgb: { ink: "text-ink", pale: "text-ink/32", inkColour: "var(--color-ink)", paleColour: "color-mix(in srgb, var(--color-ink) 32%, transparent)" },
   plain: { ink: "text-ink", pale: "text-ink/32", inkColour: "var(--color-ink)", paleColour: "color-mix(in srgb, var(--color-ink) 32%, transparent)" },
@@ -56,6 +58,9 @@ const TONES: Record<Tone, { ink: string; pale: string; inkColour: string; paleCo
   green: { ink: "text-green-dark", pale: "text-green-dark/24", inkColour: "var(--color-green-dark)", paleColour: "color-mix(in srgb, var(--color-green-dark) 24%, transparent)" },
   white: { ink: "text-white", pale: "text-white/24", inkColour: "#fff", paleColour: "rgba(255, 255, 255, 0.24)" },
   grey80: { ink: "text-text-grey-80", pale: "text-text-grey-16", inkColour: "var(--color-text-grey-80)", paleColour: "var(--color-text-grey-16)" },
+  cream: { ink: "text-[#F3EFD8]", pale: "text-[#F3EFD8]/24", inkColour: "#F3EFD8", paleColour: "rgba(243, 239, 216, 0.24)" },
+  lime: { ink: "text-[#D9E89A]", pale: "text-[#D9E89A]/24", inkColour: "#D9E89A", paleColour: "rgba(217, 232, 154, 0.24)" },
+  navy: { ink: "text-nav-navy", pale: "text-nav-navy/24", inkColour: "var(--color-nav-navy)", paleColour: "color-mix(in srgb, var(--color-nav-navy) 24%, transparent)" },
 };
 const SOFT = 1.5; // plain/blue: how many letters the darkening takes
 

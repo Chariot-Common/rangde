@@ -1,8 +1,9 @@
 "use client";
 
-import { AnimatePresence, animate, motion, useInView, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
+import { AnimatePresence, animate, motion, useInView, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "motion/react";
 import Image from "next/image";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { ScrollInk } from "./ScrollInk";
 import { Icon, type IconName } from "@/components/ui";
 import { useRangDeStats } from "@/components/providers/StatsProvider";
 import { LinkButton, SIGNUP_URL } from "./ui";
@@ -11,8 +12,10 @@ import { HOW_IT_WORKS_STEPS } from "@/components/how-it-works/steps";
 import { CreditGrowsScene } from "./CreditGrowsScene";
 import { EASE } from "./WhyRealStory";
 import { PlainQuestionCards } from "./PlainQuestionCards";
+import { GetStartedAnim, NoRepayAnim, NriAnim } from "./FaqAnimations";
+import { Testimonials } from "@/components/sections/testimonials/Testimonials";
 import { TRUST_QUESTIONS } from "./WhyTrust";
-import type { QuestionCard } from "./approaches";
+import { QUESTION_CARDS, type QuestionCard } from "./approaches";
 
 /*
  * /v/why, "One thread", second pass (20 Nov 2026 review: lighter headings, tighter spacing, a real-looking how-it-works,
@@ -61,13 +64,37 @@ function Lines({ a, b, className, grey }: { a: ReactNode; b?: ReactNode; classNa
   );
 }
 
+/** 24 Nov 2026: a section heading whose first line fills in letter by letter as it's scrolled into view (ScrollInk's
+ * plain fill, as the testimonials' "Why they lend."). The second line, if any, sits under it in grey and doesn't move. */
+function InkHeading({ a, b, className, id }: { a: string; b?: string; className: string; id?: string }) {
+  return (
+    <h2 id={id} className={className} aria-label={b ? `${a} ${b}` : a}>
+      <ScrollInk as="span" tone="plain" text={a} className="block" />
+      {b && (
+        <span aria-hidden className="block text-ink/48">
+          {b}
+        </span>
+      )}
+    </h2>
+  );
+}
+
+const PHONE = "(max-width: 767px)";
+const subscribePhone = (cb: () => void) => {
+  const m = window.matchMedia(PHONE);
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
+function usePhone() {
+  return useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
+}
+
 function usePin() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   return { ref, p: scrollYProgress };
 }
 const STICKY = "sticky top-[var(--navbar-bottom,0px)] flex h-[calc(100svh-var(--navbar-bottom,0px))] flex-col";
-const CREAM = "#F3EFD8";
 
 
 /* ── 1 The problem (19 Nov 2026 review: one big centred statement, no layers of headings). Pinned for a little over a
@@ -241,7 +268,7 @@ function OptionCard({ o }: { o: (typeof OPTIONS)[number] }) {
                 reaching up behind the title) its own layer; this keeps the icon and title painted above that layer. */}
             <Icon name={o.icon} size={40} className={`relative z-[1] -mb-3 transition-[filter] ${EASE_CSS} ${navy ? "brightness-0 invert" : ""}`} />
             {/* The option's name (H5 bold), 12px under the icon and 24px above the title (the title, divider and body keep 24px). */}
-            <p className={`relative z-[1] font-display text-h5 font-bold uppercase tracking-[0.08em] transition-colors ${EASE_CSS} ${navy ? "text-white/80" : "text-text-grey-80"}`}>{o.k}</p>
+            <p className={`relative z-[1] font-display text-h5 font-bold uppercase tracking-[0.08em] transition-colors ${EASE_CSS} ${navy ? "text-white/80" : "text-nav-navy"}`}>{o.k}</p>
             <h3 className={`${HEAD} relative z-[1] text-[28px] leading-[1.12] transition-colors lg:text-[34px] ${EASE_CSS} ${navy ? "text-white" : "text-ink"}`}>{o.t}</h3>
             {hovering && (
               // The hovered body, carried with the title. The ::before is the navy panel behind it (to the card's top
@@ -268,11 +295,34 @@ function OptionCard({ o }: { o: (typeof OPTIONS)[number] }) {
   );
 }
 
+/* 24 Nov 2026: one scroll-linked sequence for the end of the section (from tablets up). It starts once the banks card
+   has run its course (its title has met its body at the card's bottom, which is where the closing line ends) and runs
+   while the closing line moves from 60% to 32% of the way down the screen: first the closing line fills in letter by
+   letter (its two lines one after the other, shared out by length), then the four numbers, one at a time and quicker
+   (25 Nov 2026: each number counts up from zero when its turn comes, as in "It’s already working").
+   Phones stack everything, so there each piece fills on its own as it's scrolled to. */
+const CLOSE_A = "Good rural businesses";
+const CLOSE_B = "stay small, or don’t survive at all.";
+const CLOSE_END = 0.5; // the share of the sequence the closing line takes; the four numbers split the rest
+const CLOSE_SPLIT = (CLOSE_END * CLOSE_A.length) / (CLOSE_A.length + CLOSE_B.length);
+const STAT_STEP = (1 - CLOSE_END) / 4;
+
 export function ThreadOptions() {
+  const phone = usePhone();
+  const closeRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: closeRef, offset: ["end 0.6", "end 0.32"] });
+  const seq = useSpring(scrollYProgress, { stiffness: 70, damping: 22, restDelta: 0.0005 });
+  const fillA = useTransform(seq, [0, CLOSE_SPLIT], [0, 1], { clamp: true });
+  const fillB = useTransform(seq, [CLOSE_SPLIT, CLOSE_END], [0, 1], { clamp: true });
+  const stat0 = useTransform(seq, [CLOSE_END, CLOSE_END + STAT_STEP], [0, 1], { clamp: true });
+  const stat1 = useTransform(seq, [CLOSE_END + STAT_STEP, CLOSE_END + 2 * STAT_STEP], [0, 1], { clamp: true });
+  const stat2 = useTransform(seq, [CLOSE_END + 2 * STAT_STEP, CLOSE_END + 3 * STAT_STEP], [0, 1], { clamp: true });
+  const stat3 = useTransform(seq, [CLOSE_END + 3 * STAT_STEP, 1], [0, 1], { clamp: true });
+  const statDrives = [stat0, stat1, stat2, stat3];
   return (
     <section id="c-options" aria-labelledby="options-heading" className={SECTION} style={{ backgroundColor: PAPER }}>
       <div className={`${WIDE} flex flex-col gap-10 md:gap-14`}>
-        <Lines className={`${H2} text-center text-ink`} a={<span id="options-heading">What are their options?</span>} grey="text-ink/48" />
+        <InkHeading id="options-heading" className={`${H2} text-center`} a="What are their options?" />
         <div className="relative">
           <ol className="grid gap-2 md:grid-cols-4 md:items-start">
             {OPTIONS.map((o) => (
@@ -282,18 +332,70 @@ export function ThreadOptions() {
           {/* The closing, in the space under the shorter cards: a quieter first line, then the sentence on two lines at the
               section heading's size. Its box ends 40px right of the banks card (cards are (W − 24px) / 4 wide, so the box
               is 75% − 34px), and the size steps down (100cqw / 17.2; the long line is about 16.95em wide) when the line wouldn't fit. */}
-          <div className="mt-10 md:absolute md:bottom-0 md:right-0 md:mt-0 md:w-[calc(75%-34px)] md:[container-type:inline-size]">
+          <div ref={closeRef} className="mt-10 md:absolute md:bottom-0 md:right-0 md:mt-0 md:w-[calc(75%-34px)] md:[container-type:inline-size]">
             <p className="flex flex-col items-end gap-3 text-right">
               <span className="font-display text-[20px] font-medium leading-[1.3] text-ink/56 md:text-[24px]">Every option is shut, too costly, or unreliable.</span>
-              <span className={`${HEAD} text-[32px] text-ink md:text-[min(48px,calc(100cqw/17.2))] lg:text-[min(56px,calc(100cqw/17.2))]`}>
-                <span className="block">Good rural businesses</span>
-                <span className="block md:whitespace-nowrap">stay small, or don’t survive at all.</span>
+              <span className={`${HEAD} text-[32px] md:text-[min(48px,calc(100cqw/17.2))] lg:text-[min(56px,calc(100cqw/17.2))]`} aria-label={`${CLOSE_A} ${CLOSE_B}`}>
+                <ScrollInk as="span" tone="plain" text={CLOSE_A} drive={phone ? undefined : fillA} className="block" />
+                <ScrollInk as="span" tone="plain" text={CLOSE_B} drive={phone ? undefined : fillB} className="block md:whitespace-nowrap" />
               </span>
             </p>
           </div>
         </div>
+        {/* 24 Nov 2026: the numbers, moved in from their own section. A 1.6px divider, then four white cards side by side
+            (two by two on tablets), each a number that counts up and its line in bold. From tablets up the divider has the
+            section's top padding (96px) above and below it: the section's 56px gap plus 40px. */}
+        <span className="block h-[1.6px] w-full rounded-full bg-ink/16 md:mt-10" aria-hidden />
+        <ul className={`grid gap-2 md:mt-10 md:grid-cols-2 ${STAT_COLS}`}>
+          {OPTION_STATS.map((s, i) => (
+            <StatCard key={s.line} s={s} drive={phone ? undefined : statDrives[i]} />
+          ))}
+        </ul>
       </div>
     </section>
+  );
+}
+
+// 24 Nov 2026 (Rang De's figures; 86% as Rang De states it). 49% and 17.77%: NABARD rural survey, July 2026. 180%: the
+// extreme for unregistered moneylenders (RBI paper citing a Kerala study), now a card of its own.
+const OPTION_STATS: { to: number; decimals?: number; line: string }[] = [
+  { to: 86, line: "of India’s eligible adults can’t get a loan from a bank." },
+  { to: 49, line: "of rural families who borrow turn to moneylenders, relatives or friends." },
+  { to: 17.77, decimals: 2, line: "is what informal loans in India cost a year, on average." },
+  { to: 180, line: "is what predatory moneylenders can charge up to." },
+];
+// One row of four from 1280px. The columns are weighted by how long each card's line is (the 49% line is the longest),
+// so every line fits in three lines.
+const STAT_COLS = "xl:grid-cols-[1fr_1.25fr_1fr_0.85fr]";
+
+/** One number card, animated like the proof cards ("It’s already working"): the card rises in as it comes into view and
+ * its number counts up from zero. With `drive` (tablets up), the count waits for the number’s turn in the section’s
+ * scroll sequence, so the four count one after another once the closing line has filled; without it (phones), it counts
+ * as the card comes into view. */
+function StatCard({ s, drive }: { s: (typeof OPTION_STATS)[number]; drive?: MotionValue<number> }) {
+  const reduce = useReducedMotion();
+  const ref = useRef<HTMLLIElement>(null);
+  const seen = useInView(ref, { once: true, amount: 0.4 });
+  const none = useMotionValue(0);
+  const [turn, setTurn] = useState(false);
+  useMotionValueEvent(drive ?? none, "change", (v) => {
+    if (v > 0.02) setTurn(true);
+  });
+  const on = !!reduce || (drive ? turn : seen);
+  return (
+    <motion.li
+      ref={ref}
+      className="flex flex-col gap-4 rounded-[8%] bg-white p-6 lg:p-8"
+      initial={reduce ? false : { opacity: 0, y: 40 }}
+      animate={seen || reduce ? { opacity: 1, y: 0 } : undefined}
+      transition={{ duration: 0.7, ease: EASE }}
+    >
+      <p className="whitespace-nowrap font-display text-[34px] font-bold leading-[0.9] tracking-[-0.04em] text-ink md:text-[48px] lg:text-[64px]">
+        <CountUp to={s.to} decimals={s.decimals} suffix="%" on={on} />
+      </p>
+      {/* 24px, but 20px from 1280px to 1399px, where four in a row are too narrow for 24px in three lines. */}
+      <p className={`${HEAD} text-[20px] leading-[1.25] text-ink lg:text-[24px] xl:max-[1399px]:text-[20px]`}>{s.line}</p>
+    </motion.li>
   );
 }
 
@@ -426,17 +528,21 @@ export function ThreadTurn() {
         <div className={`${reduce ? "flex flex-col py-20" : STICKY} items-center justify-center gap-6 px-4 text-center md:gap-8`}>
           {/* 23 Nov 2026: no blur. The words fill from faint to full one by one as you scroll, like "A simple loan can
               help them." in the problem. */}
-          <h2 className={`${HEAD} max-w-[1100px] text-[40px] md:text-[72px] lg:text-[88px]`} style={{ color: LIME }} aria-label={TURN}>
+          {/* 24 Nov 2026: the line at 64px (34px on phones). The paragraph below is exactly as wide as the line: the two
+              share a fit-content column, and [contain:inline-size] keeps the paragraph from widening it. */}
+          <div className="flex w-fit max-w-full flex-col gap-6 md:gap-8">
+          <h2 className={`${HEAD} max-w-[1100px] text-[34px] md:text-[56px] lg:text-[64px]`} style={{ color: LIME }} aria-label={TURN}>
             {TURN.split(" ").map((w, i, all) => (
               <FillWord key={i} w={w} p={p} at={0.04 + (i / all.length) * 0.24} />
             ))}
           </h2>
           {/* Only once the line above has fully come in: the sentence rises in, faint, then fills word by word. */}
-          <motion.p className="max-w-[880px] font-display text-[20px] font-bold leading-[1.35] text-white md:text-[32px] lg:text-[36px] [text-wrap:balance]" aria-label={TURN_TEXT} style={{ opacity: paraIn, y: paraY }}>
+          <motion.p className="font-display text-[20px] font-bold leading-[1.35] text-white [contain:inline-size] md:text-[28px] lg:text-[34px] [text-wrap:pretty]" aria-label={TURN_TEXT} style={{ opacity: paraIn, y: paraY }}>
             {words.map((w, i) => (
               <FillWord key={i} w={w} p={p} at={0.4 + (i / words.length) * 0.5} />
             ))}
           </motion.p>
+          </div>
         </div>
       </div>
     </section>
@@ -466,7 +572,9 @@ function HowStrip({ at }: { at: number }) {
   const reduce = useReducedMotion();
   const n = HOW.length;
   return (
-    <div className="relative mx-auto aspect-[374/342] w-[84%] self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:aspect-auto md:h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-full">
+    /* 24 Nov 2026: on wider screens the card keeps the same 24px inset on its right as the steps column has on its left
+       (both on top of the grid's 12px), so it's narrower and no longer runs up to the panel's right edge. */
+    <div className="relative mx-auto aspect-[374/342] w-[84%] self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:ml-0 md:mr-6 md:aspect-auto md:h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-auto">
       <motion.ul
         className="absolute inset-x-0 top-0 flex flex-col"
         style={{ height: `${n * 100}%` }}
@@ -510,7 +618,7 @@ export function ThreadHow() {
         <div className={`${reduce ? "py-10" : STICKY} grid w-full gap-4 p-3 md:grid-cols-[minmax(0,5fr)_minmax(0,8fr)] md:gap-3`}>
           {/* Left: heading and the steps. */}
           <div className="flex min-h-0 flex-col justify-between gap-4 px-2 pt-4 md:px-6 md:py-8">
-            <Lines className={`${H2} text-ink`} a="How it works." b={"You choose. Rang\u00a0De does the rest."} grey="text-ink/48" />
+            <InkHeading className={H2} a="How it works." b={"You choose. Rang\u00a0De does the rest."} />
 
             <ol className="relative hidden flex-col pl-7 md:flex">
               <span className="absolute bottom-3 left-[5px] top-3 w-[2px] rounded-full bg-ink/10" aria-hidden />
@@ -518,7 +626,7 @@ export function ThreadHow() {
               {HOW.map((h, i) => (
                 <li key={h.t} className="relative py-2.5">
                   <span className="absolute -left-7 top-[17px] size-3 rounded-full border-2 transition-colors duration-300" style={{ borderColor: i <= at ? GREEN : "rgba(41,45,54,0.2)", backgroundColor: i <= at ? GREEN : PAPER }} aria-hidden />
-                  <button type="button" onClick={() => go(i)} aria-current={i === at ? "step" : undefined} className="text-left font-display text-[18px] font-bold leading-[1.25] transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-dark lg:text-[22px]" style={{ color: i === at ? INK : "rgba(41,45,54,0.36)" }}>
+                  <button type="button" onClick={() => go(i)} aria-current={i === at ? "step" : undefined} className="text-left font-display text-[20px] font-bold leading-[1.25] transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-dark lg:text-[24px]" style={{ color: i === at ? INK : "rgba(41,45,54,0.36)" }}>
                     {h.t}
                   </button>
                   <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${i === at ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
@@ -539,7 +647,7 @@ export function ThreadHow() {
               </div>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div key={at} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                  <p className="font-display text-[18px] font-bold leading-[1.25] text-ink">
+                  <p className="font-display text-[20px] font-bold leading-[1.25] text-ink">
                     <span style={{ color: GREEN }}>{at + 1}</span> {HOW[at].t}
                   </p>
                   <p className="mt-1 font-display text-[14px] font-medium leading-[20px] text-ink/64">{HOW[at].s}</p>
@@ -581,10 +689,11 @@ export function ThreadMoney() {
               style={{ top: `calc(var(--navbar-bottom,0px) + ${32 + i * 20}px)` }}
             >
               <div className="flex flex-col justify-center gap-4 p-6 md:p-14">
-                <span className="font-display text-[14px] font-bold tabular-nums" style={{ color: GREEN }}>
+                {/* 24 Nov 2026: the step count in H5 bold capitals, and the title filling in letter by letter as the card comes up. */}
+                <span className="font-display text-h5 font-bold uppercase tabular-nums tracking-[0.08em]" style={{ color: GREEN }}>
                   {i + 1} of {DOES.length}
                 </span>
-                <p className={`${HEAD} text-[28px] text-ink md:text-[48px]`}>{d.t}</p>
+                <ScrollInk as="p" tone="plain" text={d.t} className={`${HEAD} text-[28px] md:text-[48px]`} />
                 <p className={`${SUB} max-w-[380px] text-ink/64`}>
                   {d.s}
                 </p>
@@ -615,7 +724,7 @@ export function ThreadMoney() {
               { big: "Up to 4%", line: "fee on loans you choose yourself. Yearly plans: up to ₹999." },
             ].map((t) => (
               <li key={t.big} className="flex flex-col gap-1 rounded-[16px] p-4 md:p-5" style={{ backgroundColor: "rgba(255,255,255,0.08)" }}>
-                <p className="font-display text-[22px] font-bold leading-[1.1] tracking-[-0.02em] text-white md:text-[28px]">{t.big}</p>
+                <p className="font-display text-[20px] font-bold leading-[1.1] tracking-[-0.02em] text-white md:text-[24px]">{t.big}</p>
                 <p className="font-display text-[13px] font-medium leading-[19px] text-white/64 md:text-[14px]">{t.line}</p>
               </li>
             ))}
@@ -649,7 +758,7 @@ function ProofCard({ to, prefix = "", suffix = "", line, bg, fg }: { to: number;
       animate={on || reduce ? { opacity: 1, y: 0 } : undefined}
       transition={{ duration: 0.7, ease: EASE }}
     >
-      <p className={`${HEAD} whitespace-nowrap text-[48px] tabular-nums md:text-[72px]`}>
+      <p className={`${HEAD} whitespace-nowrap text-[34px] tabular-nums md:text-[64px]`}>
         <CountUp to={to} prefix={prefix} suffix={suffix} on={on || !!reduce} />
       </p>
       <p className="font-display text-[15px] font-bold md:text-[18px]">{line}</p>
@@ -663,7 +772,7 @@ export function ThreadProof() {
     <section id="c-proof" className={`${SECTION} bg-white`}>
       <div className={`${WIDE} grid gap-8 md:grid-cols-[5fr_7fr] md:gap-12`}>
         <div className="flex flex-col items-start gap-4 self-start md:sticky md:top-[calc(var(--navbar-bottom,0px)+48px)]">
-          <Lines className={`${H2} text-ink`} a="It’s already working." b="You wouldn’t be lending alone." grey="text-ink/48" />
+          <InkHeading className={H2} a="It’s already working." b="You wouldn’t be lending alone." />
           {/* The three things people ask before lending on a peer-to-peer platform (19 Nov 2026 critique): is it
               regulated, does it get repaid, and when does my money come back. All three are facts stated elsewhere on
               the page (RBI registration; the live repaid and lent figures; 6–18 month loans repaid monthly). */}
@@ -679,7 +788,7 @@ export function ThreadProof() {
             ))}
           </ul>
           <div className="mt-2 max-sm:hidden">
-            <LinkButton href={SIGNUP_URL}>Start lending</LinkButton>
+            <LinkButton href={SIGNUP_URL}>Start investing</LinkButton>
           </div>
         </div>
         <ul className="flex flex-col gap-3">
@@ -813,9 +922,9 @@ function SourceCard({ i, q, big, line, chart, note, by, href, linkText }: { i: n
       animate={live ? { opacity: 1, y: 0 } : undefined}
       transition={{ duration: 0.6, delay: i * 0.08, ease: EASE }}
     >
-      <p className="font-display text-[18px] font-bold leading-[1.25] text-ink md:text-[20px]">{q}</p>
+      <p className="font-display text-[20px] font-bold leading-[1.25] text-ink md:text-[24px]">{q}</p>
       <div className="flex flex-col gap-1">
-        <p className={`${HEAD} whitespace-nowrap text-[38px] md:text-[40px]`} style={{ color: GREEN }}>
+        <p className={`${HEAD} whitespace-nowrap text-[28px] md:text-[34px]`} style={{ color: GREEN }}>
           {big(live)}
         </p>
         <p className="font-display text-[15px] font-medium leading-[22px] text-ink/72">{line}</p>
@@ -846,7 +955,7 @@ export function ThreadSources() {
     <section id="f-resources" className={SECTION} style={{ backgroundColor: PAPER }}>
       <div className={`${WIDE} flex flex-col gap-8 md:gap-12`}>
         <div className="flex flex-col items-center gap-3 text-center">
-          <Lines className={`${H2} text-ink`} a="Read the numbers yourself." b="Every figure, with its source." grey="text-ink/48" />
+          <InkHeading className={H2} a="Read the numbers yourself." b="Every figure, with its source." />
         </div>
         <ol className="grid gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-4">
           <SourceCard
@@ -926,13 +1035,54 @@ export function ThreadSources() {
 /* ── The close (25 Nov 2026): the page ends where it began. The problem section's line, "The business is ready. The loan
       isn't.", comes back on the same deep green, now answered, with the one button. ─────────────────────────────── */
 
+/* 25 Nov 2026: "The businesses are ready. / Now you can [Invest →] in them." The section fills the screen under the
+   navigation bar, the line is at the hero's size (40 / 64 / 72 / 72–80px, as in WhyHero2), and the button sits in the
+   sentence in place of the word "invest" (after a reference where a "Get a demo" pill sits inside a headline), sized
+   to the line: 0.8em tall, centred on the lowercase letters. It replaces the "Start lending" button that sat under the
+   old line. Both lines fill in letter by letter as they're scrolled to, and the button brightens in when the fill
+   reaches it.
+   Second pass (same day): a plain white section, the first line in text grey 80 and the second in text grey 100 (the
+   navy was tried and dropped). The button is the nav's navy (as "Talk to our founders") with the site's 4px button corners, "Invest"
+   in bold at 0.28em, and a white arrow (the "Read more FAQs" arrow: a line with a chevron) close beside it, no circle. */
+const CLOSE_1 = "The businesses are ready.";
+const CLOSE_2A = "Now you can";
+const CLOSE_2B = "in them.";
+const CLOSE_CHARS = CLOSE_1.length + CLOSE_2A.length + CLOSE_2B.length;
+const HERO_SIZE = "text-[40px] md:text-[64px] lg:text-[72px] xl:text-[clamp(72px,min(5.6vw,9svh),80px)]";
+
 export function ThreadClose() {
+  const reduce = useReducedMotion();
+  const ref = useRef<HTMLHeadingElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 1", "start 0.5"] });
+  const p = useSpring(scrollYProgress, { stiffness: 70, damping: 22, restDelta: 0.0005 });
+  const at1 = CLOSE_1.length / CLOSE_CHARS;
+  const at2 = (CLOSE_1.length + CLOSE_2A.length) / CLOSE_CHARS;
+  const fill1 = useTransform(p, [0, at1], [0, 1], { clamp: true });
+  const fill2a = useTransform(p, [at1, at2], [0, 1], { clamp: true });
+  const fill2b = useTransform(p, [at2, 1], [0, 1], { clamp: true });
+  const btn = useTransform(p, [at2 - 0.04, at2 + 0.04], [0, 1], { clamp: true });
+  const btnOpacity = useTransform(btn, (v) => (reduce ? 1 : 0.3 + 0.7 * v));
+  const btnScale = useTransform(btn, (v) => (reduce ? 1 : 0.9 + 0.1 * v));
   return (
-    <section id="c-close" className={`${SECTION} text-center`} style={{ backgroundColor: DEEP, color: CREAM }}>
-      <div className={`${WIDE} flex flex-col items-center gap-8`}>
-        <Lines className={H2} a="The business is ready." b={<span style={{ color: LIME }}>Now the loan can be.</span>} grey="" />
-        <LinkButton href={SIGNUP_URL}>Start lending</LinkButton>
-      </div>
+    <section id="c-close" className="mx-2 flex min-h-[calc(100svh-var(--navbar-bottom,0px))] items-center justify-center rounded-[24px] bg-white px-4 py-16 text-center">
+      <h2 ref={ref} className={`font-display font-bold leading-[1.14] tracking-[-0.02em] ${HERO_SIZE}`} aria-label={`${CLOSE_1} Now you can invest in them.`}>
+        <ScrollInk as="span" tone="grey80" text={CLOSE_1} drive={fill1} className="block" />
+        <span className="block">
+          <ScrollInk as="span" tone="grey" text={CLOSE_2A} drive={fill2a} />{" "}
+          <motion.a
+            href="https://rangde.in/invest/individuals"
+            className="relative mx-[0.1em] inline-flex h-[0.8em] items-center gap-[0.08em] rounded-2 bg-nav-navy px-[0.36em] align-middle font-display font-bold leading-none tracking-normal text-white-100 transition-[filter] duration-150 hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-dark"
+            style={{ opacity: btnOpacity, scale: btnScale }}
+          >
+            <span className="text-[max(14px,0.28em)]">Invest</span>
+            {/* The "Read more FAQs" arrow: a line with a chevron. */}
+            <svg viewBox="0 0 24 24" className="size-[max(16px,0.32em)] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </motion.a>{" "}
+          <ScrollInk as="span" tone="grey" text={CLOSE_2B} drive={fill2b} />
+        </span>
+      </h2>
     </section>
   );
 }
@@ -955,11 +1105,18 @@ const GET_STARTED: QuestionCard = {
 
 const WHY2_QUESTIONS: QuestionCard[] = [
   GET_STARTED,
-  { ...TRUST_QUESTIONS[1], question: "After I invest, where exactly does my money go?" },
+  // 24 Nov 2026: the NRI/OCI question (the site’s own card: valid KYC, pay from an NRO account in India) in place of
+  // "where does my money go".
+  QUESTION_CARDS.find((q) => q.question.startsWith("I’m an NRI"))!,
   { ...TRUST_QUESTIONS[2], question: "What happens if a borrower doesn’t repay?" },
   TRUST_QUESTIONS[3],
 ];
 
 export function Why2Questions() {
-  return <PlainQuestionCards heading="Before you lend." cards={WHY2_QUESTIONS} icons={["faq-plus", "faq-secure", "faq-warning", "faq-returns"]} flip navyLink large foundersCall />;
+  return <PlainQuestionCards heading="Before you lend." headingClass={H2} inkHeading questionClass="text-[28px] leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]" cards={WHY2_QUESTIONS} icons={["faq-plus", "faq-nri", "faq-warning", "faq-returns"]} visuals={[<GetStartedAnim key="start" />, <NriAnim key="nri" />, <NoRepayAnim key="norepay" />]} flip navyLink large foundersCall />;
+}
+
+/** The shared testimonials, with their heading at this page’s section size (24 Nov 2026). */
+export function Why2Testimonials() {
+  return <Testimonials refined inked evenRows heading="Why they lend." headingClass={H2} />;
 }

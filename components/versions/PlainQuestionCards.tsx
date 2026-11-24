@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { FAQS_URL } from "@/data/faqs";
 import { Icon, type IconName } from "@/components/ui";
 import { FactChip, QUESTION_CARDS, type QuestionCard } from "./approaches";
@@ -46,7 +46,9 @@ function FlipCoin({ icon, auto = false }: { icon: IconName; auto?: boolean }) {
 /** `fadeIn` (Version 2): the cards fade in, one after another and rising a little, as they come into view (ease-out). */
 /** `foundersCall` (Version 3): "Talk to our founders" beside "Read more FAQs", with when under both buttons (the weekly
  * live call with Ram and Smita). */
-export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false, foundersCall = false, cards: own, icons = COIN_ICONS }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean; foundersCall?: boolean; cards?: QuestionCard[]; icons?: IconName[] }) {
+/** `visuals` (/v/why2, 24 Nov 2026): an animation per card, shown in the pop-up under the question (same order as the
+ * cards; leave a slot empty for none). */
+export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false, foundersCall = false, cards: own, icons = COIN_ICONS, visuals, headingClass, questionClass, inkHeading = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean; foundersCall?: boolean; cards?: QuestionCard[]; icons?: IconName[]; visuals?: (ReactNode | undefined)[]; headingClass?: string; questionClass?: string; inkHeading?: boolean }) {
   const cards = own ?? QUESTION_CARDS.slice(0, count);
   const reduce = useReducedMotion();
   const fade = fadeIn && !reduce;
@@ -96,7 +98,9 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
   return (
     <section className="mx-2 flex flex-col items-center gap-10 rounded-[16px] bg-white px-4 pb-12 pt-6 sm:px-8 md:py-20">
       {phoneHeading && <ScrollInk as="h2" tone="plain" text={phoneHeading} className="text-center font-display text-h3 font-bold md:hidden" />}
-      {heading && <h2 className="text-center font-display text-h3 font-bold text-text-grey-100">{heading}</h2>}
+      {/* `headingClass` / `questionClass` (24 Nov 2026, /v/why2): a page can set its own sizes for the heading and the card questions. */}
+      {/* `inkHeading` (24 Nov 2026, /v/why2): the heading fills in letter by letter as it’s scrolled into view. */}
+      {heading && (inkHeading ? <ScrollInk as="h2" tone="grey" text={heading} className={`text-center ${headingClass ?? "font-display text-h3 font-bold"}`} /> : <h2 className={`text-center text-text-grey-100 ${headingClass ?? "font-display text-h3 font-bold"}`}>{heading}</h2>)}
       <div className={`grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 ${large ? "max-w-[1440px] lg:gap-4" : "max-w-[1200px]"}`}>
         {cards.map((c, i) => (
           <motion.button
@@ -112,7 +116,7 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
             onClick={() => setOpen(i)}
             className={`group flex cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey text-left ${large ? "min-h-[300px] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[500px] lg:rounded-[20px] lg:p-10" : "min-h-[220px] p-6 sm:min-h-[260px]"} ${flip ? `transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8 ${auto === i ? "max-md:scale-[1.025] max-md:bg-primary-8" : ""}` : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100`}
           >
-            <span className={`font-display font-bold text-text-grey-100 [text-wrap:balance] ${large ? "text-[24px] leading-[30px] md:text-h4 xl:text-[36px] xl:leading-[44px]" : "text-p1"}`}>{c.question}</span>
+            <span className={`font-display font-bold text-text-grey-100 [text-wrap:balance] ${questionClass ?? (large ? "text-[24px] leading-[30px] md:text-h4 xl:text-[36px] xl:leading-[44px]" : "text-p1")}`}>{c.question}</span>
             {flip && icons[i] ? <span className={`flex self-end ${large ? "lg:scale-125 lg:origin-bottom-right" : ""}`}><FlipCoin icon={icons[i]} auto={auto === i} /></span> : <span aria-hidden className="flex size-[48px] items-center justify-center self-end rounded-full bg-text-grey-64 text-white transition-transform duration-200 group-hover:scale-105">
               <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
                 <path d="M12 5v14M5 12h14" />
@@ -171,6 +175,7 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
               </svg>
             </button>
             <h3 className="pr-12 font-display text-p1 font-bold text-text-grey-100">{current.question}</h3>
+            {open !== null && visuals?.[open]}
             <ul className="flex flex-col gap-2">
               {current.facts.map((f) => (
                 <FactChip key={f.text} {...f} />

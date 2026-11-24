@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { ClearStories } from "@/components/versions/WhyClear";
 import { PhotoRowHero } from "@/components/versions/WhyHero2";
 import { ChapterPill } from "@/components/versions/WhyRealStory";
-import { ThreadEvidence, ThreadHow, ThreadTurn, ThreadMoney, ThreadOptions, ThreadProblem, ThreadProof, ThreadSources, ThreadClose, Why2Questions } from "@/components/versions/WhyThread2";
-import { Testimonials } from "@/components/sections/testimonials/Testimonials";
+import { ThreadHow, ThreadTurn, ThreadMoney, ThreadOptions, ThreadProblem, ThreadProof, ThreadSources, ThreadClose, Why2Questions, Why2Testimonials } from "@/components/versions/WhyThread2";
 
 export const metadata: Metadata = {
   title: "Version 4 · Why we exist (copy 2) | Rang De",
@@ -13,7 +12,6 @@ export const metadata: Metadata = {
 
 const CHAPTERS = [
   { id: "c-problem", label: "The problem" },
-  { id: "c-evidence", label: "The numbers" },
   { id: "c-turn", label: "Why Rang De" },
   { id: "c-how", label: "How it works" },
   { id: "c-compare", label: "Your money" },
@@ -34,18 +32,13 @@ export default function WhyPage() {
         <ChapterPill chapters={CHAPTERS} even compact />
         <ThreadProblem />
         <ThreadOptions />
-        {/* The numbers stay put at the bottom of the screen while "This is why Rang De exists" slides up over them. */}
-        <div className="flex flex-col gap-2">
-          <ThreadEvidence />
-          <div className="relative z-10">
-            <ThreadTurn />
-          </div>
-        </div>
+        {/* 24 Nov 2026: the numbers now sit inside the options section above, so "This is why Rang De exists" follows it. */}
+        <ThreadTurn />
         <ThreadHow />
         <ThreadMoney />
         <ThreadProof />
-        <ClearStories met />
-        <Testimonials refined inked evenRows heading="Why they lend." />
+        <ClearStories met revisedType />
+        <Why2Testimonials />
         <Why2Questions />
         <ThreadSources />
         <ThreadClose />

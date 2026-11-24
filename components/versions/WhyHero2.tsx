@@ -557,8 +557,8 @@ function FadeRows() {
   );
 }
 
-// 23 Nov 2026: the header, on three lines (kept from tablets up; phones wrap freely), and the subline under it.
-const HERO_LINES = ["On Rang De, everyday Indians", "invest in rural business owners who are", "in need of funds but can’t get them."];
+// 24 Nov 2026: the header, on two lines (kept from tablets up; phones wrap freely), and the subline under it.
+const HERO_LINES = ["On Rang De, everyday Indians", "invest in rural business owners."];
 const HERO_BODY = "Your money helps them build credit, while you earn returns.";
 const FILL_MS = 600; // the whole header has filled by then
 const CHAR_MS = 150; // how long each letter takes to darken
@@ -593,7 +593,7 @@ function FillHeading({ id, lines }: { id: string; lines: string[] }) {
   return (
     <h1 id={id} aria-label={text} className="text-center font-display text-[1em] font-bold leading-[1.08] tracking-[-0.02em] [text-wrap:balance]">
       {lines.map((line, l) => (
-        <span key={l} aria-hidden className="md:block md:whitespace-nowrap">
+        <span key={l} aria-hidden className="xl:block xl:whitespace-nowrap">
           {line.split(" ").map((word, w, all) => (
             <span key={w} className="inline-block whitespace-nowrap">
               {word.split("").map(char)}
@@ -609,40 +609,61 @@ function FillHeading({ id, lines }: { id: string; lines: string[] }) {
 export function PhotoRowHero() {
   const reduce = useReducedMotion();
   const { scrollY } = useScroll();
-  const [vh, setVh] = useState(900);
+  const ref = useRef<HTMLElement>(null);
+  // Where the hero sticks (its bottom 8px above the screen's bottom, or under the navigation bar if it's shorter than the
+  // screen), and how far the page has scrolled when it does; both measured, as the hero's height now follows its content.
+  const [top, setTop] = useState<number | undefined>(undefined);
+  const stick = useRef({ at: 0, vh: 900 });
   useEffect(() => {
-    const set = () => setVh(window.innerHeight);
+    const el = ref.current;
+    if (!el) return;
+    const set = () => {
+      const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navbar-bottom")) || 0;
+      const t = Math.min(nav, window.innerHeight - el.offsetHeight - 8);
+      // The parent isn't sticky, so its top is where the hero starts on the page.
+      const start = (el.parentElement?.getBoundingClientRect().top ?? 0) + window.scrollY;
+      stick.current = { at: Math.max(0, start - t), vh: window.innerHeight };
+      setTop(t);
+    };
     set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
     window.addEventListener("resize", set);
-    return () => window.removeEventListener("resize", set);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", set);
+    };
   }, []);
-  // The settle-back starts only once the second row is in view (the hero has stuck), not while it's still scrolling up.
-  const rowPx = Math.min(260, Math.max(140, 0.22 * vh)) + 8;
-  const settle = (y: number) => Math.min(1, Math.max(0, (y - rowPx) / vh));
+  // The settle-back starts only once the hero has stuck, not while it's still scrolling up.
+  const settle = (y: number) => Math.min(1, Math.max(0, (y - stick.current.at) / stick.current.vh));
   const scale = useTransform(scrollY, (y) => (reduce ? 1 : 1 - 0.06 * settle(y)));
   const fade = useTransform(scrollY, (y) => (reduce ? 1 : 1 - 0.5 * settle(y)));
 
   return (
     /* 20 Nov 2026: the hero is one photo row taller than the screen. On load the copy fills the screen with the first
        row of photos along the bottom; scrolling brings the second row up, and then the hero stays put (its bottom 8px
-       above the bottom of the screen) while the next section slides up over it. --row is one photo row's height. */
-    <section
-      aria-labelledby="hero-heading"
-      className="sticky z-0 mx-2 [--row:clamp(140px,22svh,260px)]"
-      style={{ height: "calc(100svh - var(--navbar-bottom, 0px) + var(--row))", top: "calc(var(--navbar-bottom, 0px) - var(--row) - 8px)" }}
-    >
-      <motion.div className="flex size-full origin-top flex-col overflow-hidden rounded-4 bg-white" style={{ scale, opacity: fade }}>
-        {/* The copy takes all the height above the photos. Its size follows the screen’s width (so the three lines fit; 64px at most, where the longest line, about 19.5em, fills the page width)
-            and height (so it never runs under the navigation bar); the body copy is 0.54 of the header, which makes it
-            run just short of the header's last line. justify-center-safe: if it's ever too tall it starts at the top. */}
-        <div className="mx-auto flex min-h-0 w-full max-w-page flex-1 flex-col items-center justify-center-safe gap-[0.32em] px-4 py-8 text-[30px] md:text-[min(4.4vw,9svh,64px)]">
+       above the bottom of the screen) while the next section slides up over it. --row is one photo row's height.
+       25 Nov 2026: the hero's height follows its content. The copy sits a little below the navigation bar (10% of the
+       screen's height, 32–96px, about where it sat before) and the photos start exactly 80px under its last line, so
+       more of the photos show on load. The hero still sticks with its bottom 8px above the screen's bottom (see above). */
+    <section ref={ref} aria-labelledby="hero-heading" className="sticky z-0 mx-2 [--row:clamp(140px,22svh,260px)]" style={{ top }}>
+      <motion.div className="flex w-full origin-top flex-col overflow-hidden rounded-4 bg-white" style={{ scale, opacity: fade }}>
+        {/* Its size follows the screen’s width (so the two lines fit; 80px at most) and height (so it never runs under the
+            navigation bar); the body copy is 0.48 of the header, which makes it run just short of the header's last line. */}
+        <div className="mx-auto flex w-full max-w-page flex-col items-center gap-[0.32em] px-4 pt-[clamp(32px,10svh,96px)] pb-20 text-[40px] md:text-[64px] lg:text-[72px] xl:text-[clamp(72px,min(5.6vw,9svh),80px)]">
           {/* One direct header that says what Rang De does. It fills from text grey 24 to full ink, letter by letter,
               left to right, within 600ms of the page loading (like the problem's line). */}
-          <FillHeading id="hero-heading" lines={HERO_LINES} />
-          <p className="text-center font-display text-[0.54em] font-bold leading-[1.2] text-text-grey-80 [text-wrap:balance] md:whitespace-nowrap">{HERO_BODY}</p>
-          <p className="text-center font-display text-h5 font-bold uppercase tracking-[0.08em] text-text-grey-80">
-            Peer-to-peer lending <span aria-hidden>·</span> Registered with the RBI
-          </p>
+          {/* 24 Nov 2026: the hero is the largest text on the page at every size (40px on phones, 64px on tablets, 72–80px
+              on desktops, above the 64px section headings and stats). The two header lines only stay unbroken from 1280px up,
+              where they fit. The label (text grey 64) and the body (text grey 80) scale with it, as one unit. The label sits
+              16px above the header (the two are grouped so the copy's em gap doesn't apply). */}
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-center font-display text-[max(10px,0.15em)] font-bold uppercase tracking-[0.08em] text-text-grey-64 [text-wrap:balance]">
+              Peer-to-peer social investing{" "}<span aria-hidden>·</span> Registered with the RBI
+            </p>
+            <FillHeading id="hero-heading" lines={HERO_LINES} />
+          </div>
+          <p className="text-center font-display text-[0.48em] font-bold leading-[1.2] text-text-grey-80 [text-wrap:balance] xl:whitespace-nowrap">{HERO_BODY}</p>
         </div>
         {/* "Get repaid with interest" is Rang De's own wording (their LinkedIn posts): it answers "is this a donation?" on
             the first screen. The risk is spelled out further down. No button here: the header already has two. */}
