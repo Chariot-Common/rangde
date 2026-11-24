@@ -741,8 +741,8 @@ const DOES = [
 const UNIT = "w-full rounded-[16px] bg-white p-4 text-left shadow-[0_1px_2px_rgba(41,45,54,0.06),0_8px_24px_rgba(41,45,54,0.08)]";
 const UNIT_LABEL = "font-display text-[11px] font-bold uppercase leading-[14px] tracking-[0.08em]";
 
-/** 1 · The borrower's photo (no name), then "Entrepreneur Funded" over a full funding bar, then a green tick on the
- * right. */
+/** 1 · The borrower's photo (no name), then "Entrepreneur Funded" with a green tick right after it, on one line, over a
+ * full funding bar. */
 function FundedUnit() {
   return (
     <div className={`${UNIT} flex max-w-[300px] items-center gap-3`}>
@@ -750,14 +750,16 @@ function FundedUnit() {
         <Image src="/how-it-works/s1-av3.webp" alt="" fill sizes="48px" className="object-cover" />
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <span className="font-display text-[15px] font-bold leading-[20px] text-ink">Entrepreneur Funded</span>
+        <span className="flex items-center gap-2">
+          <span className="font-display text-[15px] font-bold leading-[20px] text-ink">Entrepreneur Funded</span>
+          <span className="flex size-[20px] shrink-0 items-center justify-center rounded-full text-white" style={{ backgroundColor: "#62AF1D" }}>
+            <svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
+          </span>
+        </span>
         <span className="block h-[8px] w-full rounded-full" style={{ backgroundColor: "#62AF1D" }} />
       </div>
-      <span className="flex size-[24px] shrink-0 items-center justify-center rounded-full text-white" style={{ backgroundColor: "#62AF1D" }}>
-        <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M5 12.5l4.5 4.5L19 7.5" />
-        </svg>
-      </span>
     </div>
   );
 }
@@ -813,7 +815,7 @@ export function ThreadMoney({ row = false }: { row?: boolean } = {}) {
         </div>
         {row ? (
           // From tablets up the cards share their rows (subgrid): the numbers, headings and lines line up across the three
-          // cards, and the UI pieces sit centred in one shared row, so their vertical centres line up too.
+          // cards, and the UI pieces sit at the bottom of one shared row, so their bottom edges line up too.
           <ul className="grid gap-3 md:grid-cols-3 md:grid-rows-[repeat(4,auto)] md:gap-y-0">
             {DOES_ROW.map((d, i) => (
               <li key={d.t} className="flex flex-col items-center rounded-[24px] px-6 pb-8 pt-8 text-center md:row-span-4 md:grid md:grid-rows-subgrid md:items-stretch md:justify-items-center lg:px-8 lg:pt-10" style={{ backgroundColor: PAPER }}>
@@ -824,7 +826,7 @@ export function ThreadMoney({ row = false }: { row?: boolean } = {}) {
                 <p className={`${HEAD} mb-3 text-[26px] lg:text-[32px]`}>{d.t}</p>
                 <p className={`${SUB} text-ink/64`}>{d.s}</p>
                 {/* The UI piece, centred under the words (after the Discord Nitro perks grid, for structure only). */}
-                <div className="mt-8 flex w-full items-center justify-center">{d.unit}</div>
+                <div className="mt-8 flex w-full items-end justify-center">{d.unit}</div>
               </li>
             ))}
           </ul>
