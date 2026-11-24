@@ -57,13 +57,14 @@ const POSSIBILITIES = [
 
 /** The gauge itself: the banded half ring, the needle at `score`, and in the middle the score (unless `hideScore`) over
  * its band's name. Shared with "One loan, three good things" (25 Nov 2026), which shows only the band. */
-export function GaugeSvg({ score, hideScore = false, label }: { score: number; hideScore?: boolean; label?: string }) {
+export function GaugeSvg({ score, hideScore = false, label, tight = false }: { score: number; hideScore?: boolean; label?: string; tight?: boolean }) {
   const gradient = `cg-poor-${useId().replace(/[^a-zA-Z0-9-]/g, "")}`;
   const band = bandOf(score);
   // The needle points straight up at 0°, so it turns by the score's angle less 90.
   const needle = angleOf(score) - 90;
   return (
-    <svg viewBox="0 0 220 132" className="block w-full overflow-visible" aria-hidden>
+    // `tight`: the frame cropped to the ring and needle (y 14–120), without the empty space above and below.
+    <svg viewBox={tight ? "0 14 220 106" : "0 0 220 132"} className="block w-full overflow-visible" aria-hidden>
       <defs>
         <linearGradient id={gradient} gradientUnits="userSpaceOnUse" x1={CX - R} y1="0" x2={CX} y2="0">
           <stop offset="0" stopColor="#D9443F" />

@@ -791,7 +791,10 @@ function RepaidUnit() {
 function CreditUnit() {
   return (
     <div className={`${UNIT} max-w-[176px]`}>
-      <GaugeSvg score={860} hideScore label="High" />
+      {/* The meter (and "High" in it) cropped and drawn 104px wide, so the piece is about as tall as the other two. */}
+      <div className="mx-auto" style={{ width: 104 }}>
+        <GaugeSvg score={860} hideScore label="High" tight />
+      </div>
       <p className={`${UNIT_LABEL} mt-1.5 text-center text-ink/48`}>Credit score</p>
     </div>
   );
