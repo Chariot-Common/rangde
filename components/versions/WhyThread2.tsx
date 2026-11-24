@@ -30,13 +30,13 @@ import { QUESTION_CARDS, type QuestionCard } from "./approaches";
 const DEEP = "#1F3F0B";
 const GREEN = "#3a6e0c";
 const LIME = "#D9E89A";
-const PAPER = "#F7F3ED";
+export const PAPER = "#F7F3ED";
 const INK = "#292D36";
 const RED = "#E32642";
 
-const HEAD = "font-display font-bold tracking-[-0.02em] leading-[1.06] [text-wrap:balance]";
+export const HEAD = "font-display font-bold tracking-[-0.02em] leading-[1.06] [text-wrap:balance]";
 const H2 = `${HEAD} text-[32px] md:text-[48px] lg:text-[56px]`;
-const SUB = "font-display text-[15px] font-medium leading-[22px] md:text-[17px] md:leading-[26px]";
+export const SUB = "font-display text-[15px] font-medium leading-[22px] md:text-[17px] md:leading-[26px]";
 const SECTION = "mx-2 rounded-[24px] px-4 py-16 sm:px-6 md:py-24 lg:px-8";
 const WIDE = "mx-auto w-full max-w-[1400px]";
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
@@ -110,7 +110,9 @@ const PROBLEM = [
 ];
 const PROBLEM_TEXT = PROBLEM.map((l) => l.text).join(" ");
 
-export function ThreadProblem() {
+/** `video` (/v/why3, 25 Nov 2026): a looping, muted clip of people at work fills the pinned screen behind the line, for
+ * ambience, under a text grey 100 layer at 96% so it stays faint (86% was too distracting). With reduced motion it shows its first frame, still. */
+export function ThreadProblem({ video }: { video?: string } = {}) {
   const reduce = useReducedMotion();
   const { ref, p: scroll } = usePin();
   const still = useTransform(scroll, () => 1);
@@ -120,8 +122,14 @@ export function ThreadProblem() {
   return (
     <section id="c-problem" className="mx-2 overflow-clip rounded-[24px]" style={{ backgroundColor: DARK }}>
       <div ref={ref} className={reduce ? "" : "relative h-[180svh]"}>
-        <div className={`${reduce ? "flex flex-col py-24" : STICKY} items-center justify-center gap-10 px-4 text-center md:gap-14`}>
-          <h2 className={`${HEAD} max-w-[1120px] text-[34px] leading-[1.15] md:text-[56px] lg:text-[64px]`} aria-label={PROBLEM_TEXT}>
+        <div className={`${reduce ? "relative flex flex-col py-24" : STICKY} items-center justify-center gap-10 px-4 text-center md:gap-14`}>
+          {video && (
+            <>
+              <video aria-hidden className="pointer-events-none absolute inset-zero size-full object-cover" src={video} autoPlay={!reduce} muted loop playsInline preload="auto" />
+              <span aria-hidden className="pointer-events-none absolute inset-zero bg-text-grey-100/96" />
+            </>
+          )}
+          <h2 className={`${HEAD} relative max-w-[1120px] text-[34px] leading-[1.15] md:text-[56px] lg:text-[64px]`} aria-label={PROBLEM_TEXT}>
             {PROBLEM.map((line) => (
               <span key={line.text} className="block [text-wrap:balance]" style={{ color: line.color }}>
                 {line.text.split(" ").map((w) => {
@@ -151,7 +159,7 @@ export function ThreadProblem() {
    leaves with the body and the card. (The title's sticky box ends where the body starts, which is what makes the
    body push it up.) */
 // 23 Nov 2026: each card names its option in an H5 bold label (k) above the title, and the title reads on from it.
-const OPTIONS: { icon: IconName; k: string; t: string; s: string; h: string }[] = [
+export const OPTIONS: { icon: IconName; k: string; t: string; s: string; h: string }[] = [
   {
     icon: "bank",
     k: "Banks",
@@ -358,7 +366,7 @@ export function ThreadOptions() {
 
 // 24 Nov 2026 (Rang De's figures; 86% as Rang De states it). 49% and 17.77%: NABARD rural survey, July 2026. 180%: the
 // extreme for unregistered moneylenders (RBI paper citing a Kerala study), now a card of its own.
-const OPTION_STATS: { to: number; decimals?: number; line: string }[] = [
+export const OPTION_STATS: { to: number; decimals?: number; line: string }[] = [
   { to: 86, line: "of India’s eligible adults can’t get a loan from a bank." },
   { to: 49, line: "of rural borrowers turn to moneylenders, family or friends." },
   { to: 17.77, decimals: 2, line: "is what informal loans in India cost a year, on average." },
@@ -366,13 +374,13 @@ const OPTION_STATS: { to: number; decimals?: number; line: string }[] = [
 ];
 // One row of four from 1280px. 25 Nov 2026: the columns are equal (they were weighted by line length); the cards in
 // a row stretch to the tallest, so they share one height too.
-const STAT_COLS = "xl:grid-cols-4";
+export const STAT_COLS = "xl:grid-cols-4";
 
 /** One number card, animated like the proof cards ("It’s already working"): the card rises in as it comes into view and
  * its number counts up from zero. With `drive` (tablets up), the count waits for the number’s turn in the section’s
  * scroll sequence, so the four count one after another once the closing line has filled; without it (phones), it counts
  * as the card comes into view. */
-function StatCard({ s, drive }: { s: (typeof OPTION_STATS)[number]; drive?: MotionValue<number> }) {
+export function StatCard({ s, drive }: { s: (typeof OPTION_STATS)[number]; drive?: MotionValue<number> }) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLLIElement>(null);
   const seen = useInView(ref, { once: true, amount: 0.4 });
@@ -513,7 +521,42 @@ function FillWord({ w, p, at }: { w: string; p: MotionValue<number>; at: number 
   return <motion.span style={{ opacity }}>{w} </motion.span>;
 }
 
-export function ThreadTurn() {
+/* 25 Nov 2026 (/v/why3, after the photos under "Our funding partners" on rangdeorg.framer.website): four photos from the
+   hero, square, tilted, in a thin white frame with a soft shadow. Second pass (same day): they no longer travel across
+   the screen. They sit in the four corners of the pinned screen, all in view, the top two at about the same height and
+   the bottom two likewise, in the side lanes so they don't cross the words. While "This is why Rang De exists" fills in
+   they settle into place, rising a little (`dy`) and straightening a little (`dr`); by the time the paragraph comes in
+   they are still, so the eye is free for the words. From tablets up only, and not with reduced motion.
+   Each photo is zoomed in on its people: `zoom` around the point `focus` (the point stays put, so the crop is the
+   window that keeps it in the same place): the buffalo photo crops to the woman near the left edge and the buffalo near
+   the right; the farm photo to the woman with a strip of field and sky; the two group photos to the group. */
+const TURN_PHOTOS = [
+  { src: "/images/why2-hero/photo-02.webp", place: { left: "5%", top: "11%" }, r: 9, dy: 40, dr: 3, zoom: 1.35, focus: "89% 100%" },
+  { src: "/images/why2-hero/photo-16.webp", place: { right: "5%", top: "13%" }, r: -6, dy: 52, dr: -3, zoom: 1.5, focus: "48% 66%" },
+  { src: "/images/why2-hero/photo-12.webp", place: { left: "6%", bottom: "11%" }, r: -7, dy: 64, dr: -3, zoom: 2.6, focus: "50% 46%" },
+  { src: "/images/why2-hero/photo-17.webp", place: { right: "6%", bottom: "9%" }, r: 8, dy: 56, dr: 3, zoom: 1.45, focus: "47% 64%" },
+] as const;
+/** How far through the pin the line has filled in (FillWord's 0.04–0.28 below): the photos are still from there on. */
+const TURN_SETTLED = 0.28;
+
+function TurnPhoto({ ph, p }: { ph: (typeof TURN_PHOTOS)[number]; p: MotionValue<number> }) {
+  const left = useTransform(p, (v) => 1 - span(v, 0, TURN_SETTLED));
+  const y = useTransform(left, (v) => ph.dy * v);
+  const rotate = useTransform(left, (v) => ph.r + ph.dr * v);
+  return (
+    <motion.div
+      className="absolute w-[clamp(110px,11vw,170px)] rounded-[8px] bg-white p-[6px] shadow-[0_4px_16px_rgba(0,0,0,0.16)]"
+      style={{ ...ph.place, y, rotate }}
+    >
+      <div className="relative aspect-square overflow-hidden rounded-[4px]">
+        <Image src={ph.src} alt="" fill sizes="340px" className="object-cover" style={{ objectPosition: ph.focus, transform: `scale(${ph.zoom})`, transformOrigin: ph.focus }} />
+      </div>
+    </motion.div>
+  );
+}
+
+/** `photos` (/v/why3): the four photos in the corners around the line (TURN_PHOTOS). */
+export function ThreadTurn({ photos = false }: { photos?: boolean } = {}) {
   const reduce = useReducedMotion();
   const { ref, p: scroll } = usePin();
   const still = useTransform(scroll, () => 1);
@@ -526,11 +569,19 @@ export function ThreadTurn() {
       <div ref={ref} className={reduce ? "" : "relative h-[220svh]"}>
         {/* 23 Nov 2026: 32px (24px on phones) between the line and the paragraph, down from 48px. */}
         <div className={`${reduce ? "flex flex-col py-20" : STICKY} items-center justify-center gap-6 px-4 text-center md:gap-8`}>
+          {photos && !reduce && (
+            <div aria-hidden className="pointer-events-none absolute inset-zero hidden md:block">
+              {TURN_PHOTOS.map((ph) => (
+                <TurnPhoto key={ph.src} ph={ph} p={scroll} />
+              ))}
+            </div>
+          )}
           {/* 23 Nov 2026: no blur. The words fill from faint to full one by one as you scroll, like "A simple loan can
               help them." in the problem. */}
           {/* 24 Nov 2026: the line at 64px (34px on phones). The paragraph below is exactly as wide as the line: the two
               share a fit-content column, and [contain:inline-size] keeps the paragraph from widening it. */}
-          <div className="flex w-fit max-w-full flex-col gap-6 md:gap-8">
+          {/* z-[1]: the words stay above the photos wherever a photo's corner reaches them on narrower screens. */}
+          <div className="relative z-[1] flex w-fit max-w-full flex-col gap-6 md:gap-8">
           <h2 className={`${HEAD} max-w-[1100px] text-[34px] md:text-[56px] lg:text-[64px]`} style={{ color: LIME }} aria-label={TURN}>
             {TURN.split(" ").map((w, i, all) => (
               <FillWord key={i} w={w} p={p} at={0.04 + (i / all.length) * 0.24} />
