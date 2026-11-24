@@ -533,8 +533,8 @@ function FillWord({ w, p, at }: { w: string; p: MotionValue<number>; at: number 
 const TURN_PHOTOS = [
   { src: "/images/why2-hero/photo-02.webp", place: { left: "5%", top: "11%" }, r: 9, dy: 40, dr: 3, zoom: 1.35, focus: "89% 100%" },
   { src: "/images/why2-hero/photo-16.webp", place: { right: "5%", top: "13%" }, r: -6, dy: 52, dr: -3, zoom: 1.5, focus: "48% 66%" },
-  { src: "/images/why2-hero/photo-12.webp", place: { left: "6%", bottom: "11%" }, r: -7, dy: 64, dr: -3, zoom: 2.6, focus: "50% 46%" },
-  { src: "/images/why2-hero/photo-17.webp", place: { right: "6%", bottom: "9%" }, r: 8, dy: 56, dr: 3, zoom: 1.45, focus: "47% 64%" },
+  { src: "/images/why2-hero/photo-12.webp", place: { left: "6%", bottom: "16%" }, r: -7, dy: 64, dr: -3, zoom: 2.6, focus: "50% 46%" },
+  { src: "/images/why2-hero/photo-17.webp", place: { right: "6%", bottom: "14%" }, r: 8, dy: 56, dr: 3, zoom: 1.45, focus: "47% 64%" },
 ] as const;
 /** How far through the pin the line has filled in (FillWord's 0.04–0.28 below): the photos are still from there on. */
 const TURN_SETTLED = 0.28;
@@ -565,7 +565,10 @@ export function ThreadTurn({ photos = false }: { photos?: boolean } = {}) {
   const paraIn = useTransform(p, (v) => span(v, 0.3, 0.38));
   const paraY = useTransform(p, (v) => 24 * (1 - span(v, 0.3, 0.38)));
   return (
-    <section id="c-turn" className="mx-2 overflow-clip rounded-[24px]" style={{ backgroundColor: DEEP }}>
+    // 25 Nov 2026 (/v/why3, with the photos): 64px above and below (96px from tablets up), as "How it works" and "One
+    // loan, three good things", outside the pinned part, so the photos have room from the section's edges while it
+    // pins exactly as before (the top padding scrolls away under the nav first).
+    <section id="c-turn" className={`mx-2 overflow-clip rounded-[24px] ${photos ? "py-16 md:py-24" : ""}`} style={{ backgroundColor: DEEP }}>
       <div ref={ref} className={reduce ? "" : "relative h-[220svh]"}>
         {/* 23 Nov 2026: 32px (24px on phones) between the line and the paragraph, down from 48px. */}
         <div className={`${reduce ? "flex flex-col py-20" : STICKY} items-center justify-center gap-6 px-4 text-center md:gap-8`}>
