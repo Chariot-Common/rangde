@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { OpportunitiesSection } from "@/components/sections/opportunities/OpportunitiesSection";
 import { ClearStories } from "@/components/versions/WhyClear";
 import { FoundersCollage } from "@/components/versions/FoundersCollage";
 import { PhotoRowHero } from "@/components/versions/WhyHero2";
@@ -28,7 +27,7 @@ const CHAPTERS = [
 // - How it works with just that heading, text and animation half and half, the steps bigger;
 // - One loan, three good things as three cards in one row;
 // - It's working: just the heading, the button and the figures; Version 1's founders section before the close;
-// - a simpler close (the line, then the Invest button), then the businesses raising a loan right now.
+// - a simpler close (the line, then the Invest button); the live opportunities taken off (25 Nov 2026).
 export default function V4() {
   return (
     <div className="flex w-full flex-col gap-2 pb-2">
@@ -56,7 +55,6 @@ export default function V4() {
           }
         />
         <V4Close />
-        <OpportunitiesSection roomy />
       </div>
     </div>
   );
