@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRangDeStats } from "@/components/providers/StatsProvider";
 import { EASE } from "./WhyRealStory";
+import { CollageStrip } from "./CollageStrip";
 
 /*
  * /v/why hero and "What Rang De is" (17 Nov 2026 review). The hero is one bold card: the headline on the left, one line saying
@@ -606,7 +607,9 @@ function FillHeading({ id, lines }: { id: string; lines: string[] }) {
   );
 }
 
-export function PhotoRowHero() {
+/** `collage` (Version 4, 24 Nov 2026 review): Version 3's free-form photo collage (CollageStrip) under the copy, filling
+ * the screen to its bottom, in place of the two even rows. */
+export function PhotoRowHero({ collage = false }: { collage?: boolean } = {}) {
   const reduce = useReducedMotion();
   const { scrollY } = useScroll();
   const ref = useRef<HTMLElement>(null);
@@ -650,7 +653,7 @@ export function PhotoRowHero() {
       <motion.div className="flex w-full origin-top flex-col overflow-hidden rounded-4 bg-white" style={{ scale, opacity: fade }}>
         {/* Its size follows the screen’s width (so the two lines fit; 80px at most) and height (so it never runs under the
             navigation bar); the body copy is 0.48 of the header, which makes it run just short of the header's last line. */}
-        <div className="mx-auto flex w-full max-w-page flex-col items-center gap-[0.32em] px-4 pt-[clamp(32px,10svh,96px)] pb-20 text-[40px] md:text-[64px] lg:text-[72px] xl:text-[clamp(72px,min(5.6vw,9svh),80px)]">
+        <div className={`mx-auto flex w-full max-w-page flex-col items-center gap-[0.32em] px-4 pt-[clamp(32px,10svh,96px)] ${collage ? "pb-10 md:pb-14" : "pb-20"} text-[40px] md:text-[64px] lg:text-[72px] xl:text-[clamp(72px,min(5.6vw,9svh),80px)]`}>
           {/* One direct header that says what Rang De does. It fills from text grey 24 to full ink, letter by letter,
               left to right, within 600ms of the page loading (like the problem's line). */}
           {/* 24 Nov 2026: the hero is the largest text on the page at every size (40px on phones, 64px on tablets, 72–80px
@@ -667,7 +670,7 @@ export function PhotoRowHero() {
         </div>
         {/* "Get repaid with interest" is Rang De's own wording (their LinkedIn posts): it answers "is this a donation?" on
             the first screen. The risk is spelled out further down. No button here: the header already has two. */}
-        <FadeRows />
+        {collage ? <CollageStrip /> : <FadeRows />}
       </motion.div>
     </section>
   );

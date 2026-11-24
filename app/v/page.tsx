@@ -52,10 +52,10 @@ const VERSIONS = [
   },
   {
     key: "4",
-    name: "Why we exist (draft)",
-    href: "/v/why",
+    name: "Why we exist",
+    href: "/v/v4",
     audience: "First-time visitors discovering the category",
-    idea: "From the 11 Nov review call: the 86% acted out with seven real borrowers, then why Rang De exists as Rekha and Arjun’s story (the bank says no, government schemes reach few, Rang De connects them, escrow, repaid with interest, a credit history), the bigger picture, the founders, a featured entrepreneur and investor. Yellow chips are figures still to be sourced.",
+    idea: "Version 3’s photo collage under the headline; the problem with the five options rising over it (banks, government schemes, moneylenders, self-help groups, family); why Rang De exists; How it works; one loan, three good things; it’s already working, with the founders; stories, testimonials, questions; the businesses raising a loan now.",
     measure: "Scroll depth, sign-ups vs. Version 1",
   },
   {

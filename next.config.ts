@@ -14,7 +14,8 @@ const nextConfig: NextConfig = {
       // The second How it works take was tried at /v/idea-2 and is now Version B itself.
       { source: "/v/idea-2", destination: "/v/idea", permanent: false },
       // Renamed: Version 4 is now Version 2, Version 6 is now Version 3 (the old Version 3 is at /v/archive/v3).
-      { source: "/v/v4", destination: "/v/v2", permanent: false },
+      // 24 Nov 2026: Version 4 is the "why we exist" page (was /v/why3).
+      { source: "/v/why3", destination: "/v/v4", permanent: false },
       { source: "/v/v6", destination: "/v/v3", permanent: false },
       // Version 2.1 replaced Version 2 (10 Nov 2026).
       { source: "/v/v2-1", destination: "/v/v2", permanent: false },

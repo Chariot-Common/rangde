@@ -7,9 +7,9 @@ import { useRefreshedNav } from "@/lib/nav-intro";
 export function AnnouncementBar() {
   // The newer versions (v5, v6) open straight onto the nav, without the bar.
   const refreshed = useRefreshedNav();
-  // /v/why2 and /v/why3 (copies of the live "Why" page) open without the founders' Q&A bar.
+  // /v/why2 and /v/v4 (was /v/why3; copies of the live "Why" page) open without the founders' Q&A bar.
   const pathname = usePathname();
-  if (refreshed || pathname === "/v/why2" || pathname === "/v/why3") return null;
+  if (refreshed || pathname === "/v/why2" || pathname === "/v/v4") return null;
   return (
     <div className="relative z-50 flex w-full items-center justify-center gap-[5px] bg-primary/16 px-[12px] py-[8px] text-center">
       <p className="font-display text-[10px] font-bold uppercase leading-[14px] tracking-[0.5px] text-primary sm:leading-[16px]">

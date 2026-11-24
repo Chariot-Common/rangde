@@ -622,13 +622,13 @@ const HOW = [
  * step, not the raw scroll position: it rests on one whole animation and glides to the next whenever the step on the
  * left changes, so it can never stop halfway between two (19 Nov 2026: it used to, when you stopped scrolling
  * mid-change). Only the open animation and its neighbours are mounted, so each starts playing as it slides in. */
-function HowStrip({ at }: { at: number }) {
+function HowStrip({ at, half = false }: { at: number; half?: boolean }) {
   const reduce = useReducedMotion();
   const n = HOW.length;
   return (
     /* 25 Nov 2026: the card's right edge sits on the section's side padding (as the steps column's left edge does), so
        it lines up with the "One loan, three good things" cards. */
-    <div className="relative mx-auto aspect-[374/342] w-[84%] self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:ml-0 md:mr-0 md:aspect-auto md:h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-auto">
+    <div className={`relative mx-auto aspect-[374/342] w-[84%] self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:ml-0 md:mr-0 ${half ? "md:max-h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-full" : "md:aspect-auto md:h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-auto"}`}>
       <motion.ul
         className="absolute inset-x-0 top-0 flex flex-col"
         style={{ height: `${n * 100}%` }}
@@ -653,7 +653,10 @@ function HowStrip({ at }: { at: number }) {
   );
 }
 
-export function ThreadHow() {
+/** `plain` (Version 4, 24 Nov 2026 review): as Version 1's How it works, the text and the animation share the width
+ * half and half, the steps at a bigger size so the eye reads them as much as the animation, and only "How it works." as
+ * the heading (no "You choose. Rang De does the rest."). */
+export function ThreadHow({ plain = false }: { plain?: boolean } = {}) {
   const reduce = useReducedMotion();
   const { ref, p } = usePin();
   const [at, setAt] = useState(0);
@@ -672,23 +675,23 @@ export function ThreadHow() {
     // 16 / 24 / 32px at the sides with the content capped at 1400px (WIDE), so the two sections' edges line up.
     <section id="c-how" className="mx-2 overflow-clip rounded-[24px] py-16 md:py-24" style={{ backgroundColor: PAPER }}>
       <div ref={ref} className={reduce ? "" : "relative h-[340svh]"}>
-        <div className={`${reduce ? "py-10" : STICKY} mx-auto grid w-full max-w-[1464px] gap-4 px-4 py-3 sm:px-6 md:grid-cols-[minmax(0,5fr)_minmax(0,8fr)] md:gap-3 lg:px-8`}>
+        <div className={`${reduce ? "py-10" : STICKY} mx-auto grid w-full max-w-[1464px] gap-4 px-4 py-3 sm:px-6 ${plain ? "md:grid-cols-2 md:items-center md:gap-10 lg:gap-16" : "md:grid-cols-[minmax(0,5fr)_minmax(0,8fr)] md:gap-3"} lg:px-8`}>
           {/* Left: heading and the steps. */}
-          <div className="flex min-h-0 flex-col justify-between gap-4 pt-4 md:py-8">
-            <InkHeading className={H2} a="How it works." b={"You choose. Rang\u00a0De does the rest."} />
+          <div className={`flex min-h-0 flex-col gap-4 pt-4 md:py-8 ${plain ? "md:justify-center md:gap-10" : "justify-between"}`}>
+            {plain ? <InkHeading className={H2} a="How it works." /> : <InkHeading className={H2} a="How it works." b={"You choose. Rang\u00a0De does the rest."} />}
 
             <ol className="relative hidden flex-col pl-7 md:flex">
               <span className="absolute bottom-3 left-[5px] top-3 w-[2px] rounded-full bg-ink/10" aria-hidden />
               <motion.span className="absolute left-[5px] top-3 w-[2px] origin-top rounded-full" style={{ height: "calc(100% - 24px)", scaleY: rail, backgroundColor: GREEN }} aria-hidden />
               {HOW.map((h, i) => (
                 <li key={h.t} className="relative py-2.5">
-                  <span className="absolute -left-7 top-[17px] size-3 rounded-full border-2 transition-colors duration-300" style={{ borderColor: i <= at ? GREEN : "rgba(41,45,54,0.2)", backgroundColor: i <= at ? GREEN : PAPER }} aria-hidden />
-                  <button type="button" onClick={() => go(i)} aria-current={i === at ? "step" : undefined} className="text-left font-display text-[20px] font-bold leading-[1.25] transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-dark lg:text-[24px]" style={{ color: i === at ? INK : "rgba(41,45,54,0.36)" }}>
+                  <span className={`absolute -left-7 ${plain ? "top-[19px] lg:top-[24px]" : "top-[17px]"} size-3 rounded-full border-2 transition-colors duration-300`} style={{ borderColor: i <= at ? GREEN : "rgba(41,45,54,0.2)", backgroundColor: i <= at ? GREEN : PAPER }} aria-hidden />
+                  <button type="button" onClick={() => go(i)} aria-current={i === at ? "step" : undefined} className={`text-left font-display font-bold transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-dark ${plain ? "text-[24px] leading-[1.2] tracking-[-0.01em] lg:text-[32px]" : "text-[20px] leading-[1.25] lg:text-[24px]"}`} style={{ color: i === at ? INK : "rgba(41,45,54,0.36)" }}>
                     {h.t}
                   </button>
                   <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${i === at ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-                    <p className="overflow-hidden font-display text-[15px] font-medium leading-[22px] text-ink/64 lg:text-[16px] lg:leading-[24px]">
-                      <span className="block max-w-[420px] pt-1.5">{h.s}</span>
+                    <p className={`overflow-hidden font-display font-medium text-ink/64 ${plain ? "text-[17px] leading-[26px] lg:text-[20px] lg:leading-[30px]" : "text-[15px] leading-[22px] lg:text-[16px] lg:leading-[24px]"}`}>
+                      <span className={`block pt-1.5 ${plain ? "max-w-[520px]" : "max-w-[420px]"}`}>{h.s}</span>
                     </p>
                   </div>
                 </li>
@@ -704,17 +707,17 @@ export function ThreadHow() {
               </div>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div key={at} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                  <p className="font-display text-[20px] font-bold leading-[1.25] text-ink">
+                  <p className={`font-display font-bold leading-[1.25] text-ink ${plain ? "text-[24px]" : "text-[20px]"}`}>
                     <span style={{ color: GREEN }}>{at + 1}</span> {HOW[at].t}
                   </p>
-                  <p className="mt-1 font-display text-[14px] font-medium leading-[20px] text-ink/64">{HOW[at].s}</p>
+                  <p className={`mt-1 font-display font-medium text-ink/64 ${plain ? "text-[16px] leading-[24px]" : "text-[14px] leading-[20px]"}`}>{HOW[at].s}</p>
                 </motion.div>
               </AnimatePresence>
             </div>
           </div>
 
           {/* Right: the step animations in one strip that glides on as you scroll (see HowStrip). */}
-          <HowStrip at={at} />
+          <HowStrip at={at} half={plain} />
         </div>
       </div>
     </section>
@@ -730,7 +733,9 @@ const DOES = [
   { t: "It builds their credit.", s: "Each loan repaid on time adds to their credit history. Next time a bank asks, the answer isn’t “None yet.”", img: "/images/collage/collage-07.webp", chip: "Credit history building" },
 ];
 
-export function ThreadMoney() {
+/** `row` (Version 4, 24 Nov 2026 review): the three cards side by side and shown together (photo on top, words under it),
+ * not stacking one by one as you scroll. Phones stack them. */
+export function ThreadMoney({ row = false }: { row?: boolean } = {}) {
   return (
     <section id="c-compare" className={SECTION} style={{ backgroundColor: DEEP }}>
       <div className={`${WIDE} flex flex-col gap-8 md:gap-12`}>
@@ -738,6 +743,30 @@ export function ThreadMoney() {
           <Lines className={`${H2} text-white`} a="One loan, three good things." grey="" />
           <p className={`${SUB} max-w-[520px] text-white/64`}>Rang De calls this social investment: lending that does good and can earn you interest.</p>
         </div>
+        {row ? (
+          <ul className="grid gap-3 md:grid-cols-3">
+            {DOES.map((d, i) => (
+              <li key={d.t} className="flex flex-col overflow-hidden rounded-[24px] bg-white">
+                <div className="relative aspect-[4/3]">
+                  <Image src={d.img} alt="" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover" />
+                  <span className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-white px-3 py-1.5 font-display text-[13px] font-bold text-ink shadow-[0_6px_16px_rgba(41,45,54,0.16)]">
+                    <span className="flex size-[18px] items-center justify-center rounded-full text-[10px]" style={{ backgroundColor: LIME, color: DEEP }}>
+                      ✓
+                    </span>
+                    {d.chip}
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col gap-3 p-6 lg:p-8">
+                  <span className="font-display text-h5 font-bold uppercase tabular-nums tracking-[0.08em]" style={{ color: GREEN }}>
+                    {i + 1} of {DOES.length}
+                  </span>
+                  <p className={`${HEAD} text-[28px] lg:text-[34px]`}>{d.t}</p>
+                  <p className={`${SUB} text-ink/64`}>{d.s}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
         <ul className="flex flex-col">
           {DOES.map((d, i) => (
             <li
@@ -767,6 +796,7 @@ export function ThreadMoney() {
             </li>
           ))}
         </ul>
+        )}
         {/* What to expect: the terms a lender asks about first, read together with the risk note under them. All from
             Rang De's own pages (22 Nov 2026): returns and the ₹500 / ₹50,000 limits from the FAQs; loan lengths from the loans listed
             on /invest/individuals that day (6, 12 and 18 months, repaid monthly); fees from the Pricing Structure Policy
@@ -823,7 +853,10 @@ function ProofCard({ to, prefix = "", suffix = "", line, bg, fg }: { to: number;
   );
 }
 
-export function ThreadProof() {
+/** `founders` (Version 4, 24 Nov 2026 review): the left side was too much text. The three-fact list gives way to Ram and
+ * Smita's photos and one line, "born when two people left Oxford for India" (the founders' story the review asked to
+ * bring back; wording from the site's own founders section). */
+export function ThreadProof({ founders = false }: { founders?: boolean } = {}) {
   const s = useRangDeStats();
   return (
     <section id="c-proof" className={`${SECTION} bg-white`}>
@@ -833,6 +866,22 @@ export function ThreadProof() {
           {/* The three things people ask before lending on a peer-to-peer platform (19 Nov 2026 critique): is it
               regulated, does it get repaid, and when does my money come back. All three are facts stated elsewhere on
               the page (RBI registration; the live repaid and lent figures; 6–18 month loans repaid monthly). */}
+          {founders ? (
+            <div className="flex w-full max-w-[460px] flex-col gap-4 rounded-[20px] p-5 md:p-6" style={{ backgroundColor: PAPER }}>
+              <div className="flex gap-2">
+                {[
+                  { src: "/images/founders/ram-v3.webp", alt: "Ram, co-founder of Rang De" },
+                  { src: "/images/founders/smita-v3.webp", alt: "Smita, co-founder of Rang De" },
+                ].map((f) => (
+                  <div key={f.src} className="relative aspect-[4/5] flex-1 overflow-hidden rounded-[14px] bg-ink/8">
+                    <Image src={f.src} alt={f.alt} fill sizes="220px" className="object-cover" />
+                  </div>
+                ))}
+              </div>
+              <p className="font-display text-[20px] font-bold leading-[1.3] text-ink md:text-[24px]">Rang De was born when two people left Oxford for India.</p>
+              <p className="font-display text-[15px] font-medium leading-[22px] text-ink/64">Ram and Smita came back to build it in 2008. Rang De is registered with the RBI as a peer-to-peer lending platform.</p>
+            </div>
+          ) : (
           <ul className="flex w-full max-w-[460px] flex-col">
             {[
               "Registered with the RBI as a peer-to-peer lending platform",
@@ -844,6 +893,7 @@ export function ThreadProof() {
               </li>
             ))}
           </ul>
+          )}
           <div className="mt-2 max-sm:hidden">
             <LinkButton href={SIGNUP_URL}>Start investing</LinkButton>
           </div>
