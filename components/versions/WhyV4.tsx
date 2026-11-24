@@ -192,9 +192,9 @@ const ARROW = (
 );
 
 /** `bento` (25 Nov 2026): the close and the founders in one grid, instead of Version 1's full founders section before it.
- * Laptops: the closing line and the Invest button in the big tile on the left; on the right, the founders (their two
- * photos and "Ram and Smita left Oxford to build Rang De."), then a field-visit photo and the Saturday call with them.
- * Phones stack the tiles. */
+ * Laptops: the closing line and the Invest button in the big tile on the left; on the right, Ram's and Smita's photos in
+ * tiles of their own, then their line ("Ram and Smita left Oxford to build Rang De.") and the Saturday call with them.
+ * Phones: the close, then the two photos side by side, then the line and the call. */
 export function V4Close({ after, bento = false }: { after?: ReactNode; bento?: boolean }) {
   const heading = (
     <h2 className="font-display text-[40px] font-bold leading-[1.1] tracking-[-0.02em] md:text-[56px] lg:text-[64px]" aria-label="The businesses are ready. Now you can invest in them.">
@@ -215,36 +215,29 @@ export function V4Close({ after, bento = false }: { after?: ReactNode; bento?: b
   if (bento) {
     return (
       <section id="c-close" className="mx-2 rounded-[24px] px-2 py-2 md:px-3 md:py-3" style={{ backgroundColor: PAPER }}>
-        <div className="grid gap-2 md:grid-cols-4 md:grid-rows-[auto_auto] md:gap-3">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:grid-rows-[auto_auto] md:gap-3">
           {/* The close. */}
-          <div className="flex flex-col justify-between gap-10 rounded-[20px] bg-white p-8 md:col-span-2 md:row-span-2 md:p-12 lg:p-14">
+          <div className="col-span-2 flex flex-col justify-between gap-10 rounded-[20px] bg-white p-8 md:row-span-2 md:p-12 lg:p-14">
             {heading}
             {invest}
           </div>
-          {/* The founders. */}
-          <div className="flex flex-col gap-5 rounded-[20px] bg-white p-6 sm:flex-row sm:items-center md:col-span-2 lg:p-8">
-            <div className="flex shrink-0 gap-2">
-              {[
-                { src: "/images/founders/ram-v3.webp", alt: "Ram, co-founder of Rang De" },
-                { src: "/images/founders/smita-v3.webp", alt: "Smita, co-founder of Rang De" },
-              ].map((f) => (
-                <div key={f.src} className="relative h-[132px] w-[104px] overflow-hidden rounded-[14px] bg-ink/8 lg:h-[156px] lg:w-[124px]">
-                  <Image src={f.src} alt={f.alt} fill sizes="124px" className="object-cover" />
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-col gap-2">
-              <p className="font-display text-h5 font-bold uppercase tracking-[0.08em] text-green-dark">Why Rang De exists</p>
-              <p className="font-display text-[22px] font-bold leading-[1.2] tracking-[-0.01em] text-ink lg:text-[26px]">Ram and Smita left Oxford to build Rang De.</p>
-              <p className="font-display text-[15px] font-medium leading-[22px] text-ink/64">Since 2008, so where you live or what you earn doesn’t decide your chance to grow.</p>
-            </div>
-          </div>
-          {/* A field visit. */}
-          <div className="relative min-h-[200px] overflow-hidden rounded-[20px]">
-            <Image src="/images/founders-collage/group-entrepreneurs.webp" alt="Rang De's team with entrepreneurs on a field visit" fill sizes="(min-width: 768px) 25vw, 100vw" className="object-cover" />
+          {/* Ram and Smita, each in a tile of their own. */}
+          {[
+            { src: "/images/founders/ram-v3.webp", alt: "Ram, co-founder of Rang De, speaking at an event", name: "Ram" },
+            { src: "/images/founders/smita-v3.webp", alt: "Smita, co-founder of Rang De, speaking at an event", name: "Smita" },
+          ].map((f) => (
+            <figure key={f.src} className="relative aspect-[4/5] min-w-0 overflow-hidden rounded-[20px] bg-ink/8 md:aspect-auto md:min-h-[260px]">
+              <Image src={f.src} alt={f.alt} fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover" />
+              <figcaption className="absolute bottom-3 left-3 rounded-full bg-white px-3 py-1 font-display text-[13px] font-bold text-ink">{f.name}, co-founder</figcaption>
+            </figure>
+          ))}
+          {/* Their line, at the call tile's padding. */}
+          <div className="col-span-2 flex flex-col justify-between gap-4 rounded-[20px] bg-white p-6 md:col-span-1 lg:p-8">
+            <p className="font-display text-h5 font-bold uppercase tracking-[0.08em] text-green-dark">Why Rang De exists</p>
+            <p className="font-display text-[26px] font-bold leading-[1.15] tracking-[-0.01em] text-ink lg:text-[30px]">Ram and Smita left Oxford to build Rang De.</p>
           </div>
           {/* The Saturday call. */}
-          <div className="flex flex-col justify-between gap-5 rounded-[20px] p-6 text-white lg:p-8" style={{ backgroundColor: "#00517A" }}>
+          <div className="col-span-2 flex flex-col justify-between gap-5 rounded-[20px] p-6 text-white md:col-span-1 lg:p-8" style={{ backgroundColor: "#00517A" }}>
             <div className="flex flex-col gap-1">
               <p className="font-display text-[18px] font-bold leading-[1.3]">Talk to Ram and Smita</p>
               <p className="font-display text-[14px] font-medium leading-[20px] text-white/72">Live, every Saturday, 11 am IST</p>
