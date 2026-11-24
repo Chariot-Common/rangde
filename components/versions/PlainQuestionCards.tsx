@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { FAQS_URL } from "@/data/faqs";
 import { Icon, type IconName } from "@/components/ui";
 import { FactChip, QUESTION_CARDS, type QuestionCard } from "./approaches";
@@ -94,6 +95,7 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
   }, [open]);
 
   const current = open === null ? null : cards[open];
+  const shown = open === null ? undefined : visuals?.[open];
 
   return (
     <section className="mx-2 flex flex-col items-center gap-10 rounded-[16px] bg-white px-4 pb-12 pt-6 sm:px-8 md:py-20">
@@ -160,10 +162,16 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
           )}
       </div>
 
-      {current && (
+      {/* 25 Nov 2026: the pop-up is portalled to <body>, so it isn't trapped in the page's stacking context and sits above
+          the navigation bar; the backdrop then blurs and darkens the bar along with the rest of the page. */}
+      {current && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={current.question}>
           <button type="button" aria-label="Close" onClick={() => setOpen(null)} className={`absolute inset-0 cursor-default bg-text-grey-100/48 backdrop-blur-sm`} />
-          <div className="relative flex max-h-[calc(100svh-32px)] w-full max-w-[560px] flex-col gap-4 overflow-y-auto rounded-[16px] bg-white p-6 shadow-[0_24px_64px_rgba(41,45,54,0.24)] sm:p-8">
+          {/* 25 Nov 2026 (/v/why2): a card with an animation opens wide from tablets up: the animation on the left (7fr),
+              the question and answer on the right (6fr). On phones everything stays in one column
+              (question, animation, answer). Cards without one keep the narrow pop-up. With `visuals`, every pop-up has
+              40px padding from small tablets up. */}
+          <div className={`relative flex max-h-[calc(100svh-32px)] w-full flex-col gap-4 overflow-y-auto rounded-[16px] bg-white p-6 shadow-[0_24px_64px_rgba(41,45,54,0.24)] ${visuals ? "sm:p-ds-7" : "sm:p-8"} ${shown ? "max-w-[560px] md:grid md:max-w-[1200px] md:grid-cols-[minmax(0,7fr)_minmax(0,6fr)] md:content-center md:gap-x-8 md:gap-y-4" : "max-w-[560px]"}`}>
             <button
               type="button"
               aria-label={`Close: ${current.question}`}
@@ -174,16 +182,22 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
                 <path d="M12 5v14M5 12h14" />
               </svg>
             </button>
-            <h3 className="pr-12 font-display text-p1 font-bold text-text-grey-100">{current.question}</h3>
-            {open !== null && visuals?.[open]}
-            <ul className="flex flex-col gap-2">
-              {current.facts.map((f) => (
-                <FactChip key={f.text} {...f} />
-              ))}
-            </ul>
-            <p className="whitespace-pre-line font-display text-p2 font-medium leading-[26px] text-text-grey-80">{current.answer}</p>
+            <h3 className={`pr-12 font-display text-p1 font-bold text-text-grey-100 ${visuals ? "md:text-[24px] md:leading-[30px]" : ""} ${shown ? "md:col-start-2 md:row-start-1 md:self-end" : ""}`}>{current.question}</h3>
+            {shown && <div className="md:col-start-1 md:row-span-2 md:row-start-1 md:self-center">{shown}</div>}
+            <div className={`flex flex-col gap-4 ${shown ? "md:col-start-2 md:row-start-2 md:self-start" : ""}`}>
+              {/* 25 Nov 2026 (/v/why2): no tick-mark fact chips where the pop-up has an animation, just the answer. */}
+              {!shown && (
+                <ul className="flex flex-col gap-2">
+                  {current.facts.map((f) => (
+                    <FactChip key={f.text} {...f} />
+                  ))}
+                </ul>
+              )}
+              <p className="whitespace-pre-line font-display text-p2 font-medium leading-[26px] text-text-grey-80">{current.answer}</p>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </section>
   );

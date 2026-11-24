@@ -372,7 +372,8 @@ export function ClearStories({ met = false, revisedType = false }: { met?: boole
       <div className="px-4">
         {met ? (
           revisedType ? (
-            <Head sub="On Rang De, lenders are called social investors." size="text-[32px] md:text-[48px] lg:text-[56px]" ink="Meet the people they lent to." type={WHY2_HEAD} />
+            // 25 Nov 2026 (/v/why2): "invested in" for "lent to", and no "On Rang De, lenders are called social investors." line.
+            <Head size="text-[32px] md:text-[48px] lg:text-[56px]" ink="Meet the people they invested in." type={WHY2_HEAD} />
           ) : (
             <Rise>
               <Head sub="On Rang De, lenders are called social investors.">Meet the people they lent to.</Head>

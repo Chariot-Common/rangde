@@ -572,9 +572,9 @@ function HowStrip({ at }: { at: number }) {
   const reduce = useReducedMotion();
   const n = HOW.length;
   return (
-    /* 24 Nov 2026: on wider screens the card keeps the same 24px inset on its right as the steps column has on its left
-       (both on top of the grid's 12px), so it's narrower and no longer runs up to the panel's right edge. */
-    <div className="relative mx-auto aspect-[374/342] w-[84%] self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:ml-0 md:mr-6 md:aspect-auto md:h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-auto">
+    /* 25 Nov 2026: the card's right edge sits on the section's side padding (as the steps column's left edge does), so
+       it lines up with the "One loan, three good things" cards. */
+    <div className="relative mx-auto aspect-[374/342] w-[84%] self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:ml-0 md:mr-0 md:aspect-auto md:h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-auto">
       <motion.ul
         className="absolute inset-x-0 top-0 flex flex-col"
         style={{ height: `${n * 100}%` }}
@@ -613,11 +613,14 @@ export function ThreadHow() {
   };
 
   return (
-    <section id="c-how" className="mx-2 overflow-clip rounded-[24px]" style={{ backgroundColor: PAPER }}>
+    // 25 Nov 2026: the same padding as "One loan, three good things" (SECTION): 64px above and below (96px from tablets
+    // up), outside the pinned part so it pins at the same point (the top padding scrolls away under the nav first), and
+    // 16 / 24 / 32px at the sides with the content capped at 1400px (WIDE), so the two sections' edges line up.
+    <section id="c-how" className="mx-2 overflow-clip rounded-[24px] py-16 md:py-24" style={{ backgroundColor: PAPER }}>
       <div ref={ref} className={reduce ? "" : "relative h-[340svh]"}>
-        <div className={`${reduce ? "py-10" : STICKY} grid w-full gap-4 p-3 md:grid-cols-[minmax(0,5fr)_minmax(0,8fr)] md:gap-3`}>
+        <div className={`${reduce ? "py-10" : STICKY} mx-auto grid w-full max-w-[1464px] gap-4 px-4 py-3 sm:px-6 md:grid-cols-[minmax(0,5fr)_minmax(0,8fr)] md:gap-3 lg:px-8`}>
           {/* Left: heading and the steps. */}
-          <div className="flex min-h-0 flex-col justify-between gap-4 px-2 pt-4 md:px-6 md:py-8">
+          <div className="flex min-h-0 flex-col justify-between gap-4 pt-4 md:py-8">
             <InkHeading className={H2} a="How it works." b={"You choose. Rang\u00a0De does the rest."} />
 
             <ol className="relative hidden flex-col pl-7 md:flex">
@@ -772,7 +775,7 @@ export function ThreadProof() {
     <section id="c-proof" className={`${SECTION} bg-white`}>
       <div className={`${WIDE} grid gap-8 md:grid-cols-[5fr_7fr] md:gap-12`}>
         <div className="flex flex-col items-start gap-4 self-start md:sticky md:top-[calc(var(--navbar-bottom,0px)+48px)]">
-          <InkHeading className={H2} a="It’s already working." b="You wouldn’t be lending alone." />
+          <InkHeading className={H2} a="It’s already working." b="You wouldn’t be funding alone." />
           {/* The three things people ask before lending on a peer-to-peer platform (19 Nov 2026 critique): is it
               regulated, does it get repaid, and when does my money come back. All three are facts stated elsewhere on
               the page (RBI registration; the live repaid and lent figures; 6–18 month loans repaid monthly). */}
@@ -1064,19 +1067,25 @@ export function ThreadClose() {
   const btnOpacity = useTransform(btn, (v) => (reduce ? 1 : 0.3 + 0.7 * v));
   const btnScale = useTransform(btn, (v) => (reduce ? 1 : 0.9 + 0.1 * v));
   return (
-    <section id="c-close" className="mx-2 flex min-h-[calc(100svh-var(--navbar-bottom,0px))] items-center justify-center rounded-[24px] bg-white px-4 py-16 text-center">
+    // 25 Nov 2026: on the cream the sources section had (it's off the page now, and this takes its place).
+    <section id="c-close" className="mx-2 flex min-h-[calc(100svh-var(--navbar-bottom,0px))] items-center justify-center rounded-[24px] px-4 py-16 text-center" style={{ backgroundColor: PAPER }}>
       <h2 ref={ref} className={`font-display font-bold leading-[1.14] tracking-[-0.02em] ${HERO_SIZE}`} aria-label={`${CLOSE_1} Now you can invest in them.`}>
         <ScrollInk as="span" tone="grey80" text={CLOSE_1} drive={fill1} className="block" />
         <span className="block">
           <ScrollInk as="span" tone="grey" text={CLOSE_2A} drive={fill2a} />{" "}
           <motion.a
             href="https://rangde.in/invest/individuals"
-            className="relative mx-[0.1em] inline-flex h-[0.8em] items-center gap-[0.08em] rounded-2 bg-nav-navy px-[0.36em] align-middle font-display font-bold leading-none tracking-normal text-white-100 transition-[filter] duration-150 hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-dark"
+            // 25 Nov 2026: the nav's "Get started" button (Button sm: 36px tall, 14px bold text, 16px sides, 8px gap, 4px
+            // corners) scaled up to the line's 0.8em height, so every part keeps its proportion: text 14/36, sides 16/36,
+            // gap 8/36 and corners 4/36 of the height. The arrow is to the text as the "Read more FAQs" one (18 / 14); its
+            // drawing leaves 5/24 of its box empty on each side (0.083em), taken off the gap and the right padding so the
+            // visible gap and sides match the nav button's.
+            className="relative mx-[0.1em] inline-flex h-[0.8em] items-center gap-[0.095em] rounded-[max(4px,0.089em)] bg-nav-navy pl-[0.356em] pr-[0.273em] align-middle font-display font-bold leading-none tracking-normal text-white-100 transition-[filter] duration-150 hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-dark"
             style={{ opacity: btnOpacity, scale: btnScale }}
           >
-            <span className="text-[max(14px,0.28em)]">Invest</span>
+            <span className="text-[max(14px,0.311em)]">Invest</span>
             {/* The "Read more FAQs" arrow: a line with a chevron. */}
-            <svg viewBox="0 0 24 24" className="size-[max(16px,0.32em)] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <svg viewBox="0 0 24 24" className="size-[max(18px,0.4em)] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </motion.a>{" "}
@@ -1100,7 +1109,7 @@ const GET_STARTED: QuestionCard = {
     { text: "Your money goes out on the 1st or 15th", tone: "ok" },
   ],
   answer:
-    "Sign up on Rang De and complete your KYC. The RBI requires it before any of your money can reach a borrower, and it’s how the platform makes sure every lender is verified. Resident Indians, NRIs and OCI/PIO holders with an Indian bank account can invest.\n\nThen browse the borrowers. Each profile says who they are, what the loan is for and how they plan to repay it, and every one has passed five checks before it’s listed. Pick one, or several, and choose how much to lend.\n\nYour money waits in escrow until the next T-Day, the 1st or 15th of the month, and reaches the borrower’s bank account within 24 hours. From then on, repayments come back every month, with interest, into your Rang De balance.",
+    "Sign up on Rang De and complete your KYC. The RBI requires it before any of your money can reach a borrower, and it’s how the platform makes sure every lender is verified. Resident Indians, NRIs and OCI/PIO holders with an Indian bank account can invest.\n\nThen browse the borrowers. Each profile says who they are, what the loan is for and how they plan to repay it, and every one has passed five checks before it’s listed. Pick one, or several, and choose how much to lend.",
 };
 
 const WHY2_QUESTIONS: QuestionCard[] = [
@@ -1113,10 +1122,10 @@ const WHY2_QUESTIONS: QuestionCard[] = [
 ];
 
 export function Why2Questions() {
-  return <PlainQuestionCards heading="Before you lend." headingClass={H2} inkHeading questionClass="text-[28px] leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]" cards={WHY2_QUESTIONS} icons={["faq-plus", "faq-nri", "faq-warning", "faq-returns"]} visuals={[<GetStartedAnim key="start" />, <NriAnim key="nri" />, <NoRepayAnim key="norepay" />]} flip navyLink large foundersCall />;
+  return <PlainQuestionCards heading="Before you invest." headingClass={H2} inkHeading questionClass="text-[28px] leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]" cards={WHY2_QUESTIONS} icons={["faq-plus", "faq-nri", "faq-warning", "faq-returns"]} visuals={[<GetStartedAnim key="start" />, <NriAnim key="nri" />, <NoRepayAnim key="norepay" />]} flip navyLink large foundersCall />;
 }
 
 /** The shared testimonials, with their heading at this page’s section size (24 Nov 2026). */
 export function Why2Testimonials() {
-  return <Testimonials refined inked evenRows heading="Why they lend." headingClass={H2} />;
+  return <Testimonials refined inked evenRows heading="Why they invest." headingClass={H2} />;
 }

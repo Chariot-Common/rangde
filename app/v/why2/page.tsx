@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ClearStories } from "@/components/versions/WhyClear";
 import { PhotoRowHero } from "@/components/versions/WhyHero2";
 import { ChapterPill } from "@/components/versions/WhyRealStory";
-import { ThreadHow, ThreadTurn, ThreadMoney, ThreadOptions, ThreadProblem, ThreadProof, ThreadSources, ThreadClose, Why2Questions, Why2Testimonials } from "@/components/versions/WhyThread2";
+import { ThreadHow, ThreadTurn, ThreadMoney, ThreadOptions, ThreadProblem, ThreadProof, ThreadClose, Why2Questions, Why2Testimonials } from "@/components/versions/WhyThread2";
 
 export const metadata: Metadata = {
   title: "Version 4 · Why we exist (copy 2) | Rang De",
@@ -16,7 +16,6 @@ const CHAPTERS = [
   { id: "c-how", label: "How it works" },
   { id: "c-compare", label: "Your money" },
   { id: "c-proof", label: "It’s working" },
-  { id: "f-resources", label: "Sources" },
 ] as const;
 
 // Version 4, "One thread" (20 Nov 2026). Hero → the problem (a line leaves a business and stops short of a bank) → one
@@ -40,7 +39,8 @@ export default function WhyPage() {
         <ClearStories met revisedType />
         <Why2Testimonials />
         <Why2Questions />
-        <ThreadSources />
+        {/* 25 Nov 2026: "Read the numbers yourself" (ThreadSources) is off the page, and its chapter with it; the close
+            takes its place, on its cream. */}
         <ThreadClose />
       </div>
     </div>
