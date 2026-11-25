@@ -13,8 +13,11 @@ import type { ReactNode } from "react";
  * `after` (Version 3): more content in the same card, under a 1px divider that runs from the card's left padding to
  * its right padding.
  * `roomy` (Version 3): 120px above and below on laptops (80px on tablets, 56px on phones), as Version 3's other sections.
+ * `navy` (Version 4, 25 Nov 2026): the heading at the page's section heading size (32 / 48 / 56px, as "How it works."),
+ * the card in the nav's Login blue (nav sky), and the selected tab and "Explore all opportunities" in the nav's navy, the
+ * button at the nav buttons' size.
  */
-export async function OpportunitiesSection({ inked = false, secondaryCta, after, roomy = false }: { inked?: boolean; secondaryCta?: ReactNode; after?: ReactNode; roomy?: boolean } = {}) {
+export async function OpportunitiesSection({ inked = false, secondaryCta, after, roomy = false, navy = false }: { inked?: boolean; secondaryCta?: ReactNode; after?: ReactNode; roomy?: boolean; navy?: boolean } = {}) {
   // One card (and one in the count) per person, the same rule India After Dark uses, so both
   // sites say the same number of people are waiting.
   const individuals = uniqueBorrowers(await getIndividualOpportunities());
@@ -22,11 +25,11 @@ export async function OpportunitiesSection({ inked = false, secondaryCta, after,
   return (
     <section
       id="opportunities"
-      className={`mx-2 flex scroll-mt-[calc(var(--navbar-bottom)+8px)] flex-col items-center gap-8 overflow-hidden rounded-[16px] bg-[#cbe8f6] sm:gap-10 ${roomy ? "py-14 sm:py-20 lg:py-[120px]" : "py-12 sm:py-16 lg:py-sp12"}`}
+      className={`mx-2 flex scroll-mt-[calc(var(--navbar-bottom)+8px)] flex-col items-center gap-8 overflow-hidden rounded-[16px] sm:gap-10 ${navy ? "bg-nav-sky" : "bg-[#cbe8f6]"} ${roomy ? "py-14 sm:py-20 lg:py-[120px]" : "py-12 sm:py-16 lg:py-sp12"}`}
     >
       <div className="flex flex-col items-center gap-3 px-4 text-center">
         {/* Figma "Section 9": the count in grey, then "Live now" on its own line in ink. */}
-        <h2 className="font-display text-h3 font-bold text-ink">
+        <h2 className={navy ? "font-display text-[32px] font-bold leading-[1.06] tracking-[-0.02em] text-ink [text-wrap:balance] md:text-[48px] lg:text-[56px]" : "font-display text-h3 font-bold text-ink"}>
           {inked ? (
             <ScrollInk as="span" tone="grey80" text={`${individuals.length} investment opportunities`} className="block" />
           ) : (
@@ -40,7 +43,7 @@ export async function OpportunitiesSection({ inked = false, secondaryCta, after,
       </div>
 
       {/* The founders' call CTA now lives in the founders section, just before the FAQs. */}
-      <OpportunitiesTabs individuals={individuals} states={STATE_OPPORTUNITIES} funds={FUNDS_OPEN ? FUND_OPPORTUNITIES : []} secondaryCta={secondaryCta} />
+      <OpportunitiesTabs individuals={individuals} states={STATE_OPPORTUNITIES} funds={FUNDS_OPEN ? FUND_OPPORTUNITIES : []} secondaryCta={secondaryCta} navy={navy} />
 
       {after && (
         <>

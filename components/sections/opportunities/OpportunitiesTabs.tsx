@@ -33,9 +33,12 @@ interface Props {
   funds: FundOpportunity[];
   /** A second button beside "Explore all opportunities" (Version 3: "How it works"). */
   secondaryCta?: React.ReactNode;
+  /** Version 4 (25 Nov 2026): the selected tab, its counts and the "See all" card in the nav's navy, and "Explore all
+   * opportunities" as the nav's Get started (navy, 36px tall, 16px at the sides, P4 bold). */
+  navy?: boolean;
 }
 
-export function OpportunitiesTabs({ individuals, states, funds, secondaryCta }: Props) {
+export function OpportunitiesTabs({ individuals, states, funds, secondaryCta, navy = false }: Props) {
   const [tab, setTab] = useState<TabKey>("individuals");
   const allTabs: { key: TabKey; label: string; count: number }[] = [
     { key: "individuals", label: "Individuals", count: individuals.length },
@@ -49,10 +52,10 @@ export function OpportunitiesTabs({ individuals, states, funds, secondaryCta }: 
   return (
     <div className="flex w-full flex-col items-center gap-6 sm:gap-8">
       {/* Segmented control — the active blue pill slides between tabs. */}
-      <div role="tablist" aria-label="Investment opportunities" className="relative flex rounded-full bg-primary/8 p-1 ring-1 ring-primary/16">
+      <div role="tablist" aria-label="Investment opportunities" className={`relative flex rounded-full p-1 ring-1 ${navy ? "bg-nav-navy/8 ring-nav-navy/16" : "bg-primary/8 ring-primary/16"}`}>
         <span
           aria-hidden
-          className="absolute bottom-1 left-1 top-1 rounded-full bg-primary shadow-[0_2px_8px_rgba(13,170,222,0.32)] transition-transform duration-300 ease-[cubic-bezier(0.65,0,0.35,1)]"
+          className={`absolute bottom-1 left-1 top-1 rounded-full transition-transform duration-300 ease-[cubic-bezier(0.65,0,0.35,1)] ${navy ? "bg-nav-navy shadow-[0_2px_8px_rgba(0,81,122,0.32)]" : "bg-primary shadow-[0_2px_8px_rgba(13,170,222,0.32)]"}`}
           style={{ width: `calc((100% - 8px) / ${tabs.length})`, transform: `translateX(${activeIndex * 100}%)` }}
         />
         {tabs.map((t) => (
@@ -64,13 +67,13 @@ export function OpportunitiesTabs({ individuals, states, funds, secondaryCta }: 
             aria-controls={`opps-${t.key}`}
             onClick={() => setTab(t.key)}
             className={`relative z-10 flex w-[112px] items-center justify-center gap-1.5 rounded-full py-2.5 font-display text-p4 font-bold transition-colors sm:w-[140px] sm:text-p3 ${
-              tab === t.key ? "text-white" : "text-ink/72 hover:text-primary"
+              tab === t.key ? "text-white" : navy ? "text-ink/72 hover:text-nav-navy" : "text-ink/72 hover:text-primary"
             }`}
           >
             {t.label}
             <span
               className={`flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[11px] font-bold leading-none transition-colors ${
-                tab === t.key ? "bg-white text-primary" : "bg-primary/12 text-primary"
+                navy ? (tab === t.key ? "bg-white text-nav-navy" : "bg-nav-navy/12 text-nav-navy") : tab === t.key ? "bg-white text-primary" : "bg-primary/12 text-primary"
               }`}
             >
               {t.count}
@@ -88,7 +91,7 @@ export function OpportunitiesTabs({ individuals, states, funds, secondaryCta }: 
             {individuals.length > MAX_CARDS && (
               <a
                 href={EXPLORE_URL.individuals}
-                className="flex w-[280px] shrink-0 snap-start flex-col items-center justify-center gap-3 rounded-[16px] bg-white/60 p-6 text-center font-display text-p2 font-bold text-primary ring-1 ring-primary/16 transition-colors hover:bg-white sm:w-[300px]"
+                className={`flex w-[280px] shrink-0 snap-start flex-col items-center justify-center gap-3 rounded-[16px] bg-white/60 p-6 text-center font-display text-p2 font-bold ring-1 transition-colors hover:bg-white sm:w-[300px] ${navy ? "text-nav-navy ring-nav-navy/16" : "text-primary ring-primary/16"}`}
               >
                 See all {individuals.length} people on Rang De
                 <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -117,10 +120,15 @@ export function OpportunitiesTabs({ individuals, states, funds, secondaryCta }: 
       <div className="flex flex-wrap items-center justify-center gap-3 px-4">
         <a
           href={EXPLORE_URL[tab]}
-          className="inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] bg-primary px-8 font-display text-p3 font-bold text-white transition-[filter] hover:brightness-95"
+          className={
+            navy
+              ? "inline-flex h-[42px] items-center justify-center gap-2 rounded-[4px] bg-nav-navy px-[16px] py-[8px] font-display text-p3 font-bold text-white transition-[filter] hover:brightness-110"
+              : "inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] bg-primary px-8 font-display text-p3 font-bold text-white transition-[filter] hover:brightness-95"
+          }
         >
           Explore all opportunities
-          <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          {/* navy: the arrow's drawing leaves 4px empty at its right; pulled in by that, so the two sides look even. */}
+          <svg viewBox="0 0 24 24" className={navy ? "-mr-[4px] size-[18px]" : "size-[18px]"} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M5 12h14M13 6l6 6-6 6" />
           </svg>
         </a>

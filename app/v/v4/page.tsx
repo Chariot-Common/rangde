@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { ClearStories } from "@/components/versions/WhyClear";
 import { PhotoRowHero } from "@/components/versions/WhyHero2";
 import { ChapterPill } from "@/components/versions/WhyRealStory";
-import { V4Close, V4ProblemOptions } from "@/components/versions/WhyV4";
+import { V4FoundersCard, V4ProblemOptions } from "@/components/versions/WhyV4";
+import { OpportunitiesSection } from "@/components/sections/opportunities/OpportunitiesSection";
 import { ThreadHow, ThreadTurn, ThreadMoney, ThreadProof, Why2Questions, Why2Testimonials } from "@/components/versions/WhyThread2";
 
 export const metadata: Metadata = {
@@ -32,19 +33,24 @@ export default function V4() {
     <div className="flex w-full flex-col gap-2 pb-2">
       <PhotoRowHero collage />
       {/* The sections slide up over the hero, which stays put behind them. */}
-      <div className="relative z-10 flex flex-col gap-2 bg-white">
+      {/* 25 Nov 2026 (second review): 8px corners (radius token 4) on every section from "This is why Rang De exists"
+          to the founders' card (the testimonials are the section right after the stories), set here so the shared
+          sections keep their own corners on the other versions. The founders' card and the FAQ cards set theirs. */}
+      <div className="relative z-10 flex flex-col gap-2 bg-white [&>#c-compare]:rounded-4 [&>#c-how]:rounded-4 [&>#c-proof]:rounded-4 [&>#c-stories]:rounded-4 [&>#c-stories+section]:rounded-4 [&>#c-turn]:rounded-4">
         {/* 25 Nov 2026: the pill on laptops and up only; on phones and tablets it sat on the sections' headings. */}
         <ChapterPill chapters={CHAPTERS} even compact desktopOnly />
         <V4ProblemOptions video="/videos/why3/problem.webm" />
         <ThreadTurn photos />
         <ThreadHow plain />
         <ThreadMoney row />
-        <ThreadProof bare tabletStack />
+        <ThreadProof bare tabletStack navyButton />
         <ClearStories met revisedType />
         <Why2Testimonials />
-        {/* 25 Nov 2026: the close and the founders in one bento grid (Version 1's full founders section was too big). */}
-        <V4Close bento />
-        {/* 25 Nov 2026: the questions after the close. */}
+        {/* 25 Nov 2026: the founders as one navy card (in place of the close, "The businesses are ready…"), then
+            Version 1's live opportunities (without its "serious infrastructure" list) in the nav's colours, then the
+            questions. tone="grey" is the card's first version. */}
+        <V4FoundersCard tone="navy" />
+        <OpportunitiesSection roomy navy />
         <Why2Questions compact />
       </div>
     </div>

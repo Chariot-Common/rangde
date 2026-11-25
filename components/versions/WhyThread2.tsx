@@ -38,6 +38,9 @@ export const HEAD = "font-display font-bold tracking-[-0.02em] leading-[1.06] [t
 const H2 = `${HEAD} text-[32px] md:text-[48px] lg:text-[56px]`;
 export const SUB = "font-display text-[15px] font-medium leading-[22px] md:text-[17px] md:leading-[26px]";
 const SECTION = "mx-2 rounded-[24px] px-4 py-16 sm:px-6 md:py-24 lg:px-8";
+/** Version 4's buttons (25 Nov 2026): the nav's "Get started" as it renders (42px tall, 16px at the sides, 8px above and
+ * below, P3 bold, 4px corners) in the nav's navy, so every button on the page matches it. */
+export const NAV_BUTTON = "inline-flex h-[42px] items-center justify-center gap-2 rounded-[4px] bg-nav-navy px-[16px] py-[8px] font-display text-p3 font-bold text-white-100 transition-[filter] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nav-navy";
 const WIDE = "mx-auto w-full max-w-[1400px]";
 const clamp = (v: number) => Math.min(1, Math.max(0, v));
 const span = (v: number, a: number, b: number) => clamp((v - a) / (b - a));
@@ -555,6 +558,27 @@ function TurnPhoto({ ph, p }: { ph: (typeof TURN_PHOTOS)[number]; p: MotionValue
   );
 }
 
+/** 25 Nov 2026 (second review): on phones the same four photos, still (no movement), two in a row above the line and
+ * two below the paragraph, each at its own tilt, so the screen isn't so empty there. */
+function TurnPhotoStill({ ph }: { ph: (typeof TURN_PHOTOS)[number] }) {
+  return (
+    <div className="w-[108px] rounded-[8px] bg-white p-[6px] shadow-[0_4px_16px_rgba(0,0,0,0.16)]" style={{ rotate: `${ph.r}deg` }}>
+      <div className="relative aspect-square overflow-hidden rounded-[4px]">
+        <Image src={ph.src} alt="" fill sizes="216px" className="object-cover" style={{ objectPosition: ph.focus, transform: `scale(${ph.zoom})`, transformOrigin: ph.focus }} />
+      </div>
+    </div>
+  );
+}
+function TurnPhotoRow({ pair }: { pair: readonly (typeof TURN_PHOTOS)[number][] }) {
+  return (
+    <div aria-hidden className="flex justify-center gap-10 md:hidden">
+      {pair.map((ph) => (
+        <TurnPhotoStill key={ph.src} ph={ph} />
+      ))}
+    </div>
+  );
+}
+
 /** `photos` (/v/why3): the four photos in the corners around the line (TURN_PHOTOS). */
 export function ThreadTurn({ photos = false }: { photos?: boolean } = {}) {
   const reduce = useReducedMotion();
@@ -587,6 +611,7 @@ export function ThreadTurn({ photos = false }: { photos?: boolean } = {}) {
               share a fit-content column, and [contain:inline-size] keeps the paragraph from widening it. */}
           {/* z-[1]: the words stay above the photos wherever a photo's corner reaches them on narrower screens. */}
           <div className="relative z-[1] flex w-fit max-w-full flex-col gap-6 md:gap-8">
+          {photos && <TurnPhotoRow pair={[TURN_PHOTOS[0], TURN_PHOTOS[1]]} />}
           <h2 className={`${HEAD} max-w-[1100px] text-[34px] md:text-[56px] lg:text-[64px]`} style={{ color: LIME }} aria-label={TURN}>
             {TURN.split(" ").map((w, i, all) => (
               <FillWord key={i} w={w} p={p} at={0.04 + (i / all.length) * 0.24} />
@@ -598,6 +623,7 @@ export function ThreadTurn({ photos = false }: { photos?: boolean } = {}) {
               <FillWord key={i} w={w} p={p} at={0.4 + (i / words.length) * 0.5} />
             ))}
           </motion.p>
+          {photos && <TurnPhotoRow pair={[TURN_PHOTOS[2], TURN_PHOTOS[3]]} />}
           </div>
         </div>
       </div>
@@ -624,15 +650,14 @@ const HOW = [
  * step, not the raw scroll position: it rests on one whole animation and glides to the next whenever the step on the
  * left changes, so it can never stop halfway between two (19 Nov 2026: it used to, when you stopped scrolling
  * mid-change). Only the open animation and its neighbours are mounted, so each starts playing as it slides in. */
-function HowStrip({ at, half = false }: { at: number; half?: boolean }) {
+/** `frame`: the card's own size and placement classes, in place of the default ones (Version 4's How it works). */
+function HowStrip({ at, frame }: { at: number; frame?: string }) {
   const reduce = useReducedMotion();
   const n = HOW.length;
   return (
     /* 25 Nov 2026: the card's right edge sits on the section's side padding (as the steps column's left edge does), so
        it lines up with the "One loan, three good things" cards. */
-    // 25 Nov 2026 (Version 4, `half`): phones get the card at the full width and a little wider than the frame's shape,
-    // so the wide frame shows the screens' edges (step 4's dashboard was cut off on the left) at the same scale.
-    <div className={`relative mx-auto self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:ml-0 md:mr-0 ${half ? "aspect-[420/342] w-full md:aspect-[374/342] md:max-h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-full" : "aspect-[374/342] w-[84%] md:aspect-auto md:h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-auto"}`}>
+    <div className={`relative self-center overflow-hidden rounded-[24px] bg-white shadow-6 ${frame ?? "mx-auto aspect-[374/342] w-[84%] md:mx-0 md:aspect-auto md:h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-auto"}`}>
       <motion.ul
         className="absolute inset-x-0 top-0 flex flex-col"
         style={{ height: `${n * 100}%` }}
@@ -657,10 +682,148 @@ function HowStrip({ at, half = false }: { at: number; half?: boolean }) {
   );
 }
 
-/** `plain` (Version 4, 24 Nov 2026 review): as Version 1's How it works, the text and the animation share the width
- * half and half, the steps at a bigger size so the eye reads them as much as the animation, and only "How it works." as
- * the heading (no "You choose. Rang De does the rest."). */
+/** `plain`: Version 4's How it works (ThreadHowV4). Without it, /v/why2's (ThreadHowClassic). */
 export function ThreadHow({ plain = false }: { plain?: boolean } = {}) {
+  return plain ? <ThreadHowV4 /> : <ThreadHowClassic />;
+}
+
+/** One part of the phones' progress bar: fills as the scroll passes through its step. */
+function HowSeg({ p, i, n, title, onClick }: { p: MotionValue<number>; i: number; n: number; title: string; onClick: () => void }) {
+  const scaleX = useTransform(p, (v) => clamp(v * n - i));
+  return (
+    <button type="button" onClick={onClick} aria-label={`Step ${i + 1}: ${title}`} className="flex-1 py-2">
+      <span className="relative block h-[4px] overflow-hidden rounded-full bg-ink/12">
+        <motion.span className="absolute inset-zero origin-left rounded-full" style={{ scaleX, backgroundColor: GREEN }} />
+      </span>
+    </button>
+  );
+}
+
+/** Version 4's How it works (24 Nov 2026 review, reworked 25 Nov 2026). It pins, and scrolling moves through the five
+ * steps.
+ * Laptops (1024px up): "How it works." and the steps on the left, the open one with its line of detail, on a rail that
+ * runs from the first step's dot to the last one's (no further) and fills as you scroll, reaching each dot as its step
+ * opens; on the right the animation card, in Version 1's laptop proportions (758 × 620) and as big as the screen
+ * allows (up to 460px tall, 560px from 1280px, 640px from 1536px), so it fills its half.
+ * Phones and tablets: as Version 1's How it works: the heading, the animation, a five-part progress bar (each part fills
+ * as you scroll through its step), then the open step centred under it: a "Step 1" pill in the nav's navy, its title and
+ * its line. */
+function ThreadHowV4() {
+  const reduce = useReducedMotion();
+  const { ref, p } = usePin();
+  const n = HOW.length;
+  const [at, setAt] = useState(0);
+  const go = (i: number) => {
+    const el = ref.current;
+    if (reduce || !el) return setAt(i);
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: top + ((i + 0.5) / n) * (el.offsetHeight - window.innerHeight), behavior: "smooth" });
+  };
+
+  // The rail: from the first dot's centre to the last one's. The dots move as the open step's line folds open and shut,
+  // so their centres are measured again whenever a step's size changes.
+  const olRef = useRef<HTMLOListElement>(null);
+  const dotRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const centres = useRef<number[]>([]);
+  const [rail, setRail] = useState({ top: 0, h: 0 });
+  const fillH = useMotionValue(0);
+  const placeFill = (v: number) => {
+    const c = centres.current;
+    if (c.length < n) return;
+    // Reaches dot i just as step i opens (at i / n of the scroll); full from the last step's start.
+    const t = reduce ? n - 1 : Math.min(n - 1, Math.max(0, v * n));
+    const i = Math.min(n - 2, Math.floor(t));
+    fillH.set(c[i] + (t - i) * (c[i + 1] - c[i]) - c[0]);
+  };
+  useMotionValueEvent(p, "change", (v) => {
+    setAt(Math.min(n - 1, Math.floor(v * n)));
+    placeFill(v);
+  });
+  useEffect(() => {
+    const ol = olRef.current;
+    if (!ol) return;
+    const measure = () => {
+      centres.current = dotRefs.current.map((d) => (d && d.parentElement ? d.parentElement.offsetTop + d.offsetTop + d.offsetHeight / 2 : 0));
+      const c = centres.current;
+      setRail({ top: c[0], h: c[n - 1] - c[0] });
+      placeFill(p.get());
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(ol);
+    [...ol.children].forEach((li) => ro.observe(li));
+    return () => ro.disconnect();
+    // placeFill reads refs only; measuring once per mount is enough, the observer does the rest.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    // 64px above and below (96px from tablets up), outside the pinned part, as "One loan, three good things".
+    <section id="c-how" className="mx-2 overflow-clip rounded-[24px] py-16 md:py-24" style={{ backgroundColor: PAPER }}>
+      <div ref={ref} className={reduce ? "" : "relative h-[340svh]"}>
+        <div className={`${reduce ? "py-10" : STICKY} mx-auto grid w-full max-w-[1464px] gap-6 px-4 py-3 max-lg:content-center sm:px-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-12 lg:px-8 xl:gap-16`}>
+          {/* Laptops: the left column. Phones and tablets: its pieces join the grid (contents), so the animation card can
+              sit between the heading and the step. On short screens (up to 820px tall) a little less space and smaller
+              steps, so the list has room while one step's line closes and the next opens. */}
+          <div className="flex min-h-0 flex-col max-lg:contents lg:justify-center lg:gap-10 lg:py-8 lg:[@media(max-height:820px)]:gap-6">
+            <InkHeading className={`${H2} max-lg:order-1 max-lg:text-center`} a="How it works." />
+
+            <ol ref={olRef} className="relative hidden flex-col pl-7 lg:flex">
+              <span className="absolute left-[5px] w-[2px] rounded-full bg-ink/10" style={{ top: rail.top, height: rail.h }} aria-hidden />
+              <motion.span className="absolute left-[5px] w-[2px] rounded-full" style={{ top: rail.top, height: fillH, backgroundColor: GREEN }} aria-hidden />
+              {HOW.map((h, i) => (
+                <li key={h.t} className="relative py-2.5">
+                  <span
+                    ref={(el) => {
+                      dotRefs.current[i] = el;
+                    }}
+                    className="absolute -left-7 top-[24px] size-3 rounded-full border-2 transition-colors duration-300 [@media(max-height:820px)]:top-[21px]"
+                    style={{ borderColor: i <= at ? GREEN : "rgba(41,45,54,0.2)", backgroundColor: i <= at ? GREEN : PAPER }}
+                    aria-hidden
+                  />
+                  <button type="button" onClick={() => go(i)} aria-current={i === at ? "step" : undefined} className="text-left font-display text-[32px] font-bold leading-[1.2] tracking-[-0.01em] transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-dark [@media(max-height:820px)]:text-[28px]" style={{ color: i === at ? INK : "rgba(41,45,54,0.36)" }}>
+                    {h.t}
+                  </button>
+                  <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${i === at ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                    <p className="overflow-hidden font-display text-[20px] font-medium leading-[30px] text-ink/64 [@media(max-height:820px)]:text-[18px] [@media(max-height:820px)]:leading-[27px]">
+                      <span className="block max-w-[520px] pt-1.5">{h.s}</span>
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+
+            {/* Phones and tablets: the progress bar, then the open step (Version 1's layout). */}
+            <div className="flex w-full max-w-[560px] flex-col gap-4 justify-self-center max-lg:order-3 lg:hidden">
+              <div className="flex gap-1.5">
+                {HOW.map((h, i) => (
+                  <HowSeg key={h.t} p={p} i={i} n={n} title={h.t} onClick={() => go(i)} />
+                ))}
+              </div>
+              <div className="min-h-[128px]">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div key={at} className="flex flex-col items-center gap-2.5 text-center" initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? undefined : { opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
+                    <span className="rounded-full bg-nav-navy px-3 py-1 font-display text-h5 font-bold uppercase tracking-[0.88px] text-white-100">Step {at + 1}</span>
+                    <p className="font-display text-p1 font-bold text-text-grey-100">{HOW[at].t}</p>
+                    <p className="font-display text-p2 font-medium text-text-grey-64">{HOW[at].s}</p>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+
+          <HowStrip
+            at={at}
+            frame="mx-auto aspect-[420/342] w-full max-w-[560px] max-lg:order-2 lg:mx-0 lg:aspect-[758/620] lg:h-[min(460px,calc(100svh-var(--navbar-bottom,0px)-96px))] lg:w-auto lg:max-w-none lg:justify-self-end xl:h-[min(560px,calc(100svh-var(--navbar-bottom,0px)-96px))] 2xl:h-[min(640px,calc(100svh-var(--navbar-bottom,0px)-96px))]"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** /v/why2's How it works. */
+function ThreadHowClassic({ plain = false }: { plain?: boolean } = {}) {
   const reduce = useReducedMotion();
   const { ref, p } = usePin();
   const [at, setAt] = useState(0);
@@ -726,7 +889,7 @@ export function ThreadHow({ plain = false }: { plain?: boolean } = {}) {
           </div>
 
           {/* Right: the step animations in one strip that glides on as you scroll (see HowStrip). */}
-          <HowStrip at={at} half={plain} />
+          <HowStrip at={at} />
         </div>
       </div>
     </section>
@@ -750,69 +913,144 @@ const DOES = [
 const UNIT = "w-full rounded-[16px] bg-white p-4 text-left shadow-[0_1px_2px_rgba(41,45,54,0.06),0_8px_24px_rgba(41,45,54,0.08)]";
 const UNIT_LABEL = "font-display text-[11px] font-bold uppercase leading-[14px] tracking-[0.08em]";
 
-/** 1 · The borrower's photo (no name), then "Entrepreneur Funded" with a green tick right after it, on one line, over a
- * full funding bar. */
-function FundedUnit() {
+/* 25 Nov 2026 (second review): the three pieces play once, each as it comes into view, the second 0.5s after its own
+   start and the third 1s after (side by side on laptops they come into view together, so they play 0, 0.5 and 1s
+   apart), then stay at their end state. With reduced motion they show the end state straight away. */
+
+/** True `delay` seconds after the piece is first well in view (or at once with reduced motion). */
+function usePlay(delay: number) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const seen = useInView(ref, { once: true, amount: 0.6 });
+  const [go, setGo] = useState(false);
+  useEffect(() => {
+    if (!seen || reduce) return;
+    const id = setTimeout(() => setGo(true), delay * 1000);
+    return () => clearTimeout(id);
+  }, [seen, reduce, delay]);
+  return { ref, go, reduce: !!reduce };
+}
+
+const FUND_GOAL = 10000;
+const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
+
+/** 1 · The borrower's photo (no name) over a funding bar. Plays: the bar fills left to right while "₹0 / ₹10,000" counts
+ * up to "₹10,000 / ₹10,000"; then the line turns into "Entrepreneur Funded" with the green tick, and stays. */
+function FundedUnit({ delay = 0 }: { delay?: number }) {
+  const { ref, go, reduce } = usePlay(delay);
+  const raised = useMotionValue(reduce ? FUND_GOAL : 0);
+  const width = useTransform(raised, (v) => `${(v / FUND_GOAL) * 100}%`);
+  const label = useTransform(raised, (v) => `${inr(v)} / ${inr(FUND_GOAL)}`);
+  const [funded, setFunded] = useState(false);
+  useEffect(() => {
+    if (!go) return;
+    const a = animate(raised, FUND_GOAL, { duration: 1.6, ease: [0.4, 0, 0.2, 1], onComplete: () => setTimeout(() => setFunded(true), 250) });
+    return () => a.stop();
+  }, [go, raised]);
+  const done = funded || reduce;
   return (
-    <div className={`${UNIT} flex max-w-[300px] items-center gap-3`}>
+    <div ref={ref} className={`${UNIT} flex max-w-[300px] items-center gap-3`}>
       <span className="relative size-[48px] shrink-0 overflow-hidden rounded-full" style={{ backgroundColor: "#A8D8F0" }}>
         <Image src="/how-it-works/s1-av3.webp" alt="" fill sizes="48px" className="object-cover" />
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <span className="flex items-center gap-2">
-          <span className="font-display text-[15px] font-bold leading-[20px] text-ink">Entrepreneur Funded</span>
-          <span className="flex size-[20px] shrink-0 items-center justify-center rounded-full text-white" style={{ backgroundColor: "#62AF1D" }}>
-            <svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M5 12.5l4.5 4.5L19 7.5" />
-            </svg>
-          </span>
+        <span className="relative flex h-[20px] items-center">
+          <AnimatePresence mode="wait" initial={false}>
+            {done ? (
+              <motion.span key="funded" className="flex items-center gap-2" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE }}>
+                <span className="font-display text-[15px] font-bold leading-[20px] text-ink">Entrepreneur Funded</span>
+                <span className="flex size-[20px] shrink-0 items-center justify-center rounded-full text-white" style={{ backgroundColor: "#62AF1D" }}>
+                  <svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M5 12.5l4.5 4.5L19 7.5" />
+                  </svg>
+                </span>
+              </motion.span>
+            ) : (
+              <motion.span key="count" className="font-display text-[15px] font-bold leading-[20px] tabular-nums text-ink" exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
+                {label}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </span>
-        <span className="block h-[8px] w-full rounded-full" style={{ backgroundColor: "#62AF1D" }} />
+        <span className="relative block h-[8px] w-full overflow-hidden rounded-full bg-ink/8">
+          <motion.span className="absolute inset-y-0 left-zero rounded-full" style={{ width, backgroundColor: "#62AF1D" }} />
+        </span>
       </div>
     </div>
   );
 }
 
 /** 2 · The repayments row from the lender's portfolio (Rekha Bai's), with the name and amount taken out: "Repayment
- * Status", a green "Completed" pill and "8.5% interest repaid". */
-function RepaidUnit() {
+ * Status" and a pill. Plays: "Payment Due" (amber) turns into "Completed" (green), and "8.5% interest repaid" comes in
+ * under it. */
+function RepaidUnit({ delay = 0 }: { delay?: number }) {
+  const { ref, go, reduce } = usePlay(delay);
+  const [paid, setPaid] = useState(false);
+  useEffect(() => {
+    if (!go) return;
+    const id = setTimeout(() => setPaid(true), 900);
+    return () => clearTimeout(id);
+  }, [go]);
+  const done = paid || reduce;
   return (
-    <div className={`${UNIT} flex max-w-[300px] items-center gap-4`}>
+    <div ref={ref} className={`${UNIT} flex max-w-[300px] items-center gap-4`}>
       <span className="relative size-[64px] shrink-0 overflow-hidden rounded-[12px]" style={{ backgroundColor: "#A8D8F0" }}>
         <Image src="/how-it-works/s1-av7.webp" alt="" fill sizes="64px" className="object-cover" />
       </span>
       <div className="flex min-w-0 flex-col items-start gap-1.5">
         <span className="font-display text-[16px] font-bold leading-[22px] text-ink">Repayment Status</span>
-        <span className={`${UNIT_LABEL} rounded-[6px] px-2 py-1`} style={{ backgroundColor: "#EEF6E6", color: GREEN }}>
-          Completed
-        </span>
-        <span className={`${UNIT_LABEL} flex items-center gap-1.5 text-ink/48`}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={done ? "done" : "due"}
+            className={`${UNIT_LABEL} rounded-[6px] px-2 py-1`}
+            style={done ? { backgroundColor: "#EEF6E6", color: GREEN } : { backgroundColor: "#FFF3D6", color: "#9A6200" }}
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.25, ease: EASE }}
+          >
+            {done ? "Completed" : "Payment Due"}
+          </motion.span>
+        </AnimatePresence>
+        <motion.span className={`${UNIT_LABEL} flex items-center gap-1.5 text-ink/48`} initial={false} animate={{ opacity: done ? 1 : 0 }} transition={{ duration: 0.3, delay: done && !reduce ? 0.15 : 0 }}>
           <Icon name="money-rupee-circle" size={14} />
           8.5% interest repaid
-        </span>
+        </motion.span>
       </div>
     </div>
   );
 }
 
-/** 3 · How it works' credit score meter (step 5), sized to the other two pieces, the needle in the darkest green band
- * and "High" in the middle, with "Credit score" under it. */
-function CreditUnit() {
+const GAUGE_FROM = 300; // the meter's leftmost point
+const GAUGE_TO = 860; // in the darkest green band
+
+/** 3 · How it works' credit score meter (step 5), bigger than before and without the "Credit score" line under it. Plays:
+ * the needle swings from the far left up into the darkest green band; "High" comes in once it's there. */
+function CreditUnit({ delay = 0 }: { delay?: number }) {
+  const { ref, go, reduce } = usePlay(delay);
+  const score = useMotionValue(reduce ? GAUGE_TO : GAUGE_FROM);
+  const [now, setNow] = useState(reduce ? GAUGE_TO : GAUGE_FROM);
+  useMotionValueEvent(score, "change", (v) => setNow(Math.round(v)));
+  const [high, setHigh] = useState(false);
+  useEffect(() => {
+    if (!go) return;
+    const a = animate(score, GAUGE_TO, { duration: 1.4, ease: [0.45, 0, 0.25, 1], onComplete: () => setHigh(true) });
+    return () => a.stop();
+  }, [go, score]);
   return (
-    <div className={`${UNIT} max-w-[176px]`}>
-      {/* The meter (and "High" in it) cropped and drawn 104px wide, so the piece is about as tall as the other two. */}
-      <div className="mx-auto" style={{ width: 104 }}>
-        <GaugeSvg score={860} hideScore label="High" tight />
+    <div ref={ref} className={`${UNIT} max-w-[208px] px-5 py-5`}>
+      {/* The meter (and "High" in it) cropped to the ring and drawn 168px wide; its words scale with it. */}
+      <div className="mx-auto" style={{ width: 168 }}>
+        <GaugeSvg score={now} hideScore label={high || reduce ? "High" : ""} tight />
       </div>
-      <p className={`${UNIT_LABEL} mt-1.5 text-center text-ink/48`}>Credit score</p>
     </div>
   );
 }
 
 const DOES_ROW: { t: string; s: string; unit: ReactNode }[] = [
   { t: "It funds a business.", s: "Your money helps fund a rural business.", unit: <FundedUnit /> },
-  { t: "It can earn you interest.", s: "You earn interest as they repay.", unit: <RepaidUnit /> },
-  { t: "It builds their credit.", s: "Each repayment builds their credit history.", unit: <CreditUnit /> },
+  { t: "It can earn you interest.", s: "You earn interest as they repay.", unit: <RepaidUnit delay={0.5} /> },
+  { t: "It builds their credit.", s: "Each repayment builds their credit history.", unit: <CreditUnit delay={1} /> },
 ];
 
 /** `row` (Version 4, 24 Nov 2026 review): the three cards side by side and shown together, not stacking one by one as
@@ -823,7 +1061,16 @@ export function ThreadMoney({ row = false }: { row?: boolean } = {}) {
       <div className={`${WIDE} flex flex-col gap-8 md:gap-12`}>
         <div className="flex flex-col items-center gap-3 text-center">
           <Lines className={`${H2} text-white`} a="One loan, three good things." grey="" />
-          <p className={`${SUB} max-w-[520px] text-white/64`}>Rang De calls this social investment: lending that does good and can earn you interest.</p>
+          {row ? (
+            // Version 4 (25 Nov 2026, second review): at the size and weight of the paragraph under "This is why Rang De
+            // exists", in white 80, across the width: from tablets up it breaks only after the colon.
+            <p className="font-display text-[20px] font-bold leading-[1.35] text-white-80 [text-wrap:balance] md:text-[28px] lg:text-[34px]">
+              Rang De calls this social investment:
+              <br className="max-md:hidden" /> lending that does good and can earn you interest.
+            </p>
+          ) : (
+            <p className={`${SUB} max-w-[520px] text-white/64`}>Rang De calls this social investment: lending that does good and can earn you interest.</p>
+          )}
         </div>
         {row ? (
           // From laptops up the cards share their rows (subgrid): the numbers, headings and lines line up across the three
@@ -832,8 +1079,9 @@ export function ThreadMoney({ row = false }: { row?: boolean } = {}) {
           <ul className="grid gap-3 lg:grid-cols-3 lg:grid-rows-[repeat(4,auto)] lg:gap-y-0">
             {DOES_ROW.map((d, i) => (
               <li key={d.t} className="flex flex-col items-center rounded-[24px] px-6 pb-8 pt-8 text-center lg:row-span-4 lg:grid lg:grid-rows-subgrid lg:items-stretch lg:justify-items-center lg:px-8 lg:pt-10" style={{ backgroundColor: PAPER }}>
-                {/* The number: P1 bold, white, in a small green circle. */}
-                <span className="mb-3 flex size-[28px] shrink-0 items-center justify-center rounded-full font-display text-p1 font-bold tabular-nums text-white" style={{ backgroundColor: GREEN }} aria-hidden>
+                {/* The number, white in a small green circle. 25 Nov 2026 (second review): medium, at the cards' line size
+                    (15px, 17px from tablets), not P1 bold. */}
+                <span className="mb-3 flex size-[28px] shrink-0 items-center justify-center rounded-full font-display text-[15px] font-medium leading-none tabular-nums text-white md:text-[17px]" style={{ backgroundColor: GREEN }} aria-hidden>
                   {i + 1}
                 </span>
                 <p className={`${HEAD} mb-3 text-[26px] lg:text-[32px]`}>{d.t}</p>
@@ -934,7 +1182,8 @@ function ProofCard({ to, prefix = "", suffix = "", line, bg, fg }: { to: number;
 /** `bare` (Version 4, 25 Nov 2026): no list beside the heading; the founders are in their own section before the close. */
 /** `tabletStack` (Version 4, 25 Nov 2026): tablets show the heading over the figures, as phones do, instead of a narrow
  * heading column wrapping to six lines beside them; the two columns start at laptop width. */
-export function ThreadProof({ bare = false, tabletStack = false }: { bare?: boolean; tabletStack?: boolean } = {}) {
+/** `navyButton` (Version 4, 25 Nov 2026): "Start investing" as the nav's Get started (NAV_BUTTON). */
+export function ThreadProof({ bare = false, tabletStack = false, navyButton = false }: { bare?: boolean; tabletStack?: boolean; navyButton?: boolean } = {}) {
   const s = useRangDeStats();
   return (
     <section id="c-proof" className={`${SECTION} bg-white`}>
@@ -958,7 +1207,13 @@ export function ThreadProof({ bare = false, tabletStack = false }: { bare?: bool
           </ul>
           )}
           <div className="mt-2 max-sm:hidden">
-            <LinkButton href={SIGNUP_URL}>Start investing</LinkButton>
+            {navyButton ? (
+              <a href={SIGNUP_URL} className={NAV_BUTTON}>
+                Start investing
+              </a>
+            ) : (
+              <LinkButton href={SIGNUP_URL}>Start investing</LinkButton>
+            )}
           </div>
         </div>
         <ul className="flex flex-col gap-3">
@@ -1308,7 +1563,7 @@ const V4_QUESTIONS: QuestionCard[] = WHY2_QUESTIONS.map((q) => (q === PAN_INDIA 
 /** `compact` (Version 4, 25 Nov 2026): on phones the cards are only as tall as their questions (icon beside the
  * question, 24px type), and "pan-India" never breaks across two lines. */
 export function Why2Questions({ compact = false }: { compact?: boolean } = {}) {
-  return <PlainQuestionCards heading="Before you invest." headingClass={H2} inkHeading questionClass={compact ? "text-[24px] leading-[30px] sm:text-[28px] sm:leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]" : "text-[28px] leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]"} cards={compact ? V4_QUESTIONS : WHY2_QUESTIONS} icons={["faq-plus", "faq-nri", "faq-warning", "avatars-group"]} visuals={[<GetStartedAnim key="start" />, <NriAnim key="nri" />, <NoRepayAnim key="norepay" />, <ReachAnim key="reach" />]} flip navyLink large foundersCall phoneRow={compact} />;
+  return <PlainQuestionCards heading="Before you invest." headingClass={H2} inkHeading questionClass={compact ? "text-[24px] leading-[30px] sm:text-[28px] sm:leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]" : "text-[28px] leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]"} cards={compact ? V4_QUESTIONS : WHY2_QUESTIONS} icons={["faq-plus", "faq-nri", "faq-warning", "avatars-group"]} visuals={[<GetStartedAnim key="start" />, <NriAnim key="nri" />, <NoRepayAnim key="norepay" />, <ReachAnim key="reach" />]} flip navyLink large foundersCall phoneRow={compact} navButtons={compact} />;
 }
 
 /** The shared testimonials, with their heading at this page’s section size (24 Nov 2026). */

@@ -21,38 +21,20 @@ import { HEAD, PAPER, SUB } from "./WhyThread2";
  */
 
 const DARK = "#1B1D22";
-const LIME = "#D9E89A";
 
-const PROBLEM = "Millions in rural India find it difficult to fund their business’s growth.";
-const WORDS = PROBLEM.split(" ");
+// 25 Nov 2026 (second review): "businesses’" (plural). The line will also say something about keeping the business
+// (and the family's livelihood) going, not only growing it; that wording is still to be agreed.
+const PROBLEM = "Millions in rural India find it difficult to fund their businesses’ growth.";
 
+// 25 Nov 2026 (second review): shorter, so each card reads at a glance while it rises (the eye should be on the
+// movement, not the reading): a point of two lines at most, then one short line. The 86% and 49% figures are out.
 type Option = { icon: IconName | "scheme"; t: string; s: string };
 const OPTIONS: Option[] = [
-  {
-    icon: "bank",
-    t: "Banks rarely say yes to a first loan.",
-    s: "They ask for collateral and a credit history, which a first-time borrower doesn’t have yet. 86% of India’s eligible adults can’t get a loan from a bank.",
-  },
-  {
-    icon: "scheme",
-    t: "Government schemes help, but can’t reach everyone.",
-    s: "Most lend through banks, so a first-time borrower still has to clear the same checks.",
-  },
-  {
-    icon: "money-bag",
-    t: "Moneylenders say yes, but charge very high interest.",
-    s: "Their interest can reach 120–180% a year, and it eats up the growth the loan was meant to fund.",
-  },
-  {
-    icon: "avatars-group",
-    t: "Self-help groups lend only when the group agrees.",
-    s: "The members decide who borrows, and only when the group has money to give.",
-  },
-  {
-    icon: "house-avatar",
-    t: "Family and friends rarely have enough to spare.",
-    s: "49% of rural borrowers turn to moneylenders, family or friends, and it’s seldom enough to grow a business.",
-  },
+  { icon: "bank", t: "Banks rarely say yes to a first loan.", s: "They ask for collateral and a credit history." },
+  { icon: "scheme", t: "Government help doesn’t reach all.", s: "Most schemes still lend through banks." },
+  { icon: "money-bag", t: "Moneylenders charge too much.", s: "Interest can reach 120–180% a year." },
+  { icon: "avatars-group", t: "Self-help groups lend only if all agree.", s: "And only when the group has money to give." },
+  { icon: "house-avatar", t: "Family and friends rarely have enough.", s: "Seldom enough to grow a business." },
 ];
 
 /** Where each card crosses (share of the free width) and its tilt as it enters. */
@@ -93,13 +75,8 @@ export function V4ProblemOptions({ video }: { video?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const p = useSpring(scrollYProgress, { stiffness: 220, damping: 36, restDelta: 0.0005 });
-  // The line fills over the lead, and dims a little once the cards are crossing it.
-  const fill = useTransform(scrollYProgress, [0, (LEAD * 0.85) / SPAN], [0, 1], { clamp: true });
-  // 25 Nov 2026: written as functions of the scroll, not input/output ranges. With ranges, motion 13 hands an opacity
-  // to the browser's own scroll timeline and drops the ranges: the line dimmed and the question faded in across the
-  // whole section instead of over these short stretches (so the question stayed faint for most of it).
-  const lineOpacity = useTransform(scrollYProgress, (v) => 1 - 0.6 * clamp01((v - LEAD / SPAN) / (0.4 / SPAN)));
-  const askOpacity = useTransform(scrollYProgress, (v) => clamp01((v - (LEAD * 0.7) / SPAN) / ((LEAD * 0.3) / SPAN)));
+  // 25 Nov 2026 (second review): the line is white throughout: no word-by-word fill and no dimming as the cards cross
+  // it, and "What are their options?" is gone. The lead is still there, so the line is read on its own first.
 
   if (reduce) {
     return (
@@ -133,17 +110,10 @@ export function V4ProblemOptions({ video }: { video?: string }) {
               <span aria-hidden className="pointer-events-none absolute inset-0 bg-text-grey-100/96" />
             </>
           )}
-          {/* 25 Nov 2026: only the line dims as the cards cross it; "What are their options?" stays at full strength (dimmed
-              with it, the lime was hard to read on the dark). */}
-          <div className="relative flex h-full flex-col items-center justify-center gap-6 text-center">
-            <motion.h2 aria-hidden className={`${HEAD} max-w-[1120px] text-[34px] leading-[1.15] text-white md:text-[56px] lg:text-[64px]`} style={{ opacity: lineOpacity }}>
-              {WORDS.map((w, i) => (
-                <Word key={i} w={w} p={fill} at={i / WORDS.length} />
-              ))}
-            </motion.h2>
-            <motion.p className="font-display text-[20px] font-bold md:text-[28px]" style={{ opacity: askOpacity, color: LIME }}>
-              What are their options?
-            </motion.p>
+          <div className="relative flex h-full flex-col items-center justify-center text-center">
+            <h2 aria-hidden className={`${HEAD} max-w-[1120px] text-[34px] leading-[1.15] text-white-100 md:text-[56px] lg:text-[64px]`}>
+              {PROBLEM}
+            </h2>
           </div>
           <ul className="pointer-events-none absolute inset-y-0 left-4 right-4 sm:left-6 sm:right-6 lg:left-8 lg:right-8">
             {OPTIONS.map((o, i) => (
@@ -153,16 +123,6 @@ export function V4ProblemOptions({ video }: { video?: string }) {
         </div>
       </div>
     </section>
-  );
-}
-
-/** A word of the line, white 24% to white as the fill reaches it. */
-function Word({ w, p, at }: { w: string; p: MotionValue<number>; at: number }) {
-  const opacity = useTransform(p, [at, at + 0.12], [0.24, 1], { clamp: true });
-  return (
-    <>
-      <motion.span style={{ opacity }}>{w}</motion.span>{" "}
-    </>
   );
 }
 
@@ -198,14 +158,64 @@ function SchemeIcon() {
   );
 }
 
-/** An option: its icon, the point in one bold line, then the detail with the number that backs it. */
+/** An option: its icon, the point in one bold line, then one short line. 25 Nov 2026 (second review): all centred. */
 function OptionCard({ o }: { o: Option }) {
   return (
-    <div className="flex flex-col items-start gap-4 rounded-[24px] bg-white p-6 text-left shadow-6 lg:p-8">
+    <div className="flex flex-col items-center gap-4 rounded-[24px] bg-white p-6 text-center shadow-6 lg:p-8">
       {o.icon === "scheme" ? <SchemeIcon /> : <Icon name={o.icon} size={40} />}
       <h3 className={`${HEAD} text-[28px] leading-[1.12] text-ink lg:text-[34px]`}>{o.t}</h3>
       <p className={`${SUB} text-ink/64`}>{o.s}</p>
     </div>
+  );
+}
+
+/** The founders as a section break (25 Nov 2026, in place of the close): one horizontal grey card, after the "quote
+ * card" on Threads' case studies. Left: "Ram and Smita left Oxford to build Rang De." at the page's section heading size,
+ * and an underlined "Read more" under it. Right: Ram and Smita cut out, standing on the card's bottom edge. Phones: the
+ * words first, the two of them under them at the right.
+ * `tone` (25 Nov 2026): "navy" is the card in the nav's dark blue, the heading in white, one line on how Rang De began
+ * (white 64) between the heading and "Read more" (white 48, over a dotted line), and Ram and Smita cropped just above
+ * Ram's belt with a 6px white outline (as thick as the photo frames in "This is why Rang De exists"), baked into
+ * ram-smita-outlined.webp (342×283). "grey" is the first version (background grey, the heading in text grey 100, "Read
+ * more" underlined in text grey 64, the full-length cut-out, no line). Corners 8px, as the sections around it. */
+
+// The dotted line under "Read more": round dots 1.6px across, 1.6px apart (a 3.2px tile with one dot in it).
+const DOTTED = "bg-[radial-gradient(circle_at_0.8px_0.8px,currentColor_0.55px,transparent_0.85px)] bg-[length:3.2px_1.6px] bg-[position:0_100%] bg-repeat-x pb-[5px]";
+
+export function V4FoundersCard({ href = "#", tone = "grey" }: { href?: string; tone?: "grey" | "navy" }) {
+  const navy = tone === "navy";
+  return (
+    <section aria-label="Rang De's founders" className="mx-2 bg-white px-2 py-10 sm:px-4 md:py-16 lg:px-6">
+      <div className={`relative mx-auto flex w-full max-w-[1200px] flex-col overflow-hidden rounded-4 ${navy ? "bg-nav-navy md:min-h-[300px] md:flex-row md:items-center xl:min-h-[330px]" : "bg-bg-grey md:min-h-[320px] md:flex-row md:items-center lg:min-h-[360px]"}`}>
+        <div className={`relative z-[1] flex flex-col items-start gap-4 p-6 sm:p-8 md:py-12 md:pl-12 lg:pl-16 ${navy ? "md:w-[56%] xl:w-[62%]" : "md:w-[62%]"}`}>
+          <h2 className={`${HEAD} text-[32px] md:text-[48px] [text-wrap:balance] ${navy ? "text-white-100 xl:text-[56px]" : "text-text-grey-100 lg:text-[56px]"}`}>Ram and Smita left Oxford to build Rang De.</h2>
+          {navy && (
+            <p className={`${SUB} max-w-[560px] text-white-64`}>
+              They started Rang De in 2008 with a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow.
+            </p>
+          )}
+          {navy ? (
+            <a href={href} className="font-display text-p3 font-medium text-white-48 transition-colors hover:text-white-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white-100">
+              <span className={DOTTED}>Read more</span>
+            </a>
+          ) : (
+            <a href={href} className="font-display text-p3 font-medium text-text-grey-64 underline decoration-from-font underline-offset-4 transition-colors hover:text-text-grey-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-text-grey-100">
+              Read more
+            </a>
+          )}
+        </div>
+        {/* It stands on the bottom edge: under the words on phones, at the right from tablets up. */}
+        {navy ? (
+          <div className="relative mr-6 h-[190px] w-[230px] self-end sm:mr-10 md:absolute md:bottom-0 md:right-10 md:mr-0 md:h-[230px] md:w-[278px] lg:right-16 xl:h-[290px] xl:w-[350px]">
+            <Image src="/images/founders/ram-smita-outlined.webp" alt="Ram and Smita, Rang De’s founders" fill sizes="(min-width: 1280px) 350px, (min-width: 768px) 278px, 230px" className="object-contain object-bottom" />
+          </div>
+        ) : (
+          <div className="relative mr-6 h-[220px] w-[174px] self-end sm:mr-10 md:absolute md:bottom-0 md:right-10 md:mr-0 md:h-[290px] md:w-[229px] lg:right-16 lg:h-[330px] lg:w-[261px]">
+            <Image src="/images/founders/ram-smita-cutout.webp" alt="Ram and Smita, Rang De’s founders" fill sizes="(min-width: 1024px) 261px, (min-width: 768px) 229px, 174px" className="object-contain object-bottom" />
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 

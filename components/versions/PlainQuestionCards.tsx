@@ -10,6 +10,8 @@ import { ScrollInk } from "./ScrollInk";
 
 // Each question's own icon on the coin's face (Figma "FAQ assets", node 2917:86), in QUESTION_CARDS order.
 const COIN_ICONS: IconName[] = ["faq-returns", "faq-secure", "faq-nri", "faq-warning"];
+// `navButtons`: the nav buttons' size as they render (42px tall, 16px at the sides, 8px above and below, P3 bold).
+const NAV_SIZE = "h-[42px] rounded-[4px] px-[16px] py-[8px] font-display text-p3 font-bold";
 
 /**
  * The coin at the bottom right of a question card. Its face is the question's icon on text grey 48; when the
@@ -53,7 +55,9 @@ function FlipCoin({ icon, auto = false }: { icon: IconName; auto?: boolean }) {
  * cards; leave a slot empty for none). */
 /** `phoneRow` (Version 4, 25 Nov 2026): on phones each card is as tall as its question, with the icon beside it at the
  * bottom right, instead of a 300px-tall card that is mostly empty. Tablets and up are unchanged. */
-export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false, foundersCall = false, phoneRow = false, cards: own, icons = COIN_ICONS, visuals, headingClass, questionClass, inkHeading = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean; foundersCall?: boolean; phoneRow?: boolean; cards?: QuestionCard[]; icons?: IconName[]; visuals?: (ReactNode | undefined)[]; headingClass?: string; questionClass?: string; inkHeading?: boolean }) {
+/** `navButtons` (Version 4, 25 Nov 2026): "Read more FAQs" and "Talk to our founders" at the nav buttons' size (Button
+ * sm: 36px tall, 16px at the sides, P4 bold), and the cards' corners 8px. */
+export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false, foundersCall = false, phoneRow = false, navButtons = false, cards: own, icons = COIN_ICONS, visuals, headingClass, questionClass, inkHeading = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean; foundersCall?: boolean; phoneRow?: boolean; navButtons?: boolean; cards?: QuestionCard[]; icons?: IconName[]; visuals?: (ReactNode | undefined)[]; headingClass?: string; questionClass?: string; inkHeading?: boolean }) {
   const cards = own ?? QUESTION_CARDS.slice(0, count);
   const reduce = useReducedMotion();
   const fade = fadeIn && !reduce;
@@ -120,7 +124,7 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
             aria-haspopup="dialog"
             aria-label={`Open: ${c.question}`}
             onClick={() => setOpen(i)}
-            className={`group flex cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey text-left ${phoneRow ? "max-sm:flex-row max-sm:items-end max-sm:gap-4 max-sm:min-h-0" : ""} ${large ? "min-h-[300px] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[500px] lg:rounded-[20px] lg:p-10" : "min-h-[220px] p-6 sm:min-h-[260px]"} ${flip ? `transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8 ${auto === i ? "max-md:scale-[1.025] max-md:bg-primary-8" : ""}` : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100`}
+            className={`group flex cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey text-left ${navButtons ? "rounded-4! lg:rounded-4!" : ""} ${phoneRow ? "max-sm:flex-row max-sm:items-end max-sm:gap-4 max-sm:min-h-0" : ""} ${large ? "min-h-[300px] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[500px] lg:rounded-[20px] lg:p-10" : "min-h-[220px] p-6 sm:min-h-[260px]"} ${flip ? `transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8 ${auto === i ? "max-md:scale-[1.025] max-md:bg-primary-8" : ""}` : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100`}
           >
             <span className={`font-display font-bold text-text-grey-100 [text-wrap:balance] ${phoneRow ? "max-sm:min-w-0 max-sm:flex-1 max-sm:self-start" : ""} ${questionClass ?? (large ? "text-[24px] leading-[30px] md:text-h4 xl:text-[36px] xl:leading-[44px]" : "text-p1")}`}>{c.question}</span>
             {flip && icons[i] ? <span className={`flex self-end ${large ? "lg:scale-125 lg:origin-bottom-right" : ""}`}><FlipCoin icon={icons[i]} auto={auto === i} /></span> : <span aria-hidden className="flex size-[48px] items-center justify-center self-end rounded-full bg-text-grey-64 text-white transition-transform duration-200 group-hover:scale-105">
@@ -134,10 +138,12 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
       <div className="flex flex-wrap items-center justify-center gap-3">
           <a
             href={FAQS_URL}
-            className={`inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] px-8 font-display text-p3 font-bold transition-[color,background-color,filter] ${navyLink ? "bg-nav-sky text-nav-navy hover:brightness-95" : "bg-primary/12 text-primary hover:bg-primary/20"}`}
+            className={`inline-flex items-center justify-center gap-2 transition-[color,background-color,filter] ${navButtons ? NAV_SIZE : "h-[48px] rounded-[4px] px-8 font-display text-p3 font-bold"} ${navyLink ? "bg-nav-sky text-nav-navy hover:brightness-95" : "bg-primary/12 text-primary hover:bg-primary/20"}`}
           >
             Read more FAQs
-            <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            {/* navButtons: the arrow's drawing leaves 4px empty at its right; pulled in by that, so the button's two sides
+                look even. */}
+            <svg viewBox="0 0 24 24" className={navButtons ? "-mr-[4px] size-[18px]" : "size-[18px]"} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </a>
@@ -149,7 +155,7 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
               <button
                 type="button"
                 aria-describedby="founders-call-when"
-                className="inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] bg-nav-navy px-8 font-display text-p3 font-bold text-white transition-[filter] hover:brightness-110"
+                className={`inline-flex items-center justify-center gap-2 bg-nav-navy text-white transition-[filter] hover:brightness-110 ${navButtons ? NAV_SIZE : "h-[48px] rounded-[4px] px-8 font-display text-p3 font-bold"}`}
               >
                 Talk to our founders
               </button>
