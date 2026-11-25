@@ -66,7 +66,7 @@ function Reveal({ children, className, delay = 0 }: { children: ReactNode; class
  * place (two columns, a rule between the rows), pushing the stories down. They then stay, once, for good.
  * Also under Version 3's hero (CoinHero) on phones.
  */
-export function PhoneStats() {
+export function PhoneStats({ labels }: { labels?: Record<string, string> } = {}) {
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
   const stats = heroStatsFrom(useRangDeStats());
@@ -99,7 +99,7 @@ export function PhoneStats() {
                   {ri > 0 && <hr className="w-full border-0 border-t border-ink/8" />}
                   <div className="flex flex-col items-center gap-1">
                     <StatNumber target={s.target} format={FIG_FORMAT[label] ?? s.format} index={ci * 2 + ri} inView={open} className="whitespace-nowrap font-display text-h3 font-bold text-text-grey-80" />
-                    <p className="font-display text-[10px] font-semibold uppercase leading-[15px] tracking-[1.2px] text-text-grey-64">{FIG_LABEL[label] ?? label}</p>
+                    <p className="font-display text-[10px] font-semibold uppercase leading-[15px] tracking-[1.2px] text-text-grey-64">{labels?.[label] ?? FIG_LABEL[label] ?? label}</p>
                   </div>
                 </Fragment>
               );
@@ -115,8 +115,9 @@ export function PhoneStats() {
  * the RBI seal with a chevron under it, and the headline is a little larger (Figma "Home - v1.1" mobile). */
 /** `compact` (Version 4): the headline one size smaller, so the visual under it carries more of the hero.
  * `bigTitle` (Version 2): the ink headline at Version 1's size (H1, 56/64 from tablets up) in a wider block, for a title
- * with its own line break. */
-export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wide = false, glow = true, compact = false, bigTitle = false, eyebrow, actions, strip, below, noStats = false }: { title: string; lead?: string; mobileLead?: ReactNode; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; compact?: boolean; bigTitle?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode; noStats?: boolean }) {
+ * with its own line break.
+ * `statLabels` (Version 1 updates): plainer names for some of the figures, e.g. { "Principal repaid": "Repayment rate" }. */
+export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wide = false, glow = true, compact = false, bigTitle = false, eyebrow, actions, strip, below, noStats = false, statLabels }: { statLabels?: Record<string, string>; title: string; lead?: string; mobileLead?: ReactNode; tone?: "green" | "ink"; wide?: boolean; glow?: boolean; compact?: boolean; bigTitle?: boolean; eyebrow?: string; actions?: ReactNode; strip?: ReactNode; below?: ReactNode; noStats?: boolean }) {
   const ready = usePageReady();
   const reduce = useReducedMotion();
   const seq = heroSequence(title, lead);
@@ -211,8 +212,8 @@ export function ApproachHero({ title, lead = "", mobileLead, tone = "green", wid
       {/* `noStats` (/v/why, 13 Nov 2026): the hero without the figures row. */}
       {!noStats && (
         <motion.div className="w-full max-w-[1200px]" {...after()}>
-          <HeroStats start={statsStart} sealOnlyMobile={!!mobileLead} />
-          {mobileLead && <PhoneStats />}
+          <HeroStats start={statsStart} sealOnlyMobile={!!mobileLead} labels={statLabels} />
+          {mobileLead && <PhoneStats labels={statLabels} />}
         </motion.div>
       )}
       {/* `strip={false}`: no strip (Version 4 meets the people further down instead). */}

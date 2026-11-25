@@ -19,6 +19,14 @@ const VERSIONS = [
     measure: "Sign-ups vs. the current homepage",
   },
   {
+    key: "1U",
+    name: "The other Startup India (updates)",
+    href: "/v/v1-updates",
+    audience: "Everyone",
+    idea: "Starts as a copy of Version 1, to be reworked section by section while Version 1 stays as it was.",
+    measure: "Sign-ups vs. Version 1",
+  },
+  {
     key: "1.2",
     name: "The other Startup India, reshuffled",
     href: "/v/v1-2",

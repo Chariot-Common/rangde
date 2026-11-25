@@ -26,7 +26,7 @@ const STEP_MS = [12000, 16800, 12400, 11700, 9500];
 // From the review call (10 Nov 2026): every title short enough for one line, "invest in" rather than "support" (which
 // reads like a donation), the 1st and 15th moved into step 3's body, and a fifth step for the borrower's side: their
 // credit grows.
-const STEPS = [
+const BASE_STEPS = [
   { title: "We find and verify rural entrepreneurs", body: HOW_IT_WORKS_STEPS[0].description },
   { title: "Choose whom you’d like to invest in", body: HOW_IT_WORKS_STEPS[1].description },
   {
@@ -46,7 +46,9 @@ const SWIPE_PX = 40;
 
 /** `swipe` (Version 2, phones and tablets): swiping the animation frame moves between the steps, as a carousel does: drag it
  * to the left for the next step, to the right for the one before (both wrap round). Tapping the progress bar still works. */
-export function V4HowItWorks({ children, swipe = false }: { children?: ReactNode; swipe?: boolean }) {
+/** `titles` (Version 1 updates, 26 Nov 2026): shorter step titles, in step order, in place of the ones above. */
+export function V4HowItWorks({ children, swipe = false, titles }: { children?: ReactNode; swipe?: boolean; titles?: string[] }) {
+  const STEPS = BASE_STEPS.map((s, i) => ({ ...s, title: titles?.[i] ?? s.title }));
   const ref = useRef<HTMLElement>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
   const inView = useInView(ref, { amount: 0.35 });

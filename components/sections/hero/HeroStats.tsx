@@ -57,7 +57,8 @@ export const HeroStatsStart = createContext<boolean | undefined>(undefined);
  * turns it on right after its body copy has come in. Either way they only count once the row is
  * on screen. */
 /** `sealOnlyMobile` (Version 1.1): on phones only the RBI seal and its label show, with no numbers. */
-export function HeroStats({ start: startProp, intro, sealOnlyMobile = false }: { start?: boolean; intro?: HeroStatsIntro; sealOnlyMobile?: boolean } = {}) {
+/** `labels` (Version 1 updates): plainer names for some of the figures, keyed by their usual label. */
+export function HeroStats({ start: startProp, intro, sealOnlyMobile = false, labels }: { start?: boolean; intro?: HeroStatsIntro; sealOnlyMobile?: boolean; labels?: Record<string, string> } = {}) {
   const pace = intro?.pace ?? 1;
   const rbiPace = intro?.rbiPace ?? pace;
   const startFromHero = useContext(HeroStatsStart);
@@ -107,7 +108,7 @@ export function HeroStats({ start: startProp, intro, sealOnlyMobile = false }: {
               animate={intro && isRbi ? (intro.rbi ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }) : undefined}
               transition={{ duration: 0.5 * rbiPace, delay: 0.15 * rbiPace, ease: EASE }}
             >
-              {stat.label}
+              {labels?.[stat.label] ?? stat.label}
             </motion.p>
           </motion.div>
         );

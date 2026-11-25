@@ -82,7 +82,10 @@ const subscribePhone = (cb: () => void) => {
 /** `thinFrame` (v1.1, v2.1): the centre photo's frame as thin as a regular print's (at 1.65× it read as too thick).
  * `roomy` (v2): the same space above the heading as the page's other sections (on laptops it was only 8px). */
 /** `story` (v2): a longer paragraph under the heading in place of the one-line belief (when it began, how it has grown). */
-export function FoundersCollage({ cards = false, thinFrame = false, roomy = false, story, phoneLayout = false, eyebrow }: { cards?: boolean; thinFrame?: boolean; roomy?: boolean; story?: ReactNode; phoneLayout?: boolean; eyebrow?: string } = {}) {
+/** `calmType` (Version 1 updates, 26 Nov 2026): the paragraph one step down, to the design system's P2; the photos a little
+ * further from it and the call pulled up closer to them; and in the call, the
+ * sentence a step down (P2, grey 64) with "Every Saturday, 11 am IST" as the bold, grey 100 part (P1). */
+export function FoundersCollage({ cards = false, thinFrame = false, roomy = false, story, phoneLayout = false, eyebrow, calmType = false }: { cards?: boolean; thinFrame?: boolean; roomy?: boolean; story?: ReactNode; phoneLayout?: boolean; eyebrow?: string; calmType?: boolean } = {}) {
   const around = cards ? AROUND.map((a) => CARD_SWAPS[a.src] ?? a) : AROUND;
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const k = phone ? 0.25 : 1;
@@ -104,7 +107,7 @@ export function FoundersCollage({ cards = false, thinFrame = false, roomy = fals
         {eyebrow && <p className="font-display text-h5 font-bold uppercase tracking-[0.88px] text-text-grey-80">{eyebrow}</p>}
         {/* Fills in as it is read, like the page's other H3s (plain: no coloured edge). */}
         <ScrollInk as="h2" tone="plain" text="Ram and Smita left Oxford to build Rang De." className="max-w-[820px] font-display text-h3 font-bold [text-wrap:balance]" />
-        <p className={`font-display text-[18px] font-medium leading-[28px] text-text-grey-64 md:text-[22px] md:leading-[32px] [text-wrap:pretty] ${story ? "max-w-[760px]" : "max-w-[640px]"}`}>
+        <p className={`font-display font-medium text-text-grey-64 [text-wrap:pretty] ${calmType ? "text-p2" : "text-[18px] leading-[28px] md:text-[22px] md:leading-[32px]"} ${story ? "max-w-[760px]" : "max-w-[640px]"}`}>
           {story ?? "With a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow."}
         </p>
       </div>
@@ -138,7 +141,7 @@ export function FoundersCollage({ cards = false, thinFrame = false, roomy = fals
           <style>{`@keyframes founders-strip { to { transform: translateX(-50%); } }`}</style>
         </div>
       ) : (
-      <div ref={stageRef} className="relative my-6 w-full max-w-[1200px] [container-type:inline-size] md:my-0 md:max-w-[66vw]" style={{ aspectRatio: `${W} / ${H}` }}>
+      <div ref={stageRef} className={`relative my-6 w-full max-w-[1200px] [container-type:inline-size] md:my-0 md:max-w-[66vw] ${calmType ? "md:mt-ds-6" : ""}`} style={{ aspectRatio: `${W} / ${H}` }}>
         {around.map((a) => (
           <Print key={a.src} item={a} progress={scrollYProgress} reduce={!!reduce} k={k} />
         ))}
@@ -158,12 +161,21 @@ export function FoundersCollage({ cards = false, thinFrame = false, roomy = fals
       </div>
       )}
 
-      {/* The call, kept small so it doesn't compete with the line above: one sentence, when, and the button. */}
-      <div className="flex max-w-[560px] flex-col items-center gap-5 text-center">
-        <p className="font-display text-p1 font-bold text-text-grey-100 [text-wrap:balance]">
-          Talk directly with Ram and Smita about Rang De and the story behind it.
-          <span className="mt-1 block font-medium text-text-grey-64">Every Saturday, 11 am IST</span>
-        </p>
+      {/* The call, kept small so it doesn't compete with the line above: one sentence, when, and the button.
+          `calmType`: pulled up towards the photos (the collage's box runs well below its lowest print), the sentence a step
+          down (P2, grey 64) and the time as the bold part (P1, grey 100). */}
+      <div className={`flex max-w-[560px] flex-col items-center gap-5 text-center ${calmType ? "md:-mt-ds-6" : ""}`}>
+        {calmType ? (
+          <p className="font-display [text-wrap:balance]">
+            <span className="block text-p2 font-medium text-text-grey-64">Talk directly with Ram and Smita about Rang De and the story behind it.</span>
+            <span className="mt-1 block text-p1 font-bold text-text-grey-100">Every Saturday, 11 am IST</span>
+          </p>
+        ) : (
+          <p className="font-display text-p1 font-bold text-text-grey-100 [text-wrap:balance]">
+            Talk directly with Ram and Smita about Rang De and the story behind it.
+            <span className="mt-1 block font-medium text-text-grey-64">Every Saturday, 11 am IST</span>
+          </p>
+        )}
         <Button variant="primary" size="lg" className="px-10" style={{ backgroundColor: "var(--color-blue-highlight)" }}>
           Register
         </Button>
