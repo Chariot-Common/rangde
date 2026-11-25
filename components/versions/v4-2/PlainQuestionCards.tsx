@@ -1,0 +1,204 @@
+"use client";
+
+import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { FAQS_URL } from "@/data/faqs";
+import { Icon, type IconName } from "@/components/ui";
+import { FactChip, QUESTION_CARDS, type QuestionCard } from "../approaches";
+import { ScrollInk } from "../ScrollInk";
+
+// Each question's own icon on the coin's face (Figma "FAQ assets", node 2917:86), in QUESTION_CARDS order.
+const COIN_ICONS: IconName[] = ["faq-returns", "faq-secure", "faq-nri", "faq-warning"];
+
+/**
+ * The coin at the bottom right of a question card. Its face is the question's icon on text grey 48; when the
+ * card is hovered (or focused from the keyboard) it flips over like a coin, turning about its vertical axis
+ * in perspective (600ms, ease-out), to show a plus (at 80% opacity) on dark blue: the prompt to open the card.
+ */
+function FlipCoin({ icon, auto = false }: { icon: IconName; auto?: boolean }) {
+  return (
+    <span aria-hidden className="relative size-16 self-end perspective-near">
+      <span className={`relative block size-full transition-transform duration-600 ease-out transform-3d ${auto ? "max-md:rotate-y-180" : ""} md:group-hover:rotate-y-180 md:group-focus-visible:rotate-y-180 motion-reduce:duration-0`}>
+        <span className="absolute inset-zero flex items-center justify-center rounded-full bg-text-grey-48 shadow-popup backface-hidden">
+          <Icon name={icon} />
+        </span>
+        <span className="absolute inset-zero flex rotate-y-180 items-center justify-center rounded-full bg-nav-navy shadow-popup backface-hidden">
+          <Icon name="faq-plus" className="opacity-80" />
+        </span>
+      </span>
+    </span>
+  );
+}
+
+/*
+ * Version 1.1's question cards: plain. Each is a light-grey card with the question at the top (ink) and a
+ * "+" at the bottom right, a white plus in a text-grey-64 circle. The whole card is the button; it opens
+ * a pop-up modal with the facts and the answer. (Bottom right keeps the question's lines clear above it, and
+ * it's where a thumb lands on a phone.) Escape, the backdrop or the × closes the modal.
+ * With `flip` (v6, v1.1) the plus is replaced by FlipCoin: the question's own icon, turning over to the plus on hover,
+ * and the cards grow slightly and tint blue on hover. `navyLink` (v6): "Read more FAQs" in the nav's Login colours.
+ */
+/** `phoneHeading` (Version 1.1): an H3 over the cards on phones only, filling in as it is read.
+ * `autoHighlight` (with `flip`, Version 1.1 phones): with no hover on a phone, one card at a time lights itself the way a hovered
+ * one does (blue tint, a slight grow, the coin turning to the plus) so it reads as tappable: the first card whose top is
+ * between a quarter and three quarters of the way down the screen; as it climbs past the quarter line the next takes over. */
+/** `large` (Version 1.1): taller cards with the question at H4 size, so they read as a section of their own. */
+/** `fadeIn` (Version 2): the cards fade in, one after another and rising a little, as they come into view (ease-out). */
+/** `foundersCall` (Version 3): "Talk to our founders" beside "Read more FAQs", with when under both buttons (the weekly
+ * live call with Ram and Smita). */
+/** `visuals` (/v/why2, 24 Nov 2026): an animation per card, shown in the pop-up under the question (same order as the
+ * cards; leave a slot empty for none). */
+export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false, foundersCall = false, cards: own, icons = COIN_ICONS, visuals, headingClass, questionClass, inkHeading = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean; foundersCall?: boolean; cards?: QuestionCard[]; icons?: IconName[]; visuals?: (ReactNode | undefined)[]; headingClass?: string; questionClass?: string; inkHeading?: boolean }) {
+  const cards = own ?? QUESTION_CARDS.slice(0, count);
+  const reduce = useReducedMotion();
+  const fade = fadeIn && !reduce;
+  const [open, setOpen] = useState<number | null>(null);
+  const [auto, setAuto] = useState<number | null>(null);
+  const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!autoHighlight) return;
+    const phone = window.matchMedia("(max-width: 767px)");
+    let raf = 0;
+    const pick = () => {
+      raf = 0;
+      if (!phone.matches) return setAuto(null);
+      const vh = window.innerHeight;
+      const tops = cardRefs.current.map((el) => el?.getBoundingClientRect().top ?? Infinity);
+      let next = tops.findIndex((t) => t >= vh * 0.25 && t <= vh * 0.75);
+      // Once the last card has passed the quarter line it stays lit, as there is no next card to take over.
+      if (next === -1 && tops.length && tops[tops.length - 1] < vh * 0.25 && cardRefs.current[tops.length - 1]!.getBoundingClientRect().bottom > 0) next = tops.length - 1;
+      setAuto(next === -1 ? null : next);
+    };
+    const queue = () => { if (!raf) raf = requestAnimationFrame(pick); };
+    pick();
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", queue);
+      window.removeEventListener("resize", queue);
+    };
+  }, [autoHighlight]);
+
+  useEffect(() => {
+    if (open === null) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const current = open === null ? null : cards[open];
+  const shown = open === null ? undefined : visuals?.[open];
+
+  return (
+    <section className="mx-2 flex flex-col items-center gap-10 rounded-[16px] bg-white px-4 pb-12 pt-6 sm:px-8 md:py-20">
+      {phoneHeading && <ScrollInk as="h2" tone="plain" text={phoneHeading} className="text-center font-display text-h3 font-bold md:hidden" />}
+      {/* `headingClass` / `questionClass` (24 Nov 2026, /v/why2): a page can set its own sizes for the heading and the card questions. */}
+      {/* `inkHeading` (24 Nov 2026, /v/why2): the heading fills in letter by letter as it’s scrolled into view. */}
+      {heading && (inkHeading ? <ScrollInk as="h2" tone="grey" text={heading} className={`text-center ${headingClass ?? "font-display text-h3 font-bold"}`} /> : <h2 className={`text-center text-text-grey-100 ${headingClass ?? "font-display text-h3 font-bold"}`}>{heading}</h2>)}
+      <div className={`grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 ${large ? "max-w-[1440px] lg:gap-4" : "max-w-[1200px]"}`}>
+        {cards.map((c, i) => (
+          <motion.button
+            key={c.question}
+            initial={fade ? { opacity: 0, y: 24 } : false}
+            whileInView={fade ? { opacity: 1, y: 0 } : undefined}
+            viewport={{ once: true, amount: 0.25 }}
+            transition={{ duration: 0.8, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+            ref={(el) => { cardRefs.current[i] = el; }}
+            type="button"
+            aria-haspopup="dialog"
+            aria-label={`Open: ${c.question}`}
+            onClick={() => setOpen(i)}
+            className={`group flex cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey text-left ${large ? "min-h-[300px] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[500px] lg:rounded-[20px] lg:p-10" : "min-h-[220px] p-6 sm:min-h-[260px]"} ${flip ? `transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8 ${auto === i ? "max-md:scale-[1.025] max-md:bg-primary-8" : ""}` : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100`}
+          >
+            <span className={`font-display font-bold text-text-grey-100 [text-wrap:balance] ${questionClass ?? (large ? "text-[24px] leading-[30px] md:text-h4 xl:text-[36px] xl:leading-[44px]" : "text-p1")}`}>{c.question}</span>
+            {flip && icons[i] ? <span className={`flex self-end ${large ? "lg:scale-125 lg:origin-bottom-right" : ""}`}><FlipCoin icon={icons[i]} auto={auto === i} /></span> : <span aria-hidden className="flex size-[48px] items-center justify-center self-end rounded-full bg-text-grey-64 text-white transition-transform duration-200 group-hover:scale-105">
+              <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </span>}
+          </motion.button>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+          <a
+            href={FAQS_URL}
+            className={`inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] px-8 font-display text-p3 font-bold transition-[color,background-color,filter] ${navyLink ? "bg-nav-sky text-nav-navy hover:brightness-95" : "bg-primary/12 text-primary hover:bg-primary/20"}`}
+          >
+            Read more FAQs
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
+          {foundersCall && (
+            // When the call is, in a black tooltip above the button on hover (or focus, so a tap on a phone shows it too),
+            // in the style of the source tooltips in the story above (StoryHowItWorks).
+            <span className="group/call relative inline-flex">
+              {/* TODO: link to the founders' call sign-up once there is one (the site's other founders' call buttons have none yet). */}
+              <button
+                type="button"
+                aria-describedby="founders-call-when"
+                className="inline-flex h-[48px] items-center justify-center gap-2 rounded-[4px] bg-nav-navy px-8 font-display text-p3 font-bold text-white transition-[filter] hover:brightness-110"
+              >
+                Talk to our founders
+              </button>
+              <span
+                id="founders-call-when"
+                role="tooltip"
+                className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-3 w-max max-w-[260px] -translate-x-1/2 translate-y-1 rounded-[8px] bg-[#1d1f24] px-3 py-2 text-center font-display text-[12px] font-medium leading-[16px] text-white opacity-0 shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-[opacity,translate] duration-150 group-hover/call:translate-y-0 group-hover/call:opacity-100 group-focus-within/call:translate-y-0 group-focus-within/call:opacity-100"
+              >
+                Live with Ram and Smita, Rang De’s founders, every Saturday at 11 am IST.
+                {/* The pointer, down to the button. */}
+                <span aria-hidden className="absolute left-1/2 top-full size-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-[#1d1f24]" />
+              </span>
+            </span>
+          )}
+      </div>
+
+      {/* 25 Nov 2026: the pop-up is portalled to <body>, so it isn't trapped in the page's stacking context and sits above
+          the navigation bar; the backdrop then blurs and darkens the bar along with the rest of the page. */}
+      {current && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={current.question}>
+          <button type="button" aria-label="Close" onClick={() => setOpen(null)} className={`absolute inset-0 cursor-default bg-text-grey-100/48 backdrop-blur-sm`} />
+          {/* 25 Nov 2026 (/v/why2): a card with an animation opens wide from tablets up: the animation on the left (7fr),
+              the question and answer on the right (6fr). On phones everything stays in one column
+              (question, animation, answer). Cards without one keep the narrow pop-up. With `visuals`, every pop-up has
+              40px padding from small tablets up. */}
+          <div className={`relative flex max-h-[calc(100svh-32px)] w-full flex-col gap-4 overflow-y-auto rounded-[16px] bg-white p-6 shadow-[0_24px_64px_rgba(41,45,54,0.24)] ${visuals ? "sm:p-ds-7" : "sm:p-8"} ${shown ? "max-w-[560px] md:grid md:max-w-[1200px] md:grid-cols-[minmax(0,7fr)_minmax(0,6fr)] md:content-center md:gap-x-8 md:gap-y-4" : "max-w-[560px]"}`}>
+            <button
+              type="button"
+              aria-label={`Close: ${current.question}`}
+              onClick={() => setOpen(null)}
+              className="absolute right-4 top-4 flex size-[40px] items-center justify-center rounded-full bg-text-grey-64 text-white transition-colors hover:bg-text-grey-80"
+            >
+              <svg viewBox="0 0 24 24" className="size-[18px] rotate-45" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+            <h3 className={`pr-12 font-display text-p1 font-bold text-text-grey-100 ${visuals ? "md:text-[24px] md:leading-[30px]" : ""} ${shown ? "md:col-start-2 md:row-start-1 md:self-end" : ""}`}>{current.question}</h3>
+            {shown && <div className="md:col-start-1 md:row-span-2 md:row-start-1 md:self-center">{shown}</div>}
+            <div className={`flex flex-col gap-4 ${shown ? "md:col-start-2 md:row-start-2 md:self-start" : ""}`}>
+              {/* 25 Nov 2026 (/v/why2): no tick-mark fact chips where the pop-up has an animation, just the answer. */}
+              {!shown && (
+                <ul className="flex flex-col gap-2">
+                  {current.facts.map((f) => (
+                    <FactChip key={f.text} {...f} />
+                  ))}
+                </ul>
+              )}
+              <p className="whitespace-pre-line font-display text-p2 font-medium leading-[26px] text-text-grey-80">{current.answer}</p>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </section>
+  );
+}

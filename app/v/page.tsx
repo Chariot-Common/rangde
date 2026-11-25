@@ -59,6 +59,14 @@ const VERSIONS = [
     measure: "Scroll depth, sign-ups vs. Version 1",
   },
   {
+    key: "4.2",
+    name: "Why we exist (25 Nov draft)",
+    href: "/v/v4-2",
+    audience: "First-time visitors discovering the category",
+    idea: "Version 4 as it stood on 25 Nov, before the reviews: the problem over a faint video of people at work; “What are their options?” pinned while the four options rise past it; why Rang De exists with four photos in its corners; How it works; one loan, three good things; it’s already working; stories, testimonials, questions; the close.",
+    measure: "Scroll depth, sign-ups vs. Version 4",
+  },
+  {
     key: "SC",
     name: "Stark contrast (concept)",
     href: "/v/stark-contrast-approach",

@@ -30,7 +30,7 @@ export function useRefreshedNav() {
 /** Pages that keep the original nav but give its buttons the refreshed nav's colours: navy "Get started" (and the phone's
  * floating one), and Login in nav sky with navy text. /v/why2 (24 Nov 2026), to match its "Talk to our founders" and
  * "Read more FAQs" buttons. */
-export const NAVY_NAV_BUTTON_ROUTES = ["/v/why2", "/v/v4"];
+export const NAVY_NAV_BUTTON_ROUTES = ["/v/why2", "/v/v4", "/v/v4-2"];
 export function useNavyNavButtons() {
   return NAVY_NAV_BUTTON_ROUTES.includes(usePathname());
 }
