@@ -33,18 +33,19 @@ export default function V4() {
       <PhotoRowHero collage />
       {/* The sections slide up over the hero, which stays put behind them. */}
       <div className="relative z-10 flex flex-col gap-2 bg-white">
-        <ChapterPill chapters={CHAPTERS} even compact />
+        {/* 25 Nov 2026: the pill on laptops and up only; on phones and tablets it sat on the sections' headings. */}
+        <ChapterPill chapters={CHAPTERS} even compact desktopOnly />
         <V4ProblemOptions video="/videos/why3/problem.webm" />
         <ThreadTurn photos />
         <ThreadHow plain />
         <ThreadMoney row />
-        <ThreadProof bare />
+        <ThreadProof bare tabletStack />
         <ClearStories met revisedType />
         <Why2Testimonials />
         {/* 25 Nov 2026: the close and the founders in one bento grid (Version 1's full founders section was too big). */}
         <V4Close bento />
         {/* 25 Nov 2026: the questions after the close. */}
-        <Why2Questions />
+        <Why2Questions compact />
       </div>
     </div>
   );

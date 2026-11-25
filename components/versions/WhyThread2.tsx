@@ -569,7 +569,9 @@ export function ThreadTurn({ photos = false }: { photos?: boolean } = {}) {
     // loan, three good things", outside the pinned part, so the photos have room from the section's edges while it
     // pins exactly as before (the top padding scrolls away under the nav first).
     <section id="c-turn" className={`mx-2 overflow-clip rounded-[24px] ${photos ? "py-16 md:py-24" : ""}`} style={{ backgroundColor: DEEP }}>
-      <div ref={ref} className={reduce ? "" : "relative h-[220svh]"}>
+      {/* 25 Nov 2026 (with the photos): phones, which don't show the photos, pin for 1.5 screens instead of 2.2, so the
+          two lines aren't followed by a long stretch of empty green. */}
+      <div ref={ref} className={reduce ? "" : photos ? "relative h-[150svh] md:h-[220svh]" : "relative h-[220svh]"}>
         {/* 23 Nov 2026: 32px (24px on phones) between the line and the paragraph, down from 48px. */}
         <div className={`${reduce ? "flex flex-col py-20" : STICKY} items-center justify-center gap-6 px-4 text-center md:gap-8`}>
           {photos && !reduce && (
@@ -628,7 +630,9 @@ function HowStrip({ at, half = false }: { at: number; half?: boolean }) {
   return (
     /* 25 Nov 2026: the card's right edge sits on the section's side padding (as the steps column's left edge does), so
        it lines up with the "One loan, three good things" cards. */
-    <div className={`relative mx-auto aspect-[374/342] w-[84%] self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:ml-0 md:mr-0 ${half ? "md:max-h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-full" : "md:aspect-auto md:h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-auto"}`}>
+    // 25 Nov 2026 (Version 4, `half`): phones get the card at the full width and a little wider than the frame's shape,
+    // so the wide frame shows the screens' edges (step 4's dashboard was cut off on the left) at the same scale.
+    <div className={`relative mx-auto self-center overflow-hidden rounded-[24px] bg-white shadow-6 md:ml-0 md:mr-0 ${half ? "aspect-[420/342] w-full md:aspect-[374/342] md:max-h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-full" : "aspect-[374/342] w-[84%] md:aspect-auto md:h-[calc(100svh-var(--navbar-bottom,0px)-96px)] md:w-auto"}`}>
       <motion.ul
         className="absolute inset-x-0 top-0 flex flex-col"
         style={{ height: `${n * 100}%` }}
@@ -675,9 +679,14 @@ export function ThreadHow({ plain = false }: { plain?: boolean } = {}) {
     // 16 / 24 / 32px at the sides with the content capped at 1400px (WIDE), so the two sections' edges line up.
     <section id="c-how" className="mx-2 overflow-clip rounded-[24px] py-16 md:py-24" style={{ backgroundColor: PAPER }}>
       <div ref={ref} className={reduce ? "" : "relative h-[340svh]"}>
-        <div className={`${reduce ? "py-10" : STICKY} mx-auto grid w-full max-w-[1464px] gap-4 px-4 py-3 sm:px-6 ${plain ? "md:grid-cols-2 md:items-center md:gap-10 lg:gap-16" : "md:grid-cols-[minmax(0,5fr)_minmax(0,8fr)] md:gap-3"} lg:px-8`}>
+        {/* 25 Nov 2026 (`plain`): on phones the step and the animation sit together in the middle of the screen, 32px apart,
+            instead of the step at the top and the animation at the bottom with a gap between them. */}
+        <div className={`${reduce ? "py-10" : STICKY} mx-auto grid w-full max-w-[1464px] gap-4 px-4 py-3 sm:px-6 ${plain ? "max-md:content-center max-md:gap-8 md:grid-cols-2 md:items-center md:gap-10 lg:gap-16" : "md:grid-cols-[minmax(0,5fr)_minmax(0,8fr)] md:gap-3"} lg:px-8`}>
           {/* Left: heading and the steps. */}
-          <div className={`flex min-h-0 flex-col gap-4 pt-4 md:py-8 ${plain ? "md:justify-center md:gap-10" : "justify-between"}`}>
+          {/* 25 Nov 2026 (`plain`): on short screens (up to 820px tall, e.g. a 1280×720 laptop) a little less space and
+              smaller steps, so the list has room to grow while one step's line closes and the next opens (it filled the
+              height exactly, and the opening line ran into the step below). */}
+          <div className={`flex min-h-0 flex-col gap-4 pt-4 md:py-8 ${plain ? "md:justify-center md:gap-10 md:[@media(max-height:820px)]:gap-6" : "justify-between"}`}>
             {plain ? <InkHeading className={H2} a="How it works." /> : <InkHeading className={H2} a="How it works." b={"You choose. Rang\u00a0De does the rest."} />}
 
             <ol className="relative hidden flex-col pl-7 md:flex">
@@ -685,12 +694,12 @@ export function ThreadHow({ plain = false }: { plain?: boolean } = {}) {
               <motion.span className="absolute left-[5px] top-3 w-[2px] origin-top rounded-full" style={{ height: "calc(100% - 24px)", scaleY: rail, backgroundColor: GREEN }} aria-hidden />
               {HOW.map((h, i) => (
                 <li key={h.t} className="relative py-2.5">
-                  <span className={`absolute -left-7 ${plain ? "top-[19px] lg:top-[24px]" : "top-[17px]"} size-3 rounded-full border-2 transition-colors duration-300`} style={{ borderColor: i <= at ? GREEN : "rgba(41,45,54,0.2)", backgroundColor: i <= at ? GREEN : PAPER }} aria-hidden />
-                  <button type="button" onClick={() => go(i)} aria-current={i === at ? "step" : undefined} className={`text-left font-display font-bold transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-dark ${plain ? "text-[24px] leading-[1.2] tracking-[-0.01em] lg:text-[32px]" : "text-[20px] leading-[1.25] lg:text-[24px]"}`} style={{ color: i === at ? INK : "rgba(41,45,54,0.36)" }}>
+                  <span className={`absolute -left-7 ${plain ? "top-[19px] lg:top-[24px] lg:[@media(max-height:820px)]:top-[21px]" : "top-[17px]"} size-3 rounded-full border-2 transition-colors duration-300`} style={{ borderColor: i <= at ? GREEN : "rgba(41,45,54,0.2)", backgroundColor: i <= at ? GREEN : PAPER }} aria-hidden />
+                  <button type="button" onClick={() => go(i)} aria-current={i === at ? "step" : undefined} className={`text-left font-display font-bold transition-colors duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-green-dark ${plain ? "text-[24px] leading-[1.2] tracking-[-0.01em] lg:text-[32px] lg:[@media(max-height:820px)]:text-[28px]" : "text-[20px] leading-[1.25] lg:text-[24px]"}`} style={{ color: i === at ? INK : "rgba(41,45,54,0.36)" }}>
                     {h.t}
                   </button>
                   <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${i === at ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
-                    <p className={`overflow-hidden font-display font-medium text-ink/64 ${plain ? "text-[17px] leading-[26px] lg:text-[20px] lg:leading-[30px]" : "text-[15px] leading-[22px] lg:text-[16px] lg:leading-[24px]"}`}>
+                    <p className={`overflow-hidden font-display font-medium text-ink/64 ${plain ? "text-[17px] leading-[26px] lg:text-[20px] lg:leading-[30px] lg:[@media(max-height:820px)]:text-[18px] lg:[@media(max-height:820px)]:leading-[27px]" :"text-[15px] leading-[22px] lg:text-[16px] lg:leading-[24px]"}`}>
                       <span className={`block pt-1.5 ${plain ? "max-w-[520px]" : "max-w-[420px]"}`}>{h.s}</span>
                     </p>
                   </div>
@@ -817,11 +826,12 @@ export function ThreadMoney({ row = false }: { row?: boolean } = {}) {
           <p className={`${SUB} max-w-[520px] text-white/64`}>Rang De calls this social investment: lending that does good and can earn you interest.</p>
         </div>
         {row ? (
-          // From tablets up the cards share their rows (subgrid): the numbers, headings and lines line up across the three
-          // cards, and the UI pieces sit at the bottom of one shared row, so their bottom edges line up too.
-          <ul className="grid gap-3 md:grid-cols-3 md:grid-rows-[repeat(4,auto)] md:gap-y-0">
+          // From laptops up the cards share their rows (subgrid): the numbers, headings and lines line up across the three
+          // cards, and the UI pieces sit at the bottom of one shared row, so their bottom edges line up too. 25 Nov 2026:
+          // tablets stack them as phones do (three columns at 768px squeezed the UI pieces).
+          <ul className="grid gap-3 lg:grid-cols-3 lg:grid-rows-[repeat(4,auto)] lg:gap-y-0">
             {DOES_ROW.map((d, i) => (
-              <li key={d.t} className="flex flex-col items-center rounded-[24px] px-6 pb-8 pt-8 text-center md:row-span-4 md:grid md:grid-rows-subgrid md:items-stretch md:justify-items-center lg:px-8 lg:pt-10" style={{ backgroundColor: PAPER }}>
+              <li key={d.t} className="flex flex-col items-center rounded-[24px] px-6 pb-8 pt-8 text-center lg:row-span-4 lg:grid lg:grid-rows-subgrid lg:items-stretch lg:justify-items-center lg:px-8 lg:pt-10" style={{ backgroundColor: PAPER }}>
                 {/* The number: P1 bold, white, in a small green circle. */}
                 <span className="mb-3 flex size-[28px] shrink-0 items-center justify-center rounded-full font-display text-p1 font-bold tabular-nums text-white" style={{ backgroundColor: GREEN }} aria-hidden>
                   {i + 1}
@@ -883,7 +893,8 @@ export function ThreadMoney({ row = false }: { row?: boolean } = {}) {
               </li>
             ))}
           </ul>
-          <a href="https://rangde.in/pricing-structure-policy" target="_blank" rel="noreferrer" className="w-fit font-display text-[13px] font-bold text-white/72 underline decoration-white/32 underline-offset-4 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+          {/* 25 Nov 2026: 12px more above and below to tap (40px tall), taken back with negative margins so nothing moves. */}
+          <a href="https://rangde.in/pricing-structure-policy" target="_blank" rel="noreferrer" className="-my-3 w-fit py-3 font-display text-[13px] font-bold text-white/72 underline decoration-white/32 underline-offset-4 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
             See the full pricing policy<span className="sr-only"> (opens in a new tab)</span>
           </a>
         </div>
@@ -921,12 +932,14 @@ function ProofCard({ to, prefix = "", suffix = "", line, bg, fg }: { to: number;
 }
 
 /** `bare` (Version 4, 25 Nov 2026): no list beside the heading; the founders are in their own section before the close. */
-export function ThreadProof({ bare = false }: { bare?: boolean } = {}) {
+/** `tabletStack` (Version 4, 25 Nov 2026): tablets show the heading over the figures, as phones do, instead of a narrow
+ * heading column wrapping to six lines beside them; the two columns start at laptop width. */
+export function ThreadProof({ bare = false, tabletStack = false }: { bare?: boolean; tabletStack?: boolean } = {}) {
   const s = useRangDeStats();
   return (
     <section id="c-proof" className={`${SECTION} bg-white`}>
-      <div className={`${WIDE} grid gap-8 md:grid-cols-[5fr_7fr] md:gap-12`}>
-        <div className="flex flex-col items-start gap-4 self-start md:sticky md:top-[calc(var(--navbar-bottom,0px)+48px)]">
+      <div className={`${WIDE} grid gap-8 ${tabletStack ? "lg:grid-cols-[5fr_7fr] lg:gap-12" : "md:grid-cols-[5fr_7fr] md:gap-12"}`}>
+        <div className={`flex flex-col items-start gap-4 self-start ${tabletStack ? "lg:sticky lg:top-[calc(var(--navbar-bottom,0px)+48px)]" : "md:sticky md:top-[calc(var(--navbar-bottom,0px)+48px)]"}`}>
           <InkHeading className={H2} a="It’s already working." b="You wouldn’t be funding alone." />
           {/* The three things people ask before lending on a peer-to-peer platform (19 Nov 2026 critique): is it
               regulated, does it get repaid, and when does my money come back. All three are facts stated elsewhere on
@@ -1289,8 +1302,13 @@ const WHY2_QUESTIONS: QuestionCard[] = [
   PAN_INDIA,
 ];
 
-export function Why2Questions() {
-  return <PlainQuestionCards heading="Before you invest." headingClass={H2} inkHeading questionClass="text-[28px] leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]" cards={WHY2_QUESTIONS} icons={["faq-plus", "faq-nri", "faq-warning", "avatars-group"]} visuals={[<GetStartedAnim key="start" />, <NriAnim key="nri" />, <NoRepayAnim key="norepay" />, <ReachAnim key="reach" />]} flip navyLink large foundersCall />;
+// Version 4 (25 Nov 2026): "pan-India" with a non-breaking hyphen, so the card never splits it as "pan-" / "India".
+const V4_QUESTIONS: QuestionCard[] = WHY2_QUESTIONS.map((q) => (q === PAN_INDIA ? { ...q, question: q.question.replace("pan-India", "pan‑India") } : q));
+
+/** `compact` (Version 4, 25 Nov 2026): on phones the cards are only as tall as their questions (icon beside the
+ * question, 24px type), and "pan-India" never breaks across two lines. */
+export function Why2Questions({ compact = false }: { compact?: boolean } = {}) {
+  return <PlainQuestionCards heading="Before you invest." headingClass={H2} inkHeading questionClass={compact ? "text-[24px] leading-[30px] sm:text-[28px] sm:leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]" : "text-[28px] leading-[34px] md:text-h4 xl:text-[34px] xl:leading-[42px]"} cards={compact ? V4_QUESTIONS : WHY2_QUESTIONS} icons={["faq-plus", "faq-nri", "faq-warning", "avatars-group"]} visuals={[<GetStartedAnim key="start" />, <NriAnim key="nri" />, <NoRepayAnim key="norepay" />, <ReachAnim key="reach" />]} flip navyLink large foundersCall phoneRow={compact} />;
 }
 
 /** The shared testimonials, with their heading at this page’s section size (24 Nov 2026). */

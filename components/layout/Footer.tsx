@@ -4,7 +4,9 @@ import { footerLegalLinks, footerNavLinks } from "@/lib/content";
 export function Footer() {
   return (
     // As much room above the logo as below the footer (it sat flush against the last section, which cut into it).
-    <footer className="mx-auto flex w-full max-w-[1170px] flex-col gap-12 px-4 pb-12 pt-12 sm:gap-16 sm:px-6 sm:pb-16 sm:pt-16 lg:gap-[80px] lg:pb-[80px] lg:pt-[80px]">
+    // 25 Nov 2026: below tablets, room under the legal links for the floating Get started button (52px, 8px off the
+    // bottom; FloatingGetStarted), which used to cover them at the very end of the page.
+    <footer className="mx-auto flex w-full max-w-[1170px] flex-col gap-12 px-4 pb-[calc(84px+env(safe-area-inset-bottom))] pt-12 sm:gap-16 sm:px-6 sm:pt-16 md:pb-16 lg:gap-[80px] lg:pb-[80px] lg:pt-[80px]">
       <div className="flex flex-col items-center gap-[24px]">
         {/* The tree in grey; hovered, it fades to its own colours (rangde-logo-footer-colour.svg: the same paths, coloured
             as in the nav's logo). */}
@@ -19,7 +21,8 @@ export function Footer() {
               <a
                 key={link}
                 href="#"
-                className="whitespace-nowrap font-display text-p1 font-bold text-ink transition-opacity hover:opacity-70"
+                // 25 Nov 2026: 8px more above and below to tap (40px tall), taken back with negative margins so nothing moves.
+                className="-my-2 whitespace-nowrap py-2 font-display text-p1 font-bold text-ink transition-opacity hover:opacity-70"
               >
                 {link}
               </a>
@@ -63,10 +66,12 @@ export function Footer() {
 
         <div className="flex flex-col items-start gap-[16px] text-left font-display text-[10px] text-ink/48 sm:items-end sm:text-right">
           <p className="whitespace-nowrap font-medium leading-[16px]">&copy; 2024, Rang De P2P Financial Services Pvt. Ltd.</p>
-          <p className="max-w-[370px] font-normal leading-[16px]">
+          {/* 25 Nov 2026: on phones the lines 28px apart and each link padded 6px above and below, so every link is a
+              24px-tall target that doesn't overlap the line above or below (they were 12px tall, 16px apart). */}
+          <p className="max-w-[370px] font-normal leading-[28px] sm:leading-[16px]">
             {footerLegalLinks.map((link, i) => (
               <span key={link}>
-                <a href="#" className="underline decoration-from-font hover:text-ink/80">
+                <a href="#" className="py-1.5 underline decoration-from-font hover:text-ink/80 sm:py-0">
                   {link}
                 </a>
                 {i < footerLegalLinks.length - 1 && "   ·   "}

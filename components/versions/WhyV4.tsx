@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "motion/react";
 import Image from "next/image";
-import { useRef, type ReactNode } from "react";
+import { useRef, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { Icon, type IconName } from "@/components/ui";
 import { ScrollInk } from "./ScrollInk";
 import { HEAD, PAPER, SUB } from "./WhyThread2";
@@ -66,21 +66,40 @@ const LANES = [
 
 // Scroll, in screen heights: the line on its own first, then the cards, overlapping so the next is coming in at the
 // bottom as the one before leaves at the top.
-const LEAD = 0.6;
-const RUN = 1.2;
-const STEP = RUN * 0.62;
-const SPAN = LEAD + STEP * (OPTIONS.length - 1) + RUN;
+// 25 Nov 2026: phones move through it faster (about 4 screens of scrolling instead of almost 6): the line fills sooner
+// and each card crosses in less scroll, with the same overlap between cards.
+const timing = (lead: number, run: number) => {
+  const step = run * 0.62;
+  return { LEAD: lead, RUN: run, STEP: step, SPAN: lead + step * (OPTIONS.length - 1) + run };
+};
+const DESKTOP = timing(0.6, 1.2);
+const PHONE = timing(0.35, 0.8);
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+
+const PHONE_QUERY = "(max-width: 767px)";
+const subscribePhone = (cb: () => void) => {
+  const mq = window.matchMedia(PHONE_QUERY);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+/** True on phones (below Tailwind's md); false on the server, so the first paint is the tablet-and-up timing. */
+function useIsPhone() {
+  return useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE_QUERY).matches, () => false);
+}
 
 export function V4ProblemOptions({ video }: { video?: string }) {
   const reduce = useReducedMotion();
+  const { LEAD, RUN, STEP, SPAN } = useIsPhone() ? PHONE : DESKTOP;
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const p = useSpring(scrollYProgress, { stiffness: 220, damping: 36, restDelta: 0.0005 });
   // The line fills over the lead, and dims a little once the cards are crossing it.
   const fill = useTransform(scrollYProgress, [0, (LEAD * 0.85) / SPAN], [0, 1], { clamp: true });
-  const lineOpacity = useTransform(scrollYProgress, [LEAD / SPAN, (LEAD + 0.4) / SPAN], [1, 0.4], { clamp: true });
-  const askOpacity = useTransform(scrollYProgress, [(LEAD * 0.7) / SPAN, LEAD / SPAN], [0, 1], { clamp: true });
+  // 25 Nov 2026: written as functions of the scroll, not input/output ranges. With ranges, motion 13 hands an opacity
+  // to the browser's own scroll timeline and drops the ranges: the line dimmed and the question faded in across the
+  // whole section instead of over these short stretches (so the question stayed faint for most of it).
+  const lineOpacity = useTransform(scrollYProgress, (v) => 1 - 0.6 * clamp01((v - LEAD / SPAN) / (0.4 / SPAN)));
+  const askOpacity = useTransform(scrollYProgress, (v) => clamp01((v - (LEAD * 0.7) / SPAN) / ((LEAD * 0.3) / SPAN)));
 
   if (reduce) {
     return (
@@ -101,7 +120,12 @@ export function V4ProblemOptions({ video }: { video?: string }) {
 
   return (
     <section id="c-problem" aria-label={PROBLEM} className="mx-2 overflow-clip rounded-[24px]" style={{ backgroundColor: DARK }}>
-      <div ref={ref} className="relative" style={{ height: `${(1 + SPAN) * 100}svh` }}>
+      {/* The height from CSS (phones / tablets up), so it's right before the page is interactive too. */}
+      <div
+        ref={ref}
+        className="relative h-[var(--h-phone)] md:h-[var(--h-wide)]"
+        style={{ "--h-phone": `${(1 + PHONE.SPAN) * 100}svh`, "--h-wide": `${(1 + DESKTOP.SPAN) * 100}svh` } as CSSProperties}
+      >
         <div className="sticky top-[var(--navbar-bottom,0px)] h-[calc(100svh-var(--navbar-bottom,0px))] overflow-hidden px-4 [--cw:min(78vw,400px)] sm:px-6 md:[--cw:clamp(300px,28vw,440px)] lg:px-8">
           {video && (
             <>
@@ -109,16 +133,18 @@ export function V4ProblemOptions({ video }: { video?: string }) {
               <span aria-hidden className="pointer-events-none absolute inset-0 bg-text-grey-100/96" />
             </>
           )}
-          <motion.div className="relative flex h-full flex-col items-center justify-center gap-6 text-center" style={{ opacity: lineOpacity }}>
-            <h2 aria-hidden className={`${HEAD} max-w-[1120px] text-[34px] leading-[1.15] text-white md:text-[56px] lg:text-[64px]`}>
+          {/* 25 Nov 2026: only the line dims as the cards cross it; "What are their options?" stays at full strength (dimmed
+              with it, the lime was hard to read on the dark). */}
+          <div className="relative flex h-full flex-col items-center justify-center gap-6 text-center">
+            <motion.h2 aria-hidden className={`${HEAD} max-w-[1120px] text-[34px] leading-[1.15] text-white md:text-[56px] lg:text-[64px]`} style={{ opacity: lineOpacity }}>
               {WORDS.map((w, i) => (
                 <Word key={i} w={w} p={fill} at={i / WORDS.length} />
               ))}
-            </h2>
+            </motion.h2>
             <motion.p className="font-display text-[20px] font-bold md:text-[28px]" style={{ opacity: askOpacity, color: LIME }}>
               What are their options?
             </motion.p>
-          </motion.div>
+          </div>
           <ul className="pointer-events-none absolute inset-y-0 left-4 right-4 sm:left-6 sm:right-6 lg:left-8 lg:right-8">
             {OPTIONS.map((o, i) => (
               <RisingCard key={o.t} o={o} i={i} p={p} start={(LEAD + i * STEP) / SPAN} end={(LEAD + i * STEP + RUN) / SPAN} />
@@ -215,9 +241,12 @@ export function V4Close({ after, bento = false }: { after?: ReactNode; bento?: b
   if (bento) {
     return (
       <section id="c-close" className="mx-2 rounded-[24px] px-2 py-2 md:px-3 md:py-3" style={{ backgroundColor: PAPER }}>
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:grid-rows-[auto_auto] md:gap-3">
+        {/* 25 Nov 2026: the four-column grid from laptops up; tablets as phones (the close across the top, the photos side
+            by side under it), with the line and the call side by side, since four columns at 768px squeezed the close to
+            eight lines and the founders' line into a narrow strip. */}
+        <div className="grid grid-cols-2 gap-2 md:gap-3 lg:grid-cols-4 lg:grid-rows-[auto_auto]">
           {/* The close. */}
-          <div className="col-span-2 flex flex-col justify-between gap-10 rounded-[20px] bg-white p-8 md:row-span-2 md:p-12 lg:p-14">
+          <div className="col-span-2 flex flex-col justify-between gap-10 rounded-[20px] bg-white p-8 md:p-12 lg:row-span-2 lg:p-14">
             {heading}
             {invest}
           </div>
@@ -226,8 +255,8 @@ export function V4Close({ after, bento = false }: { after?: ReactNode; bento?: b
             { src: "/images/founders/ram-v3.webp", alt: "Ram, co-founder of Rang De, speaking at an event", name: "Ram" },
             { src: "/images/founders/smita-v3.webp", alt: "Smita, co-founder of Rang De, speaking at an event", name: "Smita" },
           ].map((f) => (
-            <figure key={f.src} className="relative aspect-[4/5] min-w-0 overflow-hidden rounded-[20px] bg-ink/8 md:aspect-auto md:min-h-[260px]">
-              <Image src={f.src} alt={f.alt} fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover" />
+            <figure key={f.src} className="relative aspect-[4/5] min-w-0 overflow-hidden rounded-[20px] bg-ink/8 md:aspect-[5/4] lg:aspect-auto lg:min-h-[260px]">
+              <Image src={f.src} alt={f.alt} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover" />
               <figcaption className="absolute bottom-3 left-3 rounded-full bg-white px-3 py-1 font-display text-[13px] font-bold text-ink">{f.name}, co-founder</figcaption>
             </figure>
           ))}

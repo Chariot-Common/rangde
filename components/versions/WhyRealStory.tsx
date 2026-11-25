@@ -102,7 +102,9 @@ export const CHAPTERS = [
 /** `compact` (/v/why2, 23 Nov 2026): the label in the design system's H5 bold (11px capitals, 8% tracking), 8px from
  * the pill's top and bottom and 12px at the sides (8px of pill padding plus each item's 4px), smaller dots and a much lighter
  * shadow. */
-export function ChapterPill({ chapters = CHAPTERS, even = false, compact = false }: { chapters?: readonly { id: string; label: string }[]; even?: boolean; compact?: boolean } = {}) {
+/** `desktopOnly` (Version 4, 25 Nov 2026): no pill on phones or tablets, only from laptops up (1024px), where it has room
+ * beside the sections' headings instead of sitting on them. */
+export function ChapterPill({ chapters = CHAPTERS, even = false, compact = false, desktopOnly = false }: { chapters?: readonly { id: string; label: string }[]; even?: boolean; compact?: boolean; desktopOnly?: boolean } = {}) {
   const [active, setActive] = useState(-1);
   useEffect(() => {
     const els = chapters.map((c) => document.getElementById(c.id));
@@ -130,7 +132,7 @@ export function ChapterPill({ chapters = CHAPTERS, even = false, compact = false
   // name's box opens from 0 to the text's own width while the text fades in, and the dot shrinks evenly to nothing.
   const t = { duration: 0.45, ease: EASE };
   return (
-    <div className={`pointer-events-none sticky z-30 flex h-0 justify-center ${even ? "top-[var(--navbar-bottom,0px)]" : "top-[calc(var(--navbar-bottom,0px)+12px)]"}`}>
+    <div className={`pointer-events-none sticky z-30 ${desktopOnly ? "hidden lg:flex" : "flex"} h-0 justify-center ${even ? "top-[var(--navbar-bottom,0px)]" : "top-[calc(var(--navbar-bottom,0px)+12px)]"}`}>
       <AnimatePresence>
         {active >= 0 && (
           <motion.nav

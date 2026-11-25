@@ -51,7 +51,9 @@ function FlipCoin({ icon, auto = false }: { icon: IconName; auto?: boolean }) {
  * live call with Ram and Smita). */
 /** `visuals` (/v/why2, 24 Nov 2026): an animation per card, shown in the pop-up under the question (same order as the
  * cards; leave a slot empty for none). */
-export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false, foundersCall = false, cards: own, icons = COIN_ICONS, visuals, headingClass, questionClass, inkHeading = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean; foundersCall?: boolean; cards?: QuestionCard[]; icons?: IconName[]; visuals?: (ReactNode | undefined)[]; headingClass?: string; questionClass?: string; inkHeading?: boolean }) {
+/** `phoneRow` (Version 4, 25 Nov 2026): on phones each card is as tall as its question, with the icon beside it at the
+ * bottom right, instead of a 300px-tall card that is mostly empty. Tablets and up are unchanged. */
+export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = false, navyLink = false, autoHighlight = false, large = false, fadeIn = false, foundersCall = false, phoneRow = false, cards: own, icons = COIN_ICONS, visuals, headingClass, questionClass, inkHeading = false }: { heading?: string; phoneHeading?: string; count?: 4 | 5; flip?: boolean; navyLink?: boolean; autoHighlight?: boolean; large?: boolean; fadeIn?: boolean; foundersCall?: boolean; phoneRow?: boolean; cards?: QuestionCard[]; icons?: IconName[]; visuals?: (ReactNode | undefined)[]; headingClass?: string; questionClass?: string; inkHeading?: boolean }) {
   const cards = own ?? QUESTION_CARDS.slice(0, count);
   const reduce = useReducedMotion();
   const fade = fadeIn && !reduce;
@@ -118,9 +120,9 @@ export function PlainQuestionCards({ heading, phoneHeading, count = 4, flip = fa
             aria-haspopup="dialog"
             aria-label={`Open: ${c.question}`}
             onClick={() => setOpen(i)}
-            className={`group flex cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey text-left ${large ? "min-h-[300px] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[500px] lg:rounded-[20px] lg:p-10" : "min-h-[220px] p-6 sm:min-h-[260px]"} ${flip ? `transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8 ${auto === i ? "max-md:scale-[1.025] max-md:bg-primary-8" : ""}` : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100`}
+            className={`group flex cursor-pointer flex-col justify-between gap-8 rounded-[16px] bg-bg-grey text-left ${phoneRow ? "max-sm:flex-row max-sm:items-end max-sm:gap-4 max-sm:min-h-0" : ""} ${large ? "min-h-[300px] p-6 sm:min-h-[400px] sm:p-8 lg:min-h-[500px] lg:rounded-[20px] lg:p-10" : "min-h-[220px] p-6 sm:min-h-[260px]"} ${flip ? `transition-[background-color,scale] duration-600 ease-out hover:scale-[1.025] hover:duration-1200 hover:bg-primary-8 ${auto === i ? "max-md:scale-[1.025] max-md:bg-primary-8" : ""}` : "transition-colors duration-200 hover:bg-text-grey-8"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-text-grey-100`}
           >
-            <span className={`font-display font-bold text-text-grey-100 [text-wrap:balance] ${questionClass ?? (large ? "text-[24px] leading-[30px] md:text-h4 xl:text-[36px] xl:leading-[44px]" : "text-p1")}`}>{c.question}</span>
+            <span className={`font-display font-bold text-text-grey-100 [text-wrap:balance] ${phoneRow ? "max-sm:min-w-0 max-sm:flex-1 max-sm:self-start" : ""} ${questionClass ?? (large ? "text-[24px] leading-[30px] md:text-h4 xl:text-[36px] xl:leading-[44px]" : "text-p1")}`}>{c.question}</span>
             {flip && icons[i] ? <span className={`flex self-end ${large ? "lg:scale-125 lg:origin-bottom-right" : ""}`}><FlipCoin icon={icons[i]} auto={auto === i} /></span> : <span aria-hidden className="flex size-[48px] items-center justify-center self-end rounded-full bg-text-grey-64 text-white transition-transform duration-200 group-hover:scale-105">
               <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
                 <path d="M12 5v14M5 12h14" />
