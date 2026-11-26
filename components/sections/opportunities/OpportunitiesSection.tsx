@@ -19,7 +19,7 @@ import type { ReactNode } from "react";
  * `fresh` (Versions 2 and 3 updates, 26 Nov 2026): `navy`, with the newer cards (FreshCard), on a white card, and the
  * heading as one line, "14 people are raising a loan right now", with the live signal.
  */
-export async function OpportunitiesSection({ inked = false, secondaryCta, after, roomy = false, navy: navyProp = false, fresh = false }: { inked?: boolean; secondaryCta?: ReactNode; after?: ReactNode; roomy?: boolean; navy?: boolean; fresh?: boolean } = {}) {
+export async function OpportunitiesSection({ inked = false, secondaryCta, after, roomy = false, navy: navyProp = false, fresh = false, note }: { inked?: boolean; secondaryCta?: ReactNode; after?: ReactNode; roomy?: boolean; navy?: boolean; fresh?: boolean; /** With `fresh`: a short line under the heading (Version 2 updates: when loans go out). */ note?: string } = {}) {
   const navy = navyProp || fresh;
   // One card (and one in the count) per person, the same rule India After Dark uses, so both
   // sites say the same number of people are waiting.
@@ -39,6 +39,7 @@ export async function OpportunitiesSection({ inked = false, secondaryCta, after,
           <h2 className="max-w-[760px] font-display text-[32px] font-bold leading-[1.06] tracking-[-0.02em] text-ink [text-wrap:balance] md:text-[48px] lg:text-[56px]">
             {individuals.length} people are raising a loan right now.
           </h2>
+          {note && <p className="max-w-[560px] font-display text-p2 font-medium text-ink/64 [text-wrap:balance]">{note}</p>}
         </div>
       ) : (
       <div className="flex flex-col items-center gap-3 px-4 text-center">

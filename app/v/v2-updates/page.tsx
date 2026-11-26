@@ -41,10 +41,15 @@ const MOBILE_LEAD = (
   </>
 );
 
-// Copy review (26 Nov 2026): step 1 in plain words; step 2 without "Select from a pool of individuals…", which added nothing.
+// Copy from the 2024–26 lender feedback (26 Nov 2026), one point per step, said to the reader: how borrowers are chosen
+// and the loan sized, KYC, where the money waits (never with Rang De), late payments, the credit record. Facts from
+// rangde.in (see WhyTrust.tsx). TO CONFIRM with the team: that the partner sets the loan from what the business can repay.
 const STEP_BODIES = [
-  "Before a profile goes live, we and our partners on the ground visit, check and verify every borrower.",
-  "Every profile shares who they are, why they need the loan, and info on how they plan to repay it.",
+  "Every borrower comes through a local partner who knows their community. The partner checks the business and sets a loan it can repay.",
+  "See who they are, what the loan is for and how they’ll repay. You both complete KYC first, as the RBI requires.",
+  "Your money waits in an escrow account held by a bank’s trustee, never with Rang De. On the 1st or 15th, it goes straight to their bank.",
+  "Repayments land in your Rang De balance every month. If one runs late, the local partner follows up in person.",
+  "Every repayment goes to the credit bureaus that banks check. On time or late, it builds their real record.",
 ];
 
 const STEP_TITLES = ["We find and vet every borrower", "You choose who to back", "Your money reaches them", "Track every rupee", "Their credit history grows"];
@@ -93,7 +98,8 @@ export default async function V2Updates() {
           </>
         }
       />
-      <OpportunitiesSection inked fresh />
+      {/* Lender feedback (May 2026): fewer profiles show for a day or two after each disbursal day, so say why up front. */}
+      <OpportunitiesSection inked fresh note="Loans go out on the 1st and 15th. Just after, fewer people are listed for a day or two." />
       <V1UpdatesQuestions />
     </div>
   );
