@@ -1,0 +1,463 @@
+"use client";
+
+import Image from "next/image";
+import { AnimatePresence, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, type MotionValue } from "motion/react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type Ref } from "react";
+
+/*
+ * Version 2 updates (26 Nov 2026): Version 2's loop (V4Cycle) exactly, copied so its words can change here alone: the
+ * Opportunities line, "With a credit history, banks can say yes…" (was "And with it, access to the formal financial system…").
+ *
+ * Version 2's "Why it matters" (Figma "why it matters high fidelity", node 3002:14071): the loan as a loop the borrower is
+ * otherwise locked out of. Your social investment feeds their business → repayment → credit history → opportunities,
+ * which feeds back into the business.
+ *
+ * The badge and heading are there from the start and scroll by as normal; the heading fills in, left to right (its first
+ * line from text grey 24 to text grey 100, then the second from green dark at 24% to green dark). Then the stage pins:
+ * "Your social investment" at the top (kept on screen, from the review call of 10 Nov 2026), its line filling green
+ * down into Business, and the loop under it, an oval up to 1040px wide through the four steps. Business becomes the
+ * current step and the oval fills round as the progress bar, one step at a time. The open step's line sits in the
+ * middle (under the oval on phones) with its animated icon over it: P1, up to 600px wide, filling in letter by letter as
+ * the loop travels on to the next step. With reduced motion it is shown finished, with all four lines.
+ */
+
+const ICONS = "/images/why-rangde-v2";
+const STEPS = [
+  { label: "Business", icon: `${ICONS}/icon-banknotes.webp`, text: "They buy equipment, stock a shop, expand a small business, buy livestock, or take on a new opportunity." },
+  { label: "Repayment", icon: `${ICONS}/icon-hand-check.webp`, text: "They repay month by month, on the dates their loan agreement sets out, from what the business earns." },
+  { label: "Credit history", icon: `${ICONS}/icon-bar-chart.webp`, text: "Every repayment is reported to the credit bureaus. Borrowers who may never have had a credit file start building one." },
+  { label: "Opportunities", icon: `${ICONS}/icon-target-center.webp`, text: "With a credit history, banks can say yes. More capital goes back into the business." },
+];
+const N = STEPS.length;
+const LINE_1 = "You’re not just giving someone a loan.";
+const LINE_2 = "You’re helping them build their financial future.";
+// From the Figma file; green dark is a token (green-dark), these are not yet.
+const GREEN_LIGHT = "#cbe0b8";
+const GREEN_HIGHLIGHT = "#62af1d";
+const GREEN_DARK_24 = "rgba(58, 110, 12, 0.24)";
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+// Through the pinned ring, 0 → 1: the line's last stretch fills into Business, Business lights up, then the four steps.
+const Q = { segment: [0, 0.05], businessOn: 0.05, steps: [0.08, 0.97] } as const;
+
+const ramp = (v: number, [a, b]: readonly [number, number]) => Math.min(1, Math.max(0, (v - a) / (b - a)));
+
+// The ring's layout. Step heights: py-2 + 24px line (tablets up), py-1.5 + 22px (phones).
+const RING_TOP = 53; // Business's centre below the top of the pinned stage
+const BOTTOM_GAP = 24;
+const CHIP_H = 42;
+const CHIP_H_PHONE = 36;
+const PHONE_TEXT = 190; // room under the ring for the step's line on phones
+const LOOP_MAX_W = 1040; // the oval's widest (review call, 10 Nov 2026: an oval, not a rounded rectangle)
+const TEXT_W = 600; // the open step's line, in the middle: P1, half the old width
+const TEXT_GAP = 24; // the least room it leaves to Repayment and Opportunities
+const TEXT_DONE = 0.75; // the open step's line is fully filled three quarters of the way to the next step
+const TRACK_PX = 2;
+const PROGRESS_PX = 4;
+
+const PHONE = "(max-width: 767px)";
+const subscribePhone = (cb: () => void) => {
+  const m = window.matchMedia(PHONE);
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
+
+type ChipState = "upcoming" | "done" | "current";
+
+export function V2Cycle() {
+  const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
+  const reduce = useReducedMotion();
+  const headRef = useRef<HTMLHeadingElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+
+  // The loop, sized to the pinned stage (see the comment at the top): as wide as the page's content, Opportunities and
+  // Repayment against its left and right edges, and as tall as Business's centre to Credit history's.
+  const [box, setBox] = useState({ w: 1200, h: 560 });
+  // Opportunities and Repayment share one width (the wider of the two), so the loop is symmetrical and Business, the line
+  // into it and Credit history all sit on the page's centre line.
+  const [sideW, setSideW] = useState(0);
+  // Phones: the stage hugs its content, so it is pinned in the middle of the screen under the nav, with the room left over
+  // split evenly above and below it (pinned to the top, it left half a screen of white under the step's line).
+  const [phoneTop, setPhoneTop] = useState(0);
+  const oppRef = useRef<HTMLSpanElement>(null);
+  const repRef = useRef<HTMLSpanElement>(null);
+  // Every step's chip, measured so the loop can stop short of each one (for the arrows into them).
+  const chipEls = useRef<(HTMLSpanElement | null)[]>([]);
+  const [chipSizes, setChipSizes] = useState(STEPS.map(() => ({ w: 120, h: 40 })));
+  useEffect(() => {
+    if (reduce) return;
+    const size = () => {
+      const stage = stageRef.current?.getBoundingClientRect();
+      if (!stage) return;
+      const chip = phone ? CHIP_H_PHONE : CHIP_H;
+      // "Your social investment" and the line down from it sit above the loop, inside the pinned stage.
+      const top = ringRef.current?.offsetTop ?? RING_TOP;
+      const w = Math.round(Math.min(stage.width, LOOP_MAX_W));
+      const sw = Math.ceil(Math.max(oppRef.current?.offsetWidth ?? 0, repRef.current?.offsetWidth ?? 0));
+      // Phones: a circle, as wide as the side steps allow (the full height made a tall, thin oval), with the step's line
+      // right under it. The stage there hugs its content, so the room is worked out from the screen, not the stage.
+      const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--navbar-bottom")) || 0;
+      const avail = phone ? window.innerHeight - nav : stage.height;
+      let h = avail - top - BOTTOM_GAP - chip / 2 - (phone ? PHONE_TEXT : 0);
+      if (phone) {
+        h = Math.min(h, w - sw);
+        // Centred in what's visible: between the nav and the floating Get started button (52px + 8px under it + 16px).
+        setPhoneTop(Math.max(0, Math.round((window.innerHeight - nav - 76 - stage.height) / 2)));
+      }
+      setBox({ w, h: Math.max(160, Math.floor(h)) });
+      setSideW(sw);
+      setChipSizes((prev) => {
+        const next = STEPS.map((_, i) => ({ w: chipEls.current[i]?.offsetWidth ?? prev[i].w, h: chipEls.current[i]?.offsetHeight ?? prev[i].h }));
+        return next.every((c, i) => c.w === prev[i].w && c.h === prev[i].h) ? prev : next;
+      });
+    };
+    size();
+    // The stage's height follows the nav's (--navbar-bottom), which settles after first paint, so watch the stage itself.
+    const ro = new ResizeObserver(size);
+    if (stageRef.current) ro.observe(stageRef.current);
+    return () => ro.disconnect();
+  }, [reduce, phone]);
+
+  // The scroll-linked fills, worked out from where things sit on screen: the heading, the line into the loop, and the
+  // pinned loop. For smoothness the continuous parts (the loop's green, the line's green) go straight to the DOM through
+  // motion values; React only re-renders when something discrete changes (a letter fills, a step moves on).
+  const progress = useMotionValue(reduce ? 1 : 0); // the loop's green, 0 → 1 round it
+  const segment = useMotionValue(reduce ? 1 : 0); // the line's last stretch into Business
+  const pathRef = useRef<SVGPathElement>(null);
+  // The ₹ marker rides the front of the green round the loop (hidden before it sets off and once it is back at Business).
+  const markerRef = useRef<SVGGElement>(null);
+  const placeMarker = (v: number) => {
+    const path = pathRef.current;
+    const m = markerRef.current;
+    if (!path || !m) return;
+    const show = v > 0.004 && v < 0.996;
+    m.style.opacity = show ? "1" : "0";
+    if (!show) return;
+    const pt = path.getPointAtLength(path.getTotalLength() * v);
+    m.setAttribute("transform", `translate(${pt.x} ${pt.y})`);
+  };
+  useMotionValueEvent(progress, "change", (v) => {
+    pathRef.current?.setAttribute("stroke-dashoffset", String(1 - v));
+    placeMarker(v);
+  });
+  const [view, setView] = useState({ f1: 0, f2: 0, started: false, at: 0, finished: false, lineFilled: 0 });
+  const { scrollY } = useScroll();
+  const update = useCallback(() => {
+    const vh = window.innerHeight;
+    // The nav writes its bottom edge as an inline style on <html>: reading that avoids a style recalculation every frame.
+    const root = document.documentElement;
+    const nav = parseFloat(root.style.getPropertyValue("--navbar-bottom")) || parseFloat(getComputedStyle(root).getPropertyValue("--navbar-bottom")) || 0;
+    const h = headRef.current?.getBoundingClientRect();
+    const w = wrapRef.current?.getBoundingClientRect();
+    const st = stageRef.current?.getBoundingClientRect();
+    if (!h || !w || !st) return;
+    // The heading: from its top at 85% of the screen to its bottom at 35%.
+    const head = Math.min(1, Math.max(0, (0.85 * vh - h.top) / (0.5 * vh + h.height)));
+    // The loop: 0 as it pins, 1 as it lets go.
+    const q = Math.min(1, Math.max(0, (nav - w.top) / Math.max(1, w.height - st.height)));
+    const s = ramp(q, Q.steps) * N;
+    progress.set(s / N);
+    segment.set(ramp(q, Q.segment));
+    const started = q >= Q.businessOn;
+    const finished = s >= N;
+    const at = Math.min(N - 1, Math.floor(s));
+    const within = finished ? 1 : s - at;
+    // The open step's line is fully filled TEXT_DONE of the way to the next step, so a quick scroll still leaves it readable.
+    const lineFilled = started ? Math.round(Math.min(1, within / TEXT_DONE) * STEPS[at].text.length) : 0;
+    const f1 = Math.round(ramp(head, [0, 0.5]) * LINE_1.length);
+    const f2 = Math.round(ramp(head, [0.5, 1]) * LINE_2.length);
+    setView((v) =>
+      v.f1 === f1 && v.f2 === f2 && v.started === started && v.at === at && v.finished === finished && v.lineFilled === lineFilled
+        ? v
+        : { f1, f2, started, at, finished, lineFilled },
+    );
+  }, [progress, segment]);
+  useMotionValueEvent(scrollY, "change", update);
+  useEffect(() => {
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [update, box.h]);
+
+  const started = reduce || view.started;
+  const finished = reduce || view.finished;
+  const at = reduce ? N - 1 : view.at;
+  const lineFilled = reduce ? STEPS[at].text.length : view.lineFilled;
+  const stateOf = (i: number): ChipState => (!started ? "upcoming" : finished || i < at ? "done" : i === at ? "current" : "upcoming");
+  const filled1 = reduce ? LINE_1.length : view.f1;
+  const filled2 = reduce ? LINE_2.length : view.f2;
+
+  // The path: an oval through the four steps' centres (Business at the top, Repayment right, Credit history at the
+  // bottom, Opportunities left), drawn clockwise from Business. Symmetrical both ways, so each step is a quarter of it.
+  const xl = sideW / 2;
+  const xr = box.w - sideW / 2;
+  const cx = box.w / 2;
+  const rx = Math.max(0, (xr - xl) / 2);
+  const ry = box.h / 2;
+  // An arrow at the end of each stretch of the loop, pointing into the next step, with a gap between its tip and the step
+  // (the line is broken there). θ runs clockwise from Business at the top.
+  const at_ = (t: number) => [cx + rx * Math.sin(t), ry - ry * Math.cos(t)] as const;
+  const r2 = (n: number) => Math.round(n * 100) / 100; // so the server's and the browser's numbers match exactly
+  const ARROW_GAP = phone ? 6 : 8;
+  const arrows = [0, 1, 2, 3].map((k) => {
+    const j = (k + 1) % N; // the step this stretch runs into
+    const tc = ((k + 1) / N) * Math.PI * 2;
+    const [ccx, ccy] = at_(tc);
+    const hw = chipSizes[j].w / 2 + ARROW_GAP;
+    const hh = chipSizes[j].h / 2 + ARROW_GAP;
+    // Back along the loop from the step's centre until clear of its chip (and the gap).
+    let t = tc;
+    for (let n = 0; n < 2000; n++) {
+      const [x, y] = at_(t);
+      if (Math.abs(x - ccx) > hw || Math.abs(y - ccy) > hh) break;
+      t -= 0.0015;
+    }
+    const [x, y] = at_(t);
+    const deg = (Math.atan2(ry * Math.sin(t), rx * Math.cos(t)) * 180) / Math.PI;
+    const passed = reduce || finished || at > k;
+    // The gap: the loop between the arrow's tip and the step's centre, painted over in white (the chip covers the rest).
+    const gap = `M ${r2(x)} ${r2(y)} A ${r2(rx)} ${r2(ry)} 0 0 1 ${r2(ccx)} ${r2(ccy)}`;
+    return { x: r2(x), y: r2(y), deg: r2(deg), passed, gap };
+  });
+  const d = `M ${cx} 0 A ${rx} ${ry} 0 0 1 ${cx} ${box.h} A ${rx} ${ry} 0 0 1 ${cx} 0 Z`;
+  const side = sideW ? { minWidth: sideW } : undefined;
+  const chipAt: CSSProperties[] = [
+    { left: "50%", top: 0, transform: "translate(-50%, -50%)" },
+    { right: 0, top: "50%", transform: "translateY(-50%)", ...side },
+    { left: "50%", top: "100%", transform: "translate(-50%, -50%)" },
+    { left: 0, top: "50%", transform: "translateY(-50%)", ...side },
+  ];
+
+  const ring = (
+    <div ref={ringRef} className="relative mx-auto shrink-0" style={{ width: box.w, maxWidth: "100%", height: box.h }}>
+      <svg aria-hidden width={box.w} height={box.h} className="absolute left-0 top-0 overflow-visible">
+        <path d={d} fill="none" stroke="var(--color-text-grey-24)" strokeWidth={TRACK_PX} />
+        <path
+          ref={pathRef}
+          d={d}
+          fill="none"
+          stroke={GREEN_HIGHLIGHT}
+          strokeWidth={PROGRESS_PX}
+          strokeLinecap="round"
+          pathLength={1}
+          strokeDasharray="1 1"
+          strokeDashoffset={1 - progress.get()}
+        />
+        {arrows.map((a, k) => (
+          <path key={`gap-${k}`} d={a.gap} fill="none" stroke="#fff" strokeWidth={PROGRESS_PX + 6} />
+        ))}
+        {arrows.map((a, k) => (
+          <path
+            key={k}
+            transform={`translate(${a.x} ${a.y}) rotate(${a.deg})`}
+            d={phone ? "M -7 -5 L 0 0 L -7 5" : "M -9 -6.5 L 0 0 L -9 6.5"}
+            fill="none"
+            stroke={a.passed ? GREEN_HIGHLIGHT : "var(--color-text-grey-40)"}
+            strokeWidth={a.passed ? PROGRESS_PX : TRACK_PX + 0.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ transition: "stroke .3s" }}
+          />
+        ))}
+        {/* Your money, going round. */}
+        <g ref={markerRef} style={{ opacity: 0, transition: "opacity .25s" }}>
+          <circle r={15} fill="#fff" stroke={GREEN_HIGHLIGHT} strokeWidth={2.5} />
+          <text textAnchor="middle" dominantBaseline="central" fontSize={15} fontWeight={700} fill="#3A6E0C" fontFamily="var(--font-inter), Inter, sans-serif">
+            ₹
+          </text>
+        </g>
+      </svg>
+      {STEPS.map((step, i) => (
+        <Chip
+          key={step.label}
+          ref={(el: HTMLSpanElement | null) => {
+            chipEls.current[i] = el;
+            if (i === 1) repRef.current = el;
+            if (i === 3) oppRef.current = el;
+          }} label={step.label} state={stateOf(i)} style={chipAt[i]} />
+      ))}
+      {/* The open step's line, in the middle of the loop (laptops and tablets): its icon over it, P1, centred, 600px wide, but
+          never running under Repayment or Opportunities. */}
+      {!phone && !reduce && (
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center"
+          style={{ width: TEXT_W, maxWidth: Math.max(240, box.w - 2 * sideW - 2 * TEXT_GAP) }}
+        >
+          <StepLine started={started} at={at} filled={lineFilled} large />
+          {/* Before it sets off: what the loop is, so the middle isn't empty. */}
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 transition-opacity duration-300" style={{ opacity: started ? 0 : 1 }} aria-hidden>
+            <span className="flex size-[64px] items-center justify-center rounded-[16px] font-display text-[30px] font-bold text-green-dark" style={{ backgroundColor: GREEN_LIGHT }}>
+              ₹
+            </span>
+            <p className="font-display text-p1 font-bold text-text-grey-80 lg:text-[20px] lg:leading-[30px]">Follow one loan round the loop</p>
+            <p className="font-display text-p3 font-medium text-text-grey-48">Keep scrolling</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <section aria-label="How a loan builds a financial future" className="mx-2 flex flex-col items-center rounded-[16px] bg-white px-4 pt-ds-9 sm:px-8">
+      {/* Badge, eyebrow and heading: all there from the start; the heading fills in as it scrolls by. */}
+      <div className="flex flex-col items-center gap-ds-6 text-center">
+        <div className="relative size-[80px] md:size-[120px]">
+          <Image src="/images/approaches/why-it-matters-badge.svg" alt="" fill unoptimized />
+        </div>
+        <div className="flex max-w-[1000px] flex-col items-center gap-2">
+          <p className="font-display text-h5 font-bold uppercase tracking-[0.88px] text-text-grey-80">Why it matters</p>
+          <h2 ref={headRef} aria-label={`${LINE_1} ${LINE_2}`} className="font-display text-h3 font-bold [text-wrap:balance]">
+            <span aria-hidden className="block">
+              {LINE_1.split("").map((ch, i) => (
+                <span key={i} className={i < filled1 ? "text-text-grey-100" : "text-text-grey-24"}>
+                  {ch}
+                </span>
+              ))}
+            </span>
+            <span aria-hidden className="block">
+              {LINE_2.split("").map((ch, i) => (
+                <span key={i} className={i < filled2 ? "text-green-dark" : undefined} style={i < filled2 ? undefined : { color: GREEN_DARK_24 }}>
+                  {ch}
+                </span>
+              ))}
+            </span>
+          </h2>
+        </div>
+      </div>
+
+      <div className="h-ds-6 shrink-0" />
+      {reduce ? (
+        <>
+          <Start />
+          <Connector height={RING_TOP} fill={1} />
+          {ring}
+          <ol className="mt-ds-6 flex max-w-[560px] flex-col gap-3 pb-r9 text-center">
+            {STEPS.map((step) => (
+              <li key={step.label} className="font-display text-p3 font-bold text-text-grey-80">
+                <span className="text-green-dark">{step.label}.</span> {step.text}
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : (
+        // The ring pins once it is fully in view, and the steps play through the scroll from there.
+        <div ref={wrapRef} className="relative w-full" style={{ height: "calc(4.5 * (100svh - var(--navbar-bottom, 0px)))" }}>
+          <div
+            ref={stageRef}
+            className="sticky flex w-full flex-col items-center"
+            // Phones: only as tall as what's in it, so no blank screen is left under the step's line when it lets go.
+            style={{ top: phone ? `calc(var(--navbar-bottom, 0px) + ${phoneTop}px)` : "var(--navbar-bottom, 0px)", height: phone ? "auto" : "calc(100svh - var(--navbar-bottom, 0px))" }}
+          >
+            {/* Where it starts, kept on screen with the loop (review call): the line out of it fills green into Business. */}
+            <div className="h-4 shrink-0" />
+            <Start />
+            <Connector height={RING_TOP} fill={segment} />
+            {ring}
+            {/* Phones: the line under the ring. */}
+            {phone && (
+              <div className="mt-10 min-h-[132px] max-w-[320px] text-center">
+                <StepLine started={started} at={at} filled={lineFilled} />
+                {/* Where you are in the loop: step n of 4, a dot for each. */}
+                <div aria-hidden className="mt-5 flex items-center justify-center gap-3" style={{ opacity: started ? 1 : 0 }}>
+                  <span className="font-display text-[11px] font-bold uppercase leading-[14px] tracking-[0.88px] text-text-grey-48">
+                    Step {at + 1} of {N}
+                  </span>
+                  <span className="flex gap-1.5">
+                    {STEPS.map((step, i) => (
+                      <span key={step.label} className="h-[6px] rounded-full transition-all duration-300" style={{ width: i === at ? 18 : 6, backgroundColor: i <= at ? GREEN_HIGHLIGHT : "var(--color-text-grey-16)" }} />
+                    ))}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <ol className="sr-only">
+        {STEPS.map((step) => (
+          <li key={step.label}>
+            {step.label}: {step.text}
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+/** "Your social investment": where the loop starts. */
+function Start() {
+  return (
+    <div className="shrink-0 rounded-[8px] border-[1.2px] border-solid border-green-dark bg-white px-4 py-2 font-display text-p2 font-medium text-text-grey-100">
+      Your social investment
+    </div>
+  );
+}
+
+/** A stretch of the line from "Your social investment" to Business: the ring's grey track, with a green fill (the ring's
+ * progress width) growing down it as `fill` goes 0 → 1. */
+function Connector({ ref, height, fill }: { ref?: Ref<HTMLDivElement>; height: number; fill: number | MotionValue<number> }) {
+  return (
+    <div ref={ref} aria-hidden className="relative flex w-[4px] shrink-0 justify-center" style={{ height }}>
+      <span className="h-full bg-text-grey-24" style={{ width: TRACK_PX }} />
+      <motion.span className="absolute inset-x-0 top-0 origin-top rounded-full" style={{ height: "100%", backgroundColor: GREEN_HIGHLIGHT, scaleY: fill }} />
+    </div>
+  );
+}
+
+/** A step on the ring (Figma 3002:14131…): upcoming is white with a grey outline; done is green light with a green outline;
+ * current is filled green dark, with white text and a soft shadow. */
+function Chip({ ref, label, state, style }: { ref?: Ref<HTMLSpanElement>; label: string; state: ChipState; style: CSSProperties }) {
+  const cls =
+    state === "current"
+      ? "border-green-dark bg-green-dark text-white shadow-[0_8px_12px_rgba(51,13,110,0.24)]"
+      : state === "done"
+        ? "text-green-dark"
+        : "border-text-grey-16 bg-white text-text-grey-64";
+  return (
+    <span
+      ref={ref}
+      className={`absolute whitespace-nowrap rounded-[8px] border-[1.2px] border-solid px-3 py-1.5 text-center font-display text-p3 font-medium transition-[background-color,color,border-color,box-shadow] duration-300 md:px-4 md:py-2 md:text-p2 ${cls}`}
+      style={{ ...style, ...(state === "done" ? { backgroundColor: GREEN_LIGHT, borderColor: GREEN_HIGHLIGHT } : null) }}
+      aria-current={state === "current" ? "step" : undefined}
+    >
+      {label}
+    </span>
+  );
+}
+
+/** The open step's line: text grey 24 to begin with, filling in to text grey 80 letter by letter as `within` goes 0 → 1.
+ * `large`: P1 with the step's icon over it (in the middle of the loop on laptops and tablets); otherwise P2 (under it on
+ * phones), with a smaller icon. */
+function StepLine({ started, at, filled, large = false }: { started: boolean; at: number; filled: number; large?: boolean }) {
+  const text = STEPS[at].text;
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={started ? at : "idle"}
+        className="flex flex-col items-center gap-3"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: started ? 1 : 0, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.3, ease: EASE }}
+      >
+        {/* The step's animated icon (as a mask, in green dark) on a light green tile. */}
+        <span aria-hidden className={`flex items-center justify-center rounded-[16px] ${large ? "size-[64px]" : "size-[44px] rounded-[12px]"}`} style={{ backgroundColor: GREEN_LIGHT }}>
+          <span
+            className={`block bg-green-dark ${large ? "size-[34px]" : "size-[24px]"}`}
+            style={{ WebkitMask: `url(${STEPS[at].icon}) center / contain no-repeat`, mask: `url(${STEPS[at].icon}) center / contain no-repeat` }}
+          />
+        </span>
+        <p className={`font-display font-bold [text-wrap:balance] ${large ? "text-p1 lg:text-[20px] lg:leading-[30px]" : "text-p2"}`}>
+          {text.split("").map((ch, i) => (
+            <span key={i} className={i < filled ? "text-text-grey-80" : "text-text-grey-24"}>
+              {ch}
+            </span>
+          ))}
+        </p>
+      </motion.div>
+    </AnimatePresence>
+  );
+}

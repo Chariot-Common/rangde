@@ -46,9 +46,10 @@ const SWIPE_PX = 40;
 
 /** `swipe` (Version 2, phones and tablets): swiping the animation frame moves between the steps, as a carousel does: drag it
  * to the left for the next step, to the right for the one before (both wrap round). Tapping the progress bar still works. */
-/** `titles` (Version 1 updates, 26 Nov 2026): shorter step titles, in step order, in place of the ones above. */
-export function V4HowItWorks({ children, swipe = false, titles }: { children?: ReactNode; swipe?: boolean; titles?: string[] }) {
-  const STEPS = BASE_STEPS.map((s, i) => ({ ...s, title: titles?.[i] ?? s.title }));
+/** `titles` (Version 1 updates, 26 Nov 2026): shorter step titles, in step order, in place of the ones above.
+ * `bodies` (Version 2 updates, 26 Nov 2026): step text in place of the ones above, in step order (undefined keeps a step's own). */
+export function V4HowItWorks({ children, swipe = false, titles, bodies }: { children?: ReactNode; swipe?: boolean; titles?: string[]; bodies?: (string | undefined)[] }) {
+  const STEPS = BASE_STEPS.map((s, i) => ({ ...s, title: titles?.[i] ?? s.title, body: bodies?.[i] ?? s.body }));
   const ref = useRef<HTMLElement>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
   const inView = useInView(ref, { amount: 0.35 });

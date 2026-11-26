@@ -36,9 +36,11 @@ interface Props {
   /** Version 4 (25 Nov 2026): the selected tab, its counts and the "See all" card in the nav's navy, and "Explore all
    * opportunities" as the nav's Get started (navy, 36px tall, 16px at the sides, P4 bold). */
   navy?: boolean;
+  /** Versions 2 and 3 updates (26 Nov 2026): the newer card (FreshCard), no rolling digits. */
+  fresh?: boolean;
 }
 
-export function OpportunitiesTabs({ individuals, states, funds, secondaryCta, navy = false }: Props) {
+export function OpportunitiesTabs({ individuals, states, funds, secondaryCta, navy = false, fresh = false }: Props) {
   const [tab, setTab] = useState<TabKey>("individuals");
   const allTabs: { key: TabKey; label: string; count: number }[] = [
     { key: "individuals", label: "Individuals", count: individuals.length },
@@ -86,7 +88,7 @@ export function OpportunitiesTabs({ individuals, states, funds, secondaryCta, na
         {tab === "individuals" && (
           <CardRow key="individuals">
             {individuals.slice(0, MAX_CARDS).map((o) => (
-              <IndividualCard key={o.key} o={o} />
+              fresh ? <FreshCard key={o.key} o={o} /> : <IndividualCard key={o.key} o={o} />
             ))}
             {individuals.length > MAX_CARDS && (
               <a
@@ -338,6 +340,73 @@ function FundCard({ f }: { f: FundOpportunity }) {
         <div className="mt-auto flex divide-x divide-ink/8 border-t border-ink/8 pt-4">
           <Stat label="Returns up to" value={f.returnsUpTo} sub="p.a." />
           <Stat label="Tenure" value={f.tenureMonths} sub="months" />
+        </div>
+      </div>
+    </a>
+  );
+}
+
+/**
+ * Versions 2 and 3 updates (26 Nov 2026): the old card (photo under a dark gradient, three columns of rolling digits)
+ * read as dated next to the rest of the page. This one: the photo inset in a white card with the two terms as chips on
+ * it, the name and place under it, the purpose, one progress bar with "% funded" and what's left, and the credit rating
+ * beside a "Lend" link. Plain numbers (the rolling digits put about 60 elements into every card); the bar fills once
+ * the card is on screen.
+ */
+function FreshCard({ o }: { o: IndividualOpportunity }) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const seen = useInView(ref, { once: true, amount: 0.4 });
+  const left = Math.max(o.goal - o.raised, 0);
+  const pct = Math.min(100, Math.round((o.raised / o.goal) * 100));
+  return (
+    <a
+      ref={ref}
+      href={`https://rangde.in/i/${o.key}`}
+      className="group flex w-[280px] shrink-0 snap-start flex-col rounded-[16px] bg-white p-2 ring-1 ring-ink/6 shadow-[0_1px_2px_rgba(41,45,54,0.06)] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(41,45,54,0.10)] sm:w-[300px]"
+    >
+      <div className="relative aspect-[5/4] w-full overflow-hidden rounded-[10px] bg-ink/8">
+        <Image src={imgix(o.photo, 600, 480)} alt={o.name} fill unoptimized sizes="300px" className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]" />
+        <div className="absolute inset-x-2 top-2 flex justify-between gap-2">
+          <span className="rounded-full bg-white/92 px-2.5 py-1 font-display text-[12px] font-bold leading-[16px] text-green-dark backdrop-blur">{o.returnRate}% p.a.</span>
+          <span className="rounded-full bg-white/92 px-2.5 py-1 font-display text-[12px] font-bold leading-[16px] text-ink backdrop-blur">{o.tenureMonths} months</span>
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col gap-3 px-2 pb-2 pt-4">
+        <div className="flex flex-col gap-0.5">
+          <p className="truncate font-display text-p2 font-bold capitalize leading-[22px] text-ink">{o.name.toLowerCase()}</p>
+          <p className="flex items-center gap-1 truncate font-display text-p4 font-medium text-ink/56">
+            <svg viewBox="0 0 24 24" className="size-[14px] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" />
+              <circle cx="12" cy="9.5" r="2.5" />
+            </svg>
+            <span className="truncate capitalize">{`${o.district}, ${o.state}`.toLowerCase()}</span>
+          </p>
+        </div>
+        <p className="line-clamp-2 min-h-[40px] font-display text-p3 font-medium text-ink/72">{o.purpose}</p>
+        <div className="flex flex-col gap-1.5">
+          <div className="h-[8px] overflow-hidden rounded-full bg-ink/8">
+            <div className="h-full rounded-full bg-[#62af1d] transition-[width] duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)]" style={{ width: seen ? `${Math.max(pct, 3)}%` : "0%" }} />
+          </div>
+          <p className="flex justify-between font-display text-p4 text-ink/56">
+            <span>
+              <b className="font-bold text-ink">{pct}%</b> funded
+            </span>
+            <span>
+              <b className="font-bold text-ink">{inr(left)}</b> to go
+            </span>
+          </p>
+        </div>
+        <div className="mt-auto flex items-center justify-between border-t border-ink/8 pt-3">
+          <span className="flex items-center gap-1.5">
+            <Stars count={o.ratingStars} />
+            <span className="font-display text-[11px] font-bold uppercase tracking-[0.5px] text-ink/56">{o.ratingLabel || "Not rated"}</span>
+          </span>
+          <span className="flex items-center gap-1 font-display text-p4 font-bold text-nav-navy">
+            Lend
+            <svg viewBox="0 0 24 24" className="size-[16px] transition-transform duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </span>
         </div>
       </div>
     </a>

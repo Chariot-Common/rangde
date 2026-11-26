@@ -85,7 +85,7 @@ const subscribePhone = (cb: () => void) => {
 /** `calmType` (Version 1 updates, 26 Nov 2026): the paragraph one step down, to the design system's P2; the photos a little
  * further from it and the call pulled up closer to them; and in the call, the
  * sentence a step down (P2, grey 64) with "Every Saturday, 11 am IST" as the bold, grey 100 part (P1). */
-export function FoundersCollage({ cards = false, thinFrame = false, roomy = false, story, phoneLayout = false, eyebrow, calmType = false }: { cards?: boolean; thinFrame?: boolean; roomy?: boolean; story?: ReactNode; phoneLayout?: boolean; eyebrow?: string; calmType?: boolean } = {}) {
+export function FoundersCollage({ cards = false, thinFrame = false, roomy = false, story, phoneLayout = false, eyebrow, calmType = false, heading = "Ram and Smita left Oxford to build Rang De." }: { cards?: boolean; thinFrame?: boolean; roomy?: boolean; story?: ReactNode; phoneLayout?: boolean; eyebrow?: string; calmType?: boolean; /** Version 2 updates: "came back from Oxford", as Version 3 says it. */ heading?: string } = {}) {
   const around = cards ? AROUND.map((a) => CARD_SWAPS[a.src] ?? a) : AROUND;
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
   const k = phone ? 0.25 : 1;
@@ -106,7 +106,7 @@ export function FoundersCollage({ cards = false, thinFrame = false, roomy = fals
       <div className="flex flex-col items-center gap-4 text-center">
         {eyebrow && <p className="font-display text-h5 font-bold uppercase tracking-[0.88px] text-text-grey-80">{eyebrow}</p>}
         {/* Fills in as it is read, like the page's other H3s (plain: no coloured edge). */}
-        <ScrollInk as="h2" tone="plain" text="Ram and Smita left Oxford to build Rang De." className="max-w-[820px] font-display text-h3 font-bold [text-wrap:balance]" />
+        <ScrollInk as="h2" tone="plain" text={heading} className="max-w-[820px] font-display text-h3 font-bold [text-wrap:balance]" />
         <p className={`font-display font-medium text-text-grey-64 [text-wrap:pretty] ${calmType ? "text-p2" : "text-[18px] leading-[28px] md:text-[22px] md:leading-[32px]"} ${story ? "max-w-[760px]" : "max-w-[640px]"}`}>
           {story ?? "With a simple belief: where you live or how much you earn shouldn’t decide your opportunities to grow."}
         </p>

@@ -43,6 +43,14 @@ const VERSIONS = [
     measure: "Sign-ups vs. the current homepage",
   },
   {
+    key: "2U",
+    name: "Lend to a person (updates)",
+    href: "/v/v2-updates",
+    audience: "Everyone",
+    idea: "Version 2, reworked while Version 2 stays as it was: the loop redrawn as a circle, why returns aren’t higher said plainly, no repeated How it works, newer live opportunity cards, “Before you invest.” questions.",
+    measure: "Sign-ups vs. Version 2",
+  },
+  {
     key: "2 B",
     name: "Lend to a person, on a timeline",
     href: "/v/v2-b",
@@ -89,6 +97,14 @@ const VERSIONS = [
     audience: "Everyone (rangde-v1)",
     idea: "The story of Rekha and Arjun, turning into a wall of real people, then the borrowers and investors in their own words, ending on the live opportunities (until now Version 6).",
     measure: "Sign-ups vs. the current homepage",
+  },
+  {
+    key: "3U",
+    name: "Less said (updates)",
+    href: "/v/v3-updates",
+    audience: "Everyone",
+    idea: "Version 3, reworked while Version 3 stays as it was: nothing in How it works runs under the text or off the screen, a clearer wall of people, both story rows in one screen, newer live opportunity cards, “Before you invest.” questions.",
+    measure: "Sign-ups vs. Version 3",
   },
   {
     key: "3 (archived)",
